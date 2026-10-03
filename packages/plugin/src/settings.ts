@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type ObsigraphPlugin from './main';
-import { DEFAULT_SCHEMA_FOLDER, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
+import { DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
 import { parseEdgeStyles, parseTypeStyles } from './render/styles';
 
 export interface ObsigraphSettings {
@@ -16,6 +16,8 @@ export interface ObsigraphSettings {
   schemaFolder: string;
   /** Show the diagnostics count in the status bar. */
   showDiagnostics: boolean;
+  /** Depth cap for unbounded variable-length relationships. */
+  maxPathDepth: number;
 }
 
 export const DEFAULT_SETTINGS: ObsigraphSettings = {
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   edgeStyles: {},
   schemaFolder: DEFAULT_SCHEMA_FOLDER,
   showDiagnostics: true,
+  maxPathDepth: DEFAULT_MAX_PATH_DEPTH,
 };
 
 export class ObsigraphSettingTab extends PluginSettingTab {
@@ -47,6 +50,19 @@ export class ObsigraphSettingTab extends PluginSettingTab {
           const n = Number(v);
           if (Number.isInteger(n) && n > 0) {
             this.plugin.settings.maxElements = n;
+            await this.plugin.saveSettings();
+          }
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Maximum path depth')
+      .setDesc('Unbounded variable-length patterns such as [:knows*] stop at this many hops.')
+      .addText((t) =>
+        t.setValue(String(this.plugin.settings.maxPathDepth)).onChange(async (v) => {
+          const n = Number(v);
+          if (Number.isInteger(n) && n > 0 && n <= 50) {
+            this.plugin.settings.maxPathDepth = n;
             await this.plugin.saveSettings();
           }
         }),

@@ -1,9 +1,10 @@
 import type { Graph, GraphEdge } from '../graph/graph.js';
-import type { Expr, NodePattern, Pattern, Query } from './ast.js';
+import type { Expr, NodePattern, Pattern, Projection, Query, ReturnItem } from './ast.js';
+import { containsAgg } from './parser.js';
 import { CypherError } from './lexer.js';
-import { isMap, NodeRef, RelRef, toValue, type Value } from './values.js';
+import { isMap, NodeRef, PathRef, RelRef, toValue, type Value } from './values.js';
 
-export type ColumnKind = 'node' | 'relationship' | 'scalar';
+export type ColumnKind = 'node' | 'relationship' | 'path' | 'scalar';
 
 export interface Column {
   name: string;
@@ -14,100 +15,112 @@ export interface Column {
 export interface QueryResult {
   columns: Column[];
   rows: Value[][];
+  /** Non-fatal notes, e.g. that a variable-length expansion hit the depth cap. */
+  notices?: string[];
 }
+
+export interface ExecOptions {
+  /** Depth cap for unbounded variable-length relationships (`*`, `*n..`). */
+  maxPathDepth?: number;
+}
+
+export const DEFAULT_MAX_PATH_DEPTH = 10;
 
 type Env = Map<string, Value>;
 type Params = Record<string, unknown>;
+type Scope = Map<string, ColumnKind>;
 
 const runtime = (msg: string) => new CypherError('runtime', msg, 0, 0);
+const varExpr = (name: string): Expr => ({ k: 'var', name, line: 0, column: 0 });
 
-/** Execute a parsed query against the graph. Never mutates the graph. */
+/** Execute a parsed query as a pipeline of clauses. Never mutates the graph. */
 // @lat: [[query-engine#Two backends]]
-export function execute(graph: Graph, q: Query, params: Params = {}): QueryResult {
-  const kinds = new Map<string, ColumnKind>();
-  for (const m of q.matches) {
-    for (const p of m.patterns) {
-      for (const n of p.nodes) declare(kinds, n.var, 'node');
-      for (const r of p.rels) declare(kinds, r.var, 'relationship');
-    }
-  }
-
-  const ctx = new Ctx(graph, params);
-  const items = q.star
-    ? [...kinds.keys()].filter((v) => !v.startsWith(' ')).map((v) => ({ name: v, expr: { k: 'var', name: v, line: 0, column: 0 } as Expr }))
-        .concat(q.items)
-    : q.items;
-  if (items.length === 0) throw new CypherError('syntax', 'RETURN * requires at least one named variable', 1, 1);
-
-  // Static variable checks, so errors surface even when nothing matches.
-  const visible = new Set([...kinds.keys()]);
-  for (const m of q.matches) if (m.where) checkVars(m.where, visible);
-  for (const it of items) checkVars(it.expr, visible);
-  const aliases = new Set([...visible, ...items.map((i) => i.name)]);
-  for (const o of q.order) checkVars(o.expr, aliases);
-
-  // MATCH ... WHERE
+export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecOptions = {}): QueryResult {
+  const ctx = new Ctx(graph, params, opts.maxPathDepth ?? DEFAULT_MAX_PATH_DEPTH);
+  const columns = analyze(q);
   let rows: Env[] = [new Map()];
-  for (const clause of q.matches) {
-    const out: Env[] = [];
-    for (const row of rows) {
-      matchPatterns(ctx, row, clause.patterns, 0, new Set(), (env) => {
-        if (!clause.where || ctx.eval(clause.where, env) === true) out.push(new Map(env));
-      });
-    }
-    rows = out;
-  }
+  let scope: Scope = new Map();
+  let result: Value[][] = [];
 
-  // RETURN projection
-  let projected = rows.map((env) => ({ env, values: items.map((it) => ctx.eval(it.expr, env)) }));
-  if (q.distinct) {
-    const seen = new Set<string>();
-    projected = projected.filter((r) => {
-      const key = keyOf(r.values);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }
-
-  if (q.order.length > 0) {
-    const keyed = projected.map((r) => {
-      const env = new Map(r.env);
-      items.forEach((it, idx) => env.set(it.name, r.values[idx]!));
-      return { r, keys: q.order.map((o) => ctx.eval(o.expr, env)) };
-    });
-    keyed.sort((a, b) => {
-      for (let i = 0; i < q.order.length; i++) {
-        const c = orderCompare(a.keys[i]!, b.keys[i]!);
-        if (c !== 0) return q.order[i]!.desc ? -c : c;
+  for (const clause of q.clauses) {
+    if (clause.k === 'match') {
+      scope = declarePatterns(scope, clause.patterns);
+      rows = runMatch(ctx, rows, clause.patterns, clause.where, clause.optional);
+    } else {
+      const items = projectionItems(clause.proj, scope);
+      const projected = project(ctx, clause.proj, items, rows);
+      if (clause.k === 'return') {
+        result = projected.map((r) => r.values);
+        break;
       }
-      return 0;
-    });
-    projected = keyed.map((k) => k.r);
+      scope = new Map(items.map((it) => [it.name, kindOf(it.expr, scope)]));
+      rows = projected.map((r) => new Map(items.map((it, i) => [it.name, r.values[i]!])));
+      if (clause.proj.where) rows = rows.filter((env) => ctx.eval(clause.proj.where!, env) === true);
+    }
   }
 
-  const skip = q.skip ? count(ctx.eval(q.skip, new Map()), 'SKIP') : 0;
-  const limit = q.limit ? count(ctx.eval(q.limit, new Map()), 'LIMIT') : Infinity;
-  projected = projected.slice(skip, skip + limit);
+  const out: QueryResult = { columns, rows: result };
+  if (ctx.notices.size > 0) out.notices = [...ctx.notices];
+  return out;
+}
 
-  return {
-    columns: items.map((it) => ({
-      name: it.name,
-      kind: it.expr.k === 'var' ? (kinds.get(it.expr.name) ?? 'scalar') : 'scalar',
-    })),
-    rows: projected.map((r) => r.values),
+// ---- static analysis --------------------------------------------------------
+
+/** Check variable scoping through every clause and return the RETURN columns. */
+function analyze(q: Query): Column[] {
+  let scope: Scope = new Map();
+  for (const clause of q.clauses) {
+    if (clause.k === 'match') {
+      scope = declarePatterns(scope, clause.patterns);
+      for (const p of clause.patterns) {
+        for (const n of p.nodes) n.props.forEach(([, e]) => checkVars(e, scope));
+        for (const r of p.rels) r.props.forEach(([, e]) => checkVars(e, scope));
+      }
+      if (clause.where) checkVars(clause.where, scope);
+      continue;
+    }
+    const items = projectionItems(clause.proj, scope);
+    for (const it of items) checkVars(it.expr, scope);
+    const withAliases = new Set([...scope.keys(), ...items.map((i) => i.name)]);
+    for (const o of clause.proj.order) checkVars(o.expr, withAliases);
+    if (clause.proj.skip) checkVars(clause.proj.skip, new Set());
+    if (clause.proj.limit) checkVars(clause.proj.limit, new Set());
+    const next: Scope = new Map(items.map((it) => [it.name, kindOf(it.expr, scope)]));
+    if (clause.k === 'return') return items.map((it) => ({ name: it.name, kind: next.get(it.name)! }));
+    if (clause.proj.where) checkVars(clause.proj.where, next);
+    scope = next;
+  }
+  throw new CypherError('syntax', 'Query must end with RETURN', 1, 1);
+}
+
+function declarePatterns(scope: Scope, patterns: Pattern[]): Scope {
+  const next = new Map(scope);
+  const declare = (name: string, kind: ColumnKind) => {
+    const prev = next.get(name);
+    if (prev && prev !== kind) throw new CypherError('syntax', `Variable \`${name}\` is already bound as a ${prev}`, 1, 1);
+    next.set(name, kind);
   };
-}
-
-function declare(kinds: Map<string, ColumnKind>, name: string, kind: ColumnKind): void {
-  const prev = kinds.get(name);
-  if (prev && prev !== kind) {
-    throw new CypherError('syntax', `Variable \`${name}\` is used as both a node and a relationship`, 1, 1);
+  for (const p of patterns) {
+    for (const n of p.nodes) declare(n.var, 'node');
+    for (const r of p.rels) declare(r.var, 'relationship');
+    if (p.pathVar) declare(p.pathVar, 'path');
   }
-  kinds.set(name, kind);
+  return next;
 }
 
-function checkVars(e: Expr, known: Set<string>): void {
+function projectionItems(proj: Projection, scope: Scope): ReturnItem[] {
+  const items = proj.star
+    ? [...scope.keys()].filter((v) => !v.startsWith(' ')).map((v) => ({ name: v, expr: varExpr(v) })).concat(proj.items)
+    : proj.items;
+  if (items.length === 0) throw new CypherError('syntax', '* requires at least one named variable in scope', 1, 1);
+  return items;
+}
+
+function kindOf(e: Expr, scope: Scope): ColumnKind {
+  return e.k === 'var' ? (scope.get(e.name) ?? 'scalar') : 'scalar';
+}
+
+function checkVars(e: Expr, known: { has(name: string): boolean }): void {
   switch (e.k) {
     case 'var':
       if (!known.has(e.name)) throw new CypherError('syntax', `Variable \`${e.name}\` not defined`, e.line, e.column);
@@ -124,6 +137,9 @@ function checkVars(e: Expr, known: Set<string>): void {
       return e.entries.forEach(([, v]) => checkVars(v, known));
     case 'call':
       return e.args.forEach((a) => checkVars(a, known));
+    case 'agg':
+      if (e.arg) checkVars(e.arg, known);
+      return;
     case 'not':
     case 'neg':
     case 'isnull':
@@ -141,7 +157,136 @@ function count(v: Value, clause: string): number {
   return v;
 }
 
+// ---- projection (WITH / RETURN) ----------------------------------------------
+
+function collectAggs(e: Expr, out: Expr[]): void {
+  switch (e.k) {
+    case 'agg':
+      out.push(e);
+      return;
+    case 'prop':
+    case 'labels':
+      return collectAggs(e.obj, out);
+    case 'index':
+      collectAggs(e.obj, out);
+      return collectAggs(e.idx, out);
+    case 'list':
+      return e.items.forEach((i) => collectAggs(i, out));
+    case 'map':
+      return e.entries.forEach(([, v]) => collectAggs(v, out));
+    case 'call':
+      return e.args.forEach((a) => collectAggs(a, out));
+    case 'not':
+    case 'neg':
+    case 'isnull':
+      return collectAggs(e.e, out);
+    case 'bin':
+      collectAggs(e.l, out);
+      return collectAggs(e.r, out);
+    default:
+      return;
+  }
+}
+
+/**
+ * Project rows for WITH or RETURN. With aggregates, the non-aggregate items
+ * are grouping keys; without grouping keys, zero rows still yield one row.
+ */
+// @lat: [[query-engine#Supported subset]]
+function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): { values: Value[]; env: Env }[] {
+  const aggs: Expr[] = [];
+  for (const it of items) collectAggs(it.expr, aggs);
+  const orderAggs: Expr[] = [];
+  for (const o of proj.order) collectAggs(o.expr, orderAggs);
+
+  type Out = { values: Value[]; env: Env; aggValues: Map<Expr, Value> };
+  let out: Out[];
+  if (aggs.length === 0 && orderAggs.length === 0) {
+    out = rows.map((env) => ({ env, values: items.map((it) => ctx.eval(it.expr, env)), aggValues: new Map() }));
+  } else {
+    const keyItems = items.filter((it) => !containsAgg(it.expr));
+    const groups = new Map<string, Env[]>();
+    for (const env of rows) {
+      const key = keyOf(keyItems.map((it) => ctx.eval(it.expr, env)));
+      let g = groups.get(key);
+      if (!g) groups.set(key, (g = []));
+      g.push(env);
+    }
+    if (rows.length === 0 && keyItems.length === 0) groups.set('', []);
+    out = [...groups.values()].map((group) => {
+      const env = group[0] ?? new Map<string, Value>();
+      const aggValues = new Map<Expr, Value>();
+      for (const a of [...aggs, ...orderAggs]) aggValues.set(a, ctx.aggregate(a as Extract<Expr, { k: 'agg' }>, group));
+      return { env, aggValues, values: ctx.withAggs(aggValues, () => items.map((it) => ctx.eval(it.expr, env))) };
+    });
+  }
+
+  if (proj.distinct) {
+    const seen = new Set<string>();
+    out = out.filter((r) => {
+      const key = keyOf(r.values);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  if (proj.order.length > 0) {
+    const keyed = out.map((r) => {
+      const env = new Map(r.env);
+      items.forEach((it, idx) => env.set(it.name, r.values[idx]!));
+      return { r, keys: ctx.withAggs(r.aggValues, () => proj.order.map((o) => ctx.eval(o.expr, env))) };
+    });
+    keyed.sort((a, b) => {
+      for (let i = 0; i < proj.order.length; i++) {
+        const c = orderCompare(a.keys[i]!, b.keys[i]!);
+        if (c !== 0) return proj.order[i]!.desc ? -c : c;
+      }
+      return 0;
+    });
+    out = keyed.map((k) => k.r);
+  }
+
+  const skip = proj.skip ? count(ctx.eval(proj.skip, new Map()), 'SKIP') : 0;
+  const limit = proj.limit ? count(ctx.eval(proj.limit, new Map()), 'LIMIT') : Infinity;
+  return out.slice(skip, skip + limit);
+}
+
 // ---- pattern matching -------------------------------------------------------
+
+/**
+ * MATCH keeps rows with at least one match; OPTIONAL MATCH keeps rows without
+ * one, binding the pattern's new variables to null.
+ */
+function runMatch(ctx: Ctx, rows: Env[], patterns: Pattern[], where: Expr | null, optional: boolean): Env[] {
+  const out: Env[] = [];
+  const introduced = new Set<string>();
+  for (const p of patterns) {
+    for (const n of p.nodes) introduced.add(n.var);
+    for (const r of p.rels) introduced.add(r.var);
+    if (p.pathVar) introduced.add(p.pathVar);
+  }
+  for (const row of rows) {
+    let matched = false;
+    matchPatterns(ctx, new Map(row), patterns, 0, new Set(), (env) => {
+      if (!where || ctx.eval(where, env) === true) {
+        out.push(new Map(env));
+        matched = true;
+      }
+    });
+    if (optional && !matched) {
+      const env = new Map(row);
+      for (const v of introduced) if (!env.has(v)) env.set(v, null);
+      out.push(env);
+    }
+  }
+  return out;
+}
+
+interface Trail {
+  nodes: NodeRef[];
+  rels: RelRef[];
+}
 
 function matchPatterns(ctx: Ctx, env: Env, patterns: Pattern[], pi: number, used: Set<string>, emit: (env: Env) => void): void {
   if (pi === patterns.length) return emit(env);
@@ -152,14 +297,22 @@ function matchPatterns(ctx: Ctx, env: Env, patterns: Pattern[], pi: number, used
   for (const c of candidates) {
     if (!(c instanceof NodeRef) || !ctx.nodeMatches(c, first, env)) continue;
     withBinding(env, first.var, c, () =>
-      step(ctx, env, p, 0, c, used, () => matchPatterns(ctx, env, patterns, pi + 1, used, emit)),
+      step(ctx, env, p, 0, c, used, { nodes: [c], rels: [] }, () => {
+        const next = () => matchPatterns(ctx, env, patterns, pi + 1, used, emit);
+        if (p.pathVar) withBinding(env, p.pathVar, ctx.path(p, env), next);
+        else next();
+      }),
     );
   }
 }
 
-function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Set<string>, done: () => void): void {
-  if (ri === p.rels.length) return done();
+function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Set<string>, trail: Trail, done: () => void): void {
+  if (ri === p.rels.length) {
+    ctx.trails.set(p, trail);
+    return done();
+  }
   const rp = p.rels[ri]!;
+  if (rp.length) return expand(ctx, env, p, ri, cur, used, trail, done);
   const np = p.nodes[ri + 1]!;
   for (const [edge, otherId] of ctx.incident(cur.id, rp.dir)) {
     // openCypher relationship uniqueness within one MATCH clause.
@@ -170,23 +323,81 @@ function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Se
     const rel = ctx.rel(edge);
     if (!ctx.propsMatch(rel, rp.props, env)) continue;
     const other = ctx.node(otherId);
-    if (!other) continue;
-    const boundNode = env.get(np.var);
-    if (boundNode !== undefined && !(boundNode instanceof NodeRef && boundNode.id === other.id)) continue;
-    if (!ctx.nodeMatches(other, np, env)) continue;
+    if (!other || !endOk(ctx, env, np, other)) continue;
     used.add(edge.id);
     withBinding(env, rp.var, rel, () =>
-      withBinding(env, np.var, other, () => step(ctx, env, p, ri + 1, other, used, done)),
+      withBinding(env, np.var, other, () =>
+        step(ctx, env, p, ri + 1, other, used, { nodes: [...trail.nodes, other], rels: [...trail.rels, rel] }, done),
+      ),
     );
     used.delete(edge.id);
   }
 }
 
+/**
+ * Variable-length expansion: depth-first, never reusing a relationship, with
+ * unbounded ranges capped at the configured depth (reported as a notice).
+ */
+// @lat: [[query-engine#Supported subset]]
+function expand(ctx: Ctx, env: Env, p: Pattern, ri: number, start: NodeRef, used: Set<string>, trail: Trail, done: () => void): void {
+  const rp = p.rels[ri]!;
+  const np = p.nodes[ri + 1]!;
+  const { min } = rp.length!;
+  const max = rp.length!.max ?? ctx.maxDepth;
+  const nodes: NodeRef[] = [];
+  const rels: RelRef[] = [];
+  const candidates = (id: string) =>
+    ctx.incident(id, rp.dir).filter(([e]) => !used.has(e.id) && (rp.types.length === 0 || rp.types.includes(e.type)));
+
+  const finish = (end: NodeRef) => {
+    if (!endOk(ctx, env, np, end)) return;
+    const relList = [...rels];
+    const boundRel = env.get(rp.var);
+    if (boundRel !== undefined && keyOf(boundRel) !== keyOf(relList)) return;
+    withBinding(env, rp.var, relList, () =>
+      withBinding(env, np.var, end, () =>
+        step(ctx, env, p, ri + 1, end, used, { nodes: [...trail.nodes, ...nodes], rels: [...trail.rels, ...rels] }, done),
+      ),
+    );
+  };
+
+  const visit = (cur: NodeRef, depth: number) => {
+    if (depth >= min) finish(cur);
+    const next = candidates(cur.id);
+    if (depth >= max) {
+      if (rp.length!.max === null && next.length > 0) ctx.notices.add(`Variable-length expansion stopped at the depth cap of ${max}; set an upper bound or raise the cap.`);
+      return;
+    }
+    for (const [edge, otherId] of next) {
+      const rel = ctx.rel(edge);
+      if (!ctx.propsMatch(rel, rp.props, env)) continue;
+      const other = ctx.node(otherId);
+      if (!other) continue;
+      used.add(edge.id);
+      rels.push(rel);
+      nodes.push(other);
+      visit(other, depth + 1);
+      nodes.pop();
+      rels.pop();
+      used.delete(edge.id);
+    }
+  };
+  visit(start, 0);
+}
+
+function endOk(ctx: Ctx, env: Env, np: NodePattern, node: NodeRef): boolean {
+  const bound = env.get(np.var);
+  if (bound !== undefined && !(bound instanceof NodeRef && bound.id === node.id)) return false;
+  return ctx.nodeMatches(node, np, env);
+}
+
 function withBinding(env: Env, name: string, v: Value, fn: () => void): void {
   const had = env.has(name);
+  const prev = env.get(name);
   env.set(name, v);
   fn();
-  if (!had) env.delete(name);
+  if (had) env.set(name, prev!);
+  else env.delete(name);
 }
 
 // ---- evaluation ---------------------------------------------------------------
@@ -194,11 +405,73 @@ function withBinding(env: Env, name: string, v: Value, fn: () => void): void {
 class Ctx {
   private readonly nodeRefs = new Map<string, NodeRef>();
   private readonly relRefs = new Map<string, RelRef>();
+  private aggValues: Map<Expr, Value> | null = null;
+  readonly notices = new Set<string>();
+  /** Node/relationship sequence of the most recently completed pattern match. */
+  readonly trails = new Map<Pattern, Trail>();
 
   constructor(
     readonly graph: Graph,
     readonly params: Params,
+    readonly maxDepth: number,
   ) {}
+
+  path(p: Pattern, _env: Env): PathRef {
+    const t = this.trails.get(p)!;
+    return new PathRef(t.nodes, t.rels);
+  }
+
+  /** Evaluate with precomputed aggregate values for the current group. */
+  withAggs<T>(values: Map<Expr, Value>, fn: () => T): T {
+    const prev = this.aggValues;
+    this.aggValues = values;
+    try {
+      return fn();
+    } finally {
+      this.aggValues = prev;
+    }
+  }
+
+  /** openCypher aggregation over a group; nulls ignored except by count(*). */
+  aggregate(e: Extract<Expr, { k: 'agg' }>, group: Env[]): Value {
+    if (e.arg === null) return group.length;
+    let values = group.map((env) => this.eval(e.arg!, env)).filter((v) => v !== null);
+    if (e.distinct) {
+      const seen = new Set<string>();
+      values = values.filter((v) => {
+        const k = keyOf(v);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+    }
+    switch (e.name) {
+      case 'count':
+        return values.length;
+      case 'collect':
+        return values;
+      case 'sum':
+      case 'avg': {
+        let total = 0;
+        for (const v of values) {
+          if (typeof v !== 'number') {
+            throw new CypherError('runtime', `${e.name}() requires numbers, got ${typeName(v)}`, e.line, e.column);
+          }
+          total += v;
+        }
+        if (e.name === 'sum') return total;
+        return values.length === 0 ? null : total / values.length;
+      }
+      case 'min':
+      case 'max': {
+        if (values.length === 0) return null;
+        return values.reduce((a, b) => {
+          const c = orderCompare(a, b);
+          return e.name === 'min' ? (c <= 0 ? a : b) : c >= 0 ? a : b;
+        });
+      }
+    }
+  }
 
   node(id: string): NodeRef | null {
     let ref = this.nodeRefs.get(id);
@@ -272,6 +545,11 @@ class Ctx {
       }
       case 'call':
         return this.call(e.name, e.args.map((a) => this.eval(a, env)));
+      case 'agg': {
+        const v = this.aggValues?.get(e);
+        if (v === undefined) throw new CypherError('syntax', `Aggregation ${e.name}() is only allowed in WITH or RETURN`, e.line, e.column);
+        return v;
+      }
       case 'not': {
         const v = this.eval(e.e, env);
         return v === null ? null : !truthy(v);
@@ -445,6 +723,14 @@ class Ctx {
         return num(Math.ceil);
       case 'sign':
         return num(Math.sign);
+      case 'length':
+        if (a instanceof PathRef) return a.rels.length;
+        if (typeof a === 'string' || Array.isArray(a)) return a.length;
+        return null;
+      case 'nodes':
+        return a instanceof PathRef ? [...a.nodes] : null;
+      case 'relationships':
+        return a instanceof PathRef ? [...a.rels] : null;
       case 'head':
         return Array.isArray(a) ? (a[0] ?? null) : null;
       case 'last':
@@ -478,6 +764,7 @@ function typeName(v: Value): string {
   if (v === null) return 'null';
   if (v instanceof NodeRef) return 'node';
   if (v instanceof RelRef) return 'relationship';
+  if (v instanceof PathRef) return 'path';
   if (Array.isArray(v)) return 'list';
   if (isMap(v)) return 'map';
   return typeof v;
@@ -486,7 +773,7 @@ function typeName(v: Value): string {
 /** openCypher equality: null when either side is null. */
 export function equals(a: Value, b: Value): boolean | null {
   if (a === null || b === null) return null;
-  if (a instanceof NodeRef || a instanceof RelRef) return b instanceof a.constructor && (b as NodeRef).id === a.id;
+  if (a instanceof NodeRef || a instanceof RelRef || a instanceof PathRef) return b instanceof a.constructor && (b as NodeRef).id === a.id;
   if (Array.isArray(a)) {
     if (!Array.isArray(b) || a.length !== b.length) return false;
     let sawNull = false;
@@ -524,7 +811,7 @@ function compare(a: Value, b: Value): number | null {
 /** Total order for ORDER BY; nulls sort last ascending. */
 function orderCompare(a: Value, b: Value): number {
   const rank = (v: Value) =>
-    isMap(v) ? 0 : v instanceof NodeRef ? 1 : v instanceof RelRef ? 2 : Array.isArray(v) ? 3 : typeof v === 'string' ? 4 : typeof v === 'boolean' ? 5 : typeof v === 'number' ? 6 : 7;
+    isMap(v) ? 0 : v instanceof NodeRef ? 1 : v instanceof RelRef ? 2 : Array.isArray(v) ? 3 : v instanceof PathRef ? 3.5 : typeof v === 'string' ? 4 : typeof v === 'boolean' ? 5 : typeof v === 'number' ? 6 : 7;
   const ra = rank(a);
   const rb = rank(b);
   if (ra !== rb) return ra - rb;
@@ -535,12 +822,14 @@ function orderCompare(a: Value, b: Value): number {
     }
     return a.length - b.length;
   }
-  if ((a instanceof NodeRef || a instanceof RelRef) && (b instanceof NodeRef || b instanceof RelRef)) {
+  if ((a instanceof NodeRef || a instanceof RelRef || a instanceof PathRef) && (b instanceof NodeRef || b instanceof RelRef || b instanceof PathRef)) {
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   }
   return compare(a, b) ?? 0;
 }
 
 function keyOf(v: Value): string {
-  return JSON.stringify(v, (_k, x) => (x instanceof NodeRef ? `\u0000N:${x.id}` : x instanceof RelRef ? `\u0000R:${x.id}` : x));
+  return JSON.stringify(v, (_k, x) =>
+    x instanceof NodeRef ? `\u0000N:${x.id}` : x instanceof RelRef ? `\u0000R:${x.id}` : x instanceof PathRef ? `\u0000P:${x.id}` : x,
+  );
 }

@@ -10,14 +10,15 @@ Both implement [[packages/core/src/cypher/engine.ts#QueryEngine]] and are read-o
 
 ## Supported subset
 
-The in-plugin engine supports `MATCH`, `WHERE`, `RETURN`, `ORDER BY` and `LIMIT` first, then aggregations, `WITH`, `OPTIONAL MATCH` and variable-length paths.
+The in-plugin engine supports a read-only subset: matching, staging with `WITH`, optional matches, variable-length paths and aggregation, with everything else failing by name.
 
-Parsed by [[packages/core/src/cypher/parser.ts#parseQuery]] and executed by [[packages/core/src/cypher/exec.ts#execute]]. v0.1 supports exactly:
+Parsed by [[packages/core/src/cypher/parser.ts#parseQuery]] and executed by [[packages/core/src/cypher/exec.ts#execute]] as a pipeline of clauses over row streams. Supported exactly:
 
-- Clauses: repeated `MATCH` with optional `WHERE`, `RETURN [DISTINCT]` (including `*`), `ORDER BY` (`ASC`/`DESC`), `SKIP`, `LIMIT`.
-- Patterns: labels, inline property maps, directed, incoming and undirected relationships, type alternation `[:a|b]`, comma-separated patterns, relationship uniqueness per MATCH.
+- Clauses: `MATCH` and `OPTIONAL MATCH` (each with `WHERE`; optional rows keep nulls), `WITH` (aliases required for expressions; `DISTINCT`, `*`, `ORDER BY`, `SKIP`, `LIMIT`, then `WHERE`; only listed variables stay in scope), `RETURN [DISTINCT]` (including `*`), `ORDER BY`, `SKIP`, `LIMIT`.
+- Patterns: labels, inline property maps, directed, incoming and undirected relationships, type alternation `[:a|b]`, comma-separated patterns, relationship uniqueness per MATCH, variable-length `*`, `*n`, `*n..m`, `*..m`, `*n..` (relationship variable binds a list; unbounded ranges stop at the depth cap, default 10, with a result notice) and path variables `p = (...)`.
 - Expressions: literals, lists, maps, `$params`, property and index access, label predicates `n:Label`, arithmetic, comparisons, `IN`, `STARTS WITH`, `ENDS WITH`, `CONTAINS`, `IS [NOT] NULL`, three-valued `AND`/`OR`/`XOR`/`NOT`.
-- Functions: `id`, `type`, `labels`, `keys`, `properties`, `startNode`, `endNode`, string helpers, `size`, `coalesce`, conversions, numeric helpers, `head`, `last`, `reverse`.
+- Functions: `id`, `type`, `labels`, `keys`, `properties`, `startNode`, `endNode`, string helpers, `size`, `coalesce`, conversions, numeric helpers, `head`, `last`, `reverse`, `length`, `nodes`, `relationships`.
+- Aggregates: `count` (incl. `count(*)`), `sum`, `avg`, `min`, `max`, `collect`, each with optional `DISTINCT`; non-aggregate items are grouping keys; nulls ignored; empty input without keys yields 0, 0, null, null, null, []. Aggregates are rejected in `WHERE`.
 - Built-in properties: `n.stub`, `r.id`, `r.sign`.
 
 Write clauses fail as read-only; anything else outside this list fails as unsupported, naming the construct. Errors carry line and column.

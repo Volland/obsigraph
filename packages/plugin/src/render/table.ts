@@ -1,12 +1,15 @@
-import { NodeRef, RelRef, type QueryResult, type Value } from '@obsigraph/core';
+import { NodeRef, PathRef, RelRef, type QueryResult, type Value } from '@obsigraph/core';
 
 /** Plain-text form of a value for table cells. */
 export function cellText(v: Value): string {
   if (v === null) return '';
   if (v instanceof NodeRef) return String(v.node.props.title ?? v.id);
   if (v instanceof RelRef) return `${v.edge.sign < 0 ? '−' : ''}${v.edge.type}`;
+  if (v instanceof PathRef) {
+    return v.nodes.map((n, i) => (i === 0 ? cellText(n) : `-${cellText(v.rels[i - 1]!)}-> ${cellText(n)}`)).join(' ');
+  }
   if (Array.isArray(v)) return v.map(cellText).join(', ');
-  if (typeof v === 'object') return JSON.stringify(v, (_k, x) => (x instanceof NodeRef || x instanceof RelRef ? cellText(x) : x));
+  if (typeof v === 'object') return JSON.stringify(v, (_k, x) => (x instanceof NodeRef || x instanceof RelRef || x instanceof PathRef ? cellText(x) : x));
   return String(v);
 }
 

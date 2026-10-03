@@ -1,11 +1,9 @@
-import type { BinOp, Direction, Expr, MatchClause, NodePattern, Pattern, Query, RelPattern, ReturnItem, SortItem } from './ast.js';
+import type { AggName, BinOp, Clause, Direction, Expr, NodePattern, Pattern, Projection, Query, RelPattern, ReturnItem, SortItem } from './ast.js';
 import { CypherError, lex, type Token } from './lexer.js';
 
 const WRITE_CLAUSES = new Set(['CREATE', 'MERGE', 'SET', 'DELETE', 'DETACH', 'REMOVE', 'FOREACH', 'DROP']);
 
 const UNSUPPORTED_CLAUSES: Record<string, string> = {
-  OPTIONAL: 'OPTIONAL MATCH',
-  WITH: 'WITH',
   UNWIND: 'UNWIND',
   UNION: 'UNION',
   CALL: 'CALL',
@@ -13,13 +11,15 @@ const UNSUPPORTED_CLAUSES: Record<string, string> = {
   USE: 'USE',
 };
 
-const AGGREGATES = new Set(['count', 'sum', 'avg', 'min', 'max', 'collect', 'stdev', 'stdevp', 'percentilecont', 'percentiledisc']);
+const AGGREGATES = new Set<AggName>(['count', 'sum', 'avg', 'min', 'max', 'collect']);
+const UNSUPPORTED_AGGREGATES = new Set(['stdev', 'stdevp', 'percentilecont', 'percentiledisc']);
 
 export const FUNCTIONS = new Set([
   'id', 'type', 'labels', 'keys', 'properties', 'startnode', 'endnode',
   'tolower', 'toupper', 'trim', 'ltrim', 'rtrim', 'replace', 'substring', 'split', 'left', 'right',
   'size', 'coalesce', 'tostring', 'tointeger', 'tofloat', 'toboolean',
   'abs', 'round', 'floor', 'ceil', 'sign', 'head', 'last', 'reverse',
+  'length', 'nodes', 'relationships',
 ]);
 
 const COMPARISON: Record<string, BinOp> = { '=': '=', '<>': '<>', '<': '<', '>': '>', '<=': '<=', '>=': '>=' };
@@ -31,6 +31,33 @@ const unsupported = (what: string, t: Token) =>
 // @lat: [[query-engine#Supported subset]]
 export function parseQuery(src: string): Query {
   return new Parser(src).parse();
+}
+
+/** True when the expression contains an aggregate anywhere. */
+export function containsAgg(e: Expr): boolean {
+  switch (e.k) {
+    case 'agg':
+      return true;
+    case 'prop':
+    case 'labels':
+      return containsAgg(e.obj);
+    case 'index':
+      return containsAgg(e.obj) || containsAgg(e.idx);
+    case 'list':
+      return e.items.some(containsAgg);
+    case 'map':
+      return e.entries.some(([, v]) => containsAgg(v));
+    case 'call':
+      return e.args.some(containsAgg);
+    case 'not':
+    case 'neg':
+    case 'isnull':
+      return containsAgg(e.e);
+    case 'bin':
+      return containsAgg(e.l) || containsAgg(e.r);
+    default:
+      return false;
+  }
 }
 
 class Parser {
@@ -83,6 +110,12 @@ class Parser {
     this.next();
     return t.value;
   }
+  private integer(what: string): number {
+    const t = this.peek();
+    if (t.kind !== 'number' || !/^\d+$/.test(t.value)) throw this.err(`Expected ${what} but found ${this.describe(t)}`);
+    this.next();
+    return Number(t.value);
+  }
 
   /** Reject clauses outside the subset with the most specific error. */
   private checkClause(): void {
@@ -93,23 +126,56 @@ class Parser {
       throw new CypherError('readonly', `Queries are read-only: ${up} is not allowed`, t.line, t.column);
     }
     const what = UNSUPPORTED_CLAUSES[up];
-    if (what && (up !== 'OPTIONAL' || this.isKw('MATCH', 1))) throw unsupported(what, t);
+    if (what) throw unsupported(what, t);
   }
 
   // ---- clauses ------------------------------------------------------------
 
   parse(): Query {
-    const matches: MatchClause[] = [];
+    const clauses: Clause[] = [];
     for (;;) {
       this.checkClause();
-      if (!this.isKw('MATCH')) break;
-      matches.push(this.parseMatch());
+      if (this.isKw('OPTIONAL')) {
+        this.next();
+        this.expectKw('MATCH');
+        clauses.push(this.parseMatch(true));
+      } else if (this.isKw('MATCH')) {
+        this.next();
+        clauses.push(this.parseMatch(false));
+      } else if (this.isKw('WITH')) {
+        this.next();
+        clauses.push({ k: 'with', proj: this.parseProjection(true) });
+      } else if (this.isKw('RETURN')) {
+        this.next();
+        clauses.push({ k: 'return', proj: this.parseProjection(false) });
+        break;
+      } else {
+        throw this.err(`Expected MATCH, OPTIONAL MATCH, WITH or RETURN but found ${this.describe(this.peek())}`);
+      }
     }
-    if (!this.isKw('RETURN')) {
-      throw this.err(`Expected MATCH or RETURN but found ${this.describe(this.peek())}`);
+    if (this.isP(';')) this.next();
+    if (this.peek().kind !== 'eof') {
+      this.checkClause();
+      throw this.err(`Unexpected ${this.describe(this.peek())} after RETURN`);
     }
-    this.next();
+    return { clauses };
+  }
 
+  private parseMatch(optional: boolean): Clause {
+    const patterns: Pattern[] = [];
+    do {
+      patterns.push(this.parsePattern());
+    } while (this.isP(',') && this.next());
+    let where: Expr | null = null;
+    if (this.isKw('WHERE')) {
+      const t = this.next();
+      where = this.parseExpr();
+      if (containsAgg(where)) throw this.err('Aggregations are not allowed in WHERE; aggregate in WITH first', t);
+    }
+    return { k: 'match', optional, patterns, where };
+  }
+
+  private parseProjection(isWith: boolean): Projection {
     const distinct = this.isKw('DISTINCT');
     if (distinct) this.next();
     let star = false;
@@ -121,7 +187,7 @@ class Parser {
     if (!star || this.isP(',')) {
       if (star) this.next();
       do {
-        items.push(this.parseReturnItem());
+        items.push(this.parseItem(isWith));
       } while (this.isP(',') && this.next());
     }
 
@@ -151,35 +217,24 @@ class Parser {
       this.next();
       limit = this.parseExpr();
     }
-    if (this.isP(';')) this.next();
-    if (this.peek().kind !== 'eof') {
-      this.checkClause();
-      throw this.err(`Unexpected ${this.describe(this.peek())} after RETURN`);
-    }
-    return { matches, distinct, star, items, order, skip, limit };
-  }
-
-  private parseMatch(): MatchClause {
-    this.expectKw('MATCH');
-    const patterns: Pattern[] = [];
-    do {
-      patterns.push(this.parsePattern());
-    } while (this.isP(',') && this.next());
     let where: Expr | null = null;
-    if (this.isKw('WHERE')) {
-      this.next();
+    if (isWith && this.isKw('WHERE')) {
+      const t = this.next();
       where = this.parseExpr();
+      if (containsAgg(where)) throw this.err('Aggregations are not allowed in WHERE; alias them in WITH first', t);
     }
-    return { patterns, where };
+    return { distinct, star, items, order, skip, limit, where };
   }
 
-  private parseReturnItem(): ReturnItem {
-    const start = this.peek().start;
+  private parseItem(isWith: boolean): ReturnItem {
+    const start = this.peek();
     const expr = this.parseExpr();
-    let name = this.src.slice(start, this.prevEnd()).trim();
+    let name = this.src.slice(start.start, this.prevEnd()).trim();
     if (this.isKw('AS')) {
       this.next();
       name = this.symbolicName('alias');
+    } else if (isWith && expr.k !== 'var') {
+      throw this.err(`Expression '${name}' in WITH must be aliased with AS`, start);
     }
     return { expr, name };
   }
@@ -187,8 +242,10 @@ class Parser {
   // ---- patterns -----------------------------------------------------------
 
   private parsePattern(): Pattern {
+    let pathVar: string | null = null;
     if ((this.peek().kind === 'name' || this.peek().kind === 'escaped') && this.isP('=', 1)) {
-      throw unsupported('Named paths', this.peek());
+      pathVar = this.next().value;
+      this.next();
     }
     if (this.isKw('SHORTESTPATH') || this.isKw('ALLSHORTESTPATHS')) throw unsupported(this.peek().value, this.peek());
     const nodes = [this.parseNode()];
@@ -197,7 +254,7 @@ class Parser {
       rels.push(this.parseRel());
       nodes.push(this.parseNode());
     }
-    return { nodes, rels };
+    return { pathVar, nodes, rels };
   }
 
   private variable(): { var: string; anonymous: boolean } {
@@ -228,6 +285,7 @@ class Parser {
     let v = { var: ` anon${this.anon++}`, anonymous: true };
     const types: string[] = [];
     let props: [string, Expr][] = [];
+    let length: RelPattern['length'] = null;
     if (this.isP('[')) {
       this.next();
       v = this.variable();
@@ -240,7 +298,7 @@ class Parser {
           types.push(this.symbolicName('relationship type'));
         }
       }
-      if (this.isP('*')) throw unsupported('Variable-length relationships', this.peek());
+      if (this.isP('*')) length = this.parseLength();
       if (this.isP('{')) props = this.parseMapEntries();
       this.expectP(']');
     }
@@ -250,7 +308,28 @@ class Parser {
     const closing = this.next();
     if (left && right) throw this.err('A relationship cannot point in both directions', closing);
     const dir: Direction = right ? 'out' : left ? 'in' : 'both';
-    return { ...v, types, props, dir };
+    return { ...v, types, props, dir, length };
+  }
+
+  /** `*`, `*n`, `*n..m`, `*..m`, `*n..` */
+  private parseLength(): { min: number; max: number | null } {
+    const star = this.next();
+    let min = 1;
+    let max: number | null = null;
+    if (this.peek().kind === 'number') {
+      min = this.integer('a path length');
+      if (this.isP('..')) {
+        this.next();
+        max = this.peek().kind === 'number' ? this.integer('a path length') : null;
+      } else {
+        max = min;
+      }
+    } else if (this.isP('..')) {
+      this.next();
+      max = this.integer('a path length');
+    }
+    if (max !== null && max < min) throw this.err(`Path length range *${min}..${max} is empty`, star);
+    return { min, max };
   }
 
   private parseMapEntries(): [string, Expr][] {
@@ -459,7 +538,8 @@ class Parser {
   private parseCall(): Expr {
     const t = this.next();
     const name = t.value.toLowerCase();
-    if (AGGREGATES.has(name)) throw unsupported(`Aggregation function ${t.value}()`, t);
+    if (AGGREGATES.has(name as AggName)) return this.parseAggregate(name as AggName, t);
+    if (UNSUPPORTED_AGGREGATES.has(name)) throw unsupported(`Aggregation function ${t.value}()`, t);
     if (!FUNCTIONS.has(name)) throw unsupported(`Function ${t.value}()`, t);
     this.expectP('(');
     const args: Expr[] = [];
@@ -470,5 +550,20 @@ class Parser {
     }
     this.expectP(')');
     return { k: 'call', name, args };
+  }
+
+  private parseAggregate(name: AggName, t: Token): Expr {
+    this.expectP('(');
+    if (name === 'count' && this.isP('*')) {
+      this.next();
+      this.expectP(')');
+      return { k: 'agg', name, arg: null, distinct: false, line: t.line, column: t.column };
+    }
+    const distinct = this.isKw('DISTINCT');
+    if (distinct) this.next();
+    const arg = this.parseExpr();
+    if (containsAgg(arg)) throw this.err(`Aggregations cannot be nested inside ${t.value}()`, t);
+    this.expectP(')');
+    return { k: 'agg', name, arg, distinct, line: t.line, column: t.column };
   }
 }

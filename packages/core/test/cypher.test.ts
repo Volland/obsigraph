@@ -77,13 +77,15 @@ describe('cypher subset', () => {
   // @lat: [[tests/cypher-query#Unsupported syntax named]]
   it('names unsupported clauses and functions', () => {
     const cases: [string, RegExp][] = [
-      ['OPTIONAL MATCH (n) RETURN n', /OPTIONAL MATCH/],
-      ['MATCH (n) WITH n RETURN n', /WITH/],
-      ['MATCH (a)-[*1..3]->(b) RETURN b', /Variable-length/],
-      ['MATCH (n) RETURN count(n)', /count\(\)/],
-      ['MATCH p = (a)-->(b) RETURN p', /Named paths/],
-      ['MATCH (n) RETURN foo(n)', /foo\(\)/],
       ['UNWIND [1] AS x RETURN x', /UNWIND/],
+      ['MATCH (n) RETURN n UNION MATCH (m) RETURN m', /UNION/],
+      ['CALL db.labels()', /CALL/],
+      ['MATCH (n) RETURN CASE WHEN true THEN 1 END', /CASE/],
+      ['MATCH (n) RETURN stDev(n.age)', /stDev\(\)/],
+      ['MATCH (n) RETURN foo(n)', /foo\(\)/],
+      ['MATCH (n) WHERE n.title =~ "A.*" RETURN n', /=~/],
+      ['MATCH p = shortestPath((a)-->(b)) RETURN p', /shortestPath/],
+      ['RETURN [1, 2][0..1]', /List slicing/],
     ];
     for (const [q, re] of cases) {
       const e = fail(q);

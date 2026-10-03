@@ -1,4 +1,4 @@
-import { NodeRef, RelRef, type GraphNode, type QueryResult, type Value } from '@obsigraph/core';
+import { NodeRef, PathRef, RelRef, type GraphNode, type QueryResult, type Value } from '@obsigraph/core';
 
 export interface NodeElement {
   id: string;
@@ -53,6 +53,9 @@ export function toElements(result: QueryResult, lookup: (id: string) => GraphNod
         const n = nodes.has(end) ? undefined : lookup(end);
         if (n) nodes.set(end, nodeElement(n));
       }
+    } else if (v instanceof PathRef) {
+      v.nodes.forEach(visit);
+      v.rels.forEach(visit);
     } else if (Array.isArray(v)) {
       v.forEach(visit);
     }

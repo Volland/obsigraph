@@ -10,3 +10,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[schema-notes]] — schema behaviors from the schema-notes spec
 - [[visualization-config]] — style precedence behaviors from the visualization-config spec
 - [[edge-embeds]] — embed behaviors from the edge-embeds spec
+- [[cypher-extensions]] — WITH, OPTIONAL MATCH, paths and aggregation behaviors

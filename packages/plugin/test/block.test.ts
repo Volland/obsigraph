@@ -4,6 +4,7 @@ import { chooseView, parseBlock } from '../src/query/block';
 import { planRender } from '../src/query/plan';
 import { buildStylesheet, parseEdgeStyles, parseTypeStyles } from '../src/render/styles';
 import { makeStyler } from '../src/render/styler';
+import { cellText } from '../src/render/table';
 
 function fixture() {
   const notes: Record<string, string> = {
@@ -61,6 +62,21 @@ describe('graph-query block', () => {
     expect(p.elements.nodes.map((n) => n.label).sort()).toEqual(['Alice', 'Bob', 'Carol', 'Eve']);
   });
 
+  // @lat: [[tests/cypher-extensions#Paths render as graphs]]
+  it('draws path results as graphs and summarizes them in tables', () => {
+    const { plan, engine } = fixture();
+    const p = plan('MATCH p = (a {title: "Alice"})-[:knows*1..2]->(c) RETURN p');
+    expect(p.kind).toBe('graph');
+    if (p.kind === 'graph') {
+      expect(p.elements.nodes.map((n) => n.label).sort()).toEqual(['Alice', 'Bob', 'Carol']);
+      expect(p.elements.edges).toHaveLength(2);
+    }
+    const r = engine.run('MATCH p = (a {title: "Alice"})-[:knows*2]->(c) RETURN p');
+    expect(cellText(r.rows[0]![0]!)).toBe('Alice -knows-> Bob -knows-> Carol');
+    const capped = plan('MATCH (a {title: "Alice"})-[:knows*]->(c) RETURN c');
+    expect(capped.kind === 'graph' && capped.notices).toEqual([]);
+  });
+
   // @lat: [[tests/graph-query-block#Table for scalars]]
   it('renders a table when the result holds only scalars', () => {
     const { plan, engine } = fixture();
@@ -72,7 +88,7 @@ describe('graph-query block', () => {
   it('honors view: table and selects and orders columns', () => {
     const { plan } = fixture();
     const p = plan('view: table\ncolumns: b, a\n\nMATCH (a)-[r]->(b) RETURN a, r, b');
-    expect(p).toEqual({ kind: 'table', indexes: [2, 0], notice: null });
+    expect(p).toEqual({ kind: 'table', indexes: [2, 0], notice: null, notices: [] });
     const bad = plan('columns: nope\n\nMATCH (a) RETURN a.title AS t');
     expect(bad.kind).toBe('error');
     if (bad.kind === 'error') expect(bad.messages[0]).toMatch(/Unknown column 'nope' \(available: t\)/);

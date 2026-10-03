@@ -6,6 +6,8 @@ export type BinOp =
   | '+' | '-' | '*' | '/' | '%' | '^'
   | 'in' | 'starts' | 'ends' | 'contains';
 
+export type AggName = 'count' | 'sum' | 'avg' | 'min' | 'max' | 'collect';
+
 export type Expr =
   | { k: 'lit'; v: Value }
   | { k: 'param'; name: string }
@@ -16,6 +18,8 @@ export type Expr =
   | { k: 'list'; items: Expr[] }
   | { k: 'map'; entries: [string, Expr][] }
   | { k: 'call'; name: string; args: Expr[] }
+  /** Aggregate; `arg` is null for `count(*)`. */
+  | { k: 'agg'; name: AggName; arg: Expr | null; distinct: boolean; line: number; column: number }
   | { k: 'not'; e: Expr }
   | { k: 'neg'; e: Expr }
   | { k: 'isnull'; e: Expr; not: boolean }
@@ -36,16 +40,15 @@ export interface RelPattern {
   types: string[];
   props: [string, Expr][];
   dir: Direction;
+  /** Variable-length bounds; `max` null means unbounded (capped at run time). */
+  length: { min: number; max: number | null } | null;
 }
 
 export interface Pattern {
+  /** `p` in `p = (a)-->(b)`. */
+  pathVar: string | null;
   nodes: NodePattern[];
   rels: RelPattern[];
-}
-
-export interface MatchClause {
-  patterns: Pattern[];
-  where: Expr | null;
 }
 
 export interface ReturnItem {
@@ -58,12 +61,24 @@ export interface SortItem {
   desc: boolean;
 }
 
-export interface Query {
-  matches: MatchClause[];
+/** Shared body of WITH and RETURN. */
+export interface Projection {
   distinct: boolean;
   star: boolean;
   items: ReturnItem[];
   order: SortItem[];
   skip: Expr | null;
   limit: Expr | null;
+  /** WITH only: filter applied after the projection. */
+  where: Expr | null;
+}
+
+export type Clause =
+  | { k: 'match'; optional: boolean; patterns: Pattern[]; where: Expr | null }
+  | { k: 'with'; proj: Projection }
+  | { k: 'return'; proj: Projection };
+
+/** A query is a pipeline of clauses ending in RETURN. */
+export interface Query {
+  clauses: Clause[];
 }

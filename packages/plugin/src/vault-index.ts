@@ -7,6 +7,7 @@ import {
   styleSourcesFromSchemas,
   validateSchemas,
   type Diagnostic,
+  type ExecOptions,
   type IconCheck,
   type NoteInput,
   type SchemaSet,
@@ -40,12 +41,13 @@ export class VaultIndex {
     private readonly schemaFolder: () => string,
     private readonly settingsStyles: () => { nodes: Record<string, unknown>; edges: Record<string, unknown> },
     private readonly iconExists: IconCheck,
+    engineOptions: () => ExecOptions = () => ({}),
   ) {
     this.graph = new Graph((link, source) => {
       const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
       return f && f.extension === 'md' ? f.path : null;
     });
-    this.engine = new BuiltinEngine(this.graph);
+    this.engine = new BuiltinEngine(this.graph, engineOptions);
     this.graph.onChange(() => {
       this.invalidate();
       this.schedule();

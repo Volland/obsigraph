@@ -102,7 +102,7 @@ export class QueryBlock extends MarkdownRenderChild {
       } else {
         this.renderer.setStyler(styler);
       }
-      this.warnEl?.setText(header.diagnostics.map((d) => d.message).join('\n'));
+      this.warnEl?.setText([...plan.notices, ...header.diagnostics.map((d) => d.message)].join('\n'));
       this.renderer.setElements(plan.elements);
       return;
     }
@@ -110,7 +110,7 @@ export class QueryBlock extends MarkdownRenderChild {
     this.renderer?.destroy();
     this.renderer = null;
     const frag = createDiv();
-    if (plan.notice) frag.createDiv({ cls: 'obsigraph-notice', text: plan.notice });
+    for (const n of [plan.notice, ...plan.notices]) if (n) frag.createDiv({ cls: 'obsigraph-notice', text: n });
     renderTable(frag, result, plan.indexes, (path) => this.plugin.openNote(path, this.sourcePath));
     el.replaceChildren(...Array.from(frag.childNodes));
   }

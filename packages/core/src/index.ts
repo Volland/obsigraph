@@ -9,9 +9,9 @@ export type { QueryEngine } from './cypher/engine.js';
 export { parseQuery } from './cypher/parser.js';
 export { CypherError } from './cypher/lexer.js';
 export type { ErrorKind } from './cypher/lexer.js';
-export { execute } from './cypher/exec.js';
-export type { QueryResult, Column, ColumnKind } from './cypher/exec.js';
-export { NodeRef, RelRef } from './cypher/values.js';
+export { DEFAULT_MAX_PATH_DEPTH, execute } from './cypher/exec.js';
+export type { Column, ColumnKind, ExecOptions, QueryResult } from './cypher/exec.js';
+export { NodeRef, PathRef, RelRef } from './cypher/values.js';
 export type { Value } from './cypher/values.js';
 export {
   DEFAULT_SCHEMA_FOLDER,

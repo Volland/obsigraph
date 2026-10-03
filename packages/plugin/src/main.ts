@@ -25,6 +25,7 @@ export default class ObsigraphPlugin extends Plugin {
       () => this.settings.schemaFolder,
       () => ({ nodes: this.settings.typeStyles, edges: this.settings.edgeStyles }),
       (name) => getIcon(name) !== null,
+      () => ({ maxPathDepth: this.settings.maxPathDepth }),
     );
     this.addSettingTab(new ObsigraphSettingTab(this.app, this));
 

@@ -24,7 +24,7 @@ Test specifications for the built-in openCypher subset described in [[query-engi
 
 ## Unsupported syntax named
 
-Valid openCypher outside the subset (`OPTIONAL MATCH`, `WITH`, `UNWIND`, variable-length paths, aggregations, named paths, unknown functions) fails naming the construct.
+Valid openCypher outside the subset (`UNWIND`, `UNION`, `CALL`, `CASE`, `=~`, list slicing, `shortestPath`, unsupported aggregates and unknown functions) fails naming the construct.
 
 ## Syntax errors have positions
 

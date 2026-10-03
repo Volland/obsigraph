@@ -2,7 +2,7 @@
 
 An Obsidian plugin that turns your vault into a typed, labeled, signed property graph and lets you query it with openCypher.
 
-Status: v0.1. Schema notes, edge-property embeds, the LadybugDB mirror, vector search and the RAG sidecar are planned under `openspec/changes/`.
+Status: v0.2. Schema notes, edge-property embeds, the LadybugDB mirror, vector search and the RAG sidecar are planned under `openspec/changes/`.
 
 ## Install (development)
 
@@ -115,15 +115,16 @@ Header options, all optional:
 
 Results refresh when notes change. Graphs with more elements than the configured limit fall back to a table.
 
-## Supported openCypher (v0.1)
+## Supported openCypher
 
-- **Clauses:** `MATCH` (repeatable) with `WHERE`, `RETURN [DISTINCT]` (including `*`), `ORDER BY`, `SKIP`, `LIMIT`.
-- **Patterns:** labels, inline property maps, `->`, `<-`, undirected `-`, type alternation `[:a|b]`, and comma-separated patterns.
+- **Clauses:** `MATCH` and `OPTIONAL MATCH` with `WHERE`, `WITH` (alias expressions with `AS`), `RETURN [DISTINCT]` (including `*`), `ORDER BY`, `SKIP`, `LIMIT`.
+- **Patterns:** labels, inline property maps, `->`, `<-`, undirected `-`, type alternation `[:a|b]`, comma-separated patterns, variable-length `[:knows*1..3]`, and path variables `p = (a)-[*]->(b)`. Unbounded `*` stops at the **Maximum path depth** setting (default 10), and the result says so.
 - **Expressions:** arithmetic, comparisons, `IN`, `STARTS WITH`, `ENDS WITH`, `CONTAINS`, `IS [NOT] NULL`, `AND`, `OR`, `XOR`, `NOT`, `$params`, and `n:Label`.
-- **Functions:** `id`, `type`, `labels`, `keys`, `properties`, `startNode`, `endNode`, string, number and list helpers, `size`, `coalesce`, and conversions.
+- **Functions:** `id`, `type`, `labels`, `keys`, `properties`, `startNode`, `endNode`, `length`, `nodes`, `relationships`, string, number and list helpers, `size`, `coalesce`, and conversions.
+- **Aggregates:** `count` (including `count(*)`), `sum`, `avg`, `min`, `max` and `collect`, each optionally with `DISTINCT`. Grouping works as in openCypher.
 - **Built-in properties:** `n.stub`, `n.title`, `n.path`, `r.id`, `r.sign`.
 
-Queries are read-only. `CREATE`, `SET`, `DELETE`, `MERGE` and `REMOVE` are rejected. `OPTIONAL MATCH`, `WITH`, aggregations and variable-length paths are planned for v0.2. Until then they fail with an error that names them.
+Queries are read-only. `CREATE`, `SET`, `DELETE`, `MERGE` and `REMOVE` are rejected. `UNWIND`, `UNION`, `CALL`, `CASE`, `=~`, list slicing and `shortestPath` fail with an error that names them.
 
 ## Graph view
 
@@ -138,5 +139,6 @@ Run **Obsigraph: Open graph view** from the command palette or the ribbon icon.
 ## Settings
 
 - **Maximum graph elements:** above this many nodes plus edges, results show as a table.
+- **Maximum path depth:** where unbounded variable-length patterns stop.
 - **Refresh delay:** the debounce, in milliseconds, before blocks re-run after a vault change.
 - **Type styles:** JSON keyed by type label, e.g. `{"Person": {"color": "#59a14f", "shape": "round-rectangle"}}`.

@@ -10,7 +10,7 @@ Styling is a settings-level default per type; there are no schema notes yet. Thi
 
 ## v0.2 typing and config
 
-Planned as add-schema-notes, add-visualization-config, add-edge-embeds and add-cypher-extensions. Schema notes, per-type visualization, `{{edge: ...}}` embeds, pinned IDs and warnings, and `WITH`, `OPTIONAL MATCH` and variable-length paths.
+Done: add-schema-notes, add-visualization-config, add-edge-embeds, add-cypher-extensions. Schema notes, per-type visualization, `{{edge: ...}}` embeds, pinned IDs and warnings, and `WITH`, `OPTIONAL MATCH` and variable-length paths.
 
 ## v0.3 Ladybug
 

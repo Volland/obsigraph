@@ -115,11 +115,12 @@ export class GraphView extends ItemView {
       if (plan.kind === 'table') {
         this.dropRenderer();
         this.body.empty();
-        if (plan.notice) this.body.createDiv({ cls: 'obsigraph-notice', text: plan.notice });
+        for (const n of [plan.notice, ...plan.notices]) if (n) this.body.createDiv({ cls: 'obsigraph-notice', text: n });
         renderTable(this.body, result, plan.indexes, (p) => this.openNote(p));
         return;
       }
       base = plan.elements;
+      this.message.setText(plan.notices.join('\n'));
     } else if (this.focus && graph.node(this.focus)) {
       base = neighborhood(graph, this.focus);
     } else {
