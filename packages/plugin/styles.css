@@ -88,3 +88,28 @@
 .obsigraph-diagnostics li {
   margin-bottom: 2px;
 }
+.obsigraph-embed {
+  border-bottom: 1px dotted var(--text-accent);
+}
+.obsigraph-embed-unresolved {
+  color: var(--text-error);
+  border-bottom-color: var(--text-error);
+}
+.obsigraph-embed-empty {
+  color: var(--text-muted);
+}
+.obsigraph-embed-table {
+  border-bottom: none;
+  display: inline-block;
+  vertical-align: top;
+}
+.obsigraph-embed-table table {
+  font-size: var(--font-smaller);
+  border-collapse: collapse;
+}
+.obsigraph-embed-table th,
+.obsigraph-embed-table td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 0 6px;
+  text-align: left;
+}

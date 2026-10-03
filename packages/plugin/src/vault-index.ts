@@ -1,5 +1,6 @@
 import {
   BuiltinEngine,
+  EmbedIndex,
   Graph,
   schemasFromGraph,
   styleSource,
@@ -23,6 +24,7 @@ const BATCH = 100;
 export class VaultIndex {
   readonly graph: Graph;
   readonly engine: BuiltinEngine;
+  readonly embeds = new EmbedIndex();
   ready = false;
 
   private readonly listeners = new Set<() => void>();
@@ -65,6 +67,7 @@ export class VaultIndex {
         ...set.diagnostics,
         ...validateSchemas(this.graph, set),
         ...this.styleSources().diagnostics,
+        ...this.embeds.warnings(this.graph),
       ];
     }
     return this.diagnosticCache;
@@ -99,7 +102,7 @@ export class VaultIndex {
   async build(onProgress?: (done: number, total: number) => void): Promise<void> {
     const files = this.app.vault.getMarkdownFiles();
     for (let i = 0; i < files.length; i += BATCH) {
-      for (const f of files.slice(i, i + BATCH)) this.graph.upsertNote(await this.read(f));
+      for (const f of files.slice(i, i + BATCH)) this.upsert(await this.read(f));
       onProgress?.(Math.min(i + BATCH, files.length), files.length);
       await new Promise((r) => window.setTimeout(r, 0));
     }
@@ -113,14 +116,19 @@ export class VaultIndex {
     this.refs.push(
       metadataCache.on('changed', (file, data, cache) => {
         if (file.extension !== 'md') return;
-        this.graph.upsertNote({ path: file.path, text: data, frontmatter: cache.frontmatter ?? null });
+        this.upsert({ path: file.path, text: data, frontmatter: cache.frontmatter ?? null });
       }),
       vault.on('delete', (file) => {
-        if (file instanceof TFile && file.extension === 'md') this.graph.removeNote(file.path);
+        if (!(file instanceof TFile) || file.extension !== 'md') return;
+        this.embeds.remove(file.path);
+        this.graph.removeNote(file.path);
       }),
       vault.on('rename', async (file, oldPath) => {
         if (!(file instanceof TFile) || file.extension !== 'md') return;
-        this.graph.renameNote(oldPath, await this.read(file));
+        const note = await this.read(file);
+        this.embeds.remove(oldPath);
+        this.embeds.upsert(note.path, note.text);
+        this.graph.renameNote(oldPath, note);
       }),
     );
     return this.refs;
@@ -135,6 +143,12 @@ export class VaultIndex {
   destroy(): void {
     if (this.timer !== null) window.clearTimeout(this.timer);
     this.listeners.clear();
+  }
+
+  /** Embeds first, so the graph change notification sees current embeds. */
+  private upsert(note: NoteInput): void {
+    this.embeds.upsert(note.path, note.text);
+    this.graph.upsertNote(note);
   }
 
   private async read(file: TFile): Promise<NoteInput> {

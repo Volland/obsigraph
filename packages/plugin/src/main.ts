@@ -1,6 +1,8 @@
 import type { StyleSource } from '@obsigraph/core';
 import { getIcon, Plugin } from 'obsidian';
 import { makeStyler, type Styler } from './render/styler';
+import type { EditorView } from '@codemirror/view';
+import { edgeEmbedEditorExtension, edgeEmbedPostProcessor, refreshEmbeds } from './embeds/edge-embeds';
 import { QueryBlock } from './query/query-block';
 import { DEFAULT_SETTINGS, ObsigraphSettingTab, type ObsigraphSettings } from './settings';
 import { VaultIndex } from './vault-index';
@@ -13,6 +15,7 @@ export default class ObsigraphPlugin extends Plugin {
   index!: VaultIndex;
   private readonly styleListeners = new Set<() => void>();
   private readonly iconUris = new Map<string, string | null>();
+  private readonly editors = new Set<EditorView>();
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -33,6 +36,14 @@ export default class ObsigraphPlugin extends Plugin {
     this.addCommand({ id: 'open-graph-view', name: 'Open graph view', callback: () => this.openGraphView() });
     this.addRibbonIcon('git-fork', 'Open Obsigraph view', () => this.openGraphView());
     registerSchemaCommands(this);
+
+    this.registerMarkdownPostProcessor(edgeEmbedPostProcessor(this));
+    this.registerEditorExtension(edgeEmbedEditorExtension(this, this.editors));
+    this.register(
+      this.index.onChange(() => {
+        for (const view of this.editors) view.dispatch({ effects: refreshEmbeds.of(null) });
+      }),
+    );
 
     this.app.workspace.onLayoutReady(async () => {
       for (const ref of this.index.watch()) this.registerEvent(ref);

@@ -1,8 +1,9 @@
-## Purpose
+# edge-embeds Specification
 
+## Purpose
 Defines the property embed syntax that shows an edge's property value or whole property table inside prose, how an embed finds its edge, and the warnings for references that are not stable because the edge lacks a pinned ID.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Embed by endpoints
 The system SHALL resolve `{{edge: Source -type-> Target . property}}` to the edge of that type from `Source` to `Target` and render the value of `property`.
@@ -12,11 +13,11 @@ The system SHALL resolve `{{edge: Source -type-> Target . property}}` to the edg
 - **THEN** the embed renders `2020` in place
 
 #### Scenario: Signed type
-- **WHEN** the embed uses `-distrusts->` and the edge was written as `-distrusts:: [[Eve]]`
+- **WHEN** the embed uses `--distrusts->` or the unsigned `-distrusts->` and the edge was written as `-distrusts:: [[Eve]]`
 - **THEN** the embed resolves that edge
 
 #### Scenario: Sign mismatch
-- **WHEN** the embed uses `-knows->` and the only matching edge is positive
+- **WHEN** the embed uses `--knows->` (a `-` sign before the type) and the only matching edge is positive
 - **THEN** the embed shows an unresolved marker instead of a value
 
 ### Requirement: Embed by pinned ID

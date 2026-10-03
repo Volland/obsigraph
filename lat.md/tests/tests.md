@@ -9,3 +9,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[graph-view]] — view-state behaviors from the graph-view spec
 - [[schema-notes]] — schema behaviors from the schema-notes spec
 - [[visualization-config]] — style precedence behaviors from the visualization-config spec
+- [[edge-embeds]] — embed behaviors from the edge-embeds spec

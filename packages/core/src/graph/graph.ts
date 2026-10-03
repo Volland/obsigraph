@@ -76,6 +76,15 @@ export class Graph {
   inEdges(nodeId: string): GraphEdge[] {
     return [...(this.in.get(nodeId) ?? [])].map((id) => this.edgeMap.get(id)!);
   }
+  /** Resolve link text written in `sourcePath` to a node id (real note or existing stub). */
+  resolveLink(link: string, sourcePath: string): string | null {
+    const target = link.trim();
+    const resolved = this.resolve(target, sourcePath);
+    if (resolved && this.nodeMap.has(resolved)) return resolved;
+    const stub = target.replace(/\.md$/, '');
+    return this.nodeMap.get(stub)?.stub ? stub : null;
+  }
+
   diagnostics(): Diagnostic[] {
     return [...this.files.values()].flatMap((f) => f.diagnostics);
   }

@@ -14,6 +14,8 @@ lat.md/edge-syntax defines both embed forms resolved through one lookup, and edg
 
 **Endpoint embeds do not count as pinned references.** Only they trigger warnings, since pinned references are already stable. Warning on every unpinned edge was rejected as noisy.
 
+**Sign lives inside the arrow, before the type.** `-knows->` matches either sign, `--knows->` only negative and `-+knows->` only positive. The original wording used `-knows->` both for an unsigned match and for a negative one, which cannot both hold.
+
 **Ambiguity picks the lowest ordinal and warns.** Failing outright would break prose; silent choice would hide the instability.
 
 **Warnings are diagnostics, not render errors.** The page renders with an unresolved marker or the first match.

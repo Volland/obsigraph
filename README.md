@@ -31,6 +31,20 @@ knows:: [[Carol]] {since: 2018, label: "met at conf"}
 - `{id: "met-2020"}` pins an edge's ID. Otherwise the ID is `source#type#target#n`.
 - Lines in fenced code blocks and frontmatter are ignored. Malformed property blocks keep the edge and show up as diagnostics.
 
+## Embedding edge properties
+
+```markdown
+We met in {{edge: Alice -knows-> Bob . since}}.
+{{edge: met-2020 . since}}
+{{edge: met-2020}}
+```
+
+- Embeds work in both reading view and live preview, and update when the edge changes.
+- The endpoint form (`Source -type-> Target`) or a pinned id finds the edge.
+- `. property` shows one value. Without it, all properties show as a table.
+- Put the sign before the type: `--distrusts->` matches only negative edges, `-+knows->` only positive ones, and `-knows->` either.
+- An edge referenced by endpoints without a pinned `id` shows a diagnostic suggesting one. Two matching edges also show a diagnostic.
+
 ## Typing nodes
 
 Every note is a node. Its labels come from frontmatter:

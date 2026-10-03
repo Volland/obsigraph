@@ -8,6 +8,8 @@
     "cytoscape": "^3.34.3"
   },
   "devDependencies": {
+    "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.38.6",
     "esbuild": "^0.28.2",
     "obsidian": "^1.13.1"
   },

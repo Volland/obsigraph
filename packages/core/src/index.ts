@@ -44,3 +44,5 @@ export {
   styleSourcesFromSchemas,
 } from './style/style.js';
 export type { EdgeStyle, IconCheck, LineStyle, NodeShape, NodeStyle, ResolvedEdgeStyle, ResolvedNodeStyle, StyleSource } from './style/style.js';
+export { EMBED_PATTERN, EmbedIndex, findEmbeds, parseEmbed, resolveEmbed, suggestId, viewEmbed } from './embeds/embeds.js';
+export type { EdgeEmbed, EmbedOccurrence, EmbedResolution, EmbedView } from './embeds/embeds.js';

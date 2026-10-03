@@ -18,13 +18,15 @@ Example: `-distrusts:: [[Eve]]`. v0.1 assumes sign is a +1/-1 polarity from the 
 
 Each edge gets a derived ID `source#type#target#n`, where `n` is its ordinal among duplicates, and an author may pin it with an `id` property.
 
-Derived IDs shift when duplicate edges are reordered, so anything that references an edge long-term should use a pinned `id`. The plugin warns about referenced edges that are not pinned.
+Derived IDs shift when duplicate edges are reordered, so anything that references an edge long-term should use a pinned `id`. [[packages/core/src/embeds/embeds.ts#EmbedIndex]] warns about edges referenced by endpoint embeds that are not pinned, suggesting an id such as `alice-knows-bob`, and about ambiguous endpoint embeds; pinned or unreferenced edges never warn.
 
 ## Property embeds
 
 Edge properties are shown in prose with `{{edge: Alice -knows-> Bob . since}}` or `{{edge: met-2020 . since}}`, both resolved through the same lookup.
 
 Without a trailing property the embed renders the whole property block as a small table. Inside queries, `r.since` is ordinary Cypher property access.
+
+A sign goes inside the arrow before the type: `-knows->` matches either sign, `--knows->` only negative, `-+knows->` only positive. Endpoints may be wrapped in `[[ ]]`. Parsed by [[packages/core/src/embeds/embeds.ts#parseEmbed]] and resolved by [[packages/core/src/embeds/embeds.ts#resolveEmbed]]; duplicates resolve to the lowest ordinal. Embeds in code are ignored. They render in reading view through a post-processor and in live preview through a CodeMirror widget that reveals the raw text under the cursor; both re-resolve on vault changes. Unresolved embeds show a marker, never an error.
 
 ## Edge notes
 
