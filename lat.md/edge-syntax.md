@@ -6,13 +6,13 @@ How authors write typed, signed edges with properties inside markdown, and how e
 
 An edge is a single line `type:: [[Target]] {props}` where the property block is optional, so plain Graph Link Types lines stay valid unchanged.
 
-Example: `knows:: [[Bob]] {since: 2020, weight: -0.8, label: "met at conf"}`. Source heading is recorded as edge metadata so sub-note nodes can be added later without breaking edges.
+Implemented by [[packages/core/src/edges/parse.ts#parseEdges]], with property blocks parsed by [[packages/core/src/edges/props.ts#parseProps]]. Example: `knows:: [[Bob]] {since: 2020, label: "met at conf"}`. List items and comma-separated links are accepted; YAML frontmatter and fenced code are skipped. Source heading is recorded as edge metadata so sub-note nodes can be added later without breaking edges.
 
 ## Sign
 
-An edge's sign comes from a `+` or `-` prefix on its type, or from a `weight` or `sign` property, and is exposed to queries and styling.
+An edge's sign comes from a `+` or `-` prefix on its type, defaults to +1, and is exposed to queries and styling.
 
-Example: `-distrusts:: [[Eve]]`. Exact semantics (boolean polarity versus numeric weight) are still open and must be settled before v0.1 ships.
+Example: `-distrusts:: [[Eve]]`. v0.1 assumes sign is a +1/-1 polarity from the prefix only, default +1; `weight` is an ordinary property. This assumption is open for revision.
 
 ## Edge identity
 

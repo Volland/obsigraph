@@ -9,3 +9,4 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[vector-search]] — Ollama embeddings for node chunks and verbalized edges
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
 - [[roadmap]] — phased delivery v0.1 to v0.4 and open questions
+- [[tests]] — test specifications tied to test code

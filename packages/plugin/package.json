@@ -1,0 +1,7 @@
+{
+  "name": "@obsigraph/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@obsigraph/core": "0.1.0" }
+}
