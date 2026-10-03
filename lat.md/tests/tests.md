@@ -15,3 +15,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[mirror-sync]] — LadybugDB mirror behaviors from the ladybug-mirror spec
 - [[ladybug-backend]] — Ladybug query backend behaviors in sidecar and plugin
 - [[engine-conformance]] — cross-engine conformance suite behaviors
+- [[embedding-provider]] — embedding provider behaviors

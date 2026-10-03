@@ -156,6 +156,7 @@ curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN 
   - `OBSIGRAPH_HOST` (default `127.0.0.1`) and `OBSIGRAPH_PORT` (default `8765`) set the address.
   - `OBSIGRAPH_POLL_MS` enables polling, which bind mounts on macOS need.
   - `OBSIGRAPH_LADYBUG=0` turns off the LadybugDB mirror. It's on by default and runs when `@ladybugdb/core` is installed.
+  - `OBSIGRAPH_EMBED_PROVIDER` (`ollama` by default, or `openai`), `OBSIGRAPH_EMBED_URL` (default `http://localhost:11434`), `OBSIGRAPH_EMBED_MODEL` (default `nomic-embed-text`), `OBSIGRAPH_EMBED_KEY` or `OBSIGRAPH_EMBED_KEY_FILE`, and `OBSIGRAPH_EMBED_BATCH` configure embeddings. Inside Docker, reach host Ollama with `http://host.docker.internal:11434`.
   - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.
 
 ## Settings

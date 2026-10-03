@@ -9,6 +9,10 @@ Semantic search needs vectors, and vectors must come from a model the user contr
 - Record model name and dimension in index metadata and detect mismatches, so vectors from different models are never mixed.
 - Settings and sidecar configuration select the provider; hosted endpoints are never the default.
 
+## Scope note
+
+The vector index lives in the sidecar (lat.md/ladybug-mirror, lat.md/sidecar), so the plugin never embeds: the provider is configured through sidecar environment variables only, and keys come from the environment or a key file, never notes or plugin data.
+
 ## Capabilities
 
 ### New Capabilities
