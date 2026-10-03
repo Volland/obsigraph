@@ -7,8 +7,9 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -p packages/core && tsc -p packages/plugin",
-    "build": "npm run build -w @obsigraph/plugin"
+    "typecheck": "tsc -p packages/core && tsc -p packages/plugin && tsc -p packages/sidecar",
+    "build": "npm run build -w @obsigraph/plugin",
+    "build:sidecar": "npm run build -w @obsigraph/sidecar"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

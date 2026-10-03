@@ -30,6 +30,14 @@ The sidecar is the third package in the monorepo (`core`, `plugin`, `sidecar`). 
 
 **Assumption:** Ollama is reached via configurable URL; inside Docker on macOS that is typically `host.docker.internal:11434`.
 
+**Downstream processors.** Sync hands each changed or removed file to registered processors (`upsert`/`remove`); the Ladybug mirror and vector index are processors added later. Startup reconcile compares stored content hashes so only changed files reach processors after a restart.
+
+**Frontmatter and links without Obsidian.** Frontmatter is parsed with a YAML library; links resolve like Obsidian: exact path, else same-name note preferring the source's folder, then the shortest path.
+
+**Query timeout by cooperative deadline.** The engine is synchronous, so the executor checks a deadline while matching and aborts with a timeout error; no worker copy of the graph is needed.
+
+**Bundled with esbuild.** `core` imports `.js` specifiers that point at `.ts` files, so the service is bundled for Node rather than run from source.
+
 ## Risks / Trade-offs
 
 - [Missed file events on bind mounts] -> polling fallback and startup reconcile.

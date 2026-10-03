@@ -136,6 +136,26 @@ Run **Obsigraph: Open graph view** from the command palette or the ribbon icon.
 - Double-click or Cmd/Ctrl-click a node to open its note.
 - Select a node or edge to see its type, sign, ID and properties.
 
+## Sidecar (headless service)
+
+`packages/sidecar` serves a vault over REST without Obsidian running. It watches the folder and never writes to it.
+
+```bash
+npm run build:sidecar
+OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=change-me \
+  node packages/sidecar/dist/server.mjs
+curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN n.title"}' localhost:8765/query
+```
+
+- **Endpoints:** `GET /health` (no token), `GET /status`, and `POST /query` with `{query, params}`. Results use the same `{columns, rows}` shape as the plugin.
+- **Docker:** `packages/sidecar/Dockerfile` plus `compose.example.yaml`. The vault is mounted `:ro`, the image runs as a non-root user, the port is published on host loopback, and the token is passed as a Docker secret.
+- **Environment:**
+  - `OBSIGRAPH_VAULT` and `OBSIGRAPH_DATA` set the vault and data directories.
+  - `OBSIGRAPH_TOKEN` or `OBSIGRAPH_TOKEN_FILE` set the token.
+  - `OBSIGRAPH_HOST` (default `127.0.0.1`) and `OBSIGRAPH_PORT` (default `8765`) set the address.
+  - `OBSIGRAPH_POLL_MS` enables polling, which bind mounts on macOS need.
+  - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.
+
 ## Settings
 
 - **Maximum graph elements:** above this many nodes plus edges, results show as a table.

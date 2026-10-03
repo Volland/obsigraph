@@ -22,6 +22,8 @@ export interface QueryResult {
 export interface ExecOptions {
   /** Depth cap for unbounded variable-length relationships (`*`, `*n..`). */
   maxPathDepth?: number;
+  /** Abort with a timeout error after this many milliseconds. */
+  timeoutMs?: number;
 }
 
 export const DEFAULT_MAX_PATH_DEPTH = 10;
@@ -36,7 +38,7 @@ const varExpr = (name: string): Expr => ({ k: 'var', name, line: 0, column: 0 })
 /** Execute a parsed query as a pipeline of clauses. Never mutates the graph. */
 // @lat: [[query-engine#Two backends]]
 export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecOptions = {}): QueryResult {
-  const ctx = new Ctx(graph, params, opts.maxPathDepth ?? DEFAULT_MAX_PATH_DEPTH);
+  const ctx = new Ctx(graph, params, opts.maxPathDepth ?? DEFAULT_MAX_PATH_DEPTH, opts.timeoutMs ? Date.now() + opts.timeoutMs : Infinity);
   const columns = analyze(q);
   let rows: Env[] = [new Map()];
   let scope: Scope = new Map();
@@ -295,6 +297,7 @@ function matchPatterns(ctx: Ctx, env: Env, patterns: Pattern[], pi: number, used
   const bound = env.get(first.var);
   const candidates = bound !== undefined ? [bound] : ctx.allNodes();
   for (const c of candidates) {
+    ctx.tick();
     if (!(c instanceof NodeRef) || !ctx.nodeMatches(c, first, env)) continue;
     withBinding(env, first.var, c, () =>
       step(ctx, env, p, 0, c, used, { nodes: [c], rels: [] }, () => {
@@ -315,6 +318,7 @@ function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Se
   if (rp.length) return expand(ctx, env, p, ri, cur, used, trail, done);
   const np = p.nodes[ri + 1]!;
   for (const [edge, otherId] of ctx.incident(cur.id, rp.dir)) {
+    ctx.tick();
     // openCypher relationship uniqueness within one MATCH clause.
     if (used.has(edge.id)) continue;
     if (rp.types.length > 0 && !rp.types.includes(edge.type)) continue;
@@ -362,6 +366,7 @@ function expand(ctx: Ctx, env: Env, p: Pattern, ri: number, start: NodeRef, used
   };
 
   const visit = (cur: NodeRef, depth: number) => {
+    ctx.tick();
     if (depth >= min) finish(cur);
     const next = candidates(cur.id);
     if (depth >= max) {
@@ -414,7 +419,15 @@ class Ctx {
     readonly graph: Graph,
     readonly params: Params,
     readonly maxDepth: number,
+    private readonly deadline: number = Infinity,
   ) {}
+
+  private ticks = 0;
+  /** Cooperative cancellation: checked while matching, cheap between clock reads. */
+  tick(): void {
+    if (this.deadline === Infinity || ++this.ticks % 512 !== 0) return;
+    if (Date.now() > this.deadline) throw new CypherError('timeout', 'Query timed out', 0, 0);
+  }
 
   path(p: Pattern, _env: Env): PathRef {
     const t = this.trails.get(p)!;

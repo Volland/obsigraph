@@ -1,4 +1,4 @@
-export type ErrorKind = 'syntax' | 'unsupported' | 'readonly' | 'runtime';
+export type ErrorKind = 'syntax' | 'unsupported' | 'readonly' | 'runtime' | 'timeout';
 
 export class CypherError extends Error {
   constructor(

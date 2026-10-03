@@ -1,0 +1,26 @@
+# Copy to compose.yaml, set the vault path, and put a long random token in ./sidecar-token.
+services:
+  obsigraph:
+    build:
+      context: ../..
+      dockerfile: packages/sidecar/Dockerfile
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      OBSIGRAPH_TOKEN_FILE: /run/secrets/obsigraph_token
+      # Inside the container the service binds 0.0.0.0; the port below is
+      # published on host loopback only. Put a TLS proxy in front before
+      # exposing it further, then set OBSIGRAPH_BEHIND_TLS_PROXY=1.
+      OBSIGRAPH_POLL_MS: "5000"   # bind mounts on macOS can drop file events
+    volumes:
+      - /path/to/your/vault:/vault:ro
+      - obsigraph-data:/data
+    ports:
+      - "127.0.0.1:8765:8765"
+    secrets: [obsigraph_token]
+secrets:
+  obsigraph_token:
+    file: ./sidecar-token
+volumes:
+  obsigraph-data:

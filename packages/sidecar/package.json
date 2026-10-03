@@ -1,0 +1,16 @@
+{
+  "name": "@obsigraph/sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "start": "node dist/server.mjs"
+  },
+  "dependencies": {
+    "@obsigraph/core": "0.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
