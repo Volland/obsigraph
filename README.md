@@ -1,181 +1,141 @@
-# Obsigraph
+<p align="center">
+  <img src="site/assets/logo.svg" width="128" height="128" alt="Obsigraph logo">
+</p>
 
-An Obsidian plugin that turns your vault into a typed, labeled, signed property graph and lets you query it with openCypher.
+<h1 align="center">Obsigraph</h1>
 
-Status: v0.4. The plugin, the LadybugDB mirror and query backend, vector search, GraphRAG and the MCP sidecar are all in place.
+<p align="center">
+  <strong>Your Obsidian notes as a real graph</strong>: typed, signed, labeled edges with properties, openCypher queries, a graph view that shows what it means, and RAG-ready storage for agents.
+</p>
 
-## Install (development)
+<p align="center">
+  <a href="https://volland.github.io/obsigraph/demo.html"><b>Live demo</b></a> ·
+  <a href="https://volland.github.io/obsigraph/docs.html">Docs</a> ·
+  <a href="https://volland.github.io/obsigraph/">Website</a> ·
+  <a href="https://github.com/Volland/obsigraph/releases/latest">Download</a>
+</p>
 
-```bash
-npm install
-npm test
-OBSIGRAPH_OUT="/path/to/vault/.obsidian/plugins/obsigraph" npm run build
-```
+<p align="center">
+  <a href="https://github.com/Volland/obsigraph/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Volland/obsigraph?color=6d4fd9"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-17c3b2"></a>
+  <img alt="Obsidian 1.5+" src="https://img.shields.io/badge/Obsidian-1.5%2B-7c5cff">
+</p>
 
-Then enable **Obsigraph** under Settings → Community plugins.
+![Obsigraph rendering a typed, signed graph](site/assets/screenshots/graph.png)
 
-## Writing edges
+## Why
 
-An edge is a line in a note body. The note is the source node.
-
-```markdown
-knows:: [[Bob]]
-knows:: [[Carol]] {since: 2018, label: "met at conf"}
--distrusts:: [[Eve]]
-- works_at:: [[Acme]], [[Initech]] {role: engineer}
-```
-
-- `type:: [[Target]]` is the same syntax Graph Link Types uses, so existing notes keep working.
-- `{...}` holds optional properties: numbers, booleans, quoted or bare strings, and lists.
-- A `-` prefix on the type makes the edge negative (sign -1). Without a prefix the sign is +1. `weight` is an ordinary property.
-- `{id: "met-2020"}` pins an edge's ID. Otherwise the ID is `source#type#target#n`.
-- Lines in fenced code blocks and frontmatter are ignored. Malformed property blocks keep the edge and show up as diagnostics.
-
-## Embedding edge properties
-
-```markdown
-We met in {{edge: Alice -knows-> Bob . since}}.
-{{edge: met-2020 . since}}
-{{edge: met-2020}}
-```
-
-- Embeds work in both reading view and live preview, and update when the edge changes.
-- The endpoint form (`Source -type-> Target`) or a pinned id finds the edge.
-- `. property` shows one value. Without it, all properties show as a table.
-- Put the sign before the type: `--distrusts->` matches only negative edges, `-+knows->` only positive ones, and `-knows->` either.
-- An edge referenced by endpoints without a pinned `id` shows a diagnostic suggesting one. Two matching edges also show a diagnostic.
-
-## Typing nodes
-
-Every note is a node. Its labels come from frontmatter:
-
-```yaml
----
-type: [Person, Employee]
----
-```
-
-A link to a note that doesn't exist creates a stub node. It is shown faded, and queries see it with `n.stub = true`.
-
-## Type schemas
-
-A note directly in `Types/` (configurable) declares the type named by its title:
+Obsidian links say *that* two notes are related, not *how*. Obsigraph lets one line say how:
 
 ```markdown
 ---
-schema:
-  properties:
-    status: {kind: text, default: active}
-    born: {kind: date, required: true}
-  edges: [knows, worksAt]
+type: Person
 ---
-## Notes
+knows:: [[Bob]] {since: 2020, label: "met at NeurIPS"}
+works_at:: [[Acme]]
+-distrusts:: [[Mallory]]
 ```
 
-- Kinds are `text`, `number`, `boolean`, `date` and `link`.
-- `edges` lists the allowed outgoing edge types. Leaving it out allows every type.
-- The body is the template for new notes.
-- Validation is advisory. Missing required properties and disallowed edges show as issues in the status bar, and the **Show diagnostics** command lists them.
-- **Create note from type** makes a note with `type`, the defaults and the template body. It never overwrites an existing note.
-- **Create schema note** scaffolds a new type.
-
-## Styling
-
-Each attribute is resolved separately. The highest-precedence source that sets it wins:
-
-1. **The block header:** `node.Person: color=red, shape=diamond` or `edge.knows: color=orange, line=dotted`.
-2. **The schema note:** `visualization: {color, shape, icon, label}`, plus `edges: {knows: {color, line}}` inside it.
-3. **Settings:** the type styles and edge styles JSON.
-4. **Built-in defaults:** a stable color per type. Negative edges are dashed red.
-
-Icons are Lucide names, for example `user`. `label` names a property to show instead of the note title. Invalid values are ignored and reported in diagnostics. Select a node or edge in the Graph view to see where each attribute came from.
-
-## Querying in a note
+Then you can ask the vault questions in openCypher, inside any note:
 
 ````markdown
 ```graph-query
-view: table
-columns: who, since
-
-MATCH (a:Person)-[r:knows]->(b)
-WHERE r.since > 2019
-RETURN a.title AS who, r.since AS since
-ORDER BY since DESC
+MATCH (p:Person)-[c:contributes]->(proj:Project)
+RETURN p.title AS person, proj.title AS project, c.hours AS hours
+ORDER BY hours DESC
 ```
 ````
 
-Header options, all optional:
+## Features
 
-| Option | Values | Effect |
-|---|---|---|
-| `view` | `auto` (default), `table`, `graph` | `auto` draws a graph when the result has nodes or relationships, and a table otherwise. |
-| `columns` | comma-separated column names | Table columns to show, in that order. |
-| `height` | 100–4000 | Graph height in pixels. |
-| `backend` | `builtin` (default), `ladybug` | Where the query runs. `ladybug` sends it to the sidecar's LadybugDB mirror, so full read Cypher such as `UNWIND` works. |
-| `node.<Type>` / `edge.<type>` | `attr=value, …` | Style overrides for this block only. |
+- **Typed, signed edges with properties.** `type:: [[Target]] {props}` works like Graph Link Types, so your existing lines keep working. A `-` prefix makes an edge negative, and edges can have stable or pinned ids.
+- **Typed nodes and schema notes.** Frontmatter `type` gives a note its labels. A note in `Types/` declares a type's properties, allowed edges, template and look.
+- **openCypher queries.** `MATCH`, `OPTIONAL MATCH`, `WITH`, aggregates, variable-length paths and path variables. Queries are read-only and errors are clear.
+- **Graph or table, live.** Results render as a labeled, styled graph or a table, and refresh as you edit.
+- **Graph view.** A full-pane explorer that follows the active note, expands neighbors and explains where each style comes from.
+- **Edge embeds.** `{{edge: Alice -knows-> Bob . since}}` shows an edge's property inside your prose.
+- **Optional sidecar.** A LadybugDB mirror for full Cypher, local vector search (Ollama), GraphRAG with citations, and an **MCP server** for agents.
 
-Results refresh when notes change. Graphs with more elements than the configured limit fall back to a table.
+| | |
+|---|---|
+| ![Table result](site/assets/screenshots/table.png) | ![Variable-length paths](site/assets/screenshots/paths.png) |
+| ![Per-block styling](site/assets/screenshots/styled.png) | ![Dark theme](site/assets/screenshots/graph-dark.png) |
 
-## Supported openCypher
+*The screenshots come from the [live demo](https://volland.github.io/obsigraph/demo.html), which runs the plugin's own query engine, schema styling and renderer in your browser.*
 
-- **Clauses:** `MATCH` and `OPTIONAL MATCH` with `WHERE`, `WITH` (alias expressions with `AS`), `RETURN [DISTINCT]` (including `*`), `ORDER BY`, `SKIP`, `LIMIT`.
-- **Patterns:** labels, inline property maps, `->`, `<-`, undirected `-`, type alternation `[:a|b]`, comma-separated patterns, variable-length `[:knows*1..3]`, and path variables `p = (a)-[*]->(b)`. Unbounded `*` stops at the **Maximum path depth** setting (default 10), and the result says so.
-- **Expressions:** arithmetic, comparisons, `IN`, `STARTS WITH`, `ENDS WITH`, `CONTAINS`, `IS [NOT] NULL`, `AND`, `OR`, `XOR`, `NOT`, `$params`, and `n:Label`.
-- **Functions:** `id`, `type`, `labels`, `keys`, `properties`, `startNode`, `endNode`, `length`, `nodes`, `relationships`, string, number and list helpers, `size`, `coalesce`, and conversions.
-- **Aggregates:** `count` (including `count(*)`), `sum`, `avg`, `min`, `max` and `collect`, each optionally with `DISTINCT`. Grouping works as in openCypher.
-- **Built-in properties:** `n.stub`, `n.title`, `n.path`, `r.id`, `r.sign`.
+## Install
 
-Queries are read-only. `CREATE`, `SET`, `DELETE`, `MERGE` and `REMOVE` are rejected. `UNWIND`, `UNION`, `CALL`, `CASE`, `=~`, list slicing and `shortestPath` fail with an error that names them.
+- **Community plugins** (once listed): open **Settings → Community plugins → Browse**, search for *Obsigraph*, then install and enable it.
+- **BRAT** (before it's listed): install *Obsidian42 - BRAT*, run **Add a beta plugin**, and enter `Volland/obsigraph`.
+- **Manually**: download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Volland/obsigraph/releases/latest) into `<vault>/.obsidian/plugins/obsigraph/`, reload Obsidian, and enable the plugin.
 
-## Graph view
+The plugin works on desktop and mobile, and it never modifies your notes.
 
-Run **Obsigraph: Open graph view** from the command palette or the ribbon icon.
+## Quick start
 
-- With an empty query, the view shows the active note's neighborhood and follows the note you open.
-- Enter a query and press Run (or Cmd/Ctrl+Enter) to explore its result.
-- Right-click or long-press a node to expand its neighbors.
-- Double-click or Cmd/Ctrl-click a node to open its note.
-- Select a node or edge to see its type, sign, ID and properties.
+1. Add `type: Person` to a note's frontmatter.
+2. Write an edge line such as `knows:: [[Bob]] {since: 2020}`.
+3. Add a `graph-query` block with `MATCH (a:Person)-[r:knows]->(b) RETURN a, r, b`.
+4. Run **Obsigraph: Open graph view** to explore.
 
-## Sidecar (headless service)
+The full guide covers edge syntax, schema notes, styling precedence, the Cypher subset, embeds and settings: **[volland.github.io/obsigraph/docs.html](https://volland.github.io/obsigraph/docs.html)**.
 
-`packages/sidecar` serves a vault over REST without Obsidian running. It watches the folder and never writes to it.
+## For agents: the sidecar
+
+`packages/sidecar` is a headless service over a read-only copy of your vault. It needs no Obsidian. It offers REST, an MCP server, a LadybugDB mirror, local vector search and GraphRAG.
 
 ```bash
-npm run build:sidecar
-OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=change-me \
-  node packages/sidecar/dist/server.mjs
-curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN n.title"}' localhost:8765/query
+npm install && npm run build:sidecar
+claude mcp add obsigraph \
+  -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data \
+  -- node packages/sidecar/dist/server.mjs --stdio
 ```
 
-- **Endpoints:**
-  - `GET /health` needs no token. `GET /status` reports graph, mirror and vector state.
-  - `POST /query` takes `{query, params, backend}`, where `backend` is `builtin` or `ladybug`. Results use the same `{columns, rows}` shape as the plugin.
-  - `POST /search` runs a vector search.
-  - `POST /vectors/rebuild` re-embeds the vault after a model change.
-- **MCP for agents:** the three read-only tools `cypher_query`, `vector_search` and `graphrag_retrieve` are served at `POST /mcp`, with the same bearer token, or over stdio:
-  ```bash
-  claude mcp add obsigraph -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data \
-    -- node /path/to/packages/sidecar/dist/server.mjs --stdio
-  ```
-- **GraphRAG:** `POST /retrieve` takes `{"question": "...", "k": 5, "depth": 1, "neighbor_cap": 8, "chunk_cap": 20}`. It returns cited chunks from the vector hits and their graph neighbors, plus the connecting edges. The MCP `graphrag_retrieve` tool returns the same result.
-- **Vector search:** `POST /search` takes `{"query": "machine learning", "target": "nodes", "k": 5, "types": ["Person"], "then": "MATCH (p)-[:works_at]->(c) WHERE id(p) IN $hits RETURN c.title"}`. Nodes come back with their best-chunk citation, and edges come back with their sentence. `then` runs on the hits.
-- **Docker:** `packages/sidecar/Dockerfile` plus `compose.example.yaml`. The vault is mounted `:ro`, the image runs as a non-root user, the port is published on host loopback, and the token is passed as a Docker secret.
-- **Environment:**
-  - `OBSIGRAPH_VAULT` and `OBSIGRAPH_DATA` set the vault and data directories.
-  - `OBSIGRAPH_TOKEN` or `OBSIGRAPH_TOKEN_FILE` set the token.
-  - `OBSIGRAPH_HOST` (default `127.0.0.1`) and `OBSIGRAPH_PORT` (default `8765`) set the address.
-  - `OBSIGRAPH_POLL_MS` enables polling, which bind mounts on macOS need.
-  - `OBSIGRAPH_VECTORS=0` turns off the vector index, which is on by default.
-  - `OBSIGRAPH_LADYBUG=0` turns off the LadybugDB mirror. It's on by default and runs when `@ladybugdb/core` is installed.
-  - `OBSIGRAPH_EMBED_PROVIDER` (`ollama` by default, or `openai`), `OBSIGRAPH_EMBED_URL` (default `http://localhost:11434`), `OBSIGRAPH_EMBED_MODEL` (default `nomic-embed-text`), `OBSIGRAPH_EMBED_KEY` or `OBSIGRAPH_EMBED_KEY_FILE`, and `OBSIGRAPH_EMBED_BATCH` configure embeddings. Inside Docker, reach host Ollama with `http://host.docker.internal:11434`.
-  - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.
+The MCP tools are `cypher_query`, `vector_search` and `graphrag_retrieve`, all read-only. For REST endpoints, Docker and environment variables, see the [sidecar docs](https://volland.github.io/obsigraph/docs.html#sidecar).
 
-## Settings
+## Development
 
-- **Default query backend**, **Sidecar URL** and **Sidecar token**: used by blocks that run on `ladybug`.
+```text
+packages/core     edge parser, graph model, schemas, styles, openCypher engine, embeddings (no Obsidian APIs)
+packages/plugin   the Obsidian plugin
+packages/sidecar  headless REST + MCP service, LadybugDB mirror, vector index, conformance suite
+site/             the website and live demo (GitHub Pages)
+lat.md/           architecture and test specs (lat.md)
+openspec/         specs and archived changes (OpenSpec)
+```
 
-- **Maximum graph elements:** above this many nodes plus edges, results show as a table.
-- **Maximum path depth:** where unbounded variable-length patterns stop.
-- **Refresh delay:** the debounce, in milliseconds, before blocks re-run after a vault change.
-- **Type styles:** JSON keyed by type label, e.g. `{"Person": {"color": "#59a14f", "shape": "round-rectangle"}}`.
+```bash
+npm install
+npm run verify                      # typecheck + tests + lat check
+OBSIGRAPH_OUT="<vault>/.obsidian/plugins/obsigraph" npm run build   # build the plugin into a vault
+npm run site:build && npx serve site                                 # preview the website
+```
+
+### Releasing
+
+1. Run `npm run version:bump -- 0.5.0`. This updates `manifest.json`, `versions.json` and every package version.
+2. Commit, then run `git tag 0.5.0 && git push origin 0.5.0`. The tag has no `v` prefix.
+3. The **Release plugin** workflow typechecks, tests, builds, and attaches `main.js`, `manifest.json` and `styles.css` to the GitHub release.
+
+### Submitting to the Obsidian community store
+
+Do this once, after the first release exists:
+
+1. Fork [obsidianmd/obsidian-releases](https://github.com/obsidianmd/obsidian-releases) and add this entry to the end of `community-plugins.json`:
+
+   ```json
+   {
+     "id": "obsigraph",
+     "name": "Obsigraph",
+     "author": "Volodymyr Pavlyshyn",
+     "description": "Typed, signed, labeled property graph over your notes with openCypher queries, edge properties and graph views.",
+     "repo": "Volland/obsigraph"
+   }
+   ```
+
+2. Open a pull request using their plugin template and tick the checklist. The repo root already has `manifest.json`, `versions.json`, `LICENSE` and this README.
+3. Respond to the automated review bot, then to the human review. Later updates only need a new release.
+
+## License
+
+[MIT](LICENSE) © Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="t">
+  <title id="t">Obsigraph</title>
+  <defs>
+    <linearGradient id="crown" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b6cf0"/>
+      <stop offset="1" stop-color="#4b2fa8"/>
+    </linearGradient>
+    <linearGradient id="pav" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a2385"/>
+      <stop offset="1" stop-color="#1b1140"/>
+    </linearGradient>
+    <radialGradient id="shell" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#ff7b72"/>
+      <stop offset="1" stop-color="#d1242f"/>
+    </radialGradient>
+  </defs>
+
+  <!-- faceted crystal: facets are graph faces -->
+  <polygon points="36,30 64,58 16,54" fill="#6d4fd9"/>
+  <polygon points="36,30 92,30 64,58" fill="url(#crown)"/>
+  <polygon points="92,30 112,54 64,58" fill="#5a3cc4"/>
+  <polygon points="16,54 64,58 64,116" fill="url(#pav)"/>
+  <polygon points="112,54 64,116 64,58" fill="#2a1a63"/>
+
+  <!-- edges -->
+  <g stroke="#ece8ff" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.92">
+    <path d="M36 30 L92 30 L112 54 L64 116 L16 54 Z"/>
+    <path d="M64 58 L36 30 M64 58 L92 30 M64 58 L112 54 M64 58 L64 116"/>
+  </g>
+  <!-- one negative (signed) edge -->
+  <path d="M64 58 L16 54" stroke="#ff6b6b" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="5 4"/>
+
+  <!-- nodes -->
+  <g fill="#ffffff" stroke="#24165a" stroke-width="2">
+    <circle cx="36" cy="30" r="5"/>
+    <circle cx="112" cy="54" r="5"/>
+    <circle cx="16" cy="54" r="5"/>
+    <circle cx="64" cy="116" r="5"/>
+  </g>
+  <circle cx="64" cy="58" r="7.5" fill="#f5c542" stroke="#24165a" stroke-width="2"/>
+  <circle cx="92" cy="30" r="5" fill="#ffffff" stroke="#24165a" stroke-width="2"/>
+
+  <!-- ladybug crawling on a node -->
+  <g transform="translate(-4 9) rotate(32 98 22)">
+    <path d="M95 8.5 q-3 -5 -6 -6 M101 8.5 q3 -5 6 -6" stroke="#111" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <g stroke="#111" stroke-width="1.6" stroke-linecap="round">
+      <path d="M87.5 18 l-4 -2 M87 24 l-4.5 0 M88 30 l-4 2.5 M108.5 18 l4 -2 M109 24 l4.5 0 M108 30 l4 2.5"/>
+    </g>
+    <circle cx="98" cy="11" r="5" fill="#111"/>
+    <ellipse cx="98" cy="24" rx="11" ry="12.5" fill="url(#shell)" stroke="#111" stroke-width="1.6"/>
+    <path d="M98 12 L98 36.5" stroke="#111" stroke-width="1.6"/>
+    <g fill="#111">
+      <circle cx="92.6" cy="20" r="2.3"/>
+      <circle cx="103.4" cy="20" r="2.3"/>
+      <circle cx="93.2" cy="28.5" r="2"/>
+      <circle cx="102.8" cy="28.5" r="2"/>
+    </g>
+    <ellipse cx="93" cy="16.5" rx="2.6" ry="1.5" fill="#fff" opacity="0.45" transform="rotate(-30 93 16.5)"/>
+  </g>
+</svg>

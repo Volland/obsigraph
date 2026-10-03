@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obsigraph Docs</title>
+  <meta name="description" content="Obsigraph documentation: edge syntax, typed nodes, schema notes, styling, openCypher query blocks, graph view, embeds, the sidecar, LadybugDB backend, vector search, GraphRAG and MCP.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Obsigraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html" class="active">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap docs">
+    <nav class="toc" aria-label="Contents">
+      <div class="group">Start</div>
+      <a href="#install">Install</a>
+      <a href="#quickstart">Quick start</a>
+      <div class="group">Modelling</div>
+      <a href="#edges">Edges</a>
+      <a href="#nodes">Typed nodes</a>
+      <a href="#schemas">Schema notes</a>
+      <a href="#embeds">Edge embeds</a>
+      <div class="group">Querying</div>
+      <a href="#blocks">Query blocks</a>
+      <a href="#cypher">openCypher subset</a>
+      <a href="#styling">Styling</a>
+      <a href="#graph-view">Graph view</a>
+      <div class="group">Sidecar</div>
+      <a href="#sidecar">Running it</a>
+      <a href="#ladybug">Ladybug backend</a>
+      <a href="#vectors">Vector search</a>
+      <a href="#graphrag">GraphRAG</a>
+      <a href="#mcp">MCP for agents</a>
+      <a href="#security">Security</a>
+      <div class="group">More</div>
+      <a href="#settings">Settings</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <article class="doc">
+      <h2 id="install">Install</h2>
+      <p>Obsigraph works on desktop and mobile. Pick one:</p>
+      <ul>
+        <li><strong>Community plugins</strong> (once listed): Settings → Community plugins → Browse → <em>Obsigraph</em> → Install → Enable.</li>
+        <li><strong>BRAT</strong>: install <em>Obsidian42 - BRAT</em>, run <em>BRAT: Add a beta plugin</em> and enter <code>Volland/obsigraph</code>.</li>
+        <li><strong>Manual</strong>: from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> copy <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> into <code>&lt;vault&gt;/.obsidian/plugins/obsigraph/</code>, reload, enable.</li>
+      </ul>
+
+      <h2 id="quickstart">Quick start</h2>
+      <ol>
+        <li>Give a note a type: add <code>type: Person</code> to its frontmatter.</li>
+        <li>Write an edge line: <code>knows:: [[Bob]] {since: 2020}</code>.</li>
+        <li>Add a query block anywhere:
+<pre>```graph-query
+MATCH (a:Person)-[r:knows]->(b)
+RETURN a, r, b
+```</pre></li>
+        <li>Open the explorer with <em>Obsigraph: Open graph view</em> or the ribbon icon.</li>
+      </ol>
+
+      <h2 id="edges">Edges</h2>
+      <p>An edge is one line in a note; the note is the source.</p>
+<pre>knows:: [[Bob]]
+knows:: [[Carol]] {since: 2018, label: "met at conf"}
+-distrusts:: [[Eve]]
++trusts:: [[Bob]]
+- works_at:: [[Acme]], [[Initech]] {role: engineer}</pre>
+      <table>
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>type::</code></td><td>Edge type. Graph Link Types lines work unchanged.</td></tr>
+        <tr><td><code>-</code> / <code>+</code> prefix</td><td>Sign: −1 or +1 (default +1). <code>weight</code> is an ordinary property.</td></tr>
+        <tr><td><code>{…}</code></td><td>Properties: numbers, booleans, quoted or bare strings, lists.</td></tr>
+        <tr><td><code>{id: "…"}</code></td><td>Pins the edge id; otherwise it is <code>source#type#target#n</code>.</td></tr>
+        <tr><td>heading</td><td>The nearest heading above is recorded with the edge.</td></tr>
+      </table>
+      <p>Lines in code blocks and frontmatter are ignored. Malformed property blocks keep the edge and appear in <em>Show diagnostics</em>. Links to missing notes become faded <em>stub</em> nodes.</p>
+
+      <h2 id="nodes">Typed nodes</h2>
+      <p>Every note is a node. Frontmatter <code>type</code> becomes its labels; a list gives several:</p>
+<pre>---
+type: [Person, Employee]
+age: 40
+---</pre>
+      <p>Frontmatter fields, <code>title</code> and <code>path</code> are node properties.</p>
+
+      <h2 id="schemas">Schema notes</h2>
+      <p>A note directly in <code>Types/</code> (configurable) describes the type named by its title:</p>
+<pre>---
+schema:
+  properties:
+    status: {kind: text, default: active}
+    born: {kind: date, required: true}
+  edges: [knows, works_at]
+  visualization:
+    color: "#7c5cff"
+    shape: ellipse
+    icon: user
+    label: name
+    edges:
+      knows: {color: orange, line: dotted}
+---
+## Notes</pre>
+      <ul>
+        <li>Kinds: <code>text</code>, <code>number</code>, <code>boolean</code>, <code>date</code>, <code>link</code>.</li>
+        <li><code>edges</code> lists allowed outgoing edge types; omit it to allow any.</li>
+        <li>The body is the template for <em>Create note from type</em>, which never overwrites a note.</li>
+        <li>Validation is advisory: issues show in the status bar and <em>Show diagnostics</em>.</li>
+      </ul>
+
+      <h2 id="embeds">Edge property embeds</h2>
+<pre>We met in {{edge: Alice -knows-> Bob . since}}.
+{{edge: met-2020 . since}}
+{{edge: met-2020}}</pre>
+      <p>Find an edge by endpoints and type or by pinned id; <code>. property</code> shows one value, otherwise a small table. Put a sign before the type to require it: <code>--distrusts-></code> (negative), <code>-+knows-></code> (positive). Embeds referencing unpinned edges get a diagnostic suggesting an id.</p>
+
+      <h2 id="blocks">Query blocks</h2>
+      <p>A <code>graph-query</code> block is an optional header, a blank line, then the query.</p>
+<pre>```graph-query
+view: table
+columns: who, since
+backend: builtin
+node.Person: color=#e5484d, shape=hexagon
+edge.knows: line=dashed
+
+MATCH (a:Person)-[r:knows]->(b)
+RETURN a.title AS who, r.since AS since
+```</pre>
+      <table>
+        <tr><th>Option</th><th>Values</th></tr>
+        <tr><td><code>view</code></td><td><code>auto</code> (graph when the result has nodes, relationships or paths), <code>table</code>, <code>graph</code></td></tr>
+        <tr><td><code>columns</code></td><td>Table columns to show, in order</td></tr>
+        <tr><td><code>height</code></td><td>Graph height in pixels (100–4000)</td></tr>
+        <tr><td><code>backend</code></td><td><code>builtin</code> or <code>ladybug</code> (needs the sidecar)</td></tr>
+        <tr><td><code>node.&lt;Type&gt;</code> / <code>edge.&lt;type&gt;</code></td><td>Style overrides for this block</td></tr>
+      </table>
+      <p>Results refresh live. Graphs larger than the element limit fall back to a table.</p>
+
+      <h2 id="cypher">openCypher subset</h2>
+      <ul>
+        <li><strong>Clauses</strong>: <code>MATCH</code>, <code>OPTIONAL MATCH</code>, <code>WHERE</code>, <code>WITH</code>, <code>RETURN [DISTINCT]</code>, <code>ORDER BY</code>, <code>SKIP</code>, <code>LIMIT</code>.</li>
+        <li><strong>Patterns</strong>: labels, property maps, <code>-&gt;</code> <code>&lt;-</code> <code>-</code>, <code>[:a|b]</code>, <code>[:knows*1..3]</code>, <code>p = (...)</code>.</li>
+        <li><strong>Aggregates</strong>: <code>count(*)</code>, <code>count</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, <code>collect</code> (with <code>DISTINCT</code>).</li>
+        <li><strong>Functions</strong>: <code>id type labels keys properties startNode endNode length nodes relationships toLower toUpper trim replace substring split left right size coalesce toString toInteger toFloat abs round floor ceil sign head last reverse</code>.</li>
+        <li><strong>Built-ins</strong>: <code>n.stub</code>, <code>n.title</code>, <code>n.path</code>, <code>r.id</code>, <code>r.sign</code>.</li>
+      </ul>
+      <div class="callout">Queries are read-only. <code>CREATE</code>, <code>SET</code>, <code>DELETE</code>, <code>MERGE</code> and <code>REMOVE</code> are rejected. <code>UNWIND</code>, <code>UNION</code>, <code>CALL</code>, <code>CASE</code> and <code>=~</code> are not in the built-in subset; use <code>backend: ladybug</code> for those.</div>
+
+      <h2 id="styling">Styling</h2>
+      <p>Every attribute resolves on its own; the most specific source wins:</p>
+      <ol>
+        <li>Block header (<code>node.Person: color=red</code>)</li>
+        <li>Schema note <code>visualization</code></li>
+        <li>Settings → Type styles / Edge styles</li>
+        <li>Defaults: a stable color per type; negative edges dashed red with a tee arrow</li>
+      </ol>
+      <p>Node attributes: <code>color</code>, <code>shape</code> (ellipse, rectangle, round-rectangle, diamond, hexagon, triangle, star), <code>icon</code> (Lucide name), <code>label</code> (property shown instead of the title). Edge attributes: <code>color</code>, <code>line</code> (solid, dashed, dotted).</p>
+
+      <h2 id="graph-view">Graph view</h2>
+      <ul>
+        <li>Empty query: follows the active note's neighborhood.</li>
+        <li>Enter a query and press Run or ⌘/Ctrl+Enter.</li>
+        <li>Right-click or long-press a node to expand it; double-click or ⌘/Ctrl-click to open its note.</li>
+        <li>Select a node or edge to see its properties and where each style came from.</li>
+      </ul>
+
+      <h2 id="sidecar">The sidecar</h2>
+      <p>An optional headless Node service over a read-only copy of your vault. It powers the Ladybug backend, vector search, GraphRAG and MCP.</p>
+<pre>npm install && npm run build:sidecar
+OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=change-me \
+  node packages/sidecar/dist/server.mjs</pre>
+      <p>Docker: <code>packages/sidecar/Dockerfile</code> and <code>compose.example.yaml</code> mount the vault <code>:ro</code>, run as non-root and publish on host loopback only.</p>
+      <table>
+        <tr><th>Endpoint</th><th>Purpose</th></tr>
+        <tr><td><code>GET /health</code></td><td>Liveness (no token)</td></tr>
+        <tr><td><code>GET /status</code></td><td>Graph, mirror and vector state</td></tr>
+        <tr><td><code>POST /query</code></td><td><code>{query, params, backend}</code> → <code>{columns, rows}</code></td></tr>
+        <tr><td><code>POST /search</code></td><td>Vector search, optional <code>then</code> Cypher with <code>$hits</code></td></tr>
+        <tr><td><code>POST /retrieve</code></td><td>GraphRAG retrieve</td></tr>
+        <tr><td><code>POST /vectors/rebuild</code></td><td>Re-embed after a model change</td></tr>
+        <tr><td><code>POST /mcp</code></td><td>MCP over streamable HTTP</td></tr>
+      </table>
+      <table>
+        <tr><th>Variable</th><th>Default</th></tr>
+        <tr><td><code>OBSIGRAPH_VAULT</code>, <code>OBSIGRAPH_DATA</code></td><td><code>/vault</code>, <code>/data</code></td></tr>
+        <tr><td><code>OBSIGRAPH_TOKEN</code> / <code>OBSIGRAPH_TOKEN_FILE</code></td><td>required (except <code>--stdio</code>)</td></tr>
+        <tr><td><code>OBSIGRAPH_HOST</code>, <code>OBSIGRAPH_PORT</code></td><td><code>127.0.0.1</code>, <code>8765</code></td></tr>
+        <tr><td><code>OBSIGRAPH_POLL_MS</code></td><td><code>0</code> (set e.g. 5000 on macOS bind mounts)</td></tr>
+        <tr><td><code>OBSIGRAPH_LADYBUG</code>, <code>OBSIGRAPH_VECTORS</code></td><td>on; set <code>0</code> to disable</td></tr>
+        <tr><td><code>OBSIGRAPH_EMBED_PROVIDER</code>, <code>_URL</code>, <code>_MODEL</code>, <code>_KEY</code>/<code>_KEY_FILE</code></td><td><code>ollama</code>, <code>http://localhost:11434</code>, <code>nomic-embed-text</code></td></tr>
+      </table>
+
+      <h2 id="ladybug">Ladybug backend</h2>
+      <p>The sidecar mirrors the graph one-way into <a href="https://github.com/LadybugDB/ladybug">LadybugDB</a>. Set the sidecar URL and token in plugin settings, then use <code>backend: ladybug</code> in a block. Queries the built-in parser reads are translated so they return the same results; other read Cypher (like <code>UNWIND</code>) runs as-is. A 52-query conformance suite keeps the two engines in agreement.</p>
+
+      <h2 id="vectors">Vector search</h2>
+      <p>Notes are chunked by heading with title, type and frontmatter as context; each edge becomes a sentence like <em>Alice (Person) knows Bob (Person) - met at NeurIPS</em>. Embeddings come from local Ollama by default.</p>
+<pre>POST /search
+{"query": "machine learning", "target": "nodes", "k": 5, "types": ["Person"],
+ "then": "MATCH (p)-[:works_at]->(c) WHERE id(p) IN $hits RETURN c.title"}</pre>
+
+      <h2 id="graphrag">GraphRAG</h2>
+<pre>POST /retrieve
+{"question": "Who works with Alice on search?", "k": 5, "depth": 1}</pre>
+      <p>Returns the best chunks of the vector hits and of their graph neighbors (hits first, then by distance), each with path, heading, score and role, plus the connecting edges. Hub expansion is capped and flagged.</p>
+
+      <h2 id="mcp">MCP for agents</h2>
+<pre>claude mcp add obsigraph \
+  -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data \
+  -- node /path/to/packages/sidecar/dist/server.mjs --stdio</pre>
+      <p>Tools: <code>cypher_query</code>, <code>vector_search</code>, <code>graphrag_retrieve</code> — all read-only. Over HTTP use <code>POST /mcp</code> with the bearer token.</p>
+
+      <h2 id="security">Security</h2>
+      <ul>
+        <li>The vault is never written: mounted read-only, with every write confined to the data directory.</li>
+        <li>Bearer token on everything but <code>/health</code>; loopback bind by default; body and time limits.</li>
+        <li>Read-only queries enforced twice on Ladybug: a guard and a read-only database snapshot.</li>
+        <li>Retrieved note text is marked as untrusted content for agents.</li>
+      </ul>
+
+      <h2 id="settings">Settings</h2>
+      <table>
+        <tr><td>Maximum graph elements</td><td>Above this, graphs show as tables.</td></tr>
+        <tr><td>Maximum path depth</td><td>Cap for unbounded <code>*</code> patterns (default 10).</td></tr>
+        <tr><td>Default query backend, Sidecar URL, Sidecar token</td><td>For <code>backend: ladybug</code>.</td></tr>
+        <tr><td>Schema folder, Show diagnostics</td><td>Type schemas and the issue counter.</td></tr>
+        <tr><td>Type styles, Edge styles</td><td>JSON style defaults.</td></tr>
+        <tr><td>Refresh delay</td><td>Debounce before blocks re-run.</td></tr>
+      </table>
+
+      <h2 id="faq">FAQ</h2>
+      <h3>Does it change my notes?</h3>
+      <p>No. The plugin and the sidecar only read notes. Only <em>Create note from type</em> and <em>Create schema note</em> create new files, on request.</p>
+      <h3>Do I need Graph Link Types or Dataview?</h3>
+      <p>No. Obsigraph reads the same <code>type:: [[Target]]</code> lines on its own.</p>
+      <h3>Does my vault leave my machine?</h3>
+      <p>Not by default. Embeddings use local Ollama; a hosted endpoint is only used if you configure one.</p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Obsigraph · MIT · Not affiliated with Obsidian or LadybugDB.</span>
+      <span><a href="./">Home</a> · <a href="demo.html">Demo</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

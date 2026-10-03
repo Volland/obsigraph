@@ -10,12 +10,15 @@
     "typecheck": "tsc -p packages/core && tsc -p packages/plugin && tsc -p packages/sidecar",
     "build": "npm run build -w @obsigraph/plugin",
     "build:sidecar": "npm run build -w @obsigraph/sidecar",
-    "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check"
+    "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check",
+    "version:bump": "node scripts/version-bump.mjs",
+    "site:build": "node site/build.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3",
     "yaml": "^2.9.1"
-  }
+  },
+  "version": "0.4.0"
 }

@@ -4,3 +4,4 @@ dist/
 .omc/
 lat.md/.cache/
 .DS_Store
+site/assets/demo.js

@@ -1,0 +1,37 @@
+name: Release plugin
+
+# Push a tag equal to the manifest version (e.g. 0.4.0, no "v") to publish
+# main.js, manifest.json and styles.css as release assets, which is what
+# Obsidian downloads for community plugins.
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check the tag matches the manifest
+        run: |
+          v=$(node -p "require('./manifest.json').version")
+          test "$v" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest $v"; exit 1; }
+          test "$(node -p "require('./packages/plugin/manifest.json').version")" = "$v"
+      - run: npm run typecheck
+      - run: npx vitest run --reporter=dot
+      - run: npm run build
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            packages/plugin/dist/main.js packages/plugin/dist/manifest.json packages/plugin/dist/styles.css \
+            --title "Obsigraph ${GITHUB_REF_NAME}" --generate-notes

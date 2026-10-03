@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obsigraph Live Demo</title>
+  <meta name="description" content="Try Obsigraph in the browser: typed, signed edges and openCypher queries over a sample vault, rendered by the plugin's own engine and renderer.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Obsigraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html" class="active">Demo</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="demo">
+      <div class="panel">
+        <header>
+          <span class="grow">Sample vault <span class="stats" id="stats"></span></span>
+          <span class="stats">edit me · ⌘/Ctrl+Enter</span>
+        </header>
+        <textarea id="vault" spellcheck="false" aria-label="Sample vault notes"></textarea>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+        <div class="panel">
+          <header>
+            <span class="grow">graph-query block</span>
+            <select id="examples" aria-label="Examples"></select>
+            <button class="run" id="run">Run</button>
+          </header>
+          <textarea id="query" spellcheck="false" aria-label="Query block"></textarea>
+        </div>
+        <div class="panel">
+          <header><span class="grow">Result</span></header>
+          <div class="message" id="message"></div>
+          <div id="result"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>This demo runs the plugin's real query engine, schema styling and graph renderer in your browser. Nothing is uploaded.</span>
+      <span>MIT · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+  <script type="module" src="assets/demo.js"></script>
+</body>
+</html>

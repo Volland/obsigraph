@@ -10,3 +10,4 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
 - [[roadmap]] — phased delivery v0.1 to v0.4 and open questions
 - [[tests]] — test specifications tied to test code
+- [[publishing]] — releases, store submission and the website
