@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Obsigraph Docs</title>
-  <meta name="description" content="Obsigraph documentation: edge syntax, typed nodes, schema notes, styling, openCypher query blocks, graph view, embeds, the sidecar, LadybugDB backend, vector search, GraphRAG and MCP.">
+  <title>Typed Graph Docs</title>
+  <meta name="description" content="Typed Graph documentation: edge syntax, typed nodes, schema notes, styling, openCypher query blocks, graph view, embeds, the sidecar, LadybugDB backend, vector search, GraphRAG and MCP.">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Obsigraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./">Home</a>
         <a href="docs.html" class="active">Docs</a>
@@ -51,11 +51,11 @@
 
     <article class="doc">
       <h2 id="install">Install</h2>
-      <p>Obsigraph works on desktop and mobile. Pick one:</p>
+      <p>Typed Graph works on desktop and mobile. Pick one:</p>
       <ul>
-        <li><strong>Community plugins</strong> (once listed): Settings → Community plugins → Browse → <em>Obsigraph</em> → Install → Enable.</li>
+        <li><strong>Community plugins</strong> (once listed): Settings → Community plugins → Browse → <em>Typed Graph</em> → Install → Enable.</li>
         <li><strong>BRAT</strong>: install <em>Obsidian42 - BRAT</em>, run <em>BRAT: Add a beta plugin</em> and enter <code>Volland/obsigraph</code>.</li>
-        <li><strong>Manual</strong>: from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> copy <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> into <code>&lt;vault&gt;/.obsidian/plugins/obsigraph/</code>, reload, enable.</li>
+        <li><strong>Manual</strong>: from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> copy <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> into <code>&lt;vault&gt;/.obsidian/plugins/typed-graph/</code>, reload, enable.</li>
       </ul>
 
       <h2 id="quickstart">Quick start</h2>
@@ -67,7 +67,7 @@
 MATCH (a:Person)-[r:knows]->(b)
 RETURN a, r, b
 ```</pre></li>
-        <li>Open the explorer with <em>Obsigraph: Open graph view</em> or the ribbon icon.</li>
+        <li>Open the explorer with <em>Typed Graph: Open graph view</em> or the ribbon icon.</li>
       </ol>
 
       <h2 id="edges">Edges</h2>
@@ -216,7 +216,7 @@ OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=chan
       <p>Returns the best chunks of the vector hits and of their graph neighbors (hits first, then by distance), each with path, heading, score and role, plus the connecting edges. Hub expansion is capped and flagged.</p>
 
       <h2 id="mcp">MCP for agents</h2>
-<pre>claude mcp add obsigraph \
+<pre>claude mcp add typed-graph \
   -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data \
   -- node /path/to/packages/sidecar/dist/server.mjs --stdio</pre>
       <p>Tools: <code>cypher_query</code>, <code>vector_search</code>, <code>graphrag_retrieve</code> — all read-only. Over HTTP use <code>POST /mcp</code> with the bearer token.</p>
@@ -243,7 +243,7 @@ OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=chan
       <h3>Does it change my notes?</h3>
       <p>No. The plugin and the sidecar only read notes. Only <em>Create note from type</em> and <em>Create schema note</em> create new files, on request.</p>
       <h3>Do I need Graph Link Types or Dataview?</h3>
-      <p>No. Obsigraph reads the same <code>type:: [[Target]]</code> lines on its own.</p>
+      <p>No. Typed Graph reads the same <code>type:: [[Target]]</code> lines on its own.</p>
       <h3>Does my vault leave my machine?</h3>
       <p>Not by default. Embeddings use local Ollama; a hosted endpoint is only used if you configure one.</p>
     </article>
@@ -251,7 +251,7 @@ OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=chan
 
   <footer>
     <div class="wrap">
-      <span>Obsigraph · MIT · Not affiliated with Obsidian or LadybugDB.</span>
+      <span>Typed Graph · MIT · Not affiliated with Obsidian or LadybugDB.</span>
       <span><a href="./">Home</a> · <a href="demo.html">Demo</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
     </div>
   </footer>

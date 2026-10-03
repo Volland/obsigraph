@@ -36,7 +36,7 @@ export class GraphView extends ItemView {
     return VIEW_TYPE_GRAPH;
   }
   getDisplayText(): string {
-    return 'Obsigraph';
+    return 'Typed Graph';
   }
   getIcon(): string {
     return 'git-fork';

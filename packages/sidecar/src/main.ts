@@ -113,7 +113,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   }
   if (server && !config.token) log('WARNING: running without authentication (OBSIGRAPH_ALLOW_NO_AUTH=1); loopback only.');
   const s = sync.status();
-  log(redact(`obsigraph sidecar ${server ? `on ${config.host}:${port}` : 'on stdio'} — ${s.notes} notes, ${s.edges} edges`));
+  log(redact(`typed-graph sidecar ${server ? `on ${config.host}:${port}` : 'on stdio'} — ${s.notes} notes, ${s.edges} edges`));
 
   return {
     config,

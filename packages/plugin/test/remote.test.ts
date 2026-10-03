@@ -31,7 +31,7 @@ describe('ladybug backend in the plugin', () => {
     const down: Fetcher = async () => {
       throw new Error('connect ECONNREFUSED');
     };
-    expect(await runRemote(down, cfg, 'MATCH (n) RETURN n')).toMatchObject({ kind: 'error', message: 'Cannot reach the Obsigraph sidecar at http://sidecar:8765: connect ECONNREFUSED' });
+    expect(await runRemote(down, cfg, 'MATCH (n) RETURN n')).toMatchObject({ kind: 'error', message: 'Cannot reach the Typed Graph sidecar at http://sidecar:8765: connect ECONNREFUSED' });
     expect(await runRemote(fake(401, { error: {} }), cfg, 'q')).toMatchObject({ message: expect.stringMatching(/rejected the token/) });
   });
 

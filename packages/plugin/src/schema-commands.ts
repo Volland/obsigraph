@@ -73,7 +73,7 @@ export class DiagnosticsModal extends Modal {
   }
 
   onOpen(): void {
-    this.titleEl.setText(`Obsigraph diagnostics (${this.diagnostics.length})`);
+    this.titleEl.setText(`Typed Graph diagnostics (${this.diagnostics.length})`);
     if (this.diagnostics.length === 0) {
       this.contentEl.createDiv({ text: 'No issues found.', cls: 'obsigraph-status' });
       return;
@@ -129,7 +129,7 @@ export function registerSchemaCommands(plugin: ObsigraphPlugin): void {
       new PromptModal(app, 'New type name', async (name) => {
         const folder = normalizeFolder(plugin.settings.schemaFolder);
         if (!folder) {
-          new Notice('Set a schema folder in Obsigraph settings first.');
+          new Notice('Set a schema folder in Typed Graph settings first.');
           return;
         }
         if (!(await ensureFolder(app, folder))) return;

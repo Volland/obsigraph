@@ -22,7 +22,7 @@ const err = (message: string, line = 0, column = 0): RemoteOutcome => ({ kind: '
 // @lat: [[ladybug-mirror#Hosted by the sidecar]]
 export async function runRemote(fetcher: Fetcher, cfg: RemoteConfig, query: string, params: Record<string, unknown> = {}): Promise<RemoteOutcome> {
   const url = cfg.url.trim().replace(/\/+$/, '');
-  if (!url) return err('Ladybug queries run in the Obsigraph sidecar. Set the sidecar URL and token in Obsigraph settings.');
+  if (!url) return err('Ladybug queries run in the Typed Graph sidecar. Set the sidecar URL and token in Typed Graph settings.');
   let res: { status: number; json: unknown };
   try {
     res = await fetcher({
@@ -32,11 +32,11 @@ export async function runRemote(fetcher: Fetcher, cfg: RemoteConfig, query: stri
       body: JSON.stringify({ query, params, backend: 'ladybug' }),
     });
   } catch (e) {
-    return err(`Cannot reach the Obsigraph sidecar at ${url}: ${(e as Error).message}`);
+    return err(`Cannot reach the Typed Graph sidecar at ${url}: ${(e as Error).message}`);
   }
   const body = (res.json ?? {}) as { error?: { kind?: string; message?: string; line?: number; column?: number } };
   if (res.status === 200) return { kind: 'result', result: resultFromJson(res.json as JsonQueryResult) };
-  if (res.status === 401) return err('The sidecar rejected the token; check the sidecar token in Obsigraph settings.');
+  if (res.status === 401) return err('The sidecar rejected the token; check the sidecar token in Typed Graph settings.');
   const e = body.error ?? {};
   if (res.status === 503 && e.kind === 'not_ready') return { kind: 'retry', message: e.message ?? 'The Ladybug mirror is not ready yet.', afterMs: 3000 };
   if (res.status === 503) {

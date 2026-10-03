@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Obsigraph — Typed Graphs for Obsidian</title>
-  <meta name="description" content="Obsigraph turns your Obsidian vault into a typed, signed, labeled property graph with edge properties, openCypher queries, a graph view, a LadybugDB mirror, vector search and GraphRAG for agents.">
-  <meta property="og:title" content="Obsigraph — Typed Graphs for Obsidian">
+  <title>Typed Graph — Typed Graphs for Obsidian</title>
+  <meta name="description" content="Typed Graph turns your Obsidian vault into a typed, signed, labeled property graph with edge properties, openCypher queries, a graph view, a LadybugDB mirror, vector search and GraphRAG for agents.">
+  <meta property="og:title" content="Typed Graph — Typed Graphs for Obsidian">
   <meta property="og:description" content="Typed, signed, labeled edges with properties, openCypher queries, and RAG-ready storage for your vault.">
   <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -15,7 +15,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Obsigraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./" class="active">Home</a>
         <a href="docs.html">Docs</a>
@@ -31,14 +31,14 @@
       <div class="wrap">
         <div>
           <h1>Your notes, as a <span class="grad">real graph</span>.</h1>
-          <p class="lead">Obsigraph is an Obsidian plugin that turns links into typed, signed, labeled edges with properties, lets you query them with openCypher, and draws them as a graph that looks like what it means.</p>
+          <p class="lead">Typed Graph is an Obsidian plugin that turns links into typed, signed, labeled edges with properties, lets you query them with openCypher, and draws them as a graph that looks like what it means.</p>
           <div class="buttons">
             <a class="btn primary" href="demo.html">Try the live demo →</a>
             <a class="btn" href="docs.html#install">Install</a>
             <a class="btn" href="https://github.com/Volland/obsigraph">GitHub</a>
           </div>
         </div>
-        <img class="hero-logo" src="assets/logo.svg" alt="Obsigraph logo: a crystal made of graph edges with a ladybug">
+        <img class="hero-logo" src="assets/logo.svg" alt="Typed Graph logo: a crystal made of graph edges with a ladybug">
       </div>
     </section>
 
@@ -115,15 +115,15 @@ ORDER BY hours DESC
         <div>
           <h2 id="install">Install</h2>
           <ol class="steps">
-            <li><strong>From Obsidian</strong> (once listed): Settings → Community plugins → Browse → search <em>Obsigraph</em>.</li>
+            <li><strong>From Obsidian</strong> (once listed): Settings → Community plugins → Browse → search <em>Typed Graph</em>.</li>
             <li><strong>Before that, with BRAT</strong>: install the BRAT plugin, then <em>Add beta plugin</em> → <code>Volland/obsigraph</code>.</li>
-            <li><strong>Manually</strong>: download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> into <code>&lt;vault&gt;/.obsidian/plugins/obsigraph/</code> and enable it.</li>
+            <li><strong>Manually</strong>: download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> into <code>&lt;vault&gt;/.obsidian/plugins/typed-graph/</code> and enable it.</li>
           </ol>
         </div>
         <div>
           <h2>For agents</h2>
           <p class="section-lead">Run the sidecar next to your vault and give your agent the graph:</p>
-<pre>claude mcp add obsigraph \
+<pre>claude mcp add typed-graph \
   -e OBSIGRAPH_VAULT=/path/to/vault \
   -e OBSIGRAPH_DATA=/path/to/data \
   -- node packages/sidecar/dist/server.mjs --stdio</pre>
@@ -135,7 +135,7 @@ ORDER BY hours DESC
 
   <footer>
     <div class="wrap">
-      <span>Obsigraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.</span>
       <span><a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
     </div>
   </footer>

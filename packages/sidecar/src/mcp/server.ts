@@ -26,7 +26,7 @@ async function answer(fn: () => Promise<unknown>) {
  */
 // @lat: [[sidecar#Interfaces]]
 export function createMcpServer(ops: Ops): McpServer {
-  const server = new McpServer({ name: 'obsigraph', version: '0.4.0' });
+  const server = new McpServer({ name: 'typed-graph', version: '0.4.1' });
 
   server.registerTool(
     'cypher_query',

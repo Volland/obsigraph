@@ -20,7 +20,7 @@ export interface ObsigraphSettings {
   maxPathDepth: number;
   /** Engine for blocks without a `backend` option. */
   defaultBackend: 'builtin' | 'ladybug';
-  /** Obsigraph sidecar base URL, e.g. http://127.0.0.1:8765. */
+  /** Typed Graph sidecar base URL, e.g. http://127.0.0.1:8765. */
   sidecarUrl: string;
   sidecarToken: string;
 }
@@ -65,7 +65,7 @@ export class ObsigraphSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Default query backend')
-      .setDesc('Built-in runs inside Obsidian. Ladybug runs in the Obsigraph sidecar with full read Cypher. A block can override this with "backend:".')
+      .setDesc('Built-in runs inside Obsidian. Ladybug runs in the Typed Graph sidecar with full read Cypher. A block can override this with "backend:".')
       .addDropdown((d) =>
         d
           .addOptions({ builtin: 'Built-in', ladybug: 'Ladybug (sidecar)' })
@@ -78,7 +78,7 @@ export class ObsigraphSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Sidecar URL')
-      .setDesc('Where the Obsigraph sidecar listens, for Ladybug queries.')
+      .setDesc('Where the Typed Graph sidecar listens, for Ladybug queries.')
       .addText((t) =>
         t.setPlaceholder('http://127.0.0.1:8765').setValue(this.plugin.settings.sidecarUrl).onChange(async (v) => {
           this.plugin.settings.sidecarUrl = v.trim();

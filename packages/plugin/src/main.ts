@@ -35,7 +35,7 @@ export default class ObsigraphPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_GRAPH, (leaf) => new GraphView(leaf, this));
     this.addCommand({ id: 'open-graph-view', name: 'Open graph view', callback: () => this.openGraphView() });
-    this.addRibbonIcon('git-fork', 'Open Obsigraph view', () => this.openGraphView());
+    this.addRibbonIcon('git-fork', 'Open Typed Graph view', () => this.openGraphView());
     registerSchemaCommands(this);
 
     this.registerMarkdownPostProcessor(edgeEmbedPostProcessor(this));
@@ -56,11 +56,11 @@ export default class ObsigraphPlugin extends Plugin {
       const update = () => {
         const { nodes, edges } = this.index.graph.size;
         const issues = this.settings.showDiagnostics ? this.index.diagnostics().length : 0;
-        status.setText(`Obsigraph: ${nodes} nodes, ${edges} edges${issues ? ` · ${issues} issues` : ''}`);
+        status.setText(`Typed Graph: ${nodes} nodes, ${edges} edges${issues ? ` · ${issues} issues` : ''}`);
       };
       this.register(this.index.onChange(update));
       this.register(this.onStylesChanged(update));
-      await this.index.build((done, total) => status.setText(`Obsigraph: indexing ${done}/${total}`));
+      await this.index.build((done, total) => status.setText(`Typed Graph: indexing ${done}/${total}`));
       update();
     });
   }
