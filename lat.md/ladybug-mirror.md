@@ -22,6 +22,8 @@ The plugin reaches it over HTTP for `backend: ladybug` queries. Verified with `@
 
 ## Storage layout
 
-One `Node` table (id, labels list, title, path, stub, JSON props, sig) and one relationship table per edge type (id, sign, heading, JSON props, sig), created on first use by [[packages/sidecar/src/mirror/store.ts#LadybugStore]], because a Ladybug node belongs to exactly one table while notes can have several labels. An edge type named `node` uses table `node_`. Set `OBSIGRAPH_LADYBUG=0` to disable the mirror; when the module cannot load, status reports it unavailable with the reason.
+One `Node` table and one relationship table per edge type, because a Ladybug node belongs to exactly one table while notes can have several labels.
+
+`Node` holds id, labels list, title, path, stub, JSON props and sig; each relationship table holds id, sign, heading, JSON props and sig, created on first use by [[packages/sidecar/src/mirror/store.ts#LadybugStore]]. An edge type named `node` uses table `node_`. Set `OBSIGRAPH_LADYBUG=0` to disable the mirror; when the module cannot load, status reports it unavailable with the reason.
 
 Queries keep the plugin's text: the backend rewrites label patterns such as `(a:Person)` into label-list checks on `Node` before sending. Text the built-in parser cannot read passes through unchanged, with documented limits.

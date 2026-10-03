@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p packages/core && tsc -p packages/plugin && tsc -p packages/sidecar",
     "build": "npm run build -w @obsigraph/plugin",
-    "build:sidecar": "npm run build -w @obsigraph/sidecar"
+    "build:sidecar": "npm run build -w @obsigraph/sidecar",
+    "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
