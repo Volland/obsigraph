@@ -34,4 +34,4 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             packages/plugin/dist/main.js packages/plugin/dist/manifest.json packages/plugin/dist/styles.css \
-            --title "Obsigraph ${GITHUB_REF_NAME}" --generate-notes
+            --title "Typed Graph ${GITHUB_REF_NAME}" --generate-notes
