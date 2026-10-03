@@ -1,4 +1,4 @@
-import type { JsonQueryResult, JsonValue } from '@obsigraph/core';
+import type { JsonQueryResult } from '@obsigraph/core';
 
 export interface CorpusEntry {
   id: string;
@@ -31,7 +31,7 @@ export function isOrdered(query: string): boolean {
   return ret >= 0 && /\bORDER\s+BY\b/.test(query.toUpperCase().slice(ret));
 }
 
-const key = (v: JsonValue) => JSON.stringify(v);
+const key = (v: unknown) => JSON.stringify(v);
 
 /**
  * Compare two outcomes: errors must have the same kind; results must have the
@@ -46,10 +46,10 @@ export function compare(query: string, a: EngineOutcome, b: EngineOutcome): stri
   }
   const ca = a.result.columns;
   const cb = b.result.columns;
-  if (key(ca.map((c) => c.name) as never) !== key(cb.map((c) => c.name) as never)) return 'column names differ';
-  if (key(ca.map((c) => c.kind) as never) !== key(cb.map((c) => c.kind) as never)) return 'column kinds differ';
-  const ra = a.result.rows.map((r) => key(r as never));
-  const rb = b.result.rows.map((r) => key(r as never));
+  if (key(ca.map((c) => c.name)) !== key(cb.map((c) => c.name))) return 'column names differ';
+  if (key(ca.map((c) => c.kind)) !== key(cb.map((c) => c.kind))) return 'column kinds differ';
+  const ra = a.result.rows.map((r) => key(r));
+  const rb = b.result.rows.map((r) => key(r));
   if (ra.length !== rb.length) return `row counts differ: ${ra.length} vs ${rb.length}`;
   if (isOrdered(query)) return ra.every((r, i) => r === rb[i]) ? null : 'row order differs under ORDER BY';
   const sa = [...ra].sort();

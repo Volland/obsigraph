@@ -26,7 +26,7 @@ export function colType(v: unknown): ColType | null {
 
 function columnValue(v: unknown, t: ColType): unknown {
   if (t === 's') return v instanceof Date ? v.toISOString() : String(v);
-  if (t === 'j') return JSON.stringify(v, (_k, x) => (x instanceof Date ? x.toISOString() : x));
+  if (t === 'j') return JSON.stringify(v, (_k: string, x: unknown): unknown => (x instanceof Date ? x.toISOString() : x));
   return v;
 }
 
@@ -121,7 +121,7 @@ function sig(value: unknown): string {
 }
 
 function json(x: unknown): string {
-  return JSON.stringify(x, (_k, v) => (v instanceof Date ? v.toISOString() : v)) ?? 'null';
+  return JSON.stringify(x, (_k: string, v: unknown): unknown => (v instanceof Date ? v.toISOString() : v)) ?? 'null';
 }
 
 /** Rows for every node and edge in the graph, each with a content signature. */

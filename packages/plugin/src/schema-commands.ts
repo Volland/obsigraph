@@ -126,15 +126,15 @@ export function registerSchemaCommands(plugin: ObsigraphPlugin): void {
     id: 'create-schema-note',
     name: 'Create schema note',
     callback: () => {
-      new PromptModal(app, 'New type name', async (name) => {
+      new PromptModal(app, 'New type name', (name) => void (async () => {
         const folder = normalizeFolder(plugin.settings.schemaFolder);
         if (!folder) {
-          new Notice('Set a schema folder in Typed Graph settings first.');
+          new Notice('Set a schema folder in the plugin settings first.');
           return;
         }
         if (!(await ensureFolder(app, folder))) return;
         await createNote(app, `${folder}${name}.md`, scaffoldSchemaNote(), name);
-      }).open();
+      })()).open();
     },
   });
 

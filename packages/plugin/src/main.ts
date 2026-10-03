@@ -35,7 +35,7 @@ export default class ObsigraphPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_GRAPH, (leaf) => new GraphView(leaf, this));
     this.addCommand({ id: 'open-graph-view', name: 'Open graph view', callback: () => this.openGraphView() });
-    this.addRibbonIcon('git-fork', 'Open Typed Graph view', () => this.openGraphView());
+    this.addRibbonIcon('git-fork', 'Open graph view', () => this.openGraphView());
     registerSchemaCommands(this);
 
     this.registerMarkdownPostProcessor(edgeEmbedPostProcessor(this));
@@ -112,7 +112,7 @@ export default class ObsigraphPlugin extends Plugin {
     const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_GRAPH)[0];
     const leaf = existing ?? this.app.workspace.getLeaf('tab');
     if (!existing) await leaf.setViewState({ type: VIEW_TYPE_GRAPH, active: true });
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   openNoteAt(path: string, line: number): void {

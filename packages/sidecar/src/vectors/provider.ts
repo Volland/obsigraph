@@ -76,7 +76,7 @@ function checkVectors(vectors: unknown, count: number, endpoint: string): number
   if (!Array.isArray(vectors) || vectors.length !== count || !vectors.every((v) => Array.isArray(v) && v.every((x) => typeof x === 'number'))) {
     throw new EmbeddingError('bad-response', `The embedding endpoint ${endpoint} returned an unexpected response`);
   }
-  return vectors as number[][];
+  return vectors;
 }
 
 abstract class BaseProvider implements EmbeddingProvider {
@@ -103,7 +103,7 @@ abstract class BaseProvider implements EmbeddingProvider {
   protected abstract request(batch: string[]): Promise<number[][]>;
 
   protected get fetch(): Fetch {
-    return this.opts.fetch ?? fetch;
+    return this.opts.fetch ?? globalThis.fetch;
   }
 }
 

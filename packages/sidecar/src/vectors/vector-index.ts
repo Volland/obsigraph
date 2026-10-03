@@ -3,18 +3,15 @@ import { readdir, rm } from 'node:fs/promises';
 import {
   chunkNote,
   cosine,
-  EmbeddingError,
-  identityMismatch,
   nodeScore,
   normalize,
   verbalizeEdge,
-  type EmbeddingIdentity,
-  type EmbeddingProvider,
   type Graph,
   type NoteInput,
   type ScoreMode,
 } from '@obsigraph/core';
 import type { DataDir } from '../data-dir.js';
+import { EmbeddingError, identityMismatch, type EmbeddingIdentity, type EmbeddingProvider } from './provider.js';
 import type { Processor } from '../sync.js';
 
 interface Vec {

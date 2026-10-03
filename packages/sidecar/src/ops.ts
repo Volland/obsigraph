@@ -1,4 +1,5 @@
-import { BuiltinEngine, EmbeddingError, resultToJson, type Graph, type JsonQueryResult } from '@obsigraph/core';
+import { BuiltinEngine, resultToJson, type Graph, type JsonQueryResult } from '@obsigraph/core';
+import { EmbeddingError } from './vectors/provider.js';
 import type { Config } from './config.js';
 import { BackendUnavailable, type LadybugBackend } from './ladybug/backend.js';
 import { retrieve, type RetrieveResult } from './rag/retrieve.js';

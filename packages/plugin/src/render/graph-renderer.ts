@@ -41,18 +41,19 @@ export class GraphRenderer {
     private readonly opts: RendererOptions,
   ) {
     this.styler = opts.styler;
-    container.style.height = `${opts.height}px`;
+    container.setCssStyles({ height: `${opts.height}px` });
     container.addClass('obsigraph-graph');
     this.cy = cytoscape({ container, elements: [], wheelSensitivity: 0.3, minZoom: 0.1, maxZoom: 4 });
-    this.cy.style(buildStylesheet(themeFrom(container)) as unknown as cytoscape.StylesheetJson);
+    this.cy.style(buildStylesheet(themeFrom(container)));
 
-    this.cy.on('dbltap', 'node', (e) => this.open(e.target.data('path')));
+    const target = (e: cytoscape.EventObject) => e.target as cytoscape.SingularElementReturnValue;
+    this.cy.on('dbltap', 'node', (e) => this.open(target(e).data('path') as unknown));
     this.cy.on('tap', 'node', (e) => {
       const orig = e.originalEvent as MouseEvent | undefined;
-      if (orig && (orig.metaKey || orig.ctrlKey)) this.open(e.target.data('path'));
+      if (orig && (orig.metaKey || orig.ctrlKey)) this.open(target(e).data('path') as unknown);
     });
-    this.cy.on('cxttap taphold', 'node', (e) => opts.onExpand?.(e.target.id()));
-    this.cy.on('select', 'node, edge', (e) => opts.onSelect?.({ kind: e.target.isNode() ? 'node' : 'edge', id: e.target.id() }));
+    this.cy.on('cxttap taphold', 'node', (e) => opts.onExpand?.(target(e).id()));
+    this.cy.on('select', 'node, edge', (e) => opts.onSelect?.({ kind: target(e).isNode() ? 'node' : 'edge', id: target(e).id() }));
     this.cy.on('unselect', () => {
       if (this.cy.$(':selected').empty()) opts.onSelect?.(null);
     });
@@ -98,7 +99,7 @@ export class GraphRenderer {
 
   private restyle(): void {
     this.cy.batch(() => {
-      this.cy.style(buildStylesheet(themeFrom(this.container)) as unknown as cytoscape.StylesheetJson);
+      this.cy.style(buildStylesheet(themeFrom(this.container)));
       for (const [id, x] of this.model) {
         const ele = this.cy.getElementById(id);
         if (ele.nonempty()) ele.data(isEdge(x) ? this.styler.edge(x) : { ...this.styler.node(x) });
@@ -123,7 +124,8 @@ export class GraphRenderer {
 
   private layout(eles: cytoscape.Collection, animate = false): void {
     if (eles.empty()) return;
-    eles.layout({ name: 'cose', animate, padding: 24, nodeRepulsion: () => 9000, idealEdgeLength: () => 90 } as cytoscape.LayoutOptions).run();
+    const options: cytoscape.CoseLayoutOptions = { name: 'cose', animate, padding: 24, nodeRepulsion: () => 9000, idealEdgeLength: () => 90 };
+    eles.layout(options).run();
   }
 
   private open(path: unknown): void {

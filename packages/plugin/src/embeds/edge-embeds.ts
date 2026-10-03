@@ -70,14 +70,14 @@ export function edgeEmbedPostProcessor(plugin: ObsigraphPlugin) {
       const text = node.nodeValue ?? '';
       const matches = [...text.matchAll(EMBED_PATTERN)];
       if (matches.length === 0) continue;
-      const frag = document.createDocumentFragment();
+      const frag = createFragment();
       let last = 0;
       for (const m of matches) {
-        frag.append(text.slice(last, m.index));
+        frag.append(text.slice(last, m.index ?? 0));
         const span = createSpan();
         frag.append(span);
         ctx.addChild(new EmbedChild(span, m[0], parseEmbed(m[1]!), ctx.sourcePath, plugin));
-        last = m.index! + m[0].length;
+        last = (m.index ?? 0) + m[0].length;
       }
       frag.append(text.slice(last));
       node.replaceWith(frag);

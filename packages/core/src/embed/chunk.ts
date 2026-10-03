@@ -73,7 +73,8 @@ function pack(text: string, max: number): string[] {
   };
   const split = (piece: string, level: number) => {
     if (piece.length <= max) return push(piece, level === 0 ? '\n\n' : ' ');
-    if (level === 0) return piece.split(/(?<=[.!?])\s+/).forEach((s) => split(s, 1));
+    // Sentence split without lookbehind, which iOS before 16.4 does not support.
+    if (level === 0) return piece.replace(/([.!?])\s+/g, '$1\u0000').split('\u0000').forEach((s) => split(s, 1));
     if (level === 1) return piece.split(/\s+/).forEach((w) => split(w, 2));
     for (let i = 0; i < piece.length; i += max) push(piece.slice(i, i + max), ' ');
   };

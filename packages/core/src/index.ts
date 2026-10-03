@@ -51,15 +51,5 @@ export type { EdgeEmbed, EmbedOccurrence, EmbedResolution, EmbedView } from './e
 export { pathResolver } from './graph/resolve.js';
 export { fromJsonValue, resultFromJson, resultToJson, toJsonValue } from './cypher/json.js';
 export type { JsonNode, JsonPath, JsonQueryResult, JsonRelationship, JsonValue } from './cypher/json.js';
-export {
-  DEFAULT_EMBED_MODEL,
-  DEFAULT_OLLAMA_URL,
-  EmbeddingError,
-  identityMismatch,
-  OllamaProvider,
-  OpenAIProvider,
-  providerFromEnv,
-} from './embed/provider.js';
-export type { EmbeddingErrorKind, EmbeddingIdentity, EmbeddingProvider } from './embed/provider.js';
 export { chunkContext, chunkNote, cosine, DEFAULT_CHUNK_CHARS, nodeScore, normalize, poolVectors, stableId, verbalizeEdge, verbOf } from './embed/chunk.js';
 export type { Chunk, ChunkInput, EdgeSentence, ScoreMode } from './embed/chunk.js';

@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BuiltinEngine, CypherError, resultToJson } from '@obsigraph/core';
+import { BuiltinEngine, CypherError, resultToJson, type JsonQueryResult } from '@obsigraph/core';
 import { startSidecar, type Sidecar } from '../src/main.js';
 import { loadLadybug } from '../src/mirror/store.js';
 import { classify, type CorpusEntry, type Difference, type EngineOutcome, type Outcome } from './compare.js';
@@ -37,13 +37,13 @@ export async function runCorpus(entries = loadCorpus(), opts: { ladybug?: boolea
     const ladybug = hasLadybug ? new Map<string, EngineOutcome>() : null;
     for (const e of entries) {
       try {
-        builtin.set(e.id, { ok: true, result: JSON.parse(JSON.stringify(resultToJson(engine.run(e.query)))) });
+        builtin.set(e.id, { ok: true, result: JSON.parse(JSON.stringify(resultToJson(engine.run(e.query)))) as JsonQueryResult });
       } catch (err) {
         if (!(err instanceof CypherError)) throw err;
         builtin.set(e.id, { ok: false, error: err.kind });
       }
       if (ladybug) {
-        const res = await fetch(`http://127.0.0.1:${sc.port}/query`, {
+        const res = await globalThis.fetch(`http://127.0.0.1:${sc.port}/query`, {
           method: 'POST',
           headers: { authorization: 'Bearer conformance' },
           body: JSON.stringify({ query: e.query, backend: 'ladybug' }),

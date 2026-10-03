@@ -9,7 +9,7 @@ export function cellText(v: Value): string {
     return v.nodes.map((n, i) => (i === 0 ? cellText(n) : `-${cellText(v.rels[i - 1]!)}-> ${cellText(n)}`)).join(' ');
   }
   if (Array.isArray(v)) return v.map(cellText).join(', ');
-  if (typeof v === 'object') return JSON.stringify(v, (_k, x) => (x instanceof NodeRef || x instanceof RelRef || x instanceof PathRef ? cellText(x) : x));
+  if (typeof v === 'object') return JSON.stringify(v, (_k: string, x: unknown): unknown => (x instanceof NodeRef || x instanceof RelRef || x instanceof PathRef ? cellText(x) : x));
   return String(v);
 }
 

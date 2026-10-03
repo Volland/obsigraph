@@ -120,7 +120,7 @@ class Transpiler {
 
   private projection(kw: 'WITH' | 'RETURN', p: Projection, isReturn = false): string {
     const items = p.star
-      ? [...this.scope.keys()].filter((v) => !v.startsWith(' ')).map((v) => ({ name: v, expr: { k: 'var', name: v, line: 0, column: 0 } as Expr })).concat(p.items)
+      ? [...this.scope.keys()].filter((v) => !v.startsWith(' ')).map((v): { name: string; expr: Expr } => ({ name: v, expr: { k: 'var', name: v, line: 0, column: 0 } })).concat(p.items)
       : p.items;
     const rendered = items.map((it) => this.expr(it.expr));
     const keys = isReturn ? items.map((_, i) => `c${i}`) : items.map((it) => it.name);

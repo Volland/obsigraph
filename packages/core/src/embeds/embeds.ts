@@ -63,9 +63,10 @@ export function findEmbeds(text: string): EmbedOccurrence[] {
     if (fence !== null) return;
     const masked = line.replace(/`[^`]*`/g, (m) => ' '.repeat(m.length));
     for (const m of masked.matchAll(EMBED_PATTERN)) {
-      const raw = line.slice(m.index!, m.index! + m[0].length);
+      const at = m.index ?? 0;
+      const raw = line.slice(at, at + m[0].length);
       const parsed = parseEmbed(m[1]!);
-      out.push({ raw, line: n, column: m.index!, embed: typeof parsed === 'string' ? null : parsed, error: typeof parsed === 'string' ? parsed : null });
+      out.push({ raw, line: n, column: at, embed: typeof parsed === 'string' ? null : parsed, error: typeof parsed === 'string' ? parsed : null });
     }
   });
   return out;

@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { afterEach, describe, expect, it } from 'vitest';
-import { EmbeddingError, identityMismatch, OllamaProvider, OpenAIProvider, providerFromEnv } from '../src/index.js';
+import { EmbeddingError, identityMismatch, OllamaProvider, OpenAIProvider, providerFromEnv } from '../src/vectors/provider.js';
 
 interface Seen {
   path: string;

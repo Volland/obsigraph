@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
-import { providerFromEnv, type EmbeddingProvider } from '@obsigraph/core';
+import { providerFromEnv, type EmbeddingProvider } from './vectors/provider.js';
 import { ConfigError, isLoopback, loadConfig, type Config } from './config.js';
 import { DataDir } from './data-dir.js';
 import { createApi, redactor, type Logger } from './http.js';
@@ -125,7 +125,8 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     vectors,
     async stop() {
       vectors?.stop();
-      if (server) await new Promise<void>((r) => server!.close(() => r()));
+      const srv = server;
+      if (srv) await new Promise<void>((r) => srv.close(() => r()));
       await sync.stop();
       await mirror?.idle();
       await vectors?.idle();

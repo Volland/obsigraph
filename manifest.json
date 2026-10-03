@@ -1,8 +1,8 @@
 {
   "id": "typed-graph",
   "name": "Typed Graph",
-  "version": "0.4.1",
-  "minAppVersion": "1.5.0",
+  "version": "0.4.2",
+  "minAppVersion": "1.7.2",
   "description": "Typed, signed, labeled property graph over your notes with openCypher queries, edge properties and graph views.",
   "author": "Volodymyr Pavlyshyn",
   "authorUrl": "https://github.com/Volland",

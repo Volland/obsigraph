@@ -40,8 +40,8 @@ const varExpr = (name: string): Expr => ({ k: 'var', name, line: 0, column: 0 })
 export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecOptions = {}): QueryResult {
   const ctx = new Ctx(graph, params, opts.maxPathDepth ?? DEFAULT_MAX_PATH_DEPTH, opts.timeoutMs ? Date.now() + opts.timeoutMs : Infinity);
   const columns = analyze(q);
-  let rows: Env[] = [new Map()];
-  let scope: Scope = new Map();
+  let rows: Env[] = [new Map<string, Value>()];
+  let scope: Scope = new Map<string, ColumnKind>();
   let result: Value[][] = [];
 
   for (const clause of q.clauses) {
@@ -702,7 +702,7 @@ class Ctx {
           const start = args[1];
           const len = args[2];
           if (typeof start !== 'number') return null;
-          return typeof len === 'number' ? s.substr(start, len) : s.substring(start);
+          return typeof len === 'number' ? s.slice(start, start + len) : s.slice(start);
         });
       case 'split':
         return str((s) => (typeof args[1] === 'string' ? s.split(args[1]) : null));
@@ -847,7 +847,7 @@ function orderCompare(a: Value, b: Value): number {
 }
 
 function keyOf(v: Value): string {
-  return JSON.stringify(v, (_k, x) =>
+  return JSON.stringify(v, (_k: string, x: unknown): unknown =>
     x instanceof NodeRef ? `\u0000N:${x.id}` : x instanceof RelRef ? `\u0000R:${x.id}` : x instanceof PathRef ? `\u0000P:${x.id}` : x,
   );
 }

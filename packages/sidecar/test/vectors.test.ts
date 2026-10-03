@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { EmbeddingError, OllamaProvider, type EmbeddingIdentity, type EmbeddingProvider } from '@obsigraph/core';
+import { EmbeddingError, OllamaProvider, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.js';
 import { afterEach, describe, expect, it } from 'vitest';
 import { startSidecar, type Sidecar } from '../src/main.js';
 

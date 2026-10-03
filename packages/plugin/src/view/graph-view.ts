@@ -36,7 +36,7 @@ export class GraphView extends ItemView {
     return VIEW_TYPE_GRAPH;
   }
   getDisplayText(): string {
-    return 'Typed Graph';
+    return 'Typed graph';
   }
   getIcon(): string {
     return 'git-fork';
@@ -49,7 +49,7 @@ export class GraphView extends ItemView {
 
     const bar = root.createDiv({ cls: 'obsigraph-querybar' });
     this.input = bar.createEl('textarea', {
-      attr: { rows: '2', placeholder: 'MATCH (a)-[r]->(b) RETURN a, r, b — leave empty to follow the active note' },
+      attr: { rows: '2', placeholder: 'Enter a query, or leave empty to follow the active note' },
     });
     const run = bar.createEl('button', { text: 'Run', cls: 'mod-cta' });
     run.addEventListener('click', () => this.submit());
@@ -150,8 +150,7 @@ export class GraphView extends ItemView {
       },
       onSelect: (sel) => this.showDetails(sel),
     });
-    host.style.height = '100%';
-    host.style.minHeight = '320px';
+    host.setCssStyles({ height: '100%', minHeight: '320px' });
     this.renderer.cy.resize();
     return this.renderer;
   }

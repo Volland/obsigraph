@@ -79,7 +79,7 @@ async function rowsOf(conn: Conn, statement: string): Promise<Record<string, unk
   const one = Array.isArray(r) ? r[r.length - 1]! : r;
   const rows = await one.getAll();
   one.close();
-  return rows as Record<string, unknown>[];
+  return rows;
 }
 
 /**
