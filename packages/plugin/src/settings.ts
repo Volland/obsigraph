@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type ObsigraphPlugin from './main';
+import { DEFAULT_SCHEMA_FOLDER } from '@obsigraph/core';
 import { parseTypeStyles, type TypeStyles } from './render/styles';
 
 export interface ObsigraphSettings {
@@ -9,12 +10,18 @@ export interface ObsigraphSettings {
   refreshDebounceMs: number;
   /** Per-type node styles keyed by type label. */
   typeStyles: TypeStyles;
+  /** Folder whose notes declare type schemas. */
+  schemaFolder: string;
+  /** Show the diagnostics count in the status bar. */
+  showDiagnostics: boolean;
 }
 
 export const DEFAULT_SETTINGS: ObsigraphSettings = {
   maxElements: 500,
   refreshDebounceMs: 300,
   typeStyles: {},
+  schemaFolder: DEFAULT_SCHEMA_FOLDER,
+  showDiagnostics: true,
 };
 
 export class ObsigraphSettingTab extends PluginSettingTab {
@@ -52,6 +59,27 @@ export class ObsigraphSettingTab extends PluginSettingTab {
             this.plugin.settings.refreshDebounceMs = n;
             await this.plugin.saveSettings();
           }
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Schema folder')
+      .setDesc('Each note directly in this folder declares the schema for the type named by its title.')
+      .addText((t) =>
+        t.setPlaceholder(DEFAULT_SCHEMA_FOLDER).setValue(this.plugin.settings.schemaFolder).onChange(async (v) => {
+          this.plugin.settings.schemaFolder = v.trim() || DEFAULT_SCHEMA_FOLDER;
+          this.plugin.index.invalidate();
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Show diagnostics')
+      .setDesc('Show the number of parse and schema issues in the status bar.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.showDiagnostics).onChange(async (v) => {
+          this.plugin.settings.showDiagnostics = v;
+          await this.plugin.saveSettings();
         }),
       );
 

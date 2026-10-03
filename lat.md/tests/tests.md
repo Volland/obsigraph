@@ -7,3 +7,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[cypher-query]] — query behaviors from the cypher-query spec
 - [[graph-query-block]] — block pipeline behaviors from the graph-query-block spec
 - [[graph-view]] — view-state behaviors from the graph-view spec
+- [[schema-notes]] — schema behaviors from the schema-notes spec

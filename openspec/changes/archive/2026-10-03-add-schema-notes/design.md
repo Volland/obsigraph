@@ -16,7 +16,7 @@ Schema notes were sketched in lat.md/graph-model as optional typed templates. `g
 
 **Validation is advisory.** Diagnostics only, so imperfect vaults still render. Alternative, hard rejection, would break Graph Link Types compatibility.
 
-**Multi-label notes merge schemas in label order, first declaration wins for each property.** Predictable and cheap; true inheritance is out of scope.
+**Multi-label notes merge schemas in label order, first declaration wins for each property.** Predictable and cheap; true inheritance is out of scope. Allowed edge lists are unioned across the labels that declare one, and stay unrestricted when none does, so adding a second label never makes an existing edge invalid.
 
 **Parsing lives in `core`, note creation in `plugin`.** Keeps `core` free of Obsidian APIs.
 

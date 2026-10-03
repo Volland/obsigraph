@@ -1,4 +1,4 @@
-import { BuiltinEngine, Graph, type NoteInput } from '@obsigraph/core';
+import { BuiltinEngine, Graph, schemasFromGraph, validateSchemas, type Diagnostic, type NoteInput, type SchemaSet } from '@obsigraph/core';
 import { TFile, type App, type EventRef } from 'obsidian';
 
 const BATCH = 100;
@@ -16,17 +16,44 @@ export class VaultIndex {
   private readonly listeners = new Set<() => void>();
   private timer: number | null = null;
   private readonly refs: EventRef[] = [];
+  private schemaCache: SchemaSet | null = null;
+  private diagnosticCache: Diagnostic[] | null = null;
 
   constructor(
     private readonly app: App,
     private readonly debounceMs: () => number,
+    private readonly schemaFolder: () => string,
   ) {
     this.graph = new Graph((link, source) => {
       const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
       return f && f.extension === 'md' ? f.path : null;
     });
     this.engine = new BuiltinEngine(this.graph);
-    this.graph.onChange(() => this.schedule());
+    this.graph.onChange(() => {
+      this.invalidate();
+      this.schedule();
+    });
+  }
+
+  /** Type schemas from the schema folder, cached until the next vault change. */
+  // @lat: [[graph-model#Schema notes]]
+  schemas(): SchemaSet {
+    return (this.schemaCache ??= schemasFromGraph(this.graph, this.schemaFolder()));
+  }
+
+  /** Parse, schema and validation diagnostics for the whole vault. */
+  diagnostics(): Diagnostic[] {
+    if (!this.diagnosticCache) {
+      const set = this.schemas();
+      this.diagnosticCache = [...this.graph.diagnostics(), ...set.diagnostics, ...validateSchemas(this.graph, set)];
+    }
+    return this.diagnosticCache;
+  }
+
+  /** Drop cached schemas, e.g. after the schema folder setting changes. */
+  invalidate(): void {
+    this.schemaCache = null;
+    this.diagnosticCache = null;
   }
 
   /** Index every markdown note in batches, yielding to the UI between them. */

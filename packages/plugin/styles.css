@@ -82,3 +82,9 @@
   padding-right: 6px;
   vertical-align: top;
 }
+.obsigraph-muted {
+  color: var(--text-muted);
+}
+.obsigraph-diagnostics li {
+  margin-bottom: 2px;
+}

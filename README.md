@@ -43,6 +43,28 @@ type: [Person, Employee]
 
 A link to a note that doesn't exist creates a stub node. It is shown faded, and queries see it with `n.stub = true`.
 
+## Type schemas
+
+A note directly in `Types/` (configurable) declares the type named by its title:
+
+```markdown
+---
+schema:
+  properties:
+    status: {kind: text, default: active}
+    born: {kind: date, required: true}
+  edges: [knows, worksAt]
+---
+## Notes
+```
+
+- Kinds are `text`, `number`, `boolean`, `date` and `link`.
+- `edges` lists the allowed outgoing edge types. Leaving it out allows every type.
+- The body is the template for new notes.
+- Validation is advisory. Missing required properties and disallowed edges show as issues in the status bar, and the **Show diagnostics** command lists them.
+- **Create note from type** makes a note with `type`, the defaults and the template body. It never overwrites an existing note.
+- **Create schema note** scaffolds a new type.
+
 ## Querying in a note
 
 ````markdown

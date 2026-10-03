@@ -20,6 +20,8 @@ A schema note such as `Types/Person.md` declares a type's properties, defaults, 
 
 Schema notes are optional; the graph works without them. Creating a note from a type applies its template.
 
+A note directly in the schema folder (setting, default `Types/`) declares the type named by its title in frontmatter under `schema:` — `properties` (map, kind shorthand or list; kinds text, number, boolean, date, link; `default`, `required`), `edges` (allowed outgoing types, absent means unrestricted) and `style` (consumed by visualization config). The body is the template. Read by [[packages/core/src/schema/schema.ts#readSchema]], validated by [[packages/core/src/schema/schema.ts#validateSchemas]] (advisory diagnostics only) and rendered into new notes by [[packages/core/src/schema/schema.ts#renderNoteFromType]]. Multi-label notes merge schemas in label order: first property declaration wins, allowed edge lists are unioned.
+
 ## Edges
 
 Edges carry a type, optional label, sign, properties, a derived or pinned ID and the heading they were written under.

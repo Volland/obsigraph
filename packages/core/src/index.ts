@@ -13,3 +13,16 @@ export { execute } from './cypher/exec.js';
 export type { QueryResult, Column, ColumnKind } from './cypher/exec.js';
 export { NodeRef, RelRef } from './cypher/values.js';
 export type { Value } from './cypher/values.js';
+export {
+  DEFAULT_SCHEMA_FOLDER,
+  isSchemaPath,
+  mergeSchemas,
+  normalizeFolder,
+  readSchema,
+  renderNoteFromType,
+  scaffoldSchemaNote,
+  schemasFromGraph,
+  validateSchemas,
+} from './schema/schema.js';
+export type { PropertyKind, PropertySchema, SchemaSet, TypeSchema } from './schema/schema.js';
+export { splitFrontmatter, toYaml } from './schema/frontmatter.js';
