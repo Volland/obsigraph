@@ -16,8 +16,10 @@ Each note is chunked, with its title, type labels and frontmatter prepended to e
 
 A node's score is its best-matching chunk, or the pooled vector of its chunks.
 
+[[packages/core/src/embed/chunk.ts#chunkNote]] splits by heading, then packs paragraphs, sentences and words under a character limit (default 1500, context included); the stored body is returned in citations while the embedded text carries the context. Chunk ids hash path, heading path, ordinal and body with a pure-JS hash, so unchanged chunks keep their ids. [[packages/core/src/embed/chunk.ts#nodeScore]] implements both scoring modes.
+
 ## Edge verbalization
 
 Edges have no prose, so each is rendered as a sentence from its triple, labels and properties and that sentence is embedded.
 
-Example: `Alice (Person) knows Bob (Person) - since 2020, met at conf`. This makes edges searchable by meaning. Because the index lives in Ladybug, vector search is desktop-only until the [[sidecar]] hosts it.
+Example: `Alice (Person) knows Bob (Person) - since 2020, met at conf`. This makes edges searchable by meaning. [[packages/core/src/embed/chunk.ts#verbalizeEdge]] turns `worksAt` or `works_at` into `works at`, appends `(negative)` for sign -1, shows `label` bare and other properties as `key value`, omits the pinned id, and records edge id, source path and heading. Because the index lives in Ladybug, vector search is desktop-only until the [[sidecar]] hosts it.

@@ -61,3 +61,5 @@ export {
   providerFromEnv,
 } from './embed/provider.js';
 export type { EmbeddingErrorKind, EmbeddingIdentity, EmbeddingProvider } from './embed/provider.js';
+export { chunkContext, chunkNote, cosine, DEFAULT_CHUNK_CHARS, nodeScore, normalize, poolVectors, stableId, verbalizeEdge, verbOf } from './embed/chunk.js';
+export type { Chunk, ChunkInput, EdgeSentence, ScoreMode } from './embed/chunk.js';

@@ -16,3 +16,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[ladybug-backend]] — Ladybug query backend behaviors in sidecar and plugin
 - [[engine-conformance]] — cross-engine conformance suite behaviors
 - [[embedding-provider]] — embedding provider behaviors
+- [[chunking]] — chunking and edge verbalization behaviors
