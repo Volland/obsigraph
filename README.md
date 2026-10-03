@@ -117,24 +117,13 @@ npm run site:build && npx serve site                                 # preview t
 2. Commit, then run `git tag 0.5.0 && git push origin 0.5.0`. The tag has no `v` prefix.
 3. The **Release plugin** workflow typechecks, tests, builds, and attaches `main.js`, `manifest.json` and `styles.css` to the GitHub release.
 
-### Submitting to the Obsidian community store
+### Submitting to the Obsidian community directory
 
-Do this once, after the first release exists:
+Obsidian takes submissions through its web directory, not through pull requests. `community-plugins.json` in `obsidianmd/obsidian-releases` is only a mirror of it.
 
-1. Fork [obsidianmd/obsidian-releases](https://github.com/obsidianmd/obsidian-releases) and add this entry to the end of `community-plugins.json`:
-
-   ```json
-   {
-     "id": "obsigraph",
-     "name": "Obsigraph",
-     "author": "Volodymyr Pavlyshyn",
-     "description": "Typed, signed, labeled property graph over your notes with openCypher queries, edge properties and graph views.",
-     "repo": "Volland/obsigraph"
-   }
-   ```
-
-2. Open a pull request using their plugin template and tick the checklist. The repo root already has `manifest.json`, `versions.json`, `LICENSE` and this README.
-3. Respond to the automated review bot, then to the human review. Later updates only need a new release.
+1. Sign in at [community.obsidian.md](https://community.obsidian.md) with your Obsidian account, and link your GitHub account to prove you own the repo.
+2. Add the plugin from the `Volland/obsigraph` repository. The directory reads `README.md`, `LICENSE` and the root `manifest.json`, and installs from the GitHub release tagged with the manifest version.
+3. An automated review runs. To fix anything it reports, update the repo and publish a new release with a higher version (`npm run version:bump`, then push the tag).
 
 ## License
 
