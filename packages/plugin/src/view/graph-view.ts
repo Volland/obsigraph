@@ -66,7 +66,7 @@ export class GraphView extends ItemView {
     this.details = main.createDiv({ cls: 'obsigraph-details' });
 
     this.register(this.plugin.index.onChange(() => this.refresh()));
-    this.register(this.plugin.onStylesChanged(() => this.renderer?.setStyles(this.plugin.settings.typeStyles)));
+    this.register(this.plugin.onStylesChanged(() => this.refresh()));
     this.registerEvent(
       this.app.workspace.on('file-open', (file) => {
         if (this.query || !file || file.extension !== 'md') return;
@@ -130,7 +130,9 @@ export class GraphView extends ItemView {
     }
 
     const elements = mergeElements(base, ...[...this.expanded].map((id) => neighborhood(graph, id)));
-    this.ensureRenderer().setElements(elements);
+    const renderer = this.ensureRenderer();
+    renderer.setStyler(this.plugin.makeStyler());
+    renderer.setElements(elements);
   }
 
   private ensureRenderer(): GraphRenderer {
@@ -139,7 +141,7 @@ export class GraphView extends ItemView {
     const host = this.body.createDiv();
     this.renderer = new GraphRenderer(host, {
       height: 600,
-      styles: this.plugin.settings.typeStyles,
+      styler: this.plugin.makeStyler(),
       onOpen: (path) => this.openNote(path),
       onExpand: (id) => {
         this.expanded.add(id);
@@ -158,12 +160,13 @@ export class GraphView extends ItemView {
     if (!sel) return;
     const graph = this.plugin.index.graph;
     let d: Details | null = null;
+    const styler = this.plugin.makeStyler();
     if (sel.kind === 'node') {
       const n = graph.node(sel.id);
-      if (n) d = nodeDetails(n);
+      if (n) d = nodeDetails(n, styler.resolveNode(n.labels));
     } else {
       const e = graph.edge(sel.id);
-      if (e) d = edgeDetails(e, graph);
+      if (e) d = edgeDetails(e, graph, styler.resolveEdge(e.type, e.sign));
     }
     if (!d) return;
     this.details.createEl('h4', { text: d.title });

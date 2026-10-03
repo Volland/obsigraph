@@ -1,8 +1,9 @@
-import { BuiltinEngine, Graph } from '@obsigraph/core';
+import { BuiltinEngine, colorFor, Graph, styleSource } from '@obsigraph/core';
 import { describe, expect, it } from 'vitest';
 import { chooseView, parseBlock } from '../src/query/block';
 import { planRender } from '../src/query/plan';
-import { buildStylesheet, colorFor, nodeClasses, parseTypeStyles } from '../src/render/styles';
+import { buildStylesheet, parseEdgeStyles, parseTypeStyles } from '../src/render/styles';
+import { makeStyler } from '../src/render/styler';
 
 function fixture() {
   const notes: Record<string, string> = {
@@ -86,20 +87,29 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Signed and typed styling]]
-  it('styles negative edges distinctly and nodes per type, stubs last', () => {
-    const rules = buildStylesheet({ Person: { color: '#123456', shape: 'diamond' } }, ['Person', 'Company'], THEME);
-    expect(rules.find((r) => r.selector === 'edge')!.style.label).toBe('data(type)');
-    expect(rules.find((r) => r.selector === 'edge.negative')!.style['line-style']).toBe('dashed');
-    expect(rules.find((r) => r.selector === 'node.t-Person')!.style).toEqual({ 'background-color': '#123456', shape: 'diamond' });
-    expect(rules.find((r) => r.selector === 'node.t-Company')!.style['background-color']).toBe(colorFor('Company'));
-    expect(rules.at(-1)!.selector).toBe('node.stub');
-    expect(nodeClasses(['Big Co'], true)).toEqual(['t-Big_Co', 'stub']);
+  it('styles negative edges distinctly and nodes per type from element data', () => {
+    const rules = buildStylesheet(THEME);
+    const edge = rules.find((r) => r.selector === 'edge')!.style;
+    expect(edge.label).toBe('data(type)');
+    expect(edge['line-style']).toBe('data(line)');
+    expect(rules.find((r) => r.selector === 'edge.negative')!.style['target-arrow-shape']).toBe('tee');
+    expect(rules.find((r) => r.selector === 'node')!.style['background-color']).toBe('data(color)');
+    const styler = makeStyler([styleSource('settings', null, { Person: { color: '#123456', shape: 'diamond' } }, {}).source]);
+    const node = { id: 'a', label: 'Alice', labels: ['Person'], stub: false, path: 'a', props: {} };
+    expect(styler.node(node)).toEqual({ color: '#123456', shape: 'diamond', label: 'Alice', icon: '' });
+    expect(styler.node({ ...node, labels: ['Company'] }).color).toBe(colorFor('Company'));
+    const e = { id: 'e', source: 'a', target: 'b', type: 'distrusts' };
+    expect(styler.edge({ ...e, sign: -1 })).toEqual({ color: '#d94848', line: 'dashed' });
+    expect(styler.edge({ ...e, sign: 1 })).toEqual({ color: '#8a8a8a', line: 'solid' });
   });
 
   // @lat: [[tests/graph-query-block#Type style settings validated]]
   it('validates type style settings', () => {
     expect(parseTypeStyles('{"Person": {"color": "red", "shape": "star"}}')).toEqual({ Person: { color: 'red', shape: 'star' } });
-    expect(parseTypeStyles('{"Person": {"shape": "blob"}}')).toMatch(/shape for 'Person'/);
+    expect(parseTypeStyles('{"Person": {"shape": "blob"}}')).toMatch(/Ignored shape 'blob' for type label Person/);
+    expect(parseTypeStyles('{"Person": {"color": "nope"}}')).toMatch(/Ignored color 'nope'/);
+    expect(parseEdgeStyles('{"knows": {"color": "orange", "line": "dotted"}}')).toEqual({ knows: { color: 'orange', line: 'dotted' } });
+    expect(parseEdgeStyles('{"knows": {"line": "wavy"}}')).toMatch(/Ignored line 'wavy'/);
     expect(parseTypeStyles('[1]')).toMatch(/object keyed by type label/);
     expect(parseTypeStyles('{bad')).toMatch(/Invalid JSON/);
   });

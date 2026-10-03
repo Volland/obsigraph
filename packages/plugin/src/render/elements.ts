@@ -6,6 +6,7 @@ export interface NodeElement {
   labels: string[];
   stub: boolean;
   path: string | null;
+  props: Record<string, unknown>;
 }
 
 export interface EdgeElement {
@@ -29,6 +30,7 @@ export function nodeElement(n: GraphNode): NodeElement {
     labels: [...n.labels],
     stub: n.stub,
     path: n.stub ? null : n.id,
+    props: n.props,
   };
 }
 
@@ -60,6 +62,12 @@ export function toElements(result: QueryResult, lookup: (id: string) => GraphNod
   // Drop edges whose endpoint vanished, so the renderer never sees a dangling edge.
   for (const [id, e] of edges) if (!nodes.has(e.source) || !nodes.has(e.target)) edges.delete(id);
   return { nodes: [...nodes.values()], edges: [...edges.values()] };
+}
+
+/** True when `g` has exactly the ids already shown, so a refresh can restyle in place. */
+export function sameElementSet(shown: { has(id: string): boolean; size: number }, g: GraphElements): boolean {
+  const ids = [...g.nodes, ...g.edges].map((x) => x.id);
+  return ids.length === shown.size && ids.every((id) => shown.has(id));
 }
 
 export function elementCount(g: GraphElements): number {

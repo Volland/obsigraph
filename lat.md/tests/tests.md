@@ -8,3 +8,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[graph-query-block]] — block pipeline behaviors from the graph-query-block spec
 - [[graph-view]] — view-state behaviors from the graph-view spec
 - [[schema-notes]] — schema behaviors from the schema-notes spec
+- [[visualization-config]] — style precedence behaviors from the visualization-config spec

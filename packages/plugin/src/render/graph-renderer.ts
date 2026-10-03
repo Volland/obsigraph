@@ -1,10 +1,11 @@
 import cytoscape, { type Core, type ElementDefinition } from 'cytoscape';
-import type { GraphElements } from './elements';
-import { buildStylesheet, nodeClasses, type Theme, type TypeStyles } from './styles';
+import { sameElementSet, type EdgeElement, type GraphElements, type NodeElement } from './elements';
+import { buildStylesheet, type Theme } from './styles';
+import type { Styler } from './styler';
 
 export interface RendererOptions {
   height: number;
-  styles: TypeStyles;
+  styler: Styler;
   /** Called on double-click or modifier-click of a non-stub node. */
   onOpen?: (path: string) => void;
   /** Called when the selection changes; null when cleared. */
@@ -26,21 +27,24 @@ export function themeFrom(el: HTMLElement): Theme {
 
 /**
  * Shared Cytoscape renderer for inline query blocks and the Graph view, so an
- * element looks the same everywhere.
+ * element looks the same everywhere. Visual attributes come from a styler and
+ * are stored as element data, so restyling never moves nodes.
  */
 // @lat: [[visualization#Surfaces]]
 export class GraphRenderer {
   readonly cy: Core;
-  private styles: TypeStyles;
+  private styler: Styler;
+  private readonly model = new Map<string, NodeElement | EdgeElement>();
 
   constructor(
     readonly container: HTMLElement,
     private readonly opts: RendererOptions,
   ) {
-    this.styles = opts.styles;
+    this.styler = opts.styler;
     container.style.height = `${opts.height}px`;
     container.addClass('obsigraph-graph');
     this.cy = cytoscape({ container, elements: [], wheelSensitivity: 0.3, minZoom: 0.1, maxZoom: 4 });
+    this.cy.style(buildStylesheet(themeFrom(container)) as unknown as cytoscape.StylesheetJson);
 
     this.cy.on('dbltap', 'node', (e) => this.open(e.target.data('path')));
     this.cy.on('tap', 'node', (e) => {
@@ -54,27 +58,37 @@ export class GraphRenderer {
     });
   }
 
-  /** Replace all elements and re-layout. */
+  /**
+   * Show exactly these elements. When the element set is unchanged only data
+   * is refreshed, so live updates keep node positions.
+   */
   setElements(g: GraphElements): void {
+    const same = sameElementSet(this.model, g);
+    this.model.clear();
+    for (const x of [...g.nodes, ...g.edges]) this.model.set(x.id, x);
+    if (same) {
+      this.restyle();
+      return;
+    }
     this.cy.batch(() => {
       this.cy.elements().remove();
-      this.cy.add(toDefinitions(g));
+      this.cy.add(this.definitions(g));
     });
-    this.restyle();
     this.layout(this.cy.elements());
   }
 
-  /** Add elements without discarding existing ones; lays out only around new nodes. */
+  /** Add elements without discarding existing ones. */
   addElements(g: GraphElements): void {
-    const fresh = toDefinitions(g).filter((d) => this.cy.getElementById(d.data.id!).empty());
+    const fresh = [...g.nodes, ...g.edges].filter((x) => !this.model.has(x.id));
     if (fresh.length === 0) return;
-    const added = this.cy.add(fresh);
-    this.restyle();
+    for (const x of fresh) this.model.set(x.id, x);
+    const added = this.cy.add(this.definitions({ nodes: g.nodes.filter((n) => fresh.includes(n)), edges: g.edges.filter((e) => fresh.includes(e)) }));
     this.layout(this.cy.elements(), added.nodes().length > 0);
   }
 
-  setStyles(styles: TypeStyles): void {
-    this.styles = styles;
+  /** Swap the styler and update element data in place, without re-layout. */
+  setStyler(styler: Styler): void {
+    this.styler = styler;
     this.restyle();
   }
 
@@ -83,9 +97,28 @@ export class GraphRenderer {
   }
 
   private restyle(): void {
-    const labels = new Set<string>();
-    this.cy.nodes().forEach((n) => (n.data('labels') as string[]).forEach((l) => labels.add(l)));
-    this.cy.style(buildStylesheet(this.styles, labels, themeFrom(this.container)) as unknown as cytoscape.StylesheetJson);
+    this.cy.batch(() => {
+      this.cy.style(buildStylesheet(themeFrom(this.container)) as unknown as cytoscape.StylesheetJson);
+      for (const [id, x] of this.model) {
+        const ele = this.cy.getElementById(id);
+        if (ele.nonempty()) ele.data(isEdge(x) ? this.styler.edge(x) : { ...this.styler.node(x) });
+      }
+    });
+  }
+
+  private definitions(g: GraphElements): ElementDefinition[] {
+    return [
+      ...g.nodes.map((n) => ({
+        group: 'nodes' as const,
+        data: { id: n.id, labels: n.labels, path: n.path ?? '', ...this.styler.node(n) },
+        classes: n.stub ? ['stub'] : [],
+      })),
+      ...g.edges.map((e) => ({
+        group: 'edges' as const,
+        data: { id: e.id, source: e.source, target: e.target, type: e.sign < 0 ? `−${e.type}` : e.type, sign: e.sign, ...this.styler.edge(e) },
+        classes: e.sign < 0 ? ['negative'] : [],
+      })),
+    ];
   }
 
   private layout(eles: cytoscape.Collection, animate = false): void {
@@ -98,17 +131,6 @@ export class GraphRenderer {
   }
 }
 
-function toDefinitions(g: GraphElements): ElementDefinition[] {
-  return [
-    ...g.nodes.map((n) => ({
-      group: 'nodes' as const,
-      data: { id: n.id, label: n.label, labels: n.labels, path: n.path ?? '' },
-      classes: nodeClasses(n.labels, n.stub),
-    })),
-    ...g.edges.map((e) => ({
-      group: 'edges' as const,
-      data: { id: e.id, source: e.source, target: e.target, type: e.sign < 0 ? `−${e.type}` : e.type, sign: e.sign },
-      classes: e.sign < 0 ? ['negative'] : [],
-    })),
-  ];
+function isEdge(x: NodeElement | EdgeElement): x is EdgeElement {
+  return 'source' in x;
 }

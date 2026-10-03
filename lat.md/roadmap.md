@@ -22,4 +22,4 @@ Planned as add-embedding-provider, add-chunking-verbalization, add-vector-index,
 
 ## Open questions
 
-Sign semantics (v0.1 assumes prefix-only polarity) and exact Graph Link Types compatibility beyond the inline-field form remain unresolved. The v0.1 Cypher subset is pinned in [[query-engine#Supported subset]]; config precedence is proposed in add-visualization-config.
+Sign semantics (v0.1 assumes prefix-only polarity) and exact Graph Link Types compatibility beyond the inline-field form remain unresolved. The v0.1 Cypher subset is pinned in [[query-engine#Supported subset]]; config precedence is settled in [[visualization#Styling]].

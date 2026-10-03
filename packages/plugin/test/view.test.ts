@@ -1,7 +1,7 @@
 import { Graph } from '@obsigraph/core';
 import { describe, expect, it } from 'vitest';
 import { toElements } from '../src/render/elements';
-import { buildStylesheet, nodeClasses } from '../src/render/styles';
+import { makeStyler } from '../src/render/styler';
 import { edgeDetails, mergeElements, neighborhood, nodeDetails } from '../src/view/view-state';
 import { BuiltinEngine } from '@obsigraph/core';
 
@@ -71,9 +71,8 @@ describe('graph view', () => {
     const a = fromBlock.nodes[0]!;
     const b = fromView.nodes.find((n) => n.id === 'Bob.md')!;
     expect(a).toEqual(b);
-    expect(nodeClasses(a.labels, a.stub)).toEqual(nodeClasses(b.labels, b.stub));
-    const theme = { text: '#000', muted: '#999', background: '#fff' };
-    expect(buildStylesheet({}, a.labels, theme)).toEqual(buildStylesheet({}, b.labels, theme));
+    const styler = makeStyler([]);
+    expect(styler.node(a)).toEqual(styler.node(b));
   });
 
   // @lat: [[tests/graph-view#Stubs visible in neighborhood]]

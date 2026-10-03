@@ -1,15 +1,17 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type ObsigraphPlugin from './main';
-import { DEFAULT_SCHEMA_FOLDER } from '@obsigraph/core';
-import { parseTypeStyles, type TypeStyles } from './render/styles';
+import { DEFAULT_SCHEMA_FOLDER, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
+import { parseEdgeStyles, parseTypeStyles } from './render/styles';
 
 export interface ObsigraphSettings {
   /** Above this many nodes plus edges, graph results fall back to a table. */
   maxElements: number;
   /** Delay before visible blocks re-run after a vault change. */
   refreshDebounceMs: number;
-  /** Per-type node styles keyed by type label. */
-  typeStyles: TypeStyles;
+  /** Per-type node styles keyed by type label (third in style precedence). */
+  typeStyles: Record<string, NodeStyle>;
+  /** Per-edge-type styles keyed by edge type (third in style precedence). */
+  edgeStyles: Record<string, EdgeStyle>;
   /** Folder whose notes declare type schemas. */
   schemaFolder: string;
   /** Show the diagnostics count in the status bar. */
@@ -20,6 +22,7 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   maxElements: 500,
   refreshDebounceMs: 300,
   typeStyles: {},
+  edgeStyles: {},
   schemaFolder: DEFAULT_SCHEMA_FOLDER,
   showDiagnostics: true,
 };
@@ -85,7 +88,7 @@ export class ObsigraphSettingTab extends PluginSettingTab {
 
     const styles = new Setting(containerEl)
       .setName('Type styles')
-      .setDesc('JSON keyed by type label, for example {"Person": {"color": "#59a14f", "shape": "round-rectangle"}}.');
+      .setDesc('JSON keyed by type label: color, shape, icon (Lucide name) and label (property shown instead of the title). Schema notes and block headers override these per attribute. Example: {"Person": {"color": "#59a14f", "shape": "round-rectangle", "icon": "user"}}.');
     const status = containerEl.createDiv({ cls: 'obsigraph-setting-status' });
     styles.addTextArea((t) => {
       t.inputEl.rows = 8;
@@ -98,6 +101,25 @@ export class ObsigraphSettingTab extends PluginSettingTab {
         }
         status.setText('');
         this.plugin.settings.typeStyles = parsed;
+        await this.plugin.saveSettings();
+      });
+    });
+
+    const edgeStyles = new Setting(containerEl)
+      .setName('Edge styles')
+      .setDesc('JSON keyed by edge type: color and line (solid, dashed, dotted). Negative edges are dashed red unless set here. Example: {"knows": {"color": "orange"}}.');
+    const edgeStatus = containerEl.createDiv({ cls: 'obsigraph-setting-status' });
+    edgeStyles.addTextArea((t) => {
+      t.inputEl.rows = 6;
+      t.inputEl.addClass('obsigraph-styles-input');
+      t.setValue(JSON.stringify(this.plugin.settings.edgeStyles, null, 2)).onChange(async (v) => {
+        const parsed = parseEdgeStyles(v);
+        if (typeof parsed === 'string') {
+          edgeStatus.setText(parsed);
+          return;
+        }
+        edgeStatus.setText('');
+        this.plugin.settings.edgeStyles = parsed;
         await this.plugin.saveSettings();
       });
     });

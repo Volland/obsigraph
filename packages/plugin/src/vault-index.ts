@@ -1,4 +1,16 @@
-import { BuiltinEngine, Graph, schemasFromGraph, validateSchemas, type Diagnostic, type NoteInput, type SchemaSet } from '@obsigraph/core';
+import {
+  BuiltinEngine,
+  Graph,
+  schemasFromGraph,
+  styleSource,
+  styleSourcesFromSchemas,
+  validateSchemas,
+  type Diagnostic,
+  type IconCheck,
+  type NoteInput,
+  type SchemaSet,
+  type StyleSource,
+} from '@obsigraph/core';
 import { TFile, type App, type EventRef } from 'obsidian';
 
 const BATCH = 100;
@@ -18,11 +30,14 @@ export class VaultIndex {
   private readonly refs: EventRef[] = [];
   private schemaCache: SchemaSet | null = null;
   private diagnosticCache: Diagnostic[] | null = null;
+  private styleCache: { sources: StyleSource[]; diagnostics: Diagnostic[] } | null = null;
 
   constructor(
     private readonly app: App,
     private readonly debounceMs: () => number,
     private readonly schemaFolder: () => string,
+    private readonly settingsStyles: () => { nodes: Record<string, unknown>; edges: Record<string, unknown> },
+    private readonly iconExists: IconCheck,
   ) {
     this.graph = new Graph((link, source) => {
       const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
@@ -45,15 +60,39 @@ export class VaultIndex {
   diagnostics(): Diagnostic[] {
     if (!this.diagnosticCache) {
       const set = this.schemas();
-      this.diagnosticCache = [...this.graph.diagnostics(), ...set.diagnostics, ...validateSchemas(this.graph, set)];
+      this.diagnosticCache = [
+        ...this.graph.diagnostics(),
+        ...set.diagnostics,
+        ...validateSchemas(this.graph, set),
+        ...this.styleSources().diagnostics,
+      ];
     }
     return this.diagnosticCache;
   }
 
-  /** Drop cached schemas, e.g. after the schema folder setting changes. */
+  /**
+   * Style sources below the block header, in precedence order: one per schema
+   * note, then plugin settings. Invalid values become diagnostics.
+   */
+  // @lat: [[visualization#Styling]]
+  styleSources(): { sources: StyleSource[]; diagnostics: Diagnostic[] } {
+    if (!this.styleCache) {
+      const schemas = styleSourcesFromSchemas(this.schemas().schemas, this.iconExists);
+      const { nodes, edges } = this.settingsStyles();
+      const settings = styleSource('settings', null, nodes, edges, this.iconExists);
+      this.styleCache = {
+        sources: [...schemas.sources, settings.source],
+        diagnostics: [...schemas.diagnostics, ...settings.diagnostics],
+      };
+    }
+    return this.styleCache;
+  }
+
+  /** Drop cached schemas and styles, e.g. after settings change. */
   invalidate(): void {
     this.schemaCache = null;
     this.diagnosticCache = null;
+    this.styleCache = null;
   }
 
   /** Index every markdown note in batches, yielding to the UI between them. */

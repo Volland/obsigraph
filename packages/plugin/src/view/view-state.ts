@@ -1,4 +1,4 @@
-import type { Graph, GraphEdge, GraphNode } from '@obsigraph/core';
+import type { Graph, GraphEdge, GraphNode, ResolvedEdgeStyle, ResolvedNodeStyle } from '@obsigraph/core';
 import { nodeElement, type EdgeElement, type GraphElements } from '../render/elements';
 
 /** A node, its incident edges in both directions, and its direct neighbors. */
@@ -34,16 +34,26 @@ export interface Details {
   rows: [string, string][];
 }
 
-export function nodeDetails(n: GraphNode): Details {
+/** Rows naming each resolved style attribute and the source that supplied it. */
+// @lat: [[visualization#Styling]]
+export function styleRows(style: ResolvedNodeStyle | ResolvedEdgeStyle): [string, string][] {
+  return Object.entries(style.origin).map(([attr, origin]) => {
+    const value = (style as unknown as Record<string, unknown>)[attr];
+    return [`style.${attr}`, `${value ?? '—'} · ${origin}`];
+  });
+}
+
+export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle): Details {
   const rows: [string, string][] = [
     ['labels', n.labels.join(', ') || '—'],
     ['stub', String(n.stub)],
   ];
   for (const [k, v] of Object.entries(n.props)) if (k !== 'title') rows.push([k, show(v)]);
+  if (style) rows.push(...styleRows(style));
   return { title: String(n.props.title ?? n.id), rows };
 }
 
-export function edgeDetails(e: GraphEdge, graph: Graph): Details {
+export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyle): Details {
   const title = (id: string) => String(graph.node(id)?.props.title ?? id);
   const rows: [string, string][] = [
     ['type', e.type],
@@ -54,6 +64,7 @@ export function edgeDetails(e: GraphEdge, graph: Graph): Details {
   ];
   if (e.heading) rows.push(['heading', e.heading]);
   for (const [k, v] of Object.entries(e.props)) if (k !== 'id') rows.push([k, show(v)]);
+  if (style) rows.push(...styleRows(style));
   return { title: `${title(e.source)} ${e.sign < 0 ? '−' : ''}${e.type} → ${title(e.target)}`, rows };
 }
 

@@ -1,4 +1,6 @@
-import { Plugin } from 'obsidian';
+import type { StyleSource } from '@obsigraph/core';
+import { getIcon, Plugin } from 'obsidian';
+import { makeStyler, type Styler } from './render/styler';
 import { QueryBlock } from './query/query-block';
 import { DEFAULT_SETTINGS, ObsigraphSettingTab, type ObsigraphSettings } from './settings';
 import { VaultIndex } from './vault-index';
@@ -10,10 +12,17 @@ export default class ObsigraphPlugin extends Plugin {
   settings: ObsigraphSettings = DEFAULT_SETTINGS;
   index!: VaultIndex;
   private readonly styleListeners = new Set<() => void>();
+  private readonly iconUris = new Map<string, string | null>();
 
   async onload(): Promise<void> {
     await this.loadSettings();
-    this.index = new VaultIndex(this.app, () => this.settings.refreshDebounceMs, () => this.settings.schemaFolder);
+    this.index = new VaultIndex(
+      this.app,
+      () => this.settings.refreshDebounceMs,
+      () => this.settings.schemaFolder,
+      () => ({ nodes: this.settings.typeStyles, edges: this.settings.edgeStyles }),
+      (name) => getIcon(name) !== null,
+    );
     this.addSettingTab(new ObsigraphSettingTab(this.app, this));
 
     this.registerMarkdownCodeBlockProcessor('graph-query', (source, el, ctx) => {
@@ -54,7 +63,32 @@ export default class ObsigraphPlugin extends Plugin {
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+    this.index.invalidate();
     for (const fn of this.styleListeners) fn();
+  }
+
+  /** Styler over block header (optional), schema notes and settings, in that order. */
+  // @lat: [[visualization#Styling]]
+  makeStyler(blockHeader: StyleSource | null = null): Styler {
+    const sources = [...(blockHeader ? [blockHeader] : []), ...this.index.styleSources().sources];
+    return makeStyler(sources, (name) => this.iconUri(name));
+  }
+
+  /** Lucide icon as a white SVG data URI for node backgrounds; null when unknown. */
+  private iconUri(name: string): string | null {
+    if (!this.iconUris.has(name)) {
+      const svg = getIcon(name);
+      let uri: string | null = null;
+      if (svg) {
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('stroke', '#ffffff');
+        svg.setAttribute('width', '24');
+        svg.setAttribute('height', '24');
+        uri = `data:image/svg+xml;utf8,${encodeURIComponent(svg.outerHTML)}`;
+      }
+      this.iconUris.set(name, uri);
+    }
+    return this.iconUris.get(name) ?? null;
   }
 
   onStylesChanged(fn: () => void): () => void {

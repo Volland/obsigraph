@@ -26,3 +26,21 @@ export {
 } from './schema/schema.js';
 export type { PropertyKind, PropertySchema, SchemaSet, TypeSchema } from './schema/schema.js';
 export { splitFrontmatter, toYaml } from './schema/frontmatter.js';
+export {
+  BUILTIN,
+  colorFor,
+  DEFAULT_EDGE_COLOR,
+  DEFAULT_NODE_COLOR,
+  isCssColor,
+  LINE_STYLES,
+  NEGATIVE_EDGE_COLOR,
+  NODE_SHAPES,
+  nodeLabelText,
+  readEdgeStyle,
+  readNodeStyle,
+  resolveEdgeStyle,
+  resolveNodeStyle,
+  styleSource,
+  styleSourcesFromSchemas,
+} from './style/style.js';
+export type { EdgeStyle, IconCheck, LineStyle, NodeShape, NodeStyle, ResolvedEdgeStyle, ResolvedNodeStyle, StyleSource } from './style/style.js';

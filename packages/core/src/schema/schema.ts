@@ -19,7 +19,7 @@ export interface TypeSchema {
   properties: PropertySchema[];
   /** Allowed outgoing edge types; null means unrestricted. */
   edges: string[] | null;
-  /** Raw visualization block, interpreted by the visualization config. */
+  /** Raw `visualization` block (alias `style`), interpreted by the visualization config. */
   style: Record<string, unknown> | null;
 }
 
@@ -39,7 +39,7 @@ export function isSchemaPath(path: string, folder: string): boolean {
 
 /**
  * Read a schema note. The type is the note title; the schema lives in
- * frontmatter under `schema:` with `properties`, `edges` and `style`.
+ * frontmatter under `schema:` with `properties`, `edges` and `visualization`.
  */
 // @lat: [[graph-model#Schema notes]]
 export function readSchema(path: string, frontmatter: Record<string, unknown> | null | undefined): { schema: TypeSchema; diagnostics: Diagnostic[] } {
@@ -77,7 +77,10 @@ export function readSchema(path: string, frontmatter: Record<string, unknown> | 
   if (Array.isArray(decl.edges)) edges = decl.edges.map(String);
   else if (decl.edges !== undefined) diag('`edges` must be a list of edge types');
 
-  const style = isRecord(decl.style) ? decl.style : null;
+  // `visualization` is the documented key; `style` is accepted as an alias.
+  const vis = decl.visualization ?? decl.style;
+  const style = isRecord(vis) ? vis : null;
+  if (vis !== undefined && !isRecord(vis)) diag('`visualization` must be a mapping');
   return { schema: { type: titleOf(path), path, properties, edges, style }, diagnostics };
 }
 

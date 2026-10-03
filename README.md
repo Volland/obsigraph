@@ -65,6 +65,17 @@ schema:
 - **Create note from type** makes a note with `type`, the defaults and the template body. It never overwrites an existing note.
 - **Create schema note** scaffolds a new type.
 
+## Styling
+
+Each attribute is resolved separately. The highest-precedence source that sets it wins:
+
+1. **The block header:** `node.Person: color=red, shape=diamond` or `edge.knows: color=orange, line=dotted`.
+2. **The schema note:** `visualization: {color, shape, icon, label}`, plus `edges: {knows: {color, line}}` inside it.
+3. **Settings:** the type styles and edge styles JSON.
+4. **Built-in defaults:** a stable color per type. Negative edges are dashed red.
+
+Icons are Lucide names, for example `user`. `label` names a property to show instead of the note title. Invalid values are ignored and reported in diagnostics. Select a node or edge in the Graph view to see where each attribute came from.
+
 ## Querying in a note
 
 ````markdown
@@ -86,6 +97,7 @@ Header options, all optional:
 | `view` | `auto` (default), `table`, `graph` | `auto` draws a graph when the result has nodes or relationships, and a table otherwise. |
 | `columns` | comma-separated column names | Table columns to show, in that order. |
 | `height` | 100–4000 | Graph height in pixels. |
+| `node.<Type>` / `edge.<type>` | `attr=value, …` | Style overrides for this block only. |
 
 Results refresh when notes change. Graphs with more elements than the configured limit fall back to a table.
 
