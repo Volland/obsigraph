@@ -1,0 +1,9 @@
+{
+  "id": "obsigraph",
+  "name": "Obsigraph",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Typed, signed, labeled property graph over your notes with openCypher queries.",
+  "author": "Volodymyr Pavlyshyn",
+  "isDesktopOnly": false
+}

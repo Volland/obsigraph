@@ -1,0 +1,44 @@
+.obsigraph-graph {
+  width: 100%;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+}
+.obsigraph-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.obsigraph-table th,
+.obsigraph-table td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 2px 8px;
+  text-align: left;
+}
+.obsigraph-negative {
+  color: var(--text-error);
+}
+.obsigraph-empty,
+.obsigraph-status {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.obsigraph-notice {
+  color: var(--text-warning);
+  margin-bottom: 4px;
+}
+.obsigraph-error {
+  color: var(--text-error);
+  font-family: var(--font-monospace);
+  font-size: var(--font-smaller);
+  white-space: pre-wrap;
+  padding: 6px 8px;
+  border: 1px solid var(--text-error);
+  border-radius: var(--radius-s);
+}
+.obsigraph-styles-input {
+  width: 100%;
+  font-family: var(--font-monospace);
+}
+.obsigraph-setting-status {
+  color: var(--text-error);
+}

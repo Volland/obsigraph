@@ -3,5 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "dependencies": { "@obsigraph/core": "0.1.0" }
+  "dependencies": {
+    "@obsigraph/core": "0.1.0",
+    "cytoscape": "^3.34.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.13.1"
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.mjs --watch"
+  }
 }
