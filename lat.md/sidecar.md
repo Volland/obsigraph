@@ -16,7 +16,11 @@ The sidecar exposes a REST API and an MCP server offering Cypher queries, vector
 
 Hybrid retrieve takes vector hits, expands their graph neighborhood and returns cited chunks, so agents such as Claude can use the vault directly.
 
-Implemented by [[packages/sidecar/src/http.ts#createApi]]: `GET /health` (open), `GET /status`, `POST /query` with `{query, params, backend}`, `POST /search` (see [[vector-search#Vector index]]) and `POST /vectors/rebuild`. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`: 400 for syntax, unsupported and read-only, 504 for timeouts, never stack traces.
+Implemented by [[packages/sidecar/src/http.ts#createApi]]: `GET /health` (open), `GET /status`, `POST /query` with `{query, params, backend}`, `POST /search` (see [[vector-search#Vector index]]), `POST /retrieve`, `POST /vectors/rebuild` and `POST /mcp`. REST and MCP share [[packages/sidecar/src/ops.ts#Ops]], so both surfaces return identical results.
+
+[[packages/sidecar/src/mcp/server.ts#createMcpServer]] exposes three read-only tools, `cypher_query`, `vector_search` and `graphrag_retrieve`, over stateless streamable HTTP at `/mcp` behind the same token, bind address and limits, or over stdio with `server.mjs --stdio` (no listener, no token), e.g. `claude mcp add obsigraph -e OBSIGRAPH_VAULT=/vault -e OBSIGRAPH_DATA=/data -- node server.mjs --stdio`.
+
+[[packages/sidecar/src/rag/retrieve.ts#retrieve]] embeds the question once, takes top-k node and edge hits (an edge hit seeds both endpoints), expands `depth` hops breadth-first ranking neighbors by their best chunk with a per-node cap, then returns up to `chunk_cap` best chunks, hits first and neighbors by distance, each cited with path, heading, score, role and distance, plus hit and connecting edges. Truncation is flagged, and chunk text is marked as untrusted vault content. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`: 400 for syntax, unsupported and read-only, 504 for timeouts, never stack traces.
 
 ## Security
 

@@ -4,6 +4,9 @@ import { providerFromEnv, type EmbeddingProvider } from '@obsigraph/core';
 import { ConfigError, isLoopback, loadConfig, type Config } from './config.js';
 import { DataDir } from './data-dir.js';
 import { createApi, redactor, type Logger } from './http.js';
+import { Ops } from './ops.js';
+import { createMcpServer } from './mcp/server.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { LadybugBackend } from './ladybug/backend.js';
 import { LadybugMirror, type MirrorStatus } from './mirror/mirror.js';
 import { LadybugStore, loadLadybug, type MirrorStore } from './mirror/store.js';
@@ -13,7 +16,9 @@ import { VectorIndex } from './vectors/vector-index.js';
 export interface Sidecar {
   config: Config;
   sync: VaultSync;
-  server: Server;
+  /** Null in stdio mode, which has no HTTP listener. */
+  server: Server | null;
+  ops: Ops;
   /** Bound port (useful when configured as 0). */
   port: number;
   mirror: LadybugMirror | null;
@@ -30,6 +35,8 @@ export interface StartOptions {
   loadLadybug?: typeof loadLadybug;
   /** Override the embedding provider (tests); defaults to OBSIGRAPH_EMBED_* settings. */
   embedder?: EmbeddingProvider;
+  /** Serve MCP over stdio only: no HTTP listener and no token. */
+  stdio?: boolean;
 }
 
 /** Start sync and the HTTP API; resolves once the initial sync finished and the server listens. */
@@ -38,7 +45,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   const o: StartOptions = Array.isArray(opts) ? { processors: opts, log: legacyLog } : opts;
   const processors = [...(o.processors ?? [])];
   const log = o.log ?? legacyLog ?? console.error;
-  const config = loadConfig(env);
+  const config = loadConfig(env, { requireToken: !o.stdio });
   const redact = redactor(config.token);
   const data = new DataDir(config.dataDir, config.vaultDir);
 
@@ -88,30 +95,37 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     ? new LadybugBackend(mirror.store, mirror, sync, { maxPathDepth: config.maxPathDepth, timeoutMs: config.queryTimeoutMs })
     : null;
   const ladybug = () => backend ?? (mirrorUnavailable ?? 'The Ladybug mirror is not running');
-  const server = createApi(config, sync, log, { mirrorStatus, ladybug, vectors: () => vectors });
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(config.port, config.host, () => resolve());
-  });
-  const address = server.address();
-  const port = typeof address === 'object' && address ? address.port : config.port;
-  if (!isLoopback(config.host) && !config.behindTlsProxy) {
+  const ops = new Ops({ config, graph: sync.graph, ladybug, vectors: () => vectors });
+  let server: Server | null = null;
+  let port = 0;
+  if (!o.stdio) {
+    const srv = createApi(config, sync, log, { mirrorStatus, vectors: () => vectors }, ops);
+    server = srv;
+    await new Promise<void>((resolve, reject) => {
+      srv.once('error', reject);
+      srv.listen(config.port, config.host, () => resolve());
+    });
+    const address = srv.address();
+    port = typeof address === 'object' && address ? address.port : config.port;
+  }
+  if (server && !isLoopback(config.host) && !config.behindTlsProxy) {
     log(`WARNING: listening on ${config.host}:${port} without TLS; traffic is unencrypted unless a TLS proxy is in front (set OBSIGRAPH_BEHIND_TLS_PROXY=1 once it is).`);
   }
-  if (!config.token) log('WARNING: running without authentication (OBSIGRAPH_ALLOW_NO_AUTH=1); loopback only.');
+  if (server && !config.token) log('WARNING: running without authentication (OBSIGRAPH_ALLOW_NO_AUTH=1); loopback only.');
   const s = sync.status();
-  log(redact(`obsigraph sidecar on ${config.host}:${port} — ${s.notes} notes, ${s.edges} edges`));
+  log(redact(`obsigraph sidecar ${server ? `on ${config.host}:${port}` : 'on stdio'} — ${s.notes} notes, ${s.edges} edges`));
 
   return {
     config,
     sync,
     server,
+    ops,
     port,
     mirror,
     vectors,
     async stop() {
       vectors?.stop();
-      await new Promise<void>((r) => server.close(() => r()));
+      if (server) await new Promise<void>((r) => server!.close(() => r()));
       await sync.stop();
       await mirror?.idle();
       await vectors?.idle();
@@ -123,8 +137,11 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
 
 const isEntry = process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href;
 if (isEntry) {
-  startSidecar().then(
-    (sc) => {
+  const stdio = process.argv.includes('--stdio');
+  startSidecar(process.env, { stdio }).then(
+    async (sc) => {
+      // @lat: [[sidecar#Interfaces]]
+      if (stdio) await createMcpServer(sc.ops).connect(new StdioServerTransport());
       const shutdown = () => void sc.stop().then(() => process.exit(0));
       process.on('SIGINT', shutdown);
       process.on('SIGTERM', shutdown);

@@ -18,7 +18,7 @@ Done: add-sidecar-service, add-ladybug-mirror, add-ladybug-backend, add-engine-c
 
 ## v0.4 RAG
 
-Planned as add-embedding-provider, add-chunking-verbalization, add-vector-index, add-sidecar-service and add-sidecar-mcp-graphrag. The embedding provider interface, chunking and edge verbalization, the vector index, and the [[sidecar]] with REST and MCP.
+Done: add-embedding-provider, add-chunking-verbalization, add-vector-index, add-sidecar-mcp-graphrag. The embedding provider interface, chunking and edge verbalization, the vector index, and the [[sidecar]] with REST and MCP.
 
 ## Open questions
 

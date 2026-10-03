@@ -180,7 +180,28 @@ export class VectorIndex implements Processor {
   /** Top-k nodes by best chunk (or pooled) similarity, optionally filtered by type. */
   // @lat: [[vector-search#Node chunks]]
   async searchNodes(query: string, k: number, opts: { types?: string[]; mode?: ScoreMode } = {}): Promise<NodeHit[]> {
-    const q = normalize((await this.provider.embed([query]))[0]!);
+    return this.searchNodesBy(await this.embedQuery(query), k, opts);
+  }
+
+  /** Embed a question once; reuse the vector for several searches. */
+  async embedQuery(query: string): Promise<number[]> {
+    return normalize((await this.provider.embed([query]))[0]!);
+  }
+
+  /** Similarity of each chunk of a note to a query vector, best first. */
+  chunksOf(path: string, q: number[]): { heading: string | null; text: string; score: number }[] {
+    const n = this.notes.get(path);
+    if (!n) return [];
+    return n.chunks.map((c) => ({ heading: c.heading, text: c.body, score: cosine(q, c.vec) })).sort((a, b) => b.score - a.score);
+  }
+
+  /** Sentence of an indexed edge, if any. */
+  sentenceOf(edgeId: string): string | null {
+    for (const n of this.notes.values()) for (const e of n.edges) if (e.edgeId === edgeId) return e.text;
+    return null;
+  }
+
+  searchNodesBy(q: number[], k: number, opts: { types?: string[]; mode?: ScoreMode } = {}): NodeHit[] {
     const hits: NodeHit[] = [];
     for (const n of this.notes.values()) {
       const node = this.graph?.node(n.path);
@@ -202,7 +223,10 @@ export class VectorIndex implements Processor {
   /** Top-k edges by similarity of their verbalized sentence. */
   // @lat: [[vector-search#Edge verbalization]]
   async searchEdges(query: string, k: number): Promise<EdgeHit[]> {
-    const q = normalize((await this.provider.embed([query]))[0]!);
+    return this.searchEdgesBy(await this.embedQuery(query), k);
+  }
+
+  searchEdgesBy(q: number[], k: number): EdgeHit[] {
     const hits: EdgeHit[] = [];
     for (const n of this.notes.values()) {
       for (const e of n.edges) {

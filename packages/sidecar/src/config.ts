@@ -46,7 +46,7 @@ function int(env: NodeJS.ProcessEnv, name: string, fallback: number, min = 0): n
  * the vault must be readable, the data directory must exist and be writable.
  */
 // @lat: [[sidecar#Security]]
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+export function loadConfig(env: NodeJS.ProcessEnv = process.env, opts: { requireToken?: boolean } = {}): Config {
   const vaultDir = resolve(env.OBSIGRAPH_VAULT ?? '/vault');
   const dataDir = resolve(env.OBSIGRAPH_DATA ?? '/data');
 
@@ -74,12 +74,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       throw new ConfigError(`Cannot read token file ${env.OBSIGRAPH_TOKEN_FILE}`);
     }
   }
-  if (!token && env.OBSIGRAPH_ALLOW_NO_AUTH !== '1') {
+  // Stdio mode has no network listener, so no token is needed there.
+  if (!token && env.OBSIGRAPH_ALLOW_NO_AUTH !== '1' && opts.requireToken !== false) {
     throw new ConfigError('No token configured: set OBSIGRAPH_TOKEN or OBSIGRAPH_TOKEN_FILE (or OBSIGRAPH_ALLOW_NO_AUTH=1 for local testing)');
   }
 
   const host = env.OBSIGRAPH_HOST?.trim() || '127.0.0.1';
-  if (!token && !isLoopback(host)) {
+  if (!token && !isLoopback(host) && opts.requireToken !== false) {
     throw new ConfigError('Refusing to run without a token on a non-loopback address');
   }
 

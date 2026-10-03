@@ -18,3 +18,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[embedding-provider]] — embedding provider behaviors
 - [[chunking]] — chunking and edge verbalization behaviors
 - [[vector-index]] — vector index and search behaviors in the sidecar
+- [[mcp-graphrag]] — MCP tools and GraphRAG retrieve behaviors

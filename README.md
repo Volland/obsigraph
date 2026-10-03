@@ -2,7 +2,7 @@
 
 An Obsidian plugin that turns your vault into a typed, labeled, signed property graph and lets you query it with openCypher.
 
-Status: v0.2. Schema notes, edge-property embeds, the LadybugDB mirror, vector search and the RAG sidecar are planned under `openspec/changes/`.
+Status: v0.4. The plugin, the LadybugDB mirror and query backend, vector search, GraphRAG and the MCP sidecar are all in place.
 
 ## Install (development)
 
@@ -153,6 +153,12 @@ curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN 
   - `POST /query` takes `{query, params, backend}`, where `backend` is `builtin` or `ladybug`. Results use the same `{columns, rows}` shape as the plugin.
   - `POST /search` runs a vector search.
   - `POST /vectors/rebuild` re-embeds the vault after a model change.
+- **MCP for agents:** the three read-only tools `cypher_query`, `vector_search` and `graphrag_retrieve` are served at `POST /mcp`, with the same bearer token, or over stdio:
+  ```bash
+  claude mcp add obsigraph -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data \
+    -- node /path/to/packages/sidecar/dist/server.mjs --stdio
+  ```
+- **GraphRAG:** `POST /retrieve` takes `{"question": "...", "k": 5, "depth": 1, "neighbor_cap": 8, "chunk_cap": 20}`. It returns cited chunks from the vector hits and their graph neighbors, plus the connecting edges. The MCP `graphrag_retrieve` tool returns the same result.
 - **Vector search:** `POST /search` takes `{"query": "machine learning", "target": "nodes", "k": 5, "types": ["Person"], "then": "MATCH (p)-[:works_at]->(c) WHERE id(p) IN $hits RETURN c.title"}`. Nodes come back with their best-chunk citation, and edges come back with their sentence. `then` runs on the hits.
 - **Docker:** `packages/sidecar/Dockerfile` plus `compose.example.yaml`. The vault is mounted `:ro`, the image runs as a non-root user, the port is published on host loopback, and the token is passed as a Docker secret.
 - **Environment:**

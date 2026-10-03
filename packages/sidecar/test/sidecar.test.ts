@@ -300,7 +300,7 @@ describe('sidecar service', () => {
     expect(loadConfig(env(f)).host).toBe('127.0.0.1');
     const logs: string[] = [];
     const sc = await start(env(f, { OBSIGRAPH_HOST: '0.0.0.0' }), [], logs);
-    expect((sc.server.address() as { address: string }).address).toBe('0.0.0.0');
+    expect((sc.server!.address() as { address: string }).address).toBe('0.0.0.0');
     expect(logs.some((l) => l.includes('without TLS'))).toBe(true);
   });
 

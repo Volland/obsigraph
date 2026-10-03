@@ -1,9 +1,11 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { BuiltinEngine, CypherError, resultToJson } from '@obsigraph/core';
+import { CypherError } from '@obsigraph/core';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Config } from './config.js';
-import { BackendUnavailable, type LadybugBackend } from './ladybug/backend.js';
-import { EmbeddingError } from '@obsigraph/core';
+import { BackendUnavailable } from './ladybug/backend.js';
+import { createMcpServer } from './mcp/server.js';
+import { InputError, type Ops } from './ops.js';
 import type { VectorIndex } from './vectors/vector-index.js';
 import type { VaultSync } from './sync.js';
 
@@ -59,14 +61,28 @@ function send(res: ServerResponse, status: number, body: unknown): void {
 // @lat: [[sidecar#Interfaces]]
 export interface ApiExtras {
   mirrorStatus?: () => unknown;
-  /** Ladybug query backend, or the reason it is unavailable. */
-  ladybug?: () => LadybugBackend | string;
   vectors?: () => VectorIndex | null;
 }
 
-export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}, extras: ApiExtras = {}): Server {
-  const engine = new BuiltinEngine(sync.graph, () => ({ maxPathDepth: config.maxPathDepth, timeoutMs: config.queryTimeoutMs }));
+function parse(raw: string, hint: string): Record<string, unknown> {
+  try {
+    const v: unknown = JSON.parse(raw);
+    if (v && typeof v === 'object' && !Array.isArray(v)) return v as Record<string, unknown>;
+  } catch {
+    /* fall through */
+  }
+  throw new HttpError(400, 'bad_request', `Body must be a JSON object: ${hint}`);
+}
+
+/**
+ * REST and MCP surface: `GET /health` (open), `GET /status`, `POST /query`,
+ * `POST /search`, `POST /retrieve`, `POST /vectors/rebuild` and `POST /mcp`
+ * (streamable HTTP, stateless). Everything but health needs the bearer token.
+ */
+// @lat: [[sidecar#Interfaces]]
+export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}, extras: ApiExtras = {}, ops?: Ops): Server {
   const redact = redactor(config.token);
+  if (!ops) throw new Error('createApi needs the shared operations');
 
   const handle = async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
@@ -95,87 +111,44 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
           embeddingModel: extras.vectors?.()?.status().identity ?? null,
         });
       }
-      case 'POST /query': {
-        const raw = await readBody(req, config.maxBodyBytes);
-        let body: { query?: unknown; params?: unknown; backend?: unknown };
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          throw new HttpError(400, 'bad_request', 'Body must be JSON: {"query": "...", "params": {}}');
-        }
-        if (typeof body.query !== 'string' || !body.query.trim()) throw new HttpError(400, 'bad_request', '"query" must be a non-empty string');
-        const params = body.params && typeof body.params === 'object' && !Array.isArray(body.params) ? (body.params as Record<string, unknown>) : {};
-        const backend = body.backend ?? 'builtin';
-        if (backend === 'builtin') return send(res, 200, resultToJson(engine.run(body.query, params)));
-        if (backend !== 'ladybug') throw new HttpError(400, 'bad_request', '"backend" must be "builtin" or "ladybug"');
+      case 'POST /query':
         // @lat: [[ladybug-mirror#Hosted by the sidecar]]
-        const lb = extras.ladybug?.() ?? 'The Ladybug backend is not configured on this sidecar';
-        if (typeof lb === 'string') throw new BackendUnavailable('unavailable', lb);
-        return send(res, 200, await lb.run(body.query, params));
-      }
+        return send(res, 200, await ops.cypher(parse(await readBody(req, config.maxBodyBytes), '{"query": "...", "params": {}}')));
       case 'POST /search':
-        return send(res, 200, await search(await readBody(req, config.maxBodyBytes)));
+        return send(res, 200, await ops.search(parse(await readBody(req, config.maxBodyBytes), '{"query": "...", "target": "nodes", "k": 5}')));
+      case 'POST /retrieve':
+        return send(res, 200, await ops.retrieve(parse(await readBody(req, config.maxBodyBytes), '{"question": "...", "k": 5, "depth": 1}')));
       case 'POST /vectors/rebuild': {
         const v = extras.vectors?.();
         if (!v) throw new BackendUnavailable('unavailable', 'The vector index is disabled (OBSIGRAPH_VECTORS=0)');
         await v.rebuild();
         return send(res, 200, v.status());
       }
+      case 'POST /mcp': {
+        const body = parse(await readBody(req, config.maxBodyBytes), 'a JSON-RPC message');
+        const server = createMcpServer(ops);
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+        res.on('close', () => {
+          void transport.close();
+          void server.close();
+        });
+        await server.connect(transport);
+        await transport.handleRequest(req, res, body);
+        return;
+      }
       default:
-        if (['/status', '/query', '/search', '/vectors/rebuild'].includes(url.pathname)) throw new HttpError(405, 'method_not_allowed', `${req.method} not allowed on ${url.pathname}`);
+        if (['/status', '/query', '/search', '/retrieve', '/vectors/rebuild', '/mcp'].includes(url.pathname)) {
+          throw new HttpError(405, 'method_not_allowed', `${req.method} not allowed on ${url.pathname}`);
+        }
         throw new HttpError(404, 'not_found', `No route ${url.pathname}`);
     }
   };
 
-  /**
-   * Vector search over nodes or edges, optionally followed by a Cypher query
-   * that receives the hit ids as `$hits` (search then traverse).
-   */
-  // @lat: [[vector-search#Vector index]]
-  const search = async (raw: string) => {
-    let body: { query?: unknown; target?: unknown; k?: unknown; types?: unknown; mode?: unknown; then?: unknown; backend?: unknown };
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      throw new HttpError(400, 'bad_request', 'Body must be JSON: {"query": "...", "target": "nodes", "k": 5}');
-    }
-    if (typeof body.query !== 'string' || !body.query.trim()) throw new HttpError(400, 'bad_request', '"query" must be a non-empty string');
-    const target = body.target ?? 'nodes';
-    if (target !== 'nodes' && target !== 'edges') throw new HttpError(400, 'bad_request', '"target" must be "nodes" or "edges"');
-    const k = body.k === undefined ? 5 : Number(body.k);
-    if (!Number.isInteger(k) || k < 1 || k > 100) throw new HttpError(400, 'bad_request', '"k" must be an integer from 1 to 100');
-    const types = Array.isArray(body.types) ? body.types.map(String) : undefined;
-    const mode = body.mode === 'pooled' ? 'pooled' : 'best';
-    const v = extras.vectors?.();
-    if (!v) throw new BackendUnavailable('unavailable', 'The vector index is disabled (OBSIGRAPH_VECTORS=0)');
-    const st = v.status();
-    let results;
-    try {
-      results = target === 'nodes' ? await v.searchNodes(body.query, k, { types, mode }) : await v.searchEdges(body.query, k);
-    } catch (e) {
-      if (e instanceof EmbeddingError) throw new BackendUnavailable('unavailable', `Vector search is degraded: ${e.message}`);
-      throw e;
-    }
-    const notices: string[] = [];
-    if (st.state === 'mismatch') notices.push(`Results come from a stale index: ${st.message}`);
-    if (st.pending > 0) notices.push(`${st.pending} note(s) are waiting to be embedded; results may be incomplete.`);
-    let then: unknown;
-    if (typeof body.then === 'string' && body.then.trim()) {
-      const params = { hits: results.map((r) => r.id) };
-      if ((body.backend ?? 'builtin') === 'ladybug') {
-        const lb = extras.ladybug?.() ?? 'The Ladybug backend is not configured on this sidecar';
-        if (typeof lb === 'string') throw new BackendUnavailable('unavailable', lb);
-        then = await lb.run(body.then, params);
-      } else {
-        then = resultToJson(engine.run(body.then, params));
-      }
-    }
-    return { target, stale: st.state === 'mismatch', results, ...(then ? { then } : {}), ...(notices.length ? { notices } : {}) };
-  };
-
   return createServer((req, res) => {
     handle(req, res).catch((err: unknown) => {
+      if (res.headersSent) return;
       if (err instanceof HttpError) return send(res, err.status, { error: { kind: err.kind, message: err.message } });
+      if (err instanceof InputError) return send(res, 400, { error: { kind: 'bad_request', message: err.message } });
       if (err instanceof BackendUnavailable) return send(res, 503, { error: { kind: err.kind, message: err.message } });
       if (err instanceof CypherError) {
         const status = err.kind === 'timeout' ? 504 : 400;
