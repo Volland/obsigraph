@@ -6,7 +6,7 @@ The in-memory property graph built from the vault: notes become labeled nodes, p
 
 One note is one node; headings and blocks are not nodes in v1.
 
-Links to notes that do not exist become stub nodes so the graph has no dangling edges.
+Links to notes that do not exist become stub nodes, keyed by link text, so the graph has no dangling edges. Stubs are reference-counted and vanish with their last edge. Implemented by [[packages/core/src/graph/graph.ts#Graph]], which stores parsed edges per file so re-resolution after add, delete or rename needs no re-parse.
 
 ## Node types
 
