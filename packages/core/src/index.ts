@@ -6,7 +6,7 @@ export { Graph, labelsOf, titleOf } from './graph/graph.js';
 export type { GraphNode, GraphEdge, NoteInput, LinkResolver } from './graph/graph.js';
 export { BuiltinEngine } from './cypher/engine.js';
 export type { QueryEngine } from './cypher/engine.js';
-export { containsAgg, parseQuery } from './cypher/parser.js';
+export { containsAgg, FUNCTIONS, parseQuery } from './cypher/parser.js';
 export type { AggName, BinOp, Clause, Direction, Expr, NodePattern, Pattern, Projection, Query, RelPattern, ReturnItem, SortItem } from './cypher/ast.js';
 export { CypherError, lex } from './cypher/lexer.js';
 export type { Token, TokenKind } from './cypher/lexer.js';

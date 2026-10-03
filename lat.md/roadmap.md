@@ -14,7 +14,7 @@ Done: add-schema-notes, add-visualization-config, add-edge-embeds, add-cypher-ex
 
 ## v0.3 Ladybug
 
-Reordered: add-sidecar-service first, then add-ladybug-mirror, add-ladybug-backend and add-engine-conformance, all inside the sidecar. The one-way [[ladybug-mirror|mirror]], the Ladybug backend behind the shared query interface, and the cross-engine conformance suite.
+Done: add-sidecar-service, add-ladybug-mirror, add-ladybug-backend, add-engine-conformance, all inside the sidecar. The one-way [[ladybug-mirror|mirror]], the Ladybug backend behind the shared query interface, and the cross-engine conformance suite.
 
 ## v0.4 RAG
 

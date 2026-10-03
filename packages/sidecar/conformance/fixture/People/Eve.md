@@ -1,0 +1,4 @@
+---
+type: Person
+---
+knows:: [[Dave]]

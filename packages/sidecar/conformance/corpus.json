@@ -1,0 +1,1506 @@
+[
+  {
+    "id": "labels-props",
+    "query": "MATCH (a:Person)-[r:knows]->(b) WHERE r.since > 2019 RETURN a.title, r.since, b.title ORDER BY a.title, r.since",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "r.since",
+            "kind": "scalar"
+          },
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            2020,
+            "Bob"
+          ],
+          [
+            "Alice",
+            2022,
+            "Carol"
+          ],
+          [
+            "Bob",
+            2021,
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "multi-label",
+    "query": "MATCH (n:Person:Employee) RETURN n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n",
+            "kind": "node"
+          }
+        ],
+        "rows": [
+          [
+            {
+              "_type": "node",
+              "id": "People/Bob.md",
+              "labels": [
+                "Person",
+                "Employee"
+              ],
+              "stub": false,
+              "properties": {
+                "type": [
+                  "Person",
+                  "Employee"
+                ],
+                "age": 40,
+                "path": "People/Bob.md",
+                "title": "Bob"
+              }
+            }
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "label-predicate",
+    "query": "MATCH (n) WHERE n:Company OR n:Film RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Acme"
+          ],
+          [
+            "Movie"
+          ],
+          [
+            "Movie2"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "inline-props",
+    "query": "MATCH (n:Person {age: 31}) RETURN n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "direction-in",
+    "query": "MATCH (a)<-[:knows]-(b) WHERE a.title = 'Carol' RETURN b.title ORDER BY b.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Alice"
+          ],
+          [
+            "Bob"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "undirected",
+    "query": "MATCH (a {title: 'Bob'})-[r]-(b) RETURN type(r) AS t, b.title AS other ORDER BY t, other",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          },
+          {
+            "name": "other",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "employs",
+            "Acme"
+          ],
+          [
+            "knows",
+            "Alice"
+          ],
+          [
+            "knows",
+            "Carol"
+          ],
+          [
+            "rated",
+            "Movie"
+          ],
+          [
+            "trusts",
+            "Alice"
+          ],
+          [
+            "worksAt",
+            "Acme"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "type-alternation",
+    "query": "MATCH (a)-[r:knows|likes]->(b) RETURN DISTINCT b.title AS t ORDER BY t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Bob"
+          ],
+          [
+            "Carol"
+          ],
+          [
+            "Dave"
+          ],
+          [
+            "Ghost"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "comma-patterns",
+    "query": "MATCH (a)-[:knows]->(b), (b)-[:knows]->(c) WHERE a.title = 'Alice' RETURN DISTINCT c.title AS t ORDER BY t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "parallel-edges",
+    "query": "MATCH (a {title: 'Alice'})-[r:knows]->(b {title: 'Carol'}) RETURN r.id, r.since ORDER BY r.since",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "r.id",
+            "kind": "scalar"
+          },
+          {
+            "name": "r.since",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "People/Alice.md#knows#People/Carol.md#0",
+            2018
+          ],
+          [
+            "People/Alice.md#knows#People/Carol.md#1",
+            2022
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "sign-filter",
+    "query": "MATCH (a)-[r]->(b) WHERE r.sign = -1 RETURN a.title, b.title, r.id, r.why",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "r.id",
+            "kind": "scalar"
+          },
+          {
+            "name": "r.why",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            "Eve",
+            "alice-eve",
+            "phishing"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "explicit-positive",
+    "query": "MATCH (a)-[r:trusts]->(b) RETURN r.sign, a.title, b.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "r.sign",
+            "kind": "scalar"
+          },
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            1,
+            "Bob",
+            "Alice"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "pinned-id",
+    "query": "MATCH ()-[r]->() WHERE r.id = 'alice-eve' RETURN type(r) AS t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "distrusts"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "stubs",
+    "query": "MATCH (n) WHERE n.stub = true RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Dave"
+          ],
+          [
+            "Ghost"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "not-stubs-count",
+    "query": "MATCH (n) WHERE n.stub = false RETURN count(n) AS c",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "c",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            7
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "optional-match",
+    "query": "MATCH (p:Person) OPTIONAL MATCH (p)-[:worksAt]->(c) RETURN p.title, c.title ORDER BY p.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "p.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "c.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            null
+          ],
+          [
+            "Bob",
+            "Acme"
+          ],
+          [
+            "Carol",
+            null
+          ],
+          [
+            "Eve",
+            null
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "optional-where",
+    "query": "MATCH (p:Person) OPTIONAL MATCH (p)-[:knows]->(f) WHERE f.title = 'Zed' RETURN p.title, f ORDER BY p.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "p.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "f",
+            "kind": "node"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            null
+          ],
+          [
+            "Bob",
+            null
+          ],
+          [
+            "Carol",
+            null
+          ],
+          [
+            "Eve",
+            null
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "with-filter",
+    "query": "MATCH (a)-[:knows]->(b) WITH a, count(b) AS n WHERE n > 1 RETURN a.title, n ORDER BY a.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "with-order-limit",
+    "query": "MATCH (a:Person) WITH a ORDER BY a.title DESC LIMIT 2 MATCH (a)-[:knows]->(b) RETURN a.title, b.title ORDER BY a.title, b.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Carol",
+            "Alice"
+          ],
+          [
+            "Eve",
+            "Dave"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "order-skip-limit",
+    "query": "MATCH (n:Person) RETURN n.title ORDER BY n.title SKIP 1 LIMIT 2",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Bob"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "order-desc-nulls",
+    "query": "MATCH (n:Person) RETURN n.title, n.age ORDER BY n.age DESC, n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "n.age",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Eve",
+            null
+          ],
+          [
+            "Bob",
+            40
+          ],
+          [
+            "Alice",
+            31
+          ],
+          [
+            "Carol",
+            25
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "var-length-bounded",
+    "query": "MATCH (a {title: 'Alice'})-[:knows*1..2]->(b) RETURN DISTINCT b.title AS t ORDER BY t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Bob"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "var-length-exact",
+    "query": "MATCH (a {title: 'Alice'})-[:knows*2]->(b) RETURN DISTINCT b.title AS t ORDER BY t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "var-length-upper",
+    "query": "MATCH (a {title: 'Bob'})-[:knows*..2]->(b) RETURN DISTINCT b.title AS t ORDER BY t",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "t",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "var-length-lower",
+    "query": "MATCH (a {title: 'Carol'})-[:knows*2..]->(b) RETURN count(*) AS n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            4
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "var-length-star",
+    "query": "MATCH (a {title: 'Eve'})-[*]->(b) RETURN b.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "b.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Dave"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "path-variable",
+    "query": "MATCH p = (a {title: 'Alice'})-[:knows*1..2]->(b) RETURN length(p) AS l, size(nodes(p)) AS n, size(relationships(p)) AS r ORDER BY l, n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "l",
+            "kind": "scalar"
+          },
+          {
+            "name": "n",
+            "kind": "scalar"
+          },
+          {
+            "name": "r",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            2,
+            3,
+            2
+          ],
+          [
+            2,
+            3,
+            2
+          ],
+          [
+            2,
+            3,
+            2
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "count-group",
+    "query": "MATCH (a)-[r:knows]->() RETURN a.title, count(r) AS n ORDER BY n DESC, a.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            3
+          ],
+          [
+            "Bob",
+            1
+          ],
+          [
+            "Carol",
+            1
+          ],
+          [
+            "Eve",
+            1
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "count-distinct",
+    "query": "MATCH (a)-[:knows]->(b) RETURN count(*) AS rows, count(DISTINCT b) AS targets",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "rows",
+            "kind": "scalar"
+          },
+          {
+            "name": "targets",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            6,
+            4
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "numeric-aggregates",
+    "query": "MATCH ()-[r:rated]->() RETURN avg(r.score), min(r.score), max(r.score), sum(r.score)",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "avg(r.score)",
+            "kind": "scalar"
+          },
+          {
+            "name": "min(r.score)",
+            "kind": "scalar"
+          },
+          {
+            "name": "max(r.score)",
+            "kind": "scalar"
+          },
+          {
+            "name": "sum(r.score)",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            3,
+            2,
+            4,
+            9
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "collect",
+    "query": "MATCH (a {title: 'Bob'})-[r]->(b) RETURN size(collect(b.title)) AS n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            4
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "empty-aggregates",
+    "query": "MATCH (a:Nobody) RETURN count(a), sum(a.age), avg(a.age), min(a.age), max(a.age), size(collect(a.age))",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "count(a)",
+            "kind": "scalar"
+          },
+          {
+            "name": "sum(a.age)",
+            "kind": "scalar"
+          },
+          {
+            "name": "avg(a.age)",
+            "kind": "scalar"
+          },
+          {
+            "name": "min(a.age)",
+            "kind": "scalar"
+          },
+          {
+            "name": "max(a.age)",
+            "kind": "scalar"
+          },
+          {
+            "name": "size(collect(a.age))",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            0,
+            0,
+            null,
+            null,
+            null,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "arithmetic",
+    "query": "MATCH (n:Person {title: 'Alice'}) RETURN n.age + 1 AS a, n.age * 2 AS b, n.age - 1 AS c, n.age / 2 AS d, n.age % 5 AS e",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a",
+            "kind": "scalar"
+          },
+          {
+            "name": "b",
+            "kind": "scalar"
+          },
+          {
+            "name": "c",
+            "kind": "scalar"
+          },
+          {
+            "name": "d",
+            "kind": "scalar"
+          },
+          {
+            "name": "e",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            32,
+            62,
+            30,
+            15.5,
+            1
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "comparisons",
+    "query": "MATCH (n:Person) WHERE n.age >= 25 AND n.age <= 40 AND n.age <> 31 RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Bob"
+          ],
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "in-list",
+    "query": "MATCH (n) WHERE n.title IN ['Alice', 'Bob', 'Zed'] RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice"
+          ],
+          [
+            "Bob"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "string-predicates",
+    "query": "MATCH (n) WHERE n.title STARTS WITH 'A' OR n.title ENDS WITH 'ie' OR n.title CONTAINS 'ov' RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Acme"
+          ],
+          [
+            "Alice"
+          ],
+          [
+            "Movie"
+          ],
+          [
+            "Movie2"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "is-null",
+    "query": "MATCH (n:Person) WHERE n.age IS NULL RETURN n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Eve"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "boolean-logic",
+    "query": "MATCH (n:Person) WHERE NOT (n.age > 30) XOR n.title = 'Eve' RETURN n.title ORDER BY n.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Carol"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "list-property",
+    "query": "MATCH (n:Person) WHERE n.tags IS NOT NULL RETURN n.title, size(n.tags) AS k",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "k",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Alice",
+            2
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-id-labels",
+    "query": "MATCH (n:Person {title: 'Bob'}) RETURN id(n) AS i, labels(n) AS l",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "i",
+            "kind": "scalar"
+          },
+          {
+            "name": "l",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "People/Bob.md",
+            [
+              "Person",
+              "Employee"
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-strings",
+    "query": "MATCH (n:Person {title: 'Alice'}) RETURN toLower(n.title), toUpper(n.title), trim('  x '), ltrim('  x'), rtrim('x  '), replace(n.title, 'li', 'LI')",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "toLower(n.title)",
+            "kind": "scalar"
+          },
+          {
+            "name": "toUpper(n.title)",
+            "kind": "scalar"
+          },
+          {
+            "name": "trim('  x ')",
+            "kind": "scalar"
+          },
+          {
+            "name": "ltrim('  x')",
+            "kind": "scalar"
+          },
+          {
+            "name": "rtrim('x  ')",
+            "kind": "scalar"
+          },
+          {
+            "name": "replace(n.title, 'li', 'LI')",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "alice",
+            "ALICE",
+            "x",
+            "x",
+            "x",
+            "ALIce"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-substr",
+    "query": "MATCH (n:Person {title: 'Alice'}) RETURN substring(n.title, 1, 3) AS s, left(n.title, 2) AS l, right(n.title, 2) AS r, split('a,b', ',') AS p",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "s",
+            "kind": "scalar"
+          },
+          {
+            "name": "l",
+            "kind": "scalar"
+          },
+          {
+            "name": "r",
+            "kind": "scalar"
+          },
+          {
+            "name": "p",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "lic",
+            "Al",
+            "ce",
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-convert",
+    "query": "RETURN toString(42) AS s, toInteger('7') AS i, toFloat('2.5') AS f, toBoolean('true') AS b, coalesce(null, 'x') AS c",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "s",
+            "kind": "scalar"
+          },
+          {
+            "name": "i",
+            "kind": "scalar"
+          },
+          {
+            "name": "f",
+            "kind": "scalar"
+          },
+          {
+            "name": "b",
+            "kind": "scalar"
+          },
+          {
+            "name": "c",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "42",
+            7,
+            2.5,
+            true,
+            "x"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-math",
+    "query": "RETURN abs(-3) AS a, round(2.4) AS r, floor(2.7) AS f, ceil(2.1) AS c, sign(-5) AS s",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a",
+            "kind": "scalar"
+          },
+          {
+            "name": "r",
+            "kind": "scalar"
+          },
+          {
+            "name": "f",
+            "kind": "scalar"
+          },
+          {
+            "name": "c",
+            "kind": "scalar"
+          },
+          {
+            "name": "s",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            3,
+            2,
+            2,
+            3,
+            -1
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "functions-lists",
+    "query": "RETURN size([1, 2, 3]) AS s, head([1, 2, 3]) AS h, last([1, 2, 3]) AS l, reverse([1, 2, 3]) AS r, [10, 20, 30][1] AS i",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "s",
+            "kind": "scalar"
+          },
+          {
+            "name": "h",
+            "kind": "scalar"
+          },
+          {
+            "name": "l",
+            "kind": "scalar"
+          },
+          {
+            "name": "r",
+            "kind": "scalar"
+          },
+          {
+            "name": "i",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            3,
+            1,
+            3,
+            [
+              3,
+              2,
+              1
+            ],
+            20
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "node-property-number",
+    "query": "MATCH (o:Company) RETURN o.title, o.founded",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "o.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "o.founded",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Acme",
+            1999
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "edge-property-string",
+    "query": "MATCH (a)-[r:worksAt]->(c) RETURN a.title, r.role, c.title",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "a.title",
+            "kind": "scalar"
+          },
+          {
+            "name": "r.role",
+            "kind": "scalar"
+          },
+          {
+            "name": "c.title",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Bob",
+            "engineer",
+            "Acme"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "missing-type",
+    "query": "MATCH (a)-[:nope]->(b) RETURN count(*) AS n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            0
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "unwind",
+    "query": "UNWIND [1, 2, 3] AS x RETURN sum(x) AS s",
+    "difference": "unwind",
+    "expected": {
+      "ok": false,
+      "error": "unsupported"
+    }
+  },
+  {
+    "id": "case",
+    "query": "MATCH (n:Person) RETURN n.title, CASE WHEN n.age > 30 THEN 'old' ELSE 'young' END AS g ORDER BY n.title",
+    "difference": "case",
+    "expected": {
+      "ok": false,
+      "error": "unsupported"
+    }
+  },
+  {
+    "id": "startnode",
+    "query": "MATCH (a {title: 'Bob'})-[r:worksAt]->() RETURN startNode(r).title AS s, endNode(r).title AS e",
+    "difference": "node-of-relationship",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "s",
+            "kind": "scalar"
+          },
+          {
+            "name": "e",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            "Bob",
+            "Acme"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "keys-properties",
+    "query": "MATCH (o:Company) RETURN keys(o) AS k",
+    "difference": "property-maps",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "k",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            [
+              "type",
+              "founded",
+              "path",
+              "title"
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "properties-map",
+    "query": "MATCH (o:Company) RETURN properties(o).founded AS f",
+    "difference": "property-maps",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "f",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            1999
+          ]
+        ]
+      }
+    }
+  }
+]

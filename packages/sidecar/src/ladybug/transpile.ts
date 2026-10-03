@@ -106,7 +106,8 @@ class Transpiler {
     if (varLen) {
       const max = r.length!.max ?? this.ctx.maxDepth;
       if (r.length!.max === null) this.notices.add(`Unbounded variable-length patterns are capped at ${max} hops on the Ladybug backend.`);
-      len = `*${r.length!.min}..${max}`;
+      // TRAIL keeps openCypher's rule that a path never repeats a relationship.
+      len = `* TRAIL ${r.length!.min}..${max}`;
       if (r.props.length) throw unsupported('A property map on a variable-length relationship');
     } else {
       for (const [k, e] of r.props) conds.push(`${this.property(v, 'relationship', k)} = ${this.expr(e)}`);
@@ -190,6 +191,27 @@ class Transpiler {
     return `${objText}.${ident(propColumn(key, t))}`;
   }
 
+  /** Whether an expression is list-shaped, to pick list functions over string ones. */
+  private isList(e: Expr): boolean {
+    switch (e.k) {
+      case 'list':
+        return true;
+      case 'agg':
+        return e.name === 'collect';
+      case 'call':
+        return ['nodes', 'relationships', 'split', 'labels', 'keys', 'reverse'].includes(e.name) && (e.name !== 'reverse' || this.isList(e.args[0]!));
+      case 'var':
+        return this.scope.get(e.name) === 'rels';
+      case 'prop': {
+        const kind = this.kindOf(e.obj);
+        const types = kind === 'node' ? this.ctx.types.node.get(e.key) : kind === 'relationship' ? this.ctx.types.rel.get(e.key) : undefined;
+        return !!types && (types.has('ls') || types.has('ln'));
+      }
+      default:
+        return false;
+    }
+  }
+
   private kindOf(e: Expr): Kind | undefined {
     return e.k === 'var' ? this.scope.get(e.name) : undefined;
   }
@@ -214,8 +236,14 @@ class Transpiler {
         return `{${e.entries.map(([k, v]) => `${ident(k)}: ${this.expr(v)}`).join(', ')}}`;
       case 'call':
         return this.call(e.name, e.args);
-      case 'agg':
-        return e.arg === null ? 'count(*)' : `${e.name}(${e.distinct ? 'DISTINCT ' : ''}${this.expr(e.arg)})`;
+      case 'agg': {
+        if (e.arg === null) return 'count(*)';
+        const agg = `${e.name}(${e.distinct ? 'DISTINCT ' : ''}${this.expr(e.arg)})`;
+        // openCypher: sum over no rows is 0 and collect is an empty list; Ladybug gives NULL.
+        if (e.name === 'sum') return `coalesce(${agg}, 0)`;
+        if (e.name === 'collect') return `coalesce(${agg}, [])`;
+        return agg;
+      }
       case 'not':
         return `(NOT ${this.expr(e.e)})`;
       case 'neg':
@@ -270,6 +298,10 @@ class Transpiler {
         return a.length > 2 ? `substring(${a[0]}, (${a[1]}) + 1, ${a[2]})` : `substring(${a[0]}, (${a[1]}) + 1, size(${a[0]}))`;
       case 'split':
         return `string_split(${a[0]}, ${a[1]})`;
+      case 'round':
+        return `round(${a[0]}, 0)`;
+      case 'reverse':
+        return this.isList(args[0]!) ? `list_reverse(${a[0]})` : `reverse(${a[0]})`;
       case 'head':
         return `list_extract(${a[0]}, 1)`;
       case 'last':

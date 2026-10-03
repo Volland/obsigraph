@@ -6,7 +6,7 @@ Queries are written in openCypher inside `graph-query` blocks and run through on
 
 The default engine is an in-plugin TypeScript interpreter over the live graph; an optional LadybugDB backend in the sidecar takes the same query text.
 
-Both return the same `{columns, rows}` contract and are read-only. A block picks one with `backend: builtin|ladybug` or the plugin default; Ladybug blocks call the sidecar through [[packages/plugin/src/query/remote.ts#runRemote]], which maps every response to a result, a positioned error or a retry, and render asynchronously. See [[ladybug-mirror#Query translation]]. A conformance suite runs each query against both engines so they cannot silently diverge.
+Both return the same `{columns, rows}` contract and are read-only. A block picks one with `backend: builtin|ladybug` or the plugin default; Ladybug blocks call the sidecar through [[packages/plugin/src/query/remote.ts#runRemote]], which maps every response to a result, a positioned error or a retry, and render asynchronously. See [[ladybug-mirror#Query translation]]. A conformance suite runs a 52-query corpus over a fixture vault on both engines ([[packages/sidecar/conformance/runner.ts#runCorpus]], rules in [[packages/sidecar/conformance/compare.ts#compare]]): any undocumented divergence fails, and intentional ones are listed in `packages/sidecar/conformance/differences.json` (UNWIND and CASE only on Ladybug; startNode, endNode, keys and properties only built-in). It caught Ladybug's walk semantics for variable-length paths, now translated to `TRAIL`. Re-record built-in expectations with `OBSIGRAPH_RECORD=1`.
 
 ## Supported subset
 
