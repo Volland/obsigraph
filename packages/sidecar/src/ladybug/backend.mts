@@ -1,11 +1,11 @@
 import { CypherError, parseQuery, type JsonQueryResult, type JsonValue, type Query } from '@obsigraph/core';
-import type { LadybugMirror } from '../mirror/mirror.js';
-import { propertyTypes } from '../mirror/rows.js';
-import type { LadybugStore } from '../mirror/store.js';
-import type { VaultSync } from '../sync.js';
-import { fromLadybug, inferKind } from './convert.js';
-import { assertReadOnly } from './guard.js';
-import { transpile } from './transpile.js';
+import type { LadybugMirror } from '../mirror/mirror.mjs';
+import { propertyTypes } from '../mirror/rows.mjs';
+import type { LadybugStore } from '../mirror/store.mjs';
+import type { VaultSync } from '../sync.mjs';
+import { fromLadybug, inferKind } from './convert.mjs';
+import { assertReadOnly } from './guard.mjs';
+import { transpile } from './transpile.mjs';
 
 /** Raised when the mirror cannot answer yet; maps to HTTP 503. */
 export class BackendUnavailable extends Error {

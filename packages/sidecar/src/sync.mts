@@ -2,8 +2,8 @@ import { watch, type FSWatcher } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Graph, pathResolver, type NoteInput } from '@obsigraph/core';
-import type { DataDir } from './data-dir.js';
-import { isNotePath, listMarkdown, readNote } from './vault.js';
+import type { DataDir } from './data-dir.mjs';
+import { isNotePath, listMarkdown, readNote } from './vault.mjs';
 
 /** A downstream store fed per changed file, e.g. the Ladybug mirror or vector index. */
 export interface Processor {

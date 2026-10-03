@@ -3,11 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BuiltinEngine, Graph, pathResolver, type NoteInput } from '@obsigraph/core';
 import { afterEach, describe, expect, it } from 'vitest';
-import { DataDir } from '../src/data-dir.js';
-import { startSidecar, type Sidecar } from '../src/main.js';
-import { LadybugMirror, MIRROR_FORMAT } from '../src/mirror/mirror.js';
-import { graphRows } from '../src/mirror/rows.js';
-import { LadybugStore, loadLadybug, MemoryStore } from '../src/mirror/store.js';
+import { DataDir } from '../src/data-dir.mjs';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
+import { LadybugMirror, MIRROR_FORMAT } from '../src/mirror/mirror.mjs';
+import { graphRows } from '../src/mirror/rows.mjs';
+import { LadybugStore, loadLadybug, MemoryStore } from '../src/mirror/store.mjs';
 
 const dirs: string[] = [];
 const running: Sidecar[] = [];

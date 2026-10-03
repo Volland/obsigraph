@@ -1,5 +1,5 @@
 import type { ColumnKind, JsonNode, JsonPath, JsonRelationship, JsonValue } from '@obsigraph/core';
-import { typeOfTable } from '../mirror/rows.js';
+import { typeOfTable } from '../mirror/rows.mjs';
 
 type Raw = Record<string, unknown>;
 

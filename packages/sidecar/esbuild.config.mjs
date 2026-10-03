@@ -1,7 +1,7 @@
 import { build } from 'esbuild';
 
 await build({
-  entryPoints: ['src/main.ts'],
+  entryPoints: ['src/main.mts'],
   bundle: true,
   platform: 'node',
   format: 'esm',

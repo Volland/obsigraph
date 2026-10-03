@@ -2,9 +2,9 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BuiltinEngine, CypherError, resultToJson, type JsonQueryResult } from '@obsigraph/core';
-import { startSidecar, type Sidecar } from '../src/main.js';
-import { loadLadybug } from '../src/mirror/store.js';
-import { classify, type CorpusEntry, type Difference, type EngineOutcome, type Outcome } from './compare.js';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
+import { loadLadybug } from '../src/mirror/store.mjs';
+import { classify, type CorpusEntry, type Difference, type EngineOutcome, type Outcome } from './compare.mjs';
 
 export const FIXTURE = join(import.meta.dirname, 'fixture');
 export const CORPUS_FILE = join(import.meta.dirname, 'corpus.json');

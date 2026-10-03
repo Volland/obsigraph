@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { EmbeddingError, OllamaProvider, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.js';
+import { EmbeddingError, OllamaProvider, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.mjs';
 import { afterEach, describe, expect, it } from 'vitest';
-import { startSidecar, type Sidecar } from '../src/main.js';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;

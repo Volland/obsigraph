@@ -1,8 +1,8 @@
 import type { Graph } from '@obsigraph/core';
-import type { DataDir } from '../data-dir.js';
-import type { Processor } from '../sync.js';
-import { applyToState, diffMirror, graphRows, isEmptyDiff, type MirrorState } from './rows.js';
-import type { MirrorStore } from './store.js';
+import type { DataDir } from '../data-dir.mjs';
+import type { Processor } from '../sync.mjs';
+import { applyToState, diffMirror, graphRows, isEmptyDiff, type MirrorState } from './rows.mjs';
+import type { MirrorStore } from './store.mjs';
 
 /** Bump when the storage layout changes; a mismatch triggers a rebuild. */
 export const MIRROR_FORMAT = 2;

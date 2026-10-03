@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, type SettingDefinitionItem } from 'obsidian';
 import type ObsigraphPlugin from './main';
 import { DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
 import { parseEdgeStyles, parseTypeStyles } from './render/styles';
@@ -179,6 +179,97 @@ export class ObsigraphSettingTab extends PluginSettingTab {
         edgeStatus.setText('');
         this.plugin.settings.edgeStyles = parsed;
         await this.plugin.saveSettings();
+      });
+    });
+  }
+
+  /**
+   * Declarative settings (Obsidian 1.13+), so every option appears in settings
+   * search. Older versions keep using display().
+   */
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    const intIn = (min: number, max: number) => (v: number) =>
+      Number.isInteger(v) && v >= min && v <= max ? undefined : `Enter a whole number from ${min} to ${max}.`;
+    return [
+      {
+        type: 'group',
+        heading: 'Queries',
+        items: [
+          {
+            name: 'Default query backend',
+            desc: 'Where blocks run unless they set a backend line. Built-in runs inside the app; the sidecar option runs full read queries on its graph database.',
+            control: { type: 'dropdown', key: 'defaultBackend', options: { builtin: 'Built-in', ladybug: 'Ladybug (sidecar)' } },
+          },
+          { name: 'Maximum graph elements', desc: 'Graph results with more nodes plus edges than this are shown as a table instead.', control: { type: 'number', key: 'maxElements', min: 1, validate: intIn(1, 100000) } },
+          { name: 'Maximum path depth', desc: 'Unbounded variable-length patterns stop at this many hops.', control: { type: 'number', key: 'maxPathDepth', min: 1, max: 50, validate: intIn(1, 50) } },
+          { name: 'Refresh delay (ms)', desc: 'How long query blocks wait after a vault change before re-running.', control: { type: 'number', key: 'refreshDebounceMs', min: 0, validate: intIn(0, 60000) } },
+        ],
+      },
+      {
+        type: 'group',
+        heading: 'Sidecar',
+        items: [
+          { name: 'Sidecar URL', desc: 'Address and port of the sidecar, used by sidecar-backed queries.', control: { type: 'text', key: 'sidecarUrl' } },
+          {
+            name: 'Sidecar token',
+            desc: "Bearer token configured on the sidecar. Stored in this vault's plugin data.",
+            render: (setting) => {
+              setting.addText((t) => {
+                t.inputEl.type = 'password';
+                t.setValue(this.plugin.settings.sidecarToken).onChange((v) => this.setControlValue('sidecarToken', v.trim()));
+              });
+            },
+          },
+        ],
+      },
+      {
+        type: 'group',
+        heading: 'Types and styles',
+        items: [
+          { name: 'Schema folder', desc: 'Each note directly in this folder declares the schema for the type named by its title.', control: { type: 'folder', key: 'schemaFolder' } },
+          { name: 'Show diagnostics', desc: 'Show the number of parse and schema issues in the status bar.', control: { type: 'toggle', key: 'showDiagnostics' } },
+          {
+            name: 'Type styles',
+            desc: 'JSON keyed by type label: color, shape, icon (Lucide name) and label (property shown instead of the title).',
+            aliases: ['colors', 'shapes', 'icons'],
+            render: (setting) => this.jsonEditor(setting, 'typeStyles', 8),
+          },
+          {
+            name: 'Edge styles',
+            desc: 'JSON keyed by edge type: color and line (solid, dashed, dotted). Negative edges are dashed red unless set here.',
+            render: (setting) => this.jsonEditor(setting, 'edgeStyles', 6),
+          },
+        ],
+      },
+    ];
+  }
+
+  getControlValue(key: string): unknown {
+    return this.plugin.settings[key as keyof ObsigraphSettings];
+  }
+
+  /** Persist through the plugin so caches refresh and open views restyle. */
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    const settings = this.plugin.settings as unknown as Record<string, unknown>;
+    settings[key] = key === 'schemaFolder' && typeof value === 'string' && !value.trim() ? DEFAULT_SCHEMA_FOLDER : value;
+    if (key === 'schemaFolder') this.plugin.index.invalidate();
+    await this.plugin.saveSettings();
+  }
+
+  /** JSON style editor with inline validation, shared by both style settings. */
+  private jsonEditor(setting: Setting, key: 'typeStyles' | 'edgeStyles', rows: number): void {
+    const status = setting.descEl.createDiv({ cls: 'obsigraph-setting-status' });
+    setting.addTextArea((t) => {
+      t.inputEl.rows = rows;
+      t.inputEl.addClass('obsigraph-styles-input');
+      t.setValue(JSON.stringify(this.plugin.settings[key], null, 2)).onChange(async (v) => {
+        const parsed = key === 'typeStyles' ? parseTypeStyles(v) : parseEdgeStyles(v);
+        if (typeof parsed === 'string') {
+          status.setText(parsed);
+          return;
+        }
+        status.setText('');
+        await this.setControlValue(key, parsed);
       });
     });
   }

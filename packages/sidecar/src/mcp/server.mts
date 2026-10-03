@@ -1,9 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CypherError } from '@obsigraph/core';
 import { z } from 'zod';
-import { BackendUnavailable } from '../ladybug/backend.js';
-import { InputError, type Ops } from '../ops.js';
-import { UNTRUSTED_NOTICE } from '../rag/retrieve.js';
+import { BackendUnavailable } from '../ladybug/backend.mjs';
+import { InputError, type Ops } from '../ops.mjs';
+import { UNTRUSTED_NOTICE } from '../rag/retrieve.mjs';
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 

@@ -1,5 +1,5 @@
 import type { Graph } from '@obsigraph/core';
-import type { VectorIndex } from '../vectors/vector-index.js';
+import type { VectorIndex } from '../vectors/vector-index.mjs';
 
 export interface RetrieveOptions {
   k?: number;

@@ -2,10 +2,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { LadybugBackend } from '../src/ladybug/backend.js';
-import { assertReadOnly } from '../src/ladybug/guard.js';
-import { startSidecar, type Sidecar } from '../src/main.js';
-import { loadLadybug } from '../src/mirror/store.js';
+import { LadybugBackend } from '../src/ladybug/backend.mjs';
+import { assertReadOnly } from '../src/ladybug/guard.mjs';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
+import { loadLadybug } from '../src/mirror/store.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;

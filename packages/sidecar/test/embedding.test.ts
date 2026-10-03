@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { afterEach, describe, expect, it } from 'vitest';
-import { EmbeddingError, identityMismatch, OllamaProvider, OpenAIProvider, providerFromEnv } from '../src/vectors/provider.js';
+import { EmbeddingError, identityMismatch, OllamaProvider, OpenAIProvider, providerFromEnv } from '../src/vectors/provider.mjs';
 
 interface Seen {
   path: string;
@@ -130,5 +130,6 @@ describe('embedding provider', () => {
     expect(out).toHaveLength(2);
     expect(out[0]).toHaveLength(768);
     expect((await p.identity()).dimension).toBe(768);
-  });
+    // Ollama may need to load the model from disk first.
+  }, 60000);
 });

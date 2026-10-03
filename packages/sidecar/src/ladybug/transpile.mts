@@ -1,5 +1,5 @@
 import { CypherError, queryColumns, type Column, type ColumnKind, type Expr, type NodePattern, type Pattern, type Projection, type Query, type RelPattern } from '@obsigraph/core';
-import { EMPTY_REL_TABLE, propColumn, relTable, type ColType, type PropertyTypes } from '../mirror/rows.js';
+import { EMPTY_REL_TABLE, propColumn, relTable, type ColType, type PropertyTypes } from '../mirror/rows.mjs';
 
 export interface TranspileContext {
   types: PropertyTypes;

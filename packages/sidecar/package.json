@@ -1,6 +1,6 @@
 {
   "name": "@obsigraph/sidecar",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0",
-    "@obsigraph/core": "0.4.2",
+    "@obsigraph/core": "0.4.3",
     "zod": "^4.6.5",
     "yaml": "^2.9.1"
   },

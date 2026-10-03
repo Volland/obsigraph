@@ -1,10 +1,10 @@
 import { writeFileSync } from 'node:fs';
 import { BuiltinEngine, CypherError, FUNCTIONS } from '@obsigraph/core';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { checkRegistry, compare, summarize, type EngineOutcome } from '../conformance/compare.js';
-import { CORPUS_FILE, loadCorpus, loadDifferences, runCorpus, type RunReport } from '../conformance/runner.js';
-import { startSidecar } from '../src/main.js';
-import { FIXTURE } from '../conformance/runner.js';
+import { checkRegistry, compare, summarize, type EngineOutcome } from '../conformance/compare.mjs';
+import { CORPUS_FILE, loadCorpus, loadDifferences, runCorpus, type RunReport } from '../conformance/runner.mjs';
+import { startSidecar } from '../src/main.mjs';
+import { FIXTURE } from '../conformance/runner.mjs';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -122,7 +122,7 @@ describe('conformance comparison rules', () => {
 
   // @lat: [[tests/engine-conformance#Unexpected divergence fails]]
   it('reports an undocumented divergence with both results, and summarizes', async () => {
-    const { classify } = await import('../conformance/compare.js');
+    const { classify } = await import('../conformance/compare.mjs');
     const o = classify({ id: 'x', query: 'RETURN 1' }, ok([[1]]), ok([[2]]));
     expect(o).toEqual({ kind: 'divergence', reason: 'rows differ', builtin: ok([[1]]), ladybug: ok([[2]]) });
     expect(summarize([o, { kind: 'match' }, { kind: 'skipped', reason: 'r' }])).toEqual({ match: 1, 'expected-difference': 0, divergence: 1, skipped: 1 });

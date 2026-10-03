@@ -2,12 +2,12 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { CypherError } from '@obsigraph/core';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { Config } from './config.js';
-import { BackendUnavailable } from './ladybug/backend.js';
-import { createMcpServer } from './mcp/server.js';
-import { InputError, type Ops } from './ops.js';
-import type { VectorIndex } from './vectors/vector-index.js';
-import type { VaultSync } from './sync.js';
+import type { Config } from './config.mjs';
+import { BackendUnavailable } from './ladybug/backend.mjs';
+import { createMcpServer } from './mcp/server.mjs';
+import { InputError, type Ops } from './ops.mjs';
+import type { VectorIndex } from './vectors/vector-index.mjs';
+import type { VaultSync } from './sync.mjs';
 
 export type Logger = (msg: string) => void;
 

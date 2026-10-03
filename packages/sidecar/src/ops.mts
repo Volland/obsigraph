@@ -1,9 +1,9 @@
 import { BuiltinEngine, resultToJson, type Graph, type JsonQueryResult } from '@obsigraph/core';
-import { EmbeddingError } from './vectors/provider.js';
-import type { Config } from './config.js';
-import { BackendUnavailable, type LadybugBackend } from './ladybug/backend.js';
-import { retrieve, type RetrieveResult } from './rag/retrieve.js';
-import type { VectorIndex } from './vectors/vector-index.js';
+import { EmbeddingError } from './vectors/provider.mjs';
+import type { Config } from './config.mjs';
+import { BackendUnavailable, type LadybugBackend } from './ladybug/backend.mjs';
+import { retrieve, type RetrieveResult } from './rag/retrieve.mjs';
+import type { VectorIndex } from './vectors/vector-index.mjs';
 
 /** Bad input from a client; maps to HTTP 400 or an MCP tool error. */
 export class InputError extends Error {}

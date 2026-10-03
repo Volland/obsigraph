@@ -5,9 +5,9 @@ import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { EmbeddingError, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.js';
+import { EmbeddingError, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { startSidecar, type Sidecar } from '../src/main.js';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;

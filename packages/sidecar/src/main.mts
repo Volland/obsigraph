@@ -1,17 +1,17 @@
 import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
-import { providerFromEnv, type EmbeddingProvider } from './vectors/provider.js';
-import { ConfigError, isLoopback, loadConfig, type Config } from './config.js';
-import { DataDir } from './data-dir.js';
-import { createApi, redactor, type Logger } from './http.js';
-import { Ops } from './ops.js';
-import { createMcpServer } from './mcp/server.js';
+import { providerFromEnv, type EmbeddingProvider } from './vectors/provider.mjs';
+import { ConfigError, isLoopback, loadConfig, type Config } from './config.mjs';
+import { DataDir } from './data-dir.mjs';
+import { createApi, redactor, type Logger } from './http.mjs';
+import { Ops } from './ops.mjs';
+import { createMcpServer } from './mcp/server.mjs';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { LadybugBackend } from './ladybug/backend.js';
-import { LadybugMirror, type MirrorStatus } from './mirror/mirror.js';
-import { LadybugStore, loadLadybug, type MirrorStore } from './mirror/store.js';
-import { VaultSync, type Processor } from './sync.js';
-import { VectorIndex } from './vectors/vector-index.js';
+import { LadybugBackend } from './ladybug/backend.mjs';
+import { LadybugMirror, type MirrorStatus } from './mirror/mirror.mjs';
+import { LadybugStore, loadLadybug, type MirrorStore } from './mirror/store.mjs';
+import { VaultSync, type Processor } from './sync.mjs';
+import { VectorIndex } from './vectors/vector-index.mjs';
 
 export interface Sidecar {
   config: Config;

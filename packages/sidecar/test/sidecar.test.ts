@@ -4,10 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BuiltinEngine, Graph, pathResolver, resultToJson } from '@obsigraph/core';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ConfigError, loadConfig } from '../src/config.js';
-import { tokenMatches } from '../src/http.js';
-import { startSidecar, type Sidecar } from '../src/main.js';
-import type { Processor } from '../src/sync.js';
+import { ConfigError, loadConfig } from '../src/config.mjs';
+import { tokenMatches } from '../src/http.mjs';
+import { startSidecar, type Sidecar } from '../src/main.mjs';
+import type { Processor } from '../src/sync.mjs';
 
 const TOKEN = 'test-token-0123456789';
 const running: Sidecar[] = [];

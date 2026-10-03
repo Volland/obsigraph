@@ -1,10 +1,10 @@
 {
   "name": "@obsigraph/plugin",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@obsigraph/core": "0.4.2",
+    "@obsigraph/core": "0.4.3",
     "cytoscape": "^3.34.3"
   },
   "devDependencies": {

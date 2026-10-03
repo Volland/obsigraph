@@ -10,9 +10,9 @@ import {
   type NoteInput,
   type ScoreMode,
 } from '@obsigraph/core';
-import type { DataDir } from '../data-dir.js';
-import { EmbeddingError, identityMismatch, type EmbeddingIdentity, type EmbeddingProvider } from './provider.js';
-import type { Processor } from '../sync.js';
+import type { DataDir } from '../data-dir.mjs';
+import { EmbeddingError, identityMismatch, type EmbeddingIdentity, type EmbeddingProvider } from './provider.mjs';
+import type { Processor } from '../sync.mjs';
 
 interface Vec {
   /** Hash of the embedded text; identical text reuses the vector. */

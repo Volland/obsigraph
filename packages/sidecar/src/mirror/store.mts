@@ -1,6 +1,6 @@
 import { mkdir, rm } from 'node:fs/promises';
-import type { DataDir } from '../data-dir.js';
-import { COLUMN_SQL, EMPTY_REL_TABLE, emptyState, relTable, typeOfTable, type ColType, type EdgeRow, type MirrorDiff, type MirrorState, type NodeRow, type TypedValue } from './rows.js';
+import type { DataDir } from '../data-dir.mjs';
+import { COLUMN_SQL, EMPTY_REL_TABLE, emptyState, relTable, typeOfTable, type ColType, type EdgeRow, type MirrorDiff, type MirrorState, type NodeRow, type TypedValue } from './rows.mjs';
 
 /** Where mirror rows live; LadybugDB in production, memory in tests. */
 export interface MirrorStore {
