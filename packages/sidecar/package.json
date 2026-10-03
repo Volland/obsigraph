@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
+  },
+  "optionalDependencies": {
+    "@ladybugdb/core": "^0.21.2"
   }
 }

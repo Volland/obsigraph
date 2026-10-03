@@ -39,7 +39,7 @@ function write(vault: string, path: string, text: string) {
 }
 
 function env(f: { vault: string; data: string }, extra: Record<string, string> = {}): NodeJS.ProcessEnv {
-  return { OBSIGRAPH_VAULT: f.vault, OBSIGRAPH_DATA: f.data, OBSIGRAPH_TOKEN: TOKEN, OBSIGRAPH_PORT: '0', OBSIGRAPH_DEBOUNCE_MS: '40', ...extra };
+  return { OBSIGRAPH_VAULT: f.vault, OBSIGRAPH_DATA: f.data, OBSIGRAPH_TOKEN: TOKEN, OBSIGRAPH_PORT: '0', OBSIGRAPH_DEBOUNCE_MS: '40', OBSIGRAPH_LADYBUG: '0', ...extra };
 }
 
 async function start(e: NodeJS.ProcessEnv, processors: Processor[] = [], logs: string[] = []) {
@@ -252,7 +252,8 @@ describe('sidecar service', () => {
     expect(health.status).toBe(200);
     expect(await json(health)).toEqual({ status: 'ok' });
     const status = await (await json(await call(sc, '/status')));
-    expect(Object.keys(status).sort()).toEqual(['edges', 'embeddingModel', 'frontmatterErrors', 'lastSync', 'notes', 'pending', 'state', 'vectors']);
+    expect(Object.keys(status).sort()).toEqual(['edges', 'embeddingModel', 'frontmatterErrors', 'lastSync', 'mirror', 'notes', 'pending', 'state', 'vectors']);
+    expect(status.mirror).toEqual({ state: 'disabled', message: 'disabled by OBSIGRAPH_LADYBUG=0' });
     expect((await call(sc, '/nowhere')).status).toBe(404);
     expect((await call(sc, '/query')).status).toBe(405);
   });

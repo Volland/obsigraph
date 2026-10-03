@@ -63,23 +63,23 @@ The system SHALL record the mirror format version and the plugin version that wr
 - **WHEN** a sync was interrupted so the mirror is partially applied
 - **THEN** the next start detects it and rebuilds
 
-### Requirement: Mirror is desktop-only and optional
-The system SHALL run the mirror only on desktop when LadybugDB is installed and enabled, and SHALL otherwise leave the plugin fully functional without it.
+### Requirement: Mirror is optional
+The system SHALL run the mirror inside the sidecar only when LadybugDB is installed and the mirror is enabled, and SHALL otherwise keep the sidecar fully functional without it.
 
-#### Scenario: Mobile
-- **WHEN** the plugin runs on a mobile platform
-- **THEN** no mirror is created and no error is shown at startup
+#### Scenario: Disabled by configuration
+- **WHEN** the sidecar starts with the mirror disabled
+- **THEN** no mirror database is created and built-in queries work
 
 #### Scenario: Not installed
-- **WHEN** LadybugDB is not installed on desktop
-- **THEN** the plugin reports the mirror as unavailable in settings and everything else works
+- **WHEN** the LadybugDB module cannot be loaded
+- **THEN** status reports the mirror as unavailable with the reason and everything else works
 
-### Requirement: Sync does not block the editor
-The system SHALL perform initial build and sync work in batches that yield to the UI and SHALL expose sync status as idle, syncing or failed with a message.
+### Requirement: Sync does not block queries
+The system SHALL perform mirror builds and syncs in the background and SHALL expose mirror status as idle, syncing or failed with a message.
 
 #### Scenario: Large initial build
 - **WHEN** the first mirror build runs on a large vault
-- **THEN** the UI stays responsive and status shows syncing until completion
+- **THEN** built-in queries keep answering and status shows syncing until completion
 
 #### Scenario: Sync failure
 - **WHEN** a sync step fails

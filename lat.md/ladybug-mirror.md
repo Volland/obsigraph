@@ -6,7 +6,7 @@ LadybugDB holds a derived copy of the graph, adding full-language Cypher reads, 
 
 Sync flows only from vault to Ladybug; the database is a disposable cache that can be fully rebuilt from markdown.
 
-Sync is incremental per changed file. User queries against the mirror are read-only: `CREATE`, `SET` and `DELETE` are rejected, because nothing would write them back to notes and the next sync would erase or diverge from them.
+[[packages/sidecar/src/mirror/mirror.ts#LadybugMirror]] keeps a content signature per mirrored node and edge; each sync diffs the whole graph against them ([[packages/sidecar/src/mirror/rows.ts#diffMirror]]) and applies only the difference in one transaction, so incremental sync equals a rebuild by construction and edges in untouched files whose targets re-resolved are covered. A manifest (format version, in-progress or complete) makes any missing, stale, interrupted or failed state rebuild on next open. Syncs run in the background and coalesce bursts. User queries against the mirror are read-only: `CREATE`, `SET` and `DELETE` are rejected, because nothing would write them back to notes and the next sync would erase or diverge from them.
 
 ## Deferred two-way sync
 
@@ -22,6 +22,6 @@ The plugin reaches it over HTTP for `backend: ladybug` queries. Verified with `@
 
 ## Storage layout
 
-One `Node` table (id, labels list, title, path, stub, JSON props) and one relationship table per edge type (id, sign, heading, JSON props), because a Ladybug node belongs to exactly one table while notes can have several labels.
+One `Node` table (id, labels list, title, path, stub, JSON props, sig) and one relationship table per edge type (id, sign, heading, JSON props, sig), created on first use by [[packages/sidecar/src/mirror/store.ts#LadybugStore]], because a Ladybug node belongs to exactly one table while notes can have several labels. An edge type named `node` uses table `node_`. Set `OBSIGRAPH_LADYBUG=0` to disable the mirror; when the module cannot load, status reports it unavailable with the reason.
 
 Queries keep the plugin's text: the backend rewrites label patterns such as `(a:Person)` into label-list checks on `Node` before sending. Text the built-in parser cannot read passes through unchanged, with documented limits.

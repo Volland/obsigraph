@@ -10,6 +10,9 @@ The in-memory graph (graph-model) is authoritative for derived data and already 
 
 ## Decisions
 
+**Superseding notes (after the v0.3 decisions).** The mirror is a sidecar processor, not a plugin adapter. Instead of per-file deltas from change events, the mirror keeps a signature per mirrored node and edge (stored in a `sig` column and loaded at open) and each sync diffs the whole in-memory graph against it, applying only the difference in one transaction. That makes incremental equal to rebuild by construction and covers edges in untouched files whose targets re-resolved. Storage is one `Node` table plus one relationship table per edge type, created on first use. Paragraphs below that say otherwise are superseded.
+
+
 **Mirror driven by graph-model change events, applied as per-file diffs.** Each changed file yields the set of nodes and edges it contributes before and after; the mirror applies the delta in one transaction. Alternative: periodically snapshot and diff the entire graph, rejected as O(vault) per edit.
 
 **Generic storage model: one node table with a label list and a JSON property column plus promoted core columns (path, title, stub); one relationship table with type, sign, id and JSON properties.** Kuzu-lineage engines require declared schemas, and labels and edge properties are open-ended user data. Alternative: one table per label and per edge type with typed columns, which gives native `MATCH (n:Person)` but needs DDL migrations when notes introduce new labels or properties. Trade-off: queries over the generic model must be translated (label predicates, property access) by the backend change. Assumption: this can be done, to be proven by the conformance suite; if it fails, revisit with per-label tables.

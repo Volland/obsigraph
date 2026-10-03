@@ -17,6 +17,8 @@ export interface Config {
   maxBodyBytes: number;
   maxPathDepth: number;
   schemaFolder: string;
+  /** Mirror the graph into LadybugDB (when the module is installed). */
+  ladybug: boolean;
 }
 
 export class ConfigError extends Error {}
@@ -90,5 +92,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxBodyBytes: int(env, 'OBSIGRAPH_MAX_BODY_BYTES', 64 * 1024, 1),
     maxPathDepth: int(env, 'OBSIGRAPH_MAX_PATH_DEPTH', DEFAULT_MAX_PATH_DEPTH, 1),
     schemaFolder: env.OBSIGRAPH_SCHEMA_FOLDER ?? DEFAULT_SCHEMA_FOLDER,
+    ladybug: env.OBSIGRAPH_LADYBUG !== '0',
   };
 }

@@ -54,7 +54,11 @@ function send(res: ServerResponse, status: number, body: unknown): void {
  * (bearer token). Errors are JSON without stack traces.
  */
 // @lat: [[sidecar#Interfaces]]
-export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}): Server {
+export interface ApiExtras {
+  mirrorStatus?: () => unknown;
+}
+
+export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}, extras: ApiExtras = {}): Server {
   const engine = new BuiltinEngine(sync.graph, () => ({ maxPathDepth: config.maxPathDepth, timeoutMs: config.queryTimeoutMs }));
   const redact = redactor(config.token);
 
@@ -80,6 +84,7 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
           pending: s.pending,
           lastSync: s.lastSync,
           frontmatterErrors: sync.frontmatterErrors.size,
+          mirror: extras.mirrorStatus?.() ?? null,
           vectors: null,
           embeddingModel: null,
         });

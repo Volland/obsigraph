@@ -12,3 +12,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[edge-embeds]] — embed behaviors from the edge-embeds spec
 - [[cypher-extensions]] — WITH, OPTIONAL MATCH, paths and aggregation behaviors
 - [[sidecar-service]] — headless service behaviors from the sidecar-service spec
+- [[mirror-sync]] — LadybugDB mirror behaviors from the ladybug-mirror spec

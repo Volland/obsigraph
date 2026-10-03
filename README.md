@@ -154,6 +154,7 @@ curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN 
   - `OBSIGRAPH_TOKEN` or `OBSIGRAPH_TOKEN_FILE` set the token.
   - `OBSIGRAPH_HOST` (default `127.0.0.1`) and `OBSIGRAPH_PORT` (default `8765`) set the address.
   - `OBSIGRAPH_POLL_MS` enables polling, which bind mounts on macOS need.
+  - `OBSIGRAPH_LADYBUG=0` turns off the LadybugDB mirror. It's on by default and runs when `@ladybugdb/core` is installed.
   - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.
 
 ## Settings
