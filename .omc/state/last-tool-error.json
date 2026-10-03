@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls -la openspec/changes/typed-graph-core-v01/ && openspec instructions specs --change \\\"typed-graph-core-v01\\\" --json | python3 -c \\\"import json,sys; d=json.load(sys.stdin); print(d['instr...",
+  "error": "Exit code 1\ntotal 16\ndrwxr-xr-x@ 4 volodymyrpavlyshyn  staff   128 Oct  3 11:41 .\ndrwxr-xr-x@ 4 volodymyrpavlyshyn  staff   128 Oct  3 11:11 ..\n-rw-r--r--@ 1 volodymyrpavlyshyn  staff    40 Oct  3 11:11 .openspec.yaml\n-rw-r--r--@ 1 volodymyrpavlyshyn  staff  2707 Oct  3 11:41 proposal.md\nCreate specification files that define WHAT the system should do.\n\nA spec is a behavior contract, not an implementation plan.\n\nGood spec content:\n- Observable behavior users or downstream systems rely on\n- Input...",
+  "timestamp": "2026-10-03T09:41:57.144Z",
+  "retry_count": 1
+}

@@ -1,0 +1,156 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1791017102127,
+  "projectRoot": "/Users/volodymyrpavlyshyn/Documents/work/obsigtaph",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "lat.md": {
+      "path": "lat.md",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1791017102119,
+      "keyFiles": [
+        "lat.md"
+      ]
+    },
+    "openspec": {
+      "path": "openspec",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1791017102119,
+      "keyFiles": [
+        "config.yaml"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "lat.md/architecture.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018654258,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/edge-syntax.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018655333,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/graph-model.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018656415,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/query-engine.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018657482,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/visualization.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018658555,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/ladybug-mirror.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018659630,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/vector-search.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018660705,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/sidecar.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018661779,
+      "type": "file"
+    },
+    {
+      "path": "lat.md/roadmap.md",
+      "accessCount": 1,
+      "lastAccessed": 1791018662853,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/proposal.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020508892,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/specs/edge-parsing/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020561523,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/specs/graph-model/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020562607,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/specs/cypher-query/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020563703,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/specs/graph-query-block/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020564786,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/specs/graph-view/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020565875,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/design.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020587502,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/typed-graph-core-v01/tasks.md",
+      "accessCount": 1,
+      "lastAccessed": 1791020603656,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
