@@ -54,6 +54,9 @@ const call = (sc: Sidecar, path: string, init: RequestInit & { token?: string | 
   if (token) headers.set('authorization', `Bearer ${token}`);
   return fetch(`http://127.0.0.1:${sc.port}${path}`, { ...init, headers });
 };
+// Test helper: response bodies are asserted structurally, so treat them as loose JSON.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const json = (res: Response): Promise<any> => res.json();
 const query = (sc: Sidecar, q: string, token?: string | null) =>
   call(sc, '/query', { method: 'POST', body: JSON.stringify({ query: q }), headers: { 'content-type': 'application/json' }, token });
 
@@ -125,7 +128,7 @@ describe('sidecar service', () => {
     for (const d of ['People', '.obsidian', '']) chmodSync(join(f.vault, d), 0o555);
     const before = treeHash(f.vault);
     const sc = await start(env(f));
-    const r = await (await query(sc, 'MATCH (n) WHERE n.stub = false RETURN count(n) AS n')).json();
+    const r = await (await json(await query(sc, 'MATCH (n) WHERE n.stub = false RETURN count(n) AS n')));
     expect(r.rows).toEqual([[4]]);
     await sc.stop();
     running.splice(running.indexOf(sc), 1);
@@ -160,7 +163,7 @@ describe('sidecar service', () => {
       'MATCH (n) RETURN n.title, n.stub, labels(n) ORDER BY n.title',
       'MATCH p = (a {title: "Alice"})-[*1..2]->(c) RETURN p ORDER BY length(p)',
     ]) {
-      const remote = await (await query(sc, q)).json();
+      const remote = await (await json(await query(sc, q)));
       expect(remote, q).toEqual(JSON.parse(JSON.stringify(resultToJson(engine.run(q)))));
     }
   });
@@ -171,7 +174,7 @@ describe('sidecar service', () => {
     const rec = recorder();
     const sc = await start(env(f), [rec]);
     expect(rec.upserts.sort()).toEqual(['Alice.md', 'Carol.md', 'Eve.md', 'People/Bob.md']);
-    const status = await (await call(sc, '/status')).json();
+    const status = await (await json(await call(sc, '/status')));
     expect(status).toMatchObject({ state: 'ready', notes: 4, edges: 4, pending: 0 });
     expect(typeof status.lastSync).toBe('string');
   });
@@ -196,12 +199,12 @@ describe('sidecar service', () => {
     const f = fixture();
     const sc = await start(env(f));
     write(f.vault, 'Eve.md', 'knows:: [[Carol]] {since: 1999}');
-    await until(async () => (await (await query(sc, "MATCH (:Person)-[r:knows]->() WHERE r.since = 1999 RETURN r")).json()).rows?.length === 0 &&
-      (await (await query(sc, 'MATCH ({title: "Eve"})-[r:knows]->(c) RETURN c.title')).json()).rows.length === 1);
+    await until(async () => (await json(await (await query(sc, "MATCH (:Person)-[r:knows]->() WHERE r.since = 1999 RETURN r")))).rows?.length === 0 &&
+      (await json(await (await query(sc, 'MATCH ({title: "Eve"})-[r:knows]->(c) RETURN c.title')))).rows.length === 1);
     write(f.vault, 'Later/Zed.md', 'knows:: [[Eve]]');
-    await until(async () => (await (await query(sc, 'MATCH (z {title: "Zed"})-->(e) RETURN e.title')).json()).rows.length === 1);
+    await until(async () => (await json(await (await query(sc, 'MATCH (z {title: "Zed"})-->(e) RETURN e.title')))).rows.length === 1);
     rmSync(join(f.vault, 'Later/Zed.md'));
-    await until(async () => (await (await query(sc, 'MATCH (z {title: "Zed"}) RETURN z')).json()).rows.length === 0);
+    await until(async () => (await json(await (await query(sc, 'MATCH (z {title: "Zed"}) RETURN z')))).rows.length === 0);
   });
 
   // @lat: [[tests/sidecar-service#Burst of saves coalesced]]
@@ -237,7 +240,7 @@ describe('sidecar service', () => {
     const sc = await start(env(f));
     const res = await query(sc, 'CREATE (n:Person)');
     expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: { kind: 'readonly', message: 'Queries are read-only: CREATE is not allowed', line: 1, column: 1 } });
+    expect(await json(res)).toEqual({ error: { kind: 'readonly', message: 'Queries are read-only: CREATE is not allowed', line: 1, column: 1 } });
     expect(sc.sync.status().notes).toBe(4);
   });
 
@@ -247,8 +250,8 @@ describe('sidecar service', () => {
     const sc = await start(env(f));
     const health = await call(sc, '/health', { token: null });
     expect(health.status).toBe(200);
-    expect(await health.json()).toEqual({ status: 'ok' });
-    const status = await (await call(sc, '/status')).json();
+    expect(await json(health)).toEqual({ status: 'ok' });
+    const status = await (await json(await call(sc, '/status')));
     expect(Object.keys(status).sort()).toEqual(['edges', 'embeddingModel', 'frontmatterErrors', 'lastSync', 'notes', 'pending', 'state', 'vectors']);
     expect((await call(sc, '/nowhere')).status).toBe(404);
     expect((await call(sc, '/query')).status).toBe(405);
@@ -258,7 +261,7 @@ describe('sidecar service', () => {
   it('returns the {columns, rows} contract with tagged graph values', async () => {
     const f = fixture();
     const sc = await start(env(f));
-    const r = await (await query(sc, 'MATCH (a {title: "Alice"})-[r:knows]->(b) RETURN a, r, r.since')).json();
+    const r = await (await json(await query(sc, 'MATCH (a {title: "Alice"})-[r:knows]->(b) RETURN a, r, r.since')));
     expect(r.columns).toEqual([{ name: 'a', kind: 'node' }, { name: 'r', kind: 'relationship' }, { name: 'r.since', kind: 'scalar' }]);
     expect(r.rows[0][0]).toMatchObject({ _type: 'node', id: 'Alice.md', labels: ['Person'], stub: false, properties: { age: 31, title: 'Alice' } });
     expect(r.rows[0][1]).toEqual({ _type: 'relationship', id: 'Alice.md#knows#People/Bob.md#0', type: 'knows', sign: 1, source: 'Alice.md', target: 'People/Bob.md', properties: { since: 2020 } });
@@ -308,7 +311,7 @@ describe('sidecar service', () => {
     expect(big.status).toBe(413);
     const slow = await query(sc, 'MATCH (a)-[*1..6]->(b) RETURN count(*)');
     expect(slow.status).toBe(504);
-    const body = await slow.json();
+    const body = await json(slow);
     expect(body).toEqual({ error: { kind: 'timeout', message: 'Query timed out', line: 0, column: 0 } });
     expect(JSON.stringify(body)).not.toMatch(/at .*\.ts/);
   });
