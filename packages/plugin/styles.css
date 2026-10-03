@@ -42,3 +42,43 @@
 .obsigraph-setting-status {
   color: var(--text-error);
 }
+.obsigraph-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+}
+.obsigraph-querybar {
+  display: flex;
+  gap: 6px;
+}
+.obsigraph-querybar textarea {
+  flex: 1;
+  font-family: var(--font-monospace);
+  resize: vertical;
+}
+.obsigraph-view-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 6px;
+}
+.obsigraph-view-body {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+.obsigraph-details {
+  width: 220px;
+  overflow: auto;
+  font-size: var(--font-smaller);
+}
+.obsigraph-details:empty {
+  display: none;
+}
+.obsigraph-details th {
+  text-align: left;
+  color: var(--text-muted);
+  padding-right: 6px;
+  vertical-align: top;
+}
