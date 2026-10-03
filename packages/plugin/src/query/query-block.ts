@@ -1,10 +1,11 @@
-import { CypherError, styleSource } from '@obsigraph/core';
-import { getIcon } from 'obsidian';
+import { CypherError, styleSource, type QueryResult } from '@obsigraph/core';
+import { getIcon, requestUrl } from 'obsidian';
+import { runRemote, type Fetcher } from './remote';
 import { MarkdownRenderChild } from 'obsidian';
 import type ObsigraphPlugin from '../main';
 import { GraphRenderer } from '../render/graph-renderer';
 import { renderTable } from '../render/table';
-import { parseBlock } from './block';
+import { parseBlock, type ParsedBlock } from './block';
 import { planRender } from './plan';
 
 /**
@@ -18,6 +19,8 @@ export class QueryBlock extends MarkdownRenderChild {
   private visible = true;
   private dirty = false;
   private observer: IntersectionObserver | null = null;
+  private generation = 0;
+  private retryTimer: number | null = null;
 
   constructor(
     containerEl: HTMLElement,
@@ -43,6 +46,8 @@ export class QueryBlock extends MarkdownRenderChild {
   }
 
   onunload(): void {
+    this.generation++;
+    if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
     this.observer?.disconnect();
     this.renderer?.destroy();
     this.renderer = null;
@@ -70,6 +75,12 @@ export class QueryBlock extends MarkdownRenderChild {
       return this.showErrors(parsed.errors.map((e) => `Line ${e.line + 1}: ${e.message}`));
     }
 
+    const backend = parsed.options.backend ?? this.plugin.settings.defaultBackend;
+    if (backend === 'ladybug') {
+      void this.renderRemote(parsed);
+      return;
+    }
+
     let result;
     try {
       result = this.plugin.index.engine.run(parsed.query);
@@ -81,7 +92,33 @@ export class QueryBlock extends MarkdownRenderChild {
       }
       throw e;
     }
+    this.show(parsed, result);
+  }
 
+  /** Ladybug queries go to the sidecar; late answers from older runs are dropped. */
+  private async renderRemote(parsed: ParsedBlock): Promise<void> {
+    const gen = ++this.generation;
+    if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
+    if (!this.renderer && !this.containerEl.hasChildNodes()) {
+      this.containerEl.createDiv({ cls: 'obsigraph-status', text: 'Running on Ladybug…' });
+    }
+    const { sidecarUrl, sidecarToken } = this.plugin.settings;
+    const outcome = await runRemote(obsidianFetch, { url: sidecarUrl, token: sidecarToken }, parsed.query);
+    if (gen !== this.generation) return;
+    if (outcome.kind === 'retry') {
+      this.showErrors([`${outcome.message} Retrying…`]);
+      this.retryTimer = window.setTimeout(() => this.refresh(), outcome.afterMs);
+      return;
+    }
+    if (outcome.kind === 'error') {
+      const where = outcome.line > 0 ? ` (line ${outcome.line + parsed.queryLine}, column ${outcome.column})` : '';
+      return this.showErrors([`${outcome.message}${where}`]);
+    }
+    this.show(parsed, outcome.result);
+  }
+
+  private show(parsed: ParsedBlock, result: QueryResult): void {
+    const el = this.containerEl;
     const graph = this.plugin.index.graph;
     const plan = planRender(result, parsed.options, this.plugin.settings.maxElements, (id) => graph.node(id));
     if (plan.kind === 'error') return this.showErrors(plan.messages);
@@ -128,3 +165,15 @@ export class QueryBlock extends MarkdownRenderChild {
 function label(kind: CypherError['kind']): string {
   return kind === 'syntax' ? 'Syntax error' : kind === 'unsupported' ? 'Unsupported' : kind === 'readonly' ? 'Read-only' : 'Query error';
 }
+
+/** `requestUrl` avoids CORS and works on mobile. */
+const obsidianFetch: Fetcher = async (req) => {
+  const res = await requestUrl({ url: req.url, method: req.method, headers: req.headers, body: req.body, throw: false });
+  let json: unknown = null;
+  try {
+    json = res.json;
+  } catch {
+    json = null;
+  }
+  return { status: res.status, json };
+};

@@ -5,7 +5,7 @@ import { applyToState, diffMirror, graphRows, isEmptyDiff, type MirrorState } fr
 import type { MirrorStore } from './store.js';
 
 /** Bump when the storage layout changes; a mismatch triggers a rebuild. */
-export const MIRROR_FORMAT = 1;
+export const MIRROR_FORMAT = 2;
 const MANIFEST = 'ladybug/manifest.json';
 
 interface Manifest {
@@ -37,6 +37,10 @@ export class LadybugMirror implements Processor {
   private running: Promise<void> | null = null;
   private dirty = false;
   private readonly st: MirrorStatus = { state: 'idle', message: null, nodes: 0, edges: 0, lastSync: null, rebuilds: 0 };
+  /** Increments after every successful sync; readers reopen snapshots when it changes. */
+  version = 0;
+  /** True once the mirror fully matches the graph at least once since open. */
+  ready = false;
 
   constructor(
     readonly store: MirrorStore,
@@ -114,7 +118,10 @@ export class LadybugMirror implements Processor {
     const state = this.state!;
     const diff = diffMirror(state, graphRows(graph));
     if (isEmptyDiff(diff)) {
-      if (this.st.state !== 'failed') this.st.state = 'idle';
+      if (this.st.state !== 'failed') {
+        this.st.state = 'idle';
+        this.ready = true;
+      }
       this.counts();
       return;
     }
@@ -127,6 +134,8 @@ export class LadybugMirror implements Processor {
       this.st.state = 'idle';
       this.st.message = null;
       this.st.lastSync = new Date().toISOString();
+      this.version++;
+      this.ready = true;
     } catch (e) {
       // The manifest stays "in-progress", so the next open rebuilds.
       this.st.state = 'failed';

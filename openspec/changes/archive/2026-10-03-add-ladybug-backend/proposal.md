@@ -10,6 +10,12 @@ The in-plugin engine supports only a Cypher subset. Users who need the full lang
 - Show a clear in-block error when Ladybug is unavailable (mobile, not installed, mirror not ready).
 - Expose `r.sign`, `r.id`, `n.stub` identically to the in-plugin engine.
 
+## Decisions after verification
+
+- Hosted by the sidecar (lat.md/ladybug-mirror): the plugin sends `backend: ladybug` queries to the sidecar's `/query` over HTTP, so mobile works through a reachable sidecar and "desktop-only" no longer applies.
+- Queries the built-in parser reads are translated onto the mirror layout (label-list checks on `Node`, typed `p_<name>_<kind>` property columns, built-ins on base columns, function-name mapping) and keep the plugin's column names and kinds. Anything else passes through unchanged with a notice.
+- Read-only is enforced twice: a lexer-based guard rejects writes, schema statements, `CALL` and multiple statements, and queries run on a read-only database snapshot that is reopened after each mirror sync.
+
 ## Capabilities
 
 ### New Capabilities

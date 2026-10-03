@@ -111,6 +111,7 @@ Header options, all optional:
 | `view` | `auto` (default), `table`, `graph` | `auto` draws a graph when the result has nodes or relationships, and a table otherwise. |
 | `columns` | comma-separated column names | Table columns to show, in that order. |
 | `height` | 100–4000 | Graph height in pixels. |
+| `backend` | `builtin` (default), `ladybug` | Where the query runs. `ladybug` sends it to the sidecar's LadybugDB mirror, so full read Cypher such as `UNWIND` works. |
 | `node.<Type>` / `edge.<type>` | `attr=value, …` | Style overrides for this block only. |
 
 Results refresh when notes change. Graphs with more elements than the configured limit fall back to a table.
@@ -158,6 +159,8 @@ curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN 
   - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.
 
 ## Settings
+
+- **Default query backend**, **Sidecar URL** and **Sidecar token**: used by blocks that run on `ladybug`.
 
 - **Maximum graph elements:** above this many nodes plus edges, results show as a table.
 - **Maximum path depth:** where unbounded variable-length patterns stop.

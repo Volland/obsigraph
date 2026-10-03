@@ -68,6 +68,11 @@ export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecO
 
 // ---- static analysis --------------------------------------------------------
 
+/** RETURN columns and their kinds, from the query alone (shared with other backends). */
+export function queryColumns(q: Query): Column[] {
+  return analyze(q);
+}
+
 /** Check variable scoping through every clause and return the RETURN columns. */
 function analyze(q: Query): Column[] {
   let scope: Scope = new Map();

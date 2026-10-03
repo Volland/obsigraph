@@ -4,9 +4,9 @@ Queries are written in openCypher inside `graph-query` blocks and run through on
 
 ## Two backends
 
-The default engine is an in-plugin TypeScript interpreter over the live graph; an optional desktop-only LadybugDB backend takes the same query text.
+The default engine is an in-plugin TypeScript interpreter over the live graph; an optional LadybugDB backend in the sidecar takes the same query text.
 
-Both implement [[packages/core/src/cypher/engine.ts#QueryEngine]] and are read-only. A conformance suite runs each query against both engines so they cannot silently diverge.
+Both return the same `{columns, rows}` contract and are read-only. A block picks one with `backend: builtin|ladybug` or the plugin default; Ladybug blocks call the sidecar through [[packages/plugin/src/query/remote.ts#runRemote]], which maps every response to a result, a positioned error or a retry, and render asynchronously. See [[ladybug-mirror#Query translation]]. A conformance suite runs each query against both engines so they cannot silently diverge.
 
 ## Supported subset
 

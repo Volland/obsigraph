@@ -8,6 +8,8 @@ export interface BlockOptions {
   columns: string[] | null;
   /** Graph height in pixels. */
   height: number;
+  /** Query engine; null uses the plugin default. */
+  backend: 'builtin' | 'ladybug' | null;
 }
 
 export interface HeaderError {
@@ -31,9 +33,9 @@ export interface ParsedBlock {
 }
 
 const HEADER_LINE = /^\s*([A-Za-z][\w-]*(?:\.[\p{L}\p{N}_-]+)?)\s*:\s*(.*?)\s*$/u;
-const KNOWN = new Set(['view', 'columns', 'height']);
+const KNOWN = new Set(['view', 'columns', 'height', 'backend']);
 
-export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, height: 360 };
+export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, height: 360, backend: null };
 
 /**
  * Split a `graph-query` block into its `key: value` header and Cypher body.
@@ -61,7 +63,7 @@ export function parseBlock(source: string): ParsedBlock {
       continue;
     }
     if (!KNOWN.has(key)) {
-      errors.push({ line: i, message: `Unknown option '${m[1]}' (expected view, columns, height, node.<Type> or edge.<type>)` });
+      errors.push({ line: i, message: `Unknown option '${m[1]}' (expected view, columns, height, backend, node.<Type> or edge.<type>)` });
       continue;
     }
     if (key === 'view') {
@@ -72,6 +74,11 @@ export function parseBlock(source: string): ParsedBlock {
       const cols = value.split(',').map((c) => c.trim()).filter(Boolean);
       if (cols.length === 0) errors.push({ line: i, message: 'columns needs at least one column name' });
       else options.columns = cols;
+    } else if (key === 'backend') {
+      // @lat: [[ladybug-mirror#Hosted by the sidecar]]
+      const b = value.toLowerCase();
+      if (b === 'builtin' || b === 'ladybug') options.backend = b;
+      else errors.push({ line: i, message: `Invalid backend '${value}' (expected builtin or ladybug)` });
     } else if (key === 'height') {
       const h = Number(value.replace(/px$/, ''));
       if (!Number.isFinite(h) || h < 100 || h > 4000) errors.push({ line: i, message: `Invalid height '${value}' (100-4000)` });

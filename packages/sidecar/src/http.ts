@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { BuiltinEngine, CypherError, resultToJson } from '@obsigraph/core';
 import type { Config } from './config.js';
+import { BackendUnavailable, type LadybugBackend } from './ladybug/backend.js';
 import type { VaultSync } from './sync.js';
 
 export type Logger = (msg: string) => void;
@@ -56,6 +57,8 @@ function send(res: ServerResponse, status: number, body: unknown): void {
 // @lat: [[sidecar#Interfaces]]
 export interface ApiExtras {
   mirrorStatus?: () => unknown;
+  /** Ladybug query backend, or the reason it is unavailable. */
+  ladybug?: () => LadybugBackend | string;
 }
 
 export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}, extras: ApiExtras = {}): Server {
@@ -91,7 +94,7 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
       }
       case 'POST /query': {
         const raw = await readBody(req, config.maxBodyBytes);
-        let body: { query?: unknown; params?: unknown };
+        let body: { query?: unknown; params?: unknown; backend?: unknown };
         try {
           body = JSON.parse(raw);
         } catch {
@@ -99,7 +102,13 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
         }
         if (typeof body.query !== 'string' || !body.query.trim()) throw new HttpError(400, 'bad_request', '"query" must be a non-empty string');
         const params = body.params && typeof body.params === 'object' && !Array.isArray(body.params) ? (body.params as Record<string, unknown>) : {};
-        return send(res, 200, resultToJson(engine.run(body.query, params)));
+        const backend = body.backend ?? 'builtin';
+        if (backend === 'builtin') return send(res, 200, resultToJson(engine.run(body.query, params)));
+        if (backend !== 'ladybug') throw new HttpError(400, 'bad_request', '"backend" must be "builtin" or "ladybug"');
+        // @lat: [[ladybug-mirror#Hosted by the sidecar]]
+        const lb = extras.ladybug?.() ?? 'The Ladybug backend is not configured on this sidecar';
+        if (typeof lb === 'string') throw new BackendUnavailable('unavailable', lb);
+        return send(res, 200, await lb.run(body.query, params));
       }
       default:
         if (['/status', '/query'].includes(url.pathname)) throw new HttpError(405, 'method_not_allowed', `${req.method} not allowed on ${url.pathname}`);
@@ -110,6 +119,7 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
   return createServer((req, res) => {
     handle(req, res).catch((err: unknown) => {
       if (err instanceof HttpError) return send(res, err.status, { error: { kind: err.kind, message: err.message } });
+      if (err instanceof BackendUnavailable) return send(res, 503, { error: { kind: err.kind, message: err.message } });
       if (err instanceof CypherError) {
         const status = err.kind === 'timeout' ? 504 : 400;
         return send(res, status, { error: { kind: err.kind, message: err.message, line: err.line, column: err.column } });

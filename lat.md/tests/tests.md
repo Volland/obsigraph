@@ -13,3 +13,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[cypher-extensions]] — WITH, OPTIONAL MATCH, paths and aggregation behaviors
 - [[sidecar-service]] — headless service behaviors from the sidecar-service spec
 - [[mirror-sync]] — LadybugDB mirror behaviors from the ladybug-mirror spec
+- [[ladybug-backend]] — Ladybug query backend behaviors in sidecar and plugin

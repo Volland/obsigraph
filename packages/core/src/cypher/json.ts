@@ -75,3 +75,33 @@ export function resultToJson(r: QueryResult): JsonQueryResult {
   if (r.notices) out.notices = r.notices;
   return out;
 }
+
+function nodeFrom(n: JsonNode): NodeRef {
+  return new NodeRef({ id: n.id, labels: [...n.labels], stub: n.stub, props: { ...n.properties } });
+}
+
+function relFrom(r: JsonRelationship): RelRef {
+  return new RelRef({ id: r.id, type: r.type, sign: r.sign, source: r.source, target: r.target, props: { ...r.properties } as never, heading: null, line: 0 });
+}
+
+/** Inverse of {@link toJsonValue}: rebuild graph values from the wire form. */
+export function fromJsonValue(v: JsonValue): Value {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(fromJsonValue);
+  const tag = (v as { _type?: unknown })._type;
+  if (tag === 'node') return nodeFrom(v as unknown as JsonNode);
+  if (tag === 'relationship') return relFrom(v as unknown as JsonRelationship);
+  if (tag === 'path') {
+    const p = v as unknown as JsonPath;
+    return new PathRef(p.nodes.map(nodeFrom), p.relationships.map(relFrom));
+  }
+  return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fromJsonValue(x)]));
+}
+
+/** Rebuild a query result received from a remote backend. */
+// @lat: [[sidecar#Interfaces]]
+export function resultFromJson(r: JsonQueryResult): QueryResult {
+  const out: QueryResult = { columns: r.columns, rows: r.rows.map((row) => row.map(fromJsonValue)) };
+  if (r.notices) out.notices = r.notices;
+  return out;
+}

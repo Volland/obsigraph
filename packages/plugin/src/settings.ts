@@ -18,6 +18,11 @@ export interface ObsigraphSettings {
   showDiagnostics: boolean;
   /** Depth cap for unbounded variable-length relationships. */
   maxPathDepth: number;
+  /** Engine for blocks without a `backend` option. */
+  defaultBackend: 'builtin' | 'ladybug';
+  /** Obsigraph sidecar base URL, e.g. http://127.0.0.1:8765. */
+  sidecarUrl: string;
+  sidecarToken: string;
 }
 
 export const DEFAULT_SETTINGS: ObsigraphSettings = {
@@ -28,6 +33,9 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   schemaFolder: DEFAULT_SCHEMA_FOLDER,
   showDiagnostics: true,
   maxPathDepth: DEFAULT_MAX_PATH_DEPTH,
+  defaultBackend: 'builtin',
+  sidecarUrl: '',
+  sidecarToken: '',
 };
 
 export class ObsigraphSettingTab extends PluginSettingTab {
@@ -54,6 +62,40 @@ export class ObsigraphSettingTab extends PluginSettingTab {
           }
         }),
       );
+
+    new Setting(containerEl)
+      .setName('Default query backend')
+      .setDesc('Built-in runs inside Obsidian. Ladybug runs in the Obsigraph sidecar with full read Cypher. A block can override this with "backend:".')
+      .addDropdown((d) =>
+        d
+          .addOptions({ builtin: 'Built-in', ladybug: 'Ladybug (sidecar)' })
+          .setValue(this.plugin.settings.defaultBackend)
+          .onChange(async (v) => {
+            this.plugin.settings.defaultBackend = v === 'ladybug' ? 'ladybug' : 'builtin';
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('Sidecar URL')
+      .setDesc('Where the Obsigraph sidecar listens, for Ladybug queries.')
+      .addText((t) =>
+        t.setPlaceholder('http://127.0.0.1:8765').setValue(this.plugin.settings.sidecarUrl).onChange(async (v) => {
+          this.plugin.settings.sidecarUrl = v.trim();
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Sidecar token')
+      .setDesc('Bearer token configured on the sidecar. Stored in this vault\'s plugin data.')
+      .addText((t) => {
+        t.inputEl.type = 'password';
+        t.setValue(this.plugin.settings.sidecarToken).onChange(async (v) => {
+          this.plugin.settings.sidecarToken = v.trim();
+          await this.plugin.saveSettings();
+        });
+      });
 
     new Setting(containerEl)
       .setName('Maximum path depth')

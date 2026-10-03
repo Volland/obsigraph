@@ -172,7 +172,7 @@ describe('ladybug mirror', () => {
     const store = new MemoryStore();
     const { data } = tmp();
     await data.writeJson('ladybug/manifest.json', { format: MIRROR_FORMAT - 1, state: 'complete' });
-    store.nodes.set('Stale.md', { id: 'Stale.md', labels: [], title: 'Stale', path: 'Stale.md', stub: false, props: '{}', sig: 'x' });
+    store.nodes.set('Stale.md', { id: 'Stale.md', labels: [], title: 'Stale', path: 'Stale.md', stub: false, props: '{}', cols: {}, sig: 'x' });
     const m = new LadybugMirror(store, data);
     await m.open();
     m.attach(v.graph);

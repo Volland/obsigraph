@@ -1,8 +1,9 @@
-## Purpose
+# ladybug-backend Specification
 
+## Purpose
 Defines the optional desktop-only LadybugDB query backend: how a query selects it, what it may run, how its results match the shared result contract, and how it fails when unavailable.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Same interface and result contract
 The system SHALL return Ladybug results through the same query interface as the in-plugin engine, as columns each with a name and kind (node, relationship or scalar) plus rows of values.
@@ -64,15 +65,15 @@ The system SHALL choose the backend per query from a `backend` header option wit
 - **THEN** the block shows a header error naming the allowed values
 
 ### Requirement: Clear error when unavailable
-The system SHALL show an in-block error that names the cause when the Ladybug backend is selected but cannot run (mobile platform, LadybugDB not installed, mirror disabled, rebuilding or failed), and SHALL NOT silently fall back to the other backend.
+The system SHALL show an in-block error that names the cause when the Ladybug backend is selected but cannot run (sidecar not configured or unreachable, LadybugDB unavailable or disabled on the sidecar, mirror rebuilding or failed), and SHALL NOT silently fall back to the other backend.
 
-#### Scenario: Mobile
-- **WHEN** a block selects Ladybug on a mobile platform
-- **THEN** the block shows that Ladybug is desktop-only and the rest of the note renders normally
+#### Scenario: Sidecar not configured
+- **WHEN** a block selects Ladybug and no sidecar URL is set
+- **THEN** the block says Ladybug runs in the sidecar and how to configure it, and the rest of the note renders normally
 
-#### Scenario: Not installed
-- **WHEN** a block selects Ladybug and it is not installed
-- **THEN** the block shows that LadybugDB is not installed and how to enable it
+#### Scenario: Ladybug unavailable on the sidecar
+- **WHEN** a block selects Ladybug and the sidecar reports LadybugDB unavailable
+- **THEN** the block shows the sidecar's reason and how to enable it
 
 #### Scenario: Mirror rebuilding
 - **WHEN** a block selects Ladybug while the mirror is rebuilding

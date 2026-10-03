@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import { ConfigError, isLoopback, loadConfig, type Config } from './config.js';
 import { DataDir } from './data-dir.js';
 import { createApi, redactor, type Logger } from './http.js';
+import { LadybugBackend } from './ladybug/backend.js';
 import { LadybugMirror, type MirrorStatus } from './mirror/mirror.js';
 import { LadybugStore, loadLadybug, type MirrorStore } from './mirror/store.js';
 import { VaultSync, type Processor } from './sync.js';
@@ -67,7 +68,11 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
 
   const mirrorStatus = (): MirrorStatus | { state: 'disabled' | 'unavailable'; message: string } =>
     mirror ? mirror.status() : { state: config.ladybug ? 'unavailable' : 'disabled', message: mirrorUnavailable ?? '' };
-  const server = createApi(config, sync, log, { mirrorStatus });
+  const backend = mirror && mirror.store instanceof LadybugStore
+    ? new LadybugBackend(mirror.store, mirror, sync, { maxPathDepth: config.maxPathDepth, timeoutMs: config.queryTimeoutMs })
+    : null;
+  const ladybug = () => backend ?? (mirrorUnavailable ?? 'The Ladybug mirror is not running');
+  const server = createApi(config, sync, log, { mirrorStatus, ladybug });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
     server.listen(config.port, config.host, () => resolve());
@@ -91,6 +96,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
       await new Promise<void>((r) => server.close(() => r()));
       await sync.stop();
       await mirror?.idle();
+      backend?.close();
       await mirror?.store.close();
     },
   };
