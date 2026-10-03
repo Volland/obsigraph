@@ -16,7 +16,7 @@ The sidecar exposes a REST API and an MCP server offering Cypher queries, vector
 
 Hybrid retrieve takes vector hits, expands their graph neighborhood and returns cited chunks, so agents such as Claude can use the vault directly.
 
-Implemented so far by [[packages/sidecar/src/http.ts#createApi]]: `GET /health` (open), `GET /status` and `POST /query` with `{query, params}`. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`: 400 for syntax, unsupported and read-only, 504 for timeouts, never stack traces.
+Implemented by [[packages/sidecar/src/http.ts#createApi]]: `GET /health` (open), `GET /status`, `POST /query` with `{query, params, backend}`, `POST /search` (see [[vector-search#Vector index]]) and `POST /vectors/rebuild`. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`: 400 for syntax, unsupported and read-only, 504 for timeouts, never stack traces.
 
 ## Security
 

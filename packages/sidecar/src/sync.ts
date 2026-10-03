@@ -65,6 +65,16 @@ export class VaultSync {
     this.graph = new Graph(pathResolver(() => this.known));
   }
 
+  /** Content hash of a note as last read, for downstream change detection. */
+  contentHash(path: string): string | undefined {
+    return this.files.get(path)?.hash;
+  }
+
+  /** Read a note's current text from the vault (read-only). */
+  async readText(path: string): Promise<string> {
+    return (await readNote(this.vaultDir, path)).note.text;
+  }
+
   status(): SyncStatus {
     const { nodes, edges } = this.graph.size;
     const stubs = [...this.graph.nodes()].filter((n) => n.stub).length;

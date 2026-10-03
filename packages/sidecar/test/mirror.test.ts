@@ -203,7 +203,7 @@ describe('ladybug mirror', () => {
   it('creates no mirror when disabled and keeps queries working', async () => {
     const t = tmp();
     writeFileSync(join(t.vault, 'Alice.md'), 'knows:: [[Bob]]');
-    const sc = await startSidecar({ OBSIGRAPH_VAULT: t.vault, OBSIGRAPH_DATA: t.data.root, OBSIGRAPH_TOKEN: 'x', OBSIGRAPH_PORT: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
+    const sc = await startSidecar({ OBSIGRAPH_VAULT: t.vault, OBSIGRAPH_DATA: t.data.root, OBSIGRAPH_TOKEN: 'x', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
     running.push(sc);
     expect(sc.mirror).toBeNull();
     expect(() => t.data.path('ladybug')).not.toThrow();
@@ -217,7 +217,7 @@ describe('ladybug mirror', () => {
     const t = tmp();
     writeFileSync(join(t.vault, 'Alice.md'), 'knows:: [[Bob]]');
     const sc = await startSidecar(
-      { OBSIGRAPH_VAULT: t.vault, OBSIGRAPH_DATA: t.data.root, OBSIGRAPH_TOKEN: 'x', OBSIGRAPH_PORT: '0' },
+      { OBSIGRAPH_VAULT: t.vault, OBSIGRAPH_DATA: t.data.root, OBSIGRAPH_TOKEN: 'x', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0' },
       { log: () => {}, loadLadybug: async () => ({ error: "Cannot find module '@ladybugdb/core'" }) },
     );
     running.push(sc);

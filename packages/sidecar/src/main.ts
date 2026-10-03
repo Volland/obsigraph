@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
+import { providerFromEnv, type EmbeddingProvider } from '@obsigraph/core';
 import { ConfigError, isLoopback, loadConfig, type Config } from './config.js';
 import { DataDir } from './data-dir.js';
 import { createApi, redactor, type Logger } from './http.js';
@@ -6,6 +8,7 @@ import { LadybugBackend } from './ladybug/backend.js';
 import { LadybugMirror, type MirrorStatus } from './mirror/mirror.js';
 import { LadybugStore, loadLadybug, type MirrorStore } from './mirror/store.js';
 import { VaultSync, type Processor } from './sync.js';
+import { VectorIndex } from './vectors/vector-index.js';
 
 export interface Sidecar {
   config: Config;
@@ -14,6 +17,7 @@ export interface Sidecar {
   /** Bound port (useful when configured as 0). */
   port: number;
   mirror: LadybugMirror | null;
+  vectors: VectorIndex | null;
   stop(): Promise<void>;
 }
 
@@ -24,6 +28,8 @@ export interface StartOptions {
   mirrorStore?: (data: DataDir) => Promise<MirrorStore>;
   /** Override the native module loader (tests). */
   loadLadybug?: typeof loadLadybug;
+  /** Override the embedding provider (tests); defaults to OBSIGRAPH_EMBED_* settings. */
+  embedder?: EmbeddingProvider;
 }
 
 /** Start sync and the HTTP API; resolves once the initial sync finished and the server listens. */
@@ -58,6 +64,15 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     }
   }
 
+  // @lat: [[vector-search#Vector index]]
+  let vectors: VectorIndex | null = null;
+  if (config.vectors) {
+    const provider = o.embedder ?? providerFromEnv(env, (f) => readFileSync(f, 'utf8'));
+    vectors = new VectorIndex(provider, data, { hashOf: (p) => sync.contentHash(p), read: (p) => sync.readText(p) }, { retryMs: config.embedRetryMs });
+    await vectors.open();
+    processors.push(vectors);
+  }
+
   const sync = new VaultSync(config.vaultDir, data, processors, {
     debounceMs: config.debounceMs,
     pollMs: config.pollMs,
@@ -65,6 +80,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   await sync.start();
   sync.watch();
   mirror?.attach(sync.graph);
+  vectors?.attach(sync.graph);
 
   const mirrorStatus = (): MirrorStatus | { state: 'disabled' | 'unavailable'; message: string } =>
     mirror ? mirror.status() : { state: config.ladybug ? 'unavailable' : 'disabled', message: mirrorUnavailable ?? '' };
@@ -72,7 +88,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     ? new LadybugBackend(mirror.store, mirror, sync, { maxPathDepth: config.maxPathDepth, timeoutMs: config.queryTimeoutMs })
     : null;
   const ladybug = () => backend ?? (mirrorUnavailable ?? 'The Ladybug mirror is not running');
-  const server = createApi(config, sync, log, { mirrorStatus, ladybug });
+  const server = createApi(config, sync, log, { mirrorStatus, ladybug, vectors: () => vectors });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
     server.listen(config.port, config.host, () => resolve());
@@ -92,10 +108,13 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     server,
     port,
     mirror,
+    vectors,
     async stop() {
+      vectors?.stop();
       await new Promise<void>((r) => server.close(() => r()));
       await sync.stop();
       await mirror?.idle();
+      await vectors?.idle();
       backend?.close();
       await mirror?.store.close();
     },

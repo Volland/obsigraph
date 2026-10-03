@@ -101,6 +101,8 @@ export class LadybugMirror implements Processor {
     }
     this.running = this.loop().finally(() => {
       this.running = null;
+      // A change scheduled after the loop's last check must not be lost.
+      if (this.dirty && this.st.state !== 'failed') this.schedule();
     });
   }
 

@@ -23,3 +23,12 @@ A node's score is its best-matching chunk, or the pooled vector of its chunks.
 Edges have no prose, so each is rendered as a sentence from its triple, labels and properties and that sentence is embedded.
 
 Example: `Alice (Person) knows Bob (Person) - since 2020, met at conf`. This makes edges searchable by meaning. [[packages/core/src/embed/chunk.ts#verbalizeEdge]] turns `worksAt` or `works_at` into `works at`, appends `(negative)` for sign -1, shows `label` bare and other properties as `key value`, omits the pinned id, and records edge id, source path and heading. Because the index lives in Ladybug, vector search is desktop-only until the [[sidecar]] hosts it.
+
+## Vector index
+
+The sidecar keeps chunk and edge-sentence vectors per note in its data directory and answers node and edge search over REST, optionally followed by a graph query.
+
+[[packages/sidecar/src/vectors/vector-index.ts#VectorIndex]] re-indexes a note when its content hash, labels, properties or edge endpoints change (edges into a changed note are re-verbalized too), reuses any vector whose embedded text is unchanged (so folder moves re-embed nothing), records the model identity, blocks writes on a mismatch until `POST /vectors/rebuild`, and queues notes as pending with retries while the provider is unreachable, leaving old vectors searchable.
+
+`POST /search` takes `query`, `target` (`nodes` or `edges`), `k`, optional `types` and `mode` (`best` or `pooled`), and optional `then` Cypher run on either backend with the hit ids as `$hits` — this is how vector search combines with traversal. Vectors live in the data directory rather than in LadybugDB because Ladybug's vector index needs a network-installed extension and the mirror is disposable; a brute-force cosine scan is fast at vault scale. Status reports vector counts, state and model; `OBSIGRAPH_VECTORS=0` disables the index.
+

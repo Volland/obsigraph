@@ -19,6 +19,10 @@ export interface Config {
   schemaFolder: string;
   /** Mirror the graph into LadybugDB (when the module is installed). */
   ladybug: boolean;
+  /** Build the vector index with the configured embedding provider. */
+  vectors: boolean;
+  /** Delay before retrying an unreachable embedding provider. */
+  embedRetryMs: number;
 }
 
 export class ConfigError extends Error {}
@@ -93,5 +97,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxPathDepth: int(env, 'OBSIGRAPH_MAX_PATH_DEPTH', DEFAULT_MAX_PATH_DEPTH, 1),
     schemaFolder: env.OBSIGRAPH_SCHEMA_FOLDER ?? DEFAULT_SCHEMA_FOLDER,
     ladybug: env.OBSIGRAPH_LADYBUG !== '0',
+    vectors: env.OBSIGRAPH_VECTORS !== '0',
+    embedRetryMs: int(env, 'OBSIGRAPH_EMBED_RETRY_MS', 30_000, 10),
   };
 }

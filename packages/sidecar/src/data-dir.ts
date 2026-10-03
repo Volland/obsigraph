@@ -20,13 +20,30 @@ export class DataDir {
     return full;
   }
 
-  /** Atomic write via a temporary file and rename. */
-  async writeJson(name: string, value: unknown): Promise<void> {
+  private readonly queues = new Map<string, Promise<void>>();
+  private seq = 0;
+
+  /**
+   * Atomic write via a unique temporary file and rename. Writes to the same
+   * file run in call order, so the last call's snapshot always wins.
+   */
+  writeJson(name: string, value: unknown): Promise<void> {
     const full = this.path(name);
-    await mkdir(dirname(full), { recursive: true });
-    const tmp = `${full}.tmp`;
-    await writeFile(tmp, JSON.stringify(value));
-    await rename(tmp, full);
+    const json = JSON.stringify(value);
+    const tmp = `${full}.${process.pid}.${++this.seq}.tmp`;
+    const prev = this.queues.get(full) ?? Promise.resolve();
+    const next = prev
+      .catch(() => {})
+      .then(async () => {
+        await mkdir(dirname(full), { recursive: true });
+        await writeFile(tmp, json);
+        await rename(tmp, full);
+      });
+    this.queues.set(full, next);
+    void next.finally(() => {
+      if (this.queues.get(full) === next) this.queues.delete(full);
+    }).catch(() => {});
+    return next;
   }
 
   async readJson<T>(name: string): Promise<T | null> {

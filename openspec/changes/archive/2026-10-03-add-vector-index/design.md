@@ -10,6 +10,9 @@ LadybugDB provides a vector index and is already the derived store for the graph
 
 ## Decisions
 
+**Superseding notes after verification.** Vectors are stored per note in the sidecar data directory, not in LadybugDB: Ladybug's vector index needs a network-installed extension, and the mirror is disposable so a rebuild would discard costly embeddings; a brute-force cosine scan is fast at vault scale. "Usable in the same query as graph traversal" is realized as search-then-traverse: `POST /search` runs an optional Cypher query on either backend with the hit ids as `$hits`, instead of a Cypher-callable procedure. The plugin does not embed; the rebuild prompt and stale flag surface through sidecar status and `POST /vectors/rebuild`. Vectors are reused by embedded-text hash, so folder moves re-embed nothing.
+
+
 **Vectors in Ladybug, separate node tables for chunks and edge sentences linked to graph nodes and relationships.** Alternative, a separate vector database, was rejected because it cannot join with traversal. A chunk node references its note; a sentence node references its edge id.
 
 **Incremental by chunk id.** On file change recompute chunk ids, diff against stored ids, embed only new ones and delete the rest. This relies on the deterministic ids from chunking.

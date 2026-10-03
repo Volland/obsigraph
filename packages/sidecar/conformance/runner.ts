@@ -28,7 +28,7 @@ export async function runCorpus(entries = loadCorpus(), opts: { ladybug?: boolea
   let sc: Sidecar | null = null;
   try {
     sc = await startSidecar(
-      { OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 'conformance', OBSIGRAPH_PORT: '0', OBSIGRAPH_LADYBUG: hasLadybug ? '1' : '0' },
+      { OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 'conformance', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_LADYBUG: hasLadybug ? '1' : '0' },
       { log: () => {} },
     );
     await sc.mirror?.idle();

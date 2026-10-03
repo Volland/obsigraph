@@ -36,7 +36,7 @@ beforeAll(async () => {
   mkdirSync(vault);
   mkdirSync(join(root, 'data'));
   for (const [p, t] of Object.entries(NOTES)) writeFileSync(join(vault, p), t);
-  sc = await startSidecar({ OBSIGRAPH_VAULT: vault, OBSIGRAPH_DATA: join(root, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_DEBOUNCE_MS: '30' }, { log: () => {} });
+  sc = await startSidecar({ OBSIGRAPH_VAULT: vault, OBSIGRAPH_DATA: join(root, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_DEBOUNCE_MS: '30' }, { log: () => {} });
   await sc.mirror!.idle();
 });
 afterAll(async () => {
@@ -120,7 +120,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     const r2 = mkdtempSync(join(tmpdir(), 'obsigraph-lbb-off-'));
     mkdirSync(join(r2, 'vault'));
     mkdirSync(join(r2, 'data'));
-    const off = await startSidecar({ OBSIGRAPH_VAULT: join(r2, 'vault'), OBSIGRAPH_DATA: join(r2, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
+    const off = await startSidecar({ OBSIGRAPH_VAULT: join(r2, 'vault'), OBSIGRAPH_DATA: join(r2, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
     const res = await fetch(`http://127.0.0.1:${off.port}/query`, { method: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify({ query: 'MATCH (n) RETURN n', backend: 'ladybug' }) });
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: { kind: 'unavailable', message: 'disabled by OBSIGRAPH_LADYBUG=0' } });

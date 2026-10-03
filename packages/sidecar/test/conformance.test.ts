@@ -47,7 +47,7 @@ describe('engine conformance suite', () => {
   // @lat: [[tests/engine-conformance#Writes rejected on both]]
   it('rejects writes on both engines and leaves the fixture unchanged', async () => {
     const data = mkdtempSync(join(tmpdir(), 'obsigraph-conf-w-'));
-    const sc = await startSidecar({ OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0' }, { log: () => {} });
+    const sc = await startSidecar({ OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0' }, { log: () => {} });
     try {
       await sc.mirror?.idle();
       const before = sc.sync.graph.size;
@@ -78,7 +78,7 @@ describe('engine conformance suite', () => {
   it('uses a fixture with multi-labels, stubs, signed, pinned and parallel edges and edge properties', async () => {
     const g = await (async () => {
       const data = mkdtempSync(join(tmpdir(), 'obsigraph-conf-f-'));
-      const sc = await startSidecar({ OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
+      const sc = await startSidecar({ OBSIGRAPH_VAULT: FIXTURE, OBSIGRAPH_DATA: data, OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_LADYBUG: '0' }, { log: () => {} });
       const graph = sc.sync.graph;
       await sc.stop();
       rmSync(data, { recursive: true, force: true });

@@ -62,7 +62,7 @@ describe('ladybug backend in the plugin', () => {
     mkdirSync(join(root, 'data'));
     const notes: Record<string, string> = { 'Alice.md': '---\ntype: Person\n---\nknows:: [[Bob]] {since: 2020}\n-distrusts:: [[Eve]]', 'Bob.md': '', 'Eve.md': '' };
     for (const [p, t] of Object.entries(notes)) writeFileSync(join(vault, p), t);
-    const sc = await startSidecar({ OBSIGRAPH_VAULT: vault, OBSIGRAPH_DATA: join(root, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0' }, { log: () => {} });
+    const sc = await startSidecar({ OBSIGRAPH_VAULT: vault, OBSIGRAPH_DATA: join(root, 'data'), OBSIGRAPH_TOKEN: 't', OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0' }, { log: () => {} });
     try {
       await sc.mirror!.idle();
       const q = 'MATCH (a:Person)-[r]->(b) RETURN a, r, b ORDER BY r.id';

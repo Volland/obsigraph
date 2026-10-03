@@ -17,3 +17,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[engine-conformance]] — cross-engine conformance suite behaviors
 - [[embedding-provider]] — embedding provider behaviors
 - [[chunking]] — chunking and edge verbalization behaviors
+- [[vector-index]] — vector index and search behaviors in the sidecar

@@ -148,13 +148,19 @@ OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=chan
 curl -H 'authorization: Bearer change-me' -d '{"query":"MATCH (n:Person) RETURN n.title"}' localhost:8765/query
 ```
 
-- **Endpoints:** `GET /health` (no token), `GET /status`, and `POST /query` with `{query, params}`. Results use the same `{columns, rows}` shape as the plugin.
+- **Endpoints:**
+  - `GET /health` needs no token. `GET /status` reports graph, mirror and vector state.
+  - `POST /query` takes `{query, params, backend}`, where `backend` is `builtin` or `ladybug`. Results use the same `{columns, rows}` shape as the plugin.
+  - `POST /search` runs a vector search.
+  - `POST /vectors/rebuild` re-embeds the vault after a model change.
+- **Vector search:** `POST /search` takes `{"query": "machine learning", "target": "nodes", "k": 5, "types": ["Person"], "then": "MATCH (p)-[:works_at]->(c) WHERE id(p) IN $hits RETURN c.title"}`. Nodes come back with their best-chunk citation, and edges come back with their sentence. `then` runs on the hits.
 - **Docker:** `packages/sidecar/Dockerfile` plus `compose.example.yaml`. The vault is mounted `:ro`, the image runs as a non-root user, the port is published on host loopback, and the token is passed as a Docker secret.
 - **Environment:**
   - `OBSIGRAPH_VAULT` and `OBSIGRAPH_DATA` set the vault and data directories.
   - `OBSIGRAPH_TOKEN` or `OBSIGRAPH_TOKEN_FILE` set the token.
   - `OBSIGRAPH_HOST` (default `127.0.0.1`) and `OBSIGRAPH_PORT` (default `8765`) set the address.
   - `OBSIGRAPH_POLL_MS` enables polling, which bind mounts on macOS need.
+  - `OBSIGRAPH_VECTORS=0` turns off the vector index, which is on by default.
   - `OBSIGRAPH_LADYBUG=0` turns off the LadybugDB mirror. It's on by default and runs when `@ladybugdb/core` is installed.
   - `OBSIGRAPH_EMBED_PROVIDER` (`ollama` by default, or `openai`), `OBSIGRAPH_EMBED_URL` (default `http://localhost:11434`), `OBSIGRAPH_EMBED_MODEL` (default `nomic-embed-text`), `OBSIGRAPH_EMBED_KEY` or `OBSIGRAPH_EMBED_KEY_FILE`, and `OBSIGRAPH_EMBED_BATCH` configure embeddings. Inside Docker, reach host Ollama with `http://host.docker.internal:11434`.
   - `OBSIGRAPH_DEBOUNCE_MS`, `OBSIGRAPH_QUERY_TIMEOUT_MS`, `OBSIGRAPH_MAX_BODY_BYTES`, `OBSIGRAPH_MAX_PATH_DEPTH` and `OBSIGRAPH_SCHEMA_FOLDER` tune the rest.

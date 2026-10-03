@@ -39,7 +39,7 @@ function write(vault: string, path: string, text: string) {
 }
 
 function env(f: { vault: string; data: string }, extra: Record<string, string> = {}): NodeJS.ProcessEnv {
-  return { OBSIGRAPH_VAULT: f.vault, OBSIGRAPH_DATA: f.data, OBSIGRAPH_TOKEN: TOKEN, OBSIGRAPH_PORT: '0', OBSIGRAPH_DEBOUNCE_MS: '40', OBSIGRAPH_LADYBUG: '0', ...extra };
+  return { OBSIGRAPH_VAULT: f.vault, OBSIGRAPH_DATA: f.data, OBSIGRAPH_TOKEN: TOKEN, OBSIGRAPH_PORT: '0', OBSIGRAPH_VECTORS: '0', OBSIGRAPH_DEBOUNCE_MS: '40', OBSIGRAPH_LADYBUG: '0', ...extra };
 }
 
 async function start(e: NodeJS.ProcessEnv, processors: Processor[] = [], logs: string[] = []) {
