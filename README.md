@@ -52,7 +52,7 @@ ORDER BY hours DESC
 - **Typed nodes and schema notes.** Frontmatter `type` gives a note its labels. A note in `Types/` declares a type's properties, allowed edges, template and look.
 - **openCypher queries.** `MATCH`, `OPTIONAL MATCH`, `WITH`, aggregates, variable-length paths and path variables. Queries are read-only and errors are clear.
 - **Graph or table, live.** Results render as a labeled, styled graph or a table, and refresh as you edit.
-- **Graph view.** A full-pane explorer that follows the active note, expands neighbors and explains where each style comes from.
+- **Graph view.** A full-pane explorer that follows the active note, expands neighbors and explains where each style comes from. It is a separate view. Obsidian's core Graph view is left unchanged, but you can color types there yourself with groups such as `[type:Person]` (see the [docs](https://volland.github.io/obsigraph/docs.html#graph-view)).
 - **Edge embeds.** `{{edge: Alice -knows-> Bob . since}}` shows an edge's property inside your prose.
 - **Optional sidecar.** A LadybugDB mirror for full Cypher, local vector search (Ollama), GraphRAG with citations, and an **MCP server** for agents.
 

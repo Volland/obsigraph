@@ -6,7 +6,13 @@ Graph rendering is done by the plugin itself with Cytoscape.js, because the core
 
 Two surfaces share one renderer and one config: inline `graph-query` blocks and a full-pane Graph view leaf.
 
-Both use [[packages/plugin/src/render/graph-renderer.ts#GraphRenderer]]. Inline blocks are driven by [[packages/plugin/src/query/query-block.ts#QueryBlock]], which re-runs only while visible and reuses its renderer across refreshes to avoid flicker; [[packages/plugin/src/query/plan.ts#planRender]] picks graph or table and falls back to a table above the element cap. Only the leaf, [[packages/plugin/src/view/graph-view.ts#GraphView]], supports click-to-expand of neighbors; with an empty query it follows the active note's [[packages/plugin/src/view/view-state.ts#neighborhood]] and keeps expanded nodes across live refreshes. Patching or replacing the core graph view is explicitly out of scope because it is fragile across Obsidian updates.
+Both use [[packages/plugin/src/render/graph-renderer.ts#GraphRenderer]]. Inline blocks are driven by [[packages/plugin/src/query/query-block.ts#QueryBlock]], which re-runs only while visible and reuses its renderer across refreshes to avoid flicker; [[packages/plugin/src/query/plan.ts#planRender]] picks graph or table and falls back to a table above the element cap. Only the leaf, [[packages/plugin/src/view/graph-view.ts#GraphView]], supports click-to-expand of neighbors; with an empty query it follows the active note's [[packages/plugin/src/view/view-state.ts#neighborhood]] and keeps expanded nodes across live refreshes. Patching or replacing the core graph view is explicitly out of scope; see [[visualization#Core graph view]].
+
+## Core graph view
+
+Obsidian's core Graph view is never patched; type coloring there is documented as a zero-code recipe using core color groups such as `[type:Person]`.
+
+The core view has no plugin API. Decorating it means reaching into its private renderer, as Graph Link Types and Extended Graph do. That code breaks on Obsidian updates and needs the `any` casts the directory review flags. It would also only label edges the core view already draws: one line per note pair, so parallel edges collapse into one, and there are no edge properties, stubs, schema styles or queries. Users get the full model in [[visualization#Surfaces]] and color their types in the core view with groups. A later optional, off-by-default "decorate core graph" setting may add edge labels and negative-edge colors, but only if users ask for it. It would check that the internals exist and do nothing when they don't.
 
 ## Styling
 

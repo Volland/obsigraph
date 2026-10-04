@@ -174,6 +174,9 @@ RETURN a.title AS who, r.since AS since
         <li>Right-click or long-press a node to expand it; double-click or ⌘/Ctrl-click to open its note.</li>
         <li>Select a node or edge to see its properties and where each style came from.</li>
       </ul>
+      <p>This is a separate view. Obsidian's core Graph view is left untouched, because it has no plugin API and patching it breaks on Obsidian updates. It still draws one plain line per linked pair of notes, with no edge types, signs or properties.</p>
+      <h3>Color types in the core Graph view</h3>
+      <p>You can still color nodes by type in the core Graph view, without any plugin code. Open the core Graph view, expand <em>Groups</em>, choose <em>New group</em>, and enter a property search such as <code>[type:Person]</code>, then pick a color. Add one group per type. The first matching group wins, so order groups from most to least specific.</p>
 
       <h2 id="sidecar">The sidecar</h2>
       <p>An optional headless Node service over a read-only copy of your vault. It powers the Ladybug backend, vector search, GraphRAG and MCP.</p>
