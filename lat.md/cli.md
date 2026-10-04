@@ -64,7 +64,7 @@ A `code` setting takes `off`, `annotated` or `all`; the Graph view has a Code to
 
 `tg search` ranks sections lexically with no key or network, and becomes hybrid lexical plus vector when an embedding provider is configured.
 
-`LAT_LLM_KEY`, `LAT_LLM_KEY_FILE` and `LAT_LLM_KEY_HELPER` are honored as aliases so existing lat.md setups keep working. The index is a derived cache in `.tg/`. Embeddings reuse [[vector-search#Edge verbalization]] and the embedding provider from [[vector-search]].
+[[packages/core/src/latmd/search.ts#LexicalIndex]] scores title, leading paragraph and body with weighted BM25 and is rebuilt on every call. With `TG_EMBED_PROVIDER` (`ollama` or `openai`) or a key set, `packages/cli/src/embed.mts` embeds each section through the sidecar's provider classes and fuses the two rankings with reciprocal rank fusion ([[packages/core/src/latmd/search.ts#fuseRanks]]); nothing is configured by default, so a bare run never touches the network. A failing provider degrades to lexical results with a notice and exit 0. `LAT_LLM_KEY`, `LAT_LLM_KEY_FILE` and `LAT_LLM_KEY_HELPER` are honored as aliases of `TG_EMBED_KEY*`, with lat.md's prefix convention (`sk-` OpenAI, `vck_` Vercel AI Gateway), and keys are never written anywhere. Vectors live in `.tg/vectors.json` plus `.tg/vectors.f32`, keyed by content hash and model, self-ignored by a `.gitignore` inside `.tg/` and rebuilt by `tg reindex`.
 
 ## Agent integration
 

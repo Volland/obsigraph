@@ -15,6 +15,8 @@ export interface Io {
   out: (text: string) => void;
   err: (text: string) => void;
   env: Record<string, string | undefined>;
+  /** Network access for embeddings; injectable so tests never touch a real server. */
+  fetch?: typeof fetch;
 }
 
 export interface Ctx extends Io {

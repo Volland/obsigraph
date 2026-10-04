@@ -25,3 +25,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[symbol-provider]] — regex symbol finders, honest lookup and gitignore matching
 - [[tg-annotations]] — `@lat:` and `@tg:` comment annotations
 - [[tg-check]] — `tg` read and check commands and parity with `lat check`
+- [[tg-search]] — `tg search` lexical and hybrid ranking, keys and cache

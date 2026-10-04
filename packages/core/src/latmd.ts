@@ -5,3 +5,5 @@ export type { Frontmatter, LeadingIssue, ParsedMarkdown, Section, WikiRef } from
 export { extOf, isSourceTarget, LAT_SOURCE_EXTENSIONS, SOURCE_EXTENSIONS, splitTarget, TG_SOURCE_EXTENSIONS, toPosix } from './latmd/links.js';
 export { checkLattice } from './latmd/check.js';
 export type { CheckInput, CheckScope, Finding, FindingKind } from './latmd/check.js';
+export { buildSearchDocs, fuseRanks, LexicalIndex, tokenize, vectorRank } from './latmd/search.js';
+export type { SearchDoc, SearchHit } from './latmd/search.js';
