@@ -10,8 +10,9 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0",
     "@obsigraph/core": "*",
-    "zod": "^4.6.5",
-    "yaml": "^2.9.1"
+    "@obsigraph/node-vault": "*",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

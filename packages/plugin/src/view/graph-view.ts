@@ -5,6 +5,7 @@ import { DEFAULT_OPTIONS } from '../query/block';
 import { planRender } from '../query/plan';
 import type { GraphElements } from '../render/elements';
 import { GraphRenderer } from '../render/graph-renderer';
+import { themeFrom } from '../render/theme';
 import { renderTable } from '../render/table';
 import { edgeDetails, mergeElements, neighborhood, nodeDetails, type Details } from './view-state';
 
@@ -149,6 +150,7 @@ export class GraphView extends ItemView {
     this.renderer = new GraphRenderer(host, {
       height: 600,
       styler: this.plugin.makeStyler(),
+      theme: () => themeFrom(host),
       onOpen: (path) => this.openNote(path),
       onExpand: (id) => {
         this.expanded.add(id);

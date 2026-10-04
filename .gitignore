@@ -7,3 +7,5 @@ lat.md/.cache/
 site/assets/demo.js
 example/.obsidian/*
 !example/.obsidian/community-plugins.json
+packages/vscode/dist/
+packages/vscode/*.vsix

@@ -26,6 +26,12 @@ Built on branch `feat/tg-cli`, shipping as a single release: the `tg` CLI replac
 
 Nine OpenSpec changes, built in dependency order (check-commands after annotations and the symbol provider, which it needs) but released together: add-tg-cli-core, add-tg-lat-resolver, add-tg-check-commands, add-tg-symbol-provider, add-tg-annotations, add-tg-search, add-tg-agent-integration, add-tg-code-layer and add-tg-vault-integration. All nine are implemented and archived; the sidecar mirror of code nodes, a task of add-tg-code-layer, is deferred. Gate: `tg check` matches `lat check` on this repository and on real lat.md projects. Because it ships as one release, the parity suite runs in CI throughout the build.
 
+## v0.6 VS Code extension
+
+A VS Code extension with typed backlinks for notes and code, a graph webview and a `tg init` setup funnel, published to the VS Code Marketplace and Open VSX; designed in [[vscode]] and implemented by the OpenSpec change vscode-extension.
+
+It first extracts two shared packages, `node-vault` and `graph-ui`, with sidecar and plugin behavior unchanged. Deferred: a query panel and symbol-level cursor tracking. Publishing needs the maintainer's registry tokens and a published `@typedgraph/cli` 0.5.0.
+
 ## Open questions
 
 Sign semantics (v0.1 assumes prefix-only polarity) and exact Graph Link Types compatibility beyond the inline-field form remain unresolved. The v0.1 Cypher subset is pinned in [[query-engine#Supported subset]]; config precedence is settled in [[visualization#Styling]].
