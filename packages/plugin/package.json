@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@obsigraph/core": "0.4.3",
+    "@obsigraph/core": "*",
     "cytoscape": "^3.34.3"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0",
-    "@obsigraph/core": "0.4.3",
+    "@obsigraph/core": "*",
     "zod": "^4.6.5",
     "yaml": "^2.9.1"
   },

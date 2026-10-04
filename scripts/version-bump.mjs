@@ -1,5 +1,6 @@
 // Usage: node scripts/version-bump.mjs 0.5.0
 // Sets the plugin version everywhere Obsidian and npm look for it.
+import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const version = process.argv[2];
@@ -24,4 +25,6 @@ for (const p of ['package.json', 'packages/core/package.json', 'packages/plugin/
   pkg.version = version;
   save(p, pkg);
 }
+// Keep package-lock.json in step, or `npm ci` looks for the old workspace versions on the registry.
+execSync('npm install --package-lock-only --ignore-scripts', { stdio: 'inherit' });
 console.log(`Version set to ${version}. Commit, then: git tag ${version} && git push origin ${version}`);
