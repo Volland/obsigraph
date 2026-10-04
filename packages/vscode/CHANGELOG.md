@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- Fix: the "Set up TypeGraph…" row now shows in the Backlinks view (the welcome view it relied on never appeared).
+- A fuller README with examples, settings, limits and troubleshooting.
+
 ## 0.5.0
 
 - Typed backlinks panel for the active markdown note or source file, grouped by edge type with sign and properties.

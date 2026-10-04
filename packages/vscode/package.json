@@ -2,60 +2,107 @@
   "name": "typegraph-vscode",
   "displayName": "TypeGraph",
   "description": "Typed backlinks and a graph view for your markdown and code, with no Obsidian required.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "publisher": "typedgraph",
   "license": "MIT",
   "type": "module",
   "icon": "media/icon.png",
-  "repository": { "type": "git", "url": "https://github.com/Volland/obsigraph" },
-  "categories": ["Visualization", "Other"],
-  "keywords": ["markdown", "backlinks", "graph", "lat.md", "knowledge graph", "typed links"],
-  "engines": { "vscode": "^1.90.0" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Volland/obsigraph"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "backlinks",
+    "graph",
+    "lat.md",
+    "knowledge graph",
+    "typed links"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
   "main": "dist/extension.cjs",
-  "activationEvents": ["workspaceContains:**/*.md", "onStartupFinished"],
+  "activationEvents": [
+    "workspaceContains:**/*.md",
+    "onStartupFinished"
+  ],
   "contributes": {
     "configuration": {
       "title": "TypeGraph",
       "properties": {
         "typegraph.roots": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["."],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "."
+          ],
           "markdownDescription": "Folders, relative to the workspace folder, whose markdown and annotated source files form the graph. Dot folders and `node_modules` are always skipped."
         },
         "typegraph.ignore": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["node_modules"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "node_modules"
+          ],
           "markdownDescription": "Folder names skipped at any depth, in addition to dot folders."
         }
       }
     },
     "viewsContainers": {
-      "activitybar": [{ "id": "typegraph", "title": "TypeGraph", "icon": "media/activity.svg" }]
+      "activitybar": [
+        {
+          "id": "typegraph",
+          "title": "TypeGraph",
+          "icon": "media/activity.svg"
+        }
+      ]
     },
     "views": {
       "typegraph": [
-        { "id": "typegraph.backlinks", "name": "Backlinks" }
+        {
+          "id": "typegraph.backlinks",
+          "name": "Backlinks"
+        }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "typegraph.backlinks",
-        "contents": "Open a markdown or source file to see its typed backlinks.\n[Set up TypeGraph](command:typegraph.setup)",
-        "when": "typegraph.needsSetup"
-      }
-    ],
     "commands": [
-      { "command": "typegraph.openGraph", "title": "TypeGraph: Open Graph", "icon": "$(graph)" },
-      { "command": "typegraph.setup", "title": "TypeGraph: Set Up TypeGraph" },
-      { "command": "typegraph.refresh", "title": "TypeGraph: Refresh Index", "icon": "$(refresh)" }
+      {
+        "command": "typegraph.openGraph",
+        "title": "TypeGraph: Open Graph",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "typegraph.setup",
+        "title": "TypeGraph: Set Up TypeGraph"
+      },
+      {
+        "command": "typegraph.refresh",
+        "title": "TypeGraph: Refresh Index",
+        "icon": "$(refresh)"
+      }
     ],
     "menus": {
       "view/title": [
-        { "command": "typegraph.openGraph", "when": "view == typegraph.backlinks", "group": "navigation" },
-        { "command": "typegraph.refresh", "when": "view == typegraph.backlinks", "group": "navigation" }
+        {
+          "command": "typegraph.openGraph",
+          "when": "view == typegraph.backlinks",
+          "group": "navigation"
+        },
+        {
+          "command": "typegraph.refresh",
+          "when": "view == typegraph.backlinks",
+          "group": "navigation"
+        }
       ]
     }
   },

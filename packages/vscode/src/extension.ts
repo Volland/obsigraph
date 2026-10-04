@@ -8,7 +8,7 @@ import { WorkspaceIndex } from './workspace-index';
 
 const SOURCE_GLOB = '**/*.{md,ts,tsx,js,jsx,py,rs,go,c,h,mts,cts,mjs,cjs}';
 
-type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: BacklinkItem; folder: string } | { kind: 'empty'; text: string };
+type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: BacklinkItem; folder: string } | { kind: 'empty'; text: string } | { kind: 'setup' };
 
 /** Thin VS Code adapter: everything it shows is computed by the pure modules next to it. */
 export function activate(context: vscode.ExtensionContext): void {
@@ -29,10 +29,6 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!doc || !folder || doc.uri.scheme !== 'file') return null;
     const rel = vscode.workspace.asRelativePath(doc.uri, false);
     return rel.startsWith('..') ? null : rel.split('\\').join('/');
-  };
-
-  const refreshContext = () => {
-    if (folder) void vscode.commands.executeCommand('setContext', 'typegraph.needsSetup', needsSetup(folder.uri.fsPath));
   };
 
   const ensureLoaded = (): Promise<void> => {
@@ -60,7 +56,6 @@ export function activate(context: vscode.ExtensionContext): void {
       timer = setTimeout(() => {
         changed.fire();
         postGraph();
-        refreshContext();
       }, 150);
     });
   };
@@ -69,6 +64,13 @@ export function activate(context: vscode.ExtensionContext): void {
     onDidChangeTreeData: changed.event as vscode.Event<void>,
     getTreeItem(n) {
       if (n.kind === 'empty') return new vscode.TreeItem(n.text);
+      if (n.kind === 'setup') {
+        const t = new vscode.TreeItem('Set up TypeGraph…');
+        t.iconPath = new vscode.ThemeIcon('rocket');
+        t.tooltip = 'Run tg init to add lat.md, agent instructions, hooks and MCP (asks first)';
+        t.command = { command: 'typegraph.setup', title: 'Set up TypeGraph' };
+        return t;
+      }
       if (n.kind === 'group') {
         const t = new vscode.TreeItem(`${n.group.title} (${n.group.items.length})`, vscode.TreeItemCollapsibleState.Expanded);
         t.iconPath = new vscode.ThemeIcon('symbol-event');
@@ -88,11 +90,13 @@ export function activate(context: vscode.ExtensionContext): void {
       await ensureLoaded();
       if (n?.kind === 'group') return n.group.items.map((item) => ({ kind: 'item', item, folder: folder.uri.fsPath }));
       if (n) return [];
+      // The setup row comes last so it never hides backlinks; a welcome view cannot be used because this view is never empty.
+      const setupRow: Node[] = needsSetup(folder.uri.fsPath) ? [{ kind: 'setup' }] : [];
       const path = activePath();
-      if (!path || !index) return [{ kind: 'empty', text: 'Open a markdown or source file.' }];
+      if (!path || !index) return [{ kind: 'empty', text: 'Open a markdown or source file.' }, ...setupRow];
       const r = backlinksFor(index, path);
-      if (r.kind === 'empty') return [{ kind: 'empty', text: `No typed edges for ${posix.basename(path)}.` }];
-      return r.groups.map((group) => ({ kind: 'group', group }));
+      if (r.kind === 'empty') return [{ kind: 'empty', text: `No typed edges for ${posix.basename(path)}.` }, ...setupRow];
+      return [...r.groups.map((group): Node => ({ kind: 'group', group })), ...setupRow];
     },
   };
 
@@ -156,7 +160,6 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('typegraph.refresh', reload),
     changed,
   );
-  refreshContext();
 }
 
 export function deactivate(): void {}
