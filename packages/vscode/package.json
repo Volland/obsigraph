@@ -4,7 +4,7 @@
   "description": "Typed backlinks and a graph view for your markdown and code, with no Obsidian required.",
   "version": "0.5.1",
   "private": true,
-  "publisher": "typedgraph",
+  "publisher": "pavlyshyn",
   "license": "MIT",
   "type": "module",
   "icon": "media/icon.png",

@@ -179,7 +179,7 @@ One intentional difference: `.mts`, `.cts`, `.mjs` and `.cjs` files count as sou
 
 ## More ways in
 
-- **VS Code:** the [TypeGraph extension](https://marketplace.visualstudio.com/items?itemName=typedgraph.typegraph-vscode) shows typed backlinks for notes and code, and has a setup button that runs `tg init` for you.
+- **VS Code:** the [TypeGraph extension](https://marketplace.visualstudio.com/items?itemName=pavlyshyn.typegraph-vscode) shows typed backlinks for notes and code, and has a setup button that runs `tg init` for you.
 - **Obsidian:** the Typed Graph plugin, with a live demo at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/demo.html).
 - **Docs and source:** [github.com/Volland/obsigraph](https://github.com/Volland/obsigraph). Design notes for this CLI are in `lat.md/cli.md` in the repository.
 
