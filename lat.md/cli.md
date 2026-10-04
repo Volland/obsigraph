@@ -20,6 +20,18 @@ The section tree and link resolver live in `core` with no heavy dependencies, be
 
 Markdown is read by [[packages/core/src/latmd/markdown.ts#parseMarkdown]], a line scanner (no remark) that yields the section tree, wiki links outside code and the `require-code-mention` option; [[packages/core/src/latmd/markdown.ts#leadingParagraphIssue]] applies the 250-character rule. Intentional differences from lat.md: `.mts`, `.cts`, `.mjs` and `.cjs` are accepted as source targets. Edge targets already drop `#subpath`, so nested-heading links never make stub nodes; code targets in edges arrive with the code layer.
 
+## Commands
+
+`tg locate`, `section`, `refs`, `expand` and `check` (`packages/cli/src/commands/`) read the lattice through `Project` (`packages/cli/src/project.mts`) and validate with [[packages/core/src/latmd/check.ts#checkLattice]].
+
+`check` runs lat.md's four checks in its order: links (including source links verified on disk), code references with `require-code-mention` coverage, directory index files and the leading-paragraph rule; `@tg:` annotations are validated too, and a `@tg:` target counts toward coverage. Output mirrors lat (`- file:line: message`), `--json` gives findings, warnings and file counts, and `check md|code-refs|index|sections` runs one. Locate, section, refs and expand print lat-style previews.
+
+### Parity gate
+
+A vitest suite runs the pinned reference `lat check` (0.12.2, installed by the CI and release workflows) and `tg check` on this repository, a seeded fixture and a snapshot of the upstream lat.md project, and compares the normalized finding sets.
+
+The suite skips when `lat` is absent locally. The one intentional difference is that `.mjs`, `.cjs`, `.mts` and `.cts` links are source links for tg and unresolved for lat, so their message text is normalized. The upstream snapshot lives in `packages/cli/test/fixtures/upstream-lat-md` (MIT, with its license) and has over two hundred findings, so it exercises every message kind.
+
 ## Symbols
 
 `lookupSymbol` in `packages/core/src/code/symbols.ts` answers found, absent or unresolvable for `file#Class#method` paths using regex finders for TS/JS, Python, Go, Rust and C.

@@ -25,6 +25,8 @@ jobs:
           v=$(node -p "require('./manifest.json').version")
           test "$v" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest $v"; exit 1; }
           test "$(node -p "require('./packages/plugin/manifest.json').version")" = "$v"
+      - name: Install the reference lat.md for the parity suite
+        run: npm install -g lat.md@0.12.2
       - run: npm run typecheck
       - run: npx vitest run --reporter=dot
       - run: npm run build

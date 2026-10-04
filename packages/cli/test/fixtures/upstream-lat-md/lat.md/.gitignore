@@ -1,0 +1,4 @@
+.obsidian
+.cache
+*.canvas
+config.local.yaml

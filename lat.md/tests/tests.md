@@ -24,3 +24,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[lat-resolver]] — lat.md-compatible section tree, ids and link resolution
 - [[symbol-provider]] — regex symbol finders, honest lookup and gitignore matching
 - [[tg-annotations]] — `@lat:` and `@tg:` comment annotations
+- [[tg-check]] — `tg` read and check commands and parity with `lat check`

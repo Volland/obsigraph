@@ -1,2 +1,2 @@
-// Each later change registers its commands by importing here.
-export {};
+import './check.mjs';
+import './read.mjs';
