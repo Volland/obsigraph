@@ -11,7 +11,9 @@
     "build": "node esbuild.config.mjs"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "@obsigraph/core": "*",
+    "zod": "^4.6.5",
     "esbuild": "^0.28.2"
   }
 }

@@ -17,6 +17,8 @@ export interface Io {
   env: Record<string, string | undefined>;
   /** Network access for embeddings; injectable so tests never touch a real server. */
   fetch?: typeof fetch;
+  /** Whole standard input, for hooks; absent when none is piped. */
+  stdin?: () => string;
 }
 
 export interface Ctx extends Io {

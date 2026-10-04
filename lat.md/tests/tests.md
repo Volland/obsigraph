@@ -26,3 +26,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[tg-annotations]] — `@lat:` and `@tg:` comment annotations
 - [[tg-check]] — `tg` read and check commands and parity with `lat check`
 - [[tg-search]] — `tg search` lexical and hybrid ranking, keys and cache
+- [[tg-agent]] — `tg init`, `gen`, `hook`, `mcp` and bundled skills

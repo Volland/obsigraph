@@ -68,9 +68,11 @@ A `code` setting takes `off`, `annotated` or `all`; the Graph view has a Code to
 
 ## Agent integration
 
-`tg init`, `gen`, `hook` and `mcp` match lat.md's agent layer and add `cypher` and `edges` MCP tools over the docs and code graph, plus two bundled skills.
+`tg init`, `gen`, `hook` and `mcp` match lat.md's agent layer and add `cypher` and `edges` over the section graph, plus two bundled skills.
 
-Every file write is a dry run printing a diff unless `--write` is passed, and an existing lat block is migrated only with `--migrate`. MCP results reuse the contract described in [[sidecar#Interfaces]].
+Every file write is a dry run printing a diff unless `--write` is passed (`packages/cli/src/commands/init.mts`). The managed block is bounded by `%% tg:begin %%` markers so re-runs replace only it; an existing `lat:begin` block is replaced only with `--migrate`, which also swaps `lat hook claude` hooks and the `lat` MCP entry. `--agent` picks Claude Code (CLAUDE.md, `.claude/settings.json` hooks, `.mcp.json`, skills), `agents` (AGENTS.md) or `cursor`. Templates and skills are markdown files in `packages/cli/templates/`, bundled as text. `tg hook claude UserPromptSubmit|Stop` and `cursor stop` follow lat's JSON protocol, accept the prompt as `prompt` or `user_prompt`, search lexically only (no network in a hook), flag a stale lat.md after 5 or more changed code lines, and always exit 0.
+
+[[packages/core/src/latmd/graph.ts#buildLatGraph]] turns the lattice into a graph for [[query-engine]]: `Section` nodes with `section`, `title`, `file`, `depth`, `startLine`, `endLine` and `summary`, `contains` edges parent to child and `references` edges for resolved wiki links. Section keys replace `#` with `›` because the edge syntax cannot carry `#`. `tg cypher` runs the built-in engine over it; `tg edges` lists annotation edges. `tg mcp` (`createTgMcpServer` in `packages/cli/src/commands/mcp-server.mts`) exposes `tg_locate`, `tg_section`, `tg_search`, `tg_expand`, `tg_check`, `tg_refs`, `tg_cypher` and `tg_edges`, each wrapping the CLI command, and loads the MCP SDK only on demand so other commands stay fast. Cypher results use the sidecar's `_type`-tagged contract from [[sidecar#Interfaces]].
 
 ## Vault integration
 

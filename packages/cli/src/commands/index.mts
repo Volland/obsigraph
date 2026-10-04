@@ -1,3 +1,8 @@
 import './check.mjs';
 import './read.mjs';
 import './search.mjs';
+import './graph.mjs';
+import './gen.mjs';
+import './init.mjs';
+import './hook.mjs';
+import './mcp.mjs';

@@ -7,3 +7,4 @@ export { checkLattice } from './latmd/check.js';
 export type { CheckInput, CheckScope, Finding, FindingKind } from './latmd/check.js';
 export { buildSearchDocs, fuseRanks, LexicalIndex, tokenize, vectorRank } from './latmd/search.js';
 export type { SearchDoc, SearchHit } from './latmd/search.js';
+export { buildLatGraph, sectionKey } from './latmd/graph.js';

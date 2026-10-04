@@ -12,5 +12,6 @@ await build({
   outfile: 'dist/tg.mjs',
   define: { __TG_VERSION__: JSON.stringify(version) },
   banner: { js: '#!/usr/bin/env node' },
+  loader: { '.md': 'text' },
   logLevel: 'info',
 });
