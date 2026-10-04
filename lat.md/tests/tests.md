@@ -23,3 +23,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[cli-core]] — `tg` entry point, root discovery, output contract and packaging
 - [[lat-resolver]] — lat.md-compatible section tree, ids and link resolution
 - [[symbol-provider]] — regex symbol finders, honest lookup and gitignore matching
+- [[tg-annotations]] — `@lat:` and `@tg:` comment annotations

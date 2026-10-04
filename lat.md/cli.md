@@ -40,6 +40,8 @@ Code points at docs with `@lat: [[section]]`, a plain `references` link, or `@tg
 
 One grammar serves notes, docs and code (see [[edge-syntax#Inline edge form]]). A bare `@tg: [[x]]` equals `@lat:`. The edge source is the symbol declared within three lines after the comment, else the file with a warning. Arrow syntax is deferred.
 
+[[packages/core/src/code/annotations.ts#scanAnnotations]] finds them: `@lat:` uses lat.md's exact pattern (`//` or `#` comments, one link) so both tools see the same references, while `@tg:` also accepts block, JSDoc and SQL-style comments. Targets are checked with [[packages/core/src/code/annotations.ts#checkAnnotationTarget]]; a schema note's `edges` list gives advisory checks through [[packages/core/src/code/annotations.ts#schemaIssues]].
+
 ## Code layer
 
 Source files and symbols can appear in the graph as derived `CodeFile` and `CodeSymbol` nodes, off or limited to annotated symbols by default, and never written into the vault.
