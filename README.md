@@ -78,7 +78,7 @@ The plugin works on desktop and mobile, and it never modifies your notes.
 3. Add a `graph-query` block with `MATCH (a:Person)-[r:knows]->(b) RETURN a, r, b`.
 4. Run **Typed Graph: Open graph view** to explore.
 
-**Try the demo vault:** clone the repository, run `npm install && npm run example:install`, and open the `example/` folder as a vault. It uses every feature and includes a hands-on Cypher manual.
+**Try the demo vault:** download [typed-graph-demo-vault.zip](https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip), unzip it and open the folder as a vault. The plugin is preinstalled. Open **Start Here** for a tour and a hands-on Cypher manual. From a clone, `npm run example:install` builds the plugin into `example/` instead.
 
 The full guide covers edge syntax, schema notes, styling precedence, the Cypher subset, embeds and settings: **[volland.github.io/obsigraph/docs.html](https://volland.github.io/obsigraph/docs.html)**.
 
