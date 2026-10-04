@@ -5,7 +5,7 @@ This vault is a small research lab: five people, two companies, three projects, 
 ## Set up
 
 1. Open this folder as a vault in Obsidian (*Open another vault → Open folder as vault*).
-2. Install Typed Graph: from *Settings → Community plugins → Browse → "Typed Graph"*, or with BRAT (`Volland/obsigraph`). If you cloned the repository, run `npm run example:install` to build the plugin straight into this vault.
+2. Install Typed Graph: [open it in Obsidian](obsidian://show-plugin?id=typed-graph) and click *Install*, or go to *Settings → Community plugins → Browse → "Typed Graph"*. If you cloned the repository, run `npm run example:install` to build the plugin straight into this vault.
 3. Turn the plugin on, then reopen this note.
 
 The graph below is live. If you see a graph, the plugin works:

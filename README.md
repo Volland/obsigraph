@@ -65,8 +65,8 @@ ORDER BY hours DESC
 
 ## Install
 
-- **Community plugins** (once listed): open **Settings → Community plugins → Browse**, search for *Typed Graph*, then install and enable it.
-- **BRAT** (before it's listed): install *Obsidian42 - BRAT*, run **Add a beta plugin**, and enter `Volland/obsigraph`.
+- **Community plugins** (recommended): [open Typed Graph in Obsidian](obsidian://show-plugin?id=typed-graph), or go to **Settings → Community plugins → Browse**, search for *Typed Graph*, then install and enable it. Directory page: [community.obsidian.md/plugins/typed-graph](https://community.obsidian.md/plugins/typed-graph).
+- **BRAT**, for beta builds: install *Obsidian42 - BRAT*, run **Add a beta plugin**, and enter `Volland/obsigraph`.
 - **Manually**: download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Volland/obsigraph/releases/latest) into `<vault>/.obsidian/plugins/typed-graph/`, reload Obsidian, and enable the plugin.
 
 The plugin works on desktop and mobile, and it never modifies your notes.
