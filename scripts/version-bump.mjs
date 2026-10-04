@@ -20,7 +20,7 @@ const versions = json('versions.json');
 versions[version] = manifest.minAppVersion;
 save('versions.json', versions);
 
-for (const p of ['package.json', 'packages/core/package.json', 'packages/plugin/package.json', 'packages/sidecar/package.json']) {
+for (const p of ['package.json', 'packages/core/package.json', 'packages/plugin/package.json', 'packages/sidecar/package.json', 'packages/cli/package.json']) {
   const pkg = json(p);
   pkg.version = version;
   save(p, pkg);

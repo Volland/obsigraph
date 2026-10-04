@@ -20,6 +20,14 @@ Done: add-sidecar-service, add-ladybug-mirror, add-ladybug-backend, add-engine-c
 
 Done: add-embedding-provider, add-chunking-verbalization, add-vector-index, add-sidecar-mcp-graphrag. The embedding provider interface, chunking and edge verbalization, the vector index, and the [[sidecar]] with REST and MCP.
 
+## v0.5 tg CLI
+
+Planned as a single release: the `tg` CLI replacing lat.md, `@lat:` and `@tg:` annotations, an opt-in code layer in the graph, and lat.md vault integration with export. Designed in [[cli]].
+
+Nine OpenSpec changes, built in dependency order but released together: add-tg-cli-core, add-tg-lat-resolver, add-tg-check-commands, add-tg-symbol-provider, add-tg-annotations, add-tg-search, add-tg-agent-integration, add-tg-code-layer and add-tg-vault-integration. Gate: `tg check` matches `lat check` on this repository and on real lat.md projects. Because it ships as one release, the parity suite runs in CI throughout the build.
+
 ## Open questions
 
 Sign semantics (v0.1 assumes prefix-only polarity) and exact Graph Link Types compatibility beyond the inline-field form remain unresolved. The v0.1 Cypher subset is pinned in [[query-engine#Supported subset]]; config precedence is settled in [[visualization#Styling]].
+
+Whether the `@typedgraph` npm scope is owned by the maintainer is unverified; the CLI publish step depends on it. See [[cli#Packaging]].

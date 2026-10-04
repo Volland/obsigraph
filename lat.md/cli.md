@@ -1,0 +1,53 @@
+# CLI
+
+The `tg` command line (package `@typedgraph/cli`) is a drop-in replacement for lat.md that also links code into the typed graph. Parts land as OpenSpec changes named `add-tg-*`; sections below say what exists.
+
+## Compatibility contract
+
+`tg` reads the same `lat.md/` folder as lat.md: same section ids, `[[wiki]]` and source links, `@lat:` comments, leading-paragraph rule and `require-code-mention` frontmatter.
+
+"Drop-in" is defined by verdicts: `tg check` and `lat check` must report the same findings on this repository and on real lat.md projects. A differential suite enforces it in CI and gates the release. Typed edges and Cypher are additions on top, never changes to the lat.md format. Specified in `add-tg-check-commands` and `add-tg-lat-resolver`.
+
+## Own implementation
+
+`tg` re-implements lat.md instead of wrapping its npm package, so the parsed sections and code links can feed the existing graph, Cypher engine and styling.
+
+The section tree and link resolver live in `core` with no heavy dependencies, because the plugin bundles `core` and the CLI must start fast in agent hooks. Symbols come from a regex finder behind a `SymbolProvider` interface; tree-sitter is an optional later package, not a base dependency. See [[architecture#Monorepo layout]].
+
+## Packaging
+
+One bundled package `@typedgraph/cli` exposes the `tg` binary, built with esbuild like the plugin and sidecar. Workspace packages keep their `@obsigraph/*` names and `core` stays private.
+
+`packages/cli` builds `dist/tg.mjs` with esbuild (`npm run build:cli`); `src/cli.mts` holds the registry, argument parsing and exit-code contract (0 ok, 1 findings, 2 usage or internal error), `src/root.mts` the upward root search for `lat.md/` or `.tg/`. Commands register themselves from `src/commands/`. The tag workflow publishes it when an `NPM_TOKEN` secret exists, and `scripts/version-bump.mjs` keeps its version in step.
+
+The public product name is Typed Graph (see [[publishing#Plugin releases]]), so the npm scope is `@typedgraph`. Ownership of that scope was not verifiable during design and must be confirmed before the first publish. A layered library (`@typedgraph/core`) is deferred until the parser API settles.
+
+## Annotations
+
+Code points at docs with `@lat: [[section]]`, a plain `references` link, or `@tg:` followed by the existing inline edge grammar, e.g. `// @tg: implements:: [[auth#Login]] {since: 2}`.
+
+One grammar serves notes, docs and code (see [[edge-syntax#Inline edge form]]). A bare `@tg: [[x]]` equals `@lat:`. The edge source is the symbol declared within three lines after the comment, else the file with a warning. Arrow syntax is deferred.
+
+## Code layer
+
+Source files and symbols can appear in the graph as derived `CodeFile` and `CodeSymbol` nodes, off or limited to annotated symbols by default, and never written into the vault.
+
+A `code` setting takes `off`, `annotated` or `all`; the Graph view has a Code toggle and the usual element cap falls back to a table. This keeps [[architecture#Source of truth]] intact: code nodes are derived like the Ladybug mirror. Materialized stub notes exist only through an explicit export. See [[visualization#Surfaces]].
+
+## Search
+
+`tg search` ranks sections lexically with no key or network, and becomes hybrid lexical plus vector when an embedding provider is configured.
+
+`LAT_LLM_KEY`, `LAT_LLM_KEY_FILE` and `LAT_LLM_KEY_HELPER` are honored as aliases so existing lat.md setups keep working. The index is a derived cache in `.tg/`. Embeddings reuse [[vector-search#Edge verbalization]] and the embedding provider from [[vector-search]].
+
+## Agent integration
+
+`tg init`, `gen`, `hook` and `mcp` match lat.md's agent layer and add `cypher` and `edges` MCP tools over the docs and code graph, plus two bundled skills.
+
+Every file write is a dry run printing a diff unless `--write` is passed, and an existing lat block is migrated only with `--migrate`. MCP results reuse the contract described in [[sidecar#Interfaces]].
+
+## Vault integration
+
+A `lat.md/` folder inside a vault is read in place through the lat resolver, so nested-heading and code links work in Obsidian without rewriting files; `tg export` and `tg import` cover interchange.
+
+Export projects a vault subset into a lat-conformant folder, flattening typed edges and dropping properties, then verifies it with `check` and prints a loss report. Round trip is not guaranteed on purpose, because lat.md has no equivalent for typed edges.

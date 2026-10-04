@@ -8,6 +8,7 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[ladybug-mirror]] — one-way disposable LadybugDB mirror
 - [[vector-search]] — Ollama embeddings for node chunks and verbalized edges
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
+- [[cli]] — planned `tg` CLI: lat.md replacement, annotations, code layer, vault integration
 - [[roadmap]] — phased delivery v0.1 to v0.4 and open questions
 - [[tests]] — test specifications tied to test code
 - [[publishing]] — releases, store submission and the website

@@ -20,3 +20,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[vector-index]] — vector index and search behaviors in the sidecar
 - [[mcp-graphrag]] — MCP tools and GraphRAG retrieve behaviors
 - [[example-vault]] — demo vault queries, embeds and diagnostics
+- [[cli-core]] — `tg` entry point, root discovery, output contract and packaging

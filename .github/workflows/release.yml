@@ -28,6 +28,7 @@ jobs:
       - run: npm run typecheck
       - run: npx vitest run --reporter=dot
       - run: npm run build
+      - run: npm run build:cli
       - name: Package the demo vault with the plugin installed
         run: |
           mkdir -p example/.obsidian/plugins/typed-graph
@@ -42,3 +43,11 @@ jobs:
             packages/plugin/dist/main.js packages/plugin/dist/manifest.json packages/plugin/dist/styles.css \
             typed-graph-demo-vault.zip \
             --title "Typed Graph ${GITHUB_REF_NAME}" --generate-notes
+      - name: Publish the tg CLI to npm
+        # Needs an NPM_TOKEN secret with publish rights on the @typedgraph scope.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NPM_TOKEN not set; skipping npm publish"; exit 0; fi
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          npm publish -w @typedgraph/cli --access public

@@ -1,0 +1,17 @@
+{
+  "name": "@typedgraph/cli",
+  "version": "0.4.4",
+  "description": "tg: map, check and query docs and code as a typed graph; a drop-in replacement for lat.md",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "tg": "dist/tg.mjs" },
+  "files": ["dist", "templates", "skills"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node esbuild.config.mjs"
+  },
+  "devDependencies": {
+    "@obsigraph/core": "*",
+    "esbuild": "^0.28.2"
+  }
+}
