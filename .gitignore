@@ -5,3 +5,5 @@ dist/
 lat.md/.cache/
 .DS_Store
 site/assets/demo.js
+example/.obsidian/*
+!example/.obsidian/community-plugins.json

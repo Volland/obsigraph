@@ -12,7 +12,8 @@
     "build:sidecar": "npm run build -w @obsigraph/sidecar",
     "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check",
     "version:bump": "node scripts/version-bump.mjs",
-    "site:build": "node site/build.mjs"
+    "site:build": "node site/build.mjs",
+    "example:install": "node scripts/install-example.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
