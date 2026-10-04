@@ -2,6 +2,7 @@ import {
   BuiltinEngine,
   EmbedIndex,
   Graph,
+  LatIndex,
   schemasFromGraph,
   styleSource,
   styleSourcesFromSchemas,
@@ -16,6 +17,7 @@ import {
 } from '@obsigraph/core';
 import { TFile, type App, type EventRef } from 'obsidian';
 import { CodeLayer } from './code-layer';
+import { inLatFolder, latDiagnostics } from './lat-links';
 
 const BATCH = 100;
 
@@ -29,6 +31,8 @@ export class VaultIndex {
   readonly engine: BuiltinEngine;
   readonly embeds = new EmbedIndex();
   readonly code: CodeLayer;
+  /** Sections and links of any lat.md folder in the vault, for in-place navigation and checks. */
+  readonly lat = new LatIndex();
   ready = false;
 
   private readonly listeners = new Set<() => void>();
@@ -80,6 +84,7 @@ export class VaultIndex {
         ...validateSchemas(this.graph, set),
         ...this.styleSources().diagnostics,
         ...this.embeds.warnings(this.graph),
+        ...latDiagnostics(this.lat),
       ];
     }
     return this.diagnosticCache;
@@ -139,12 +144,14 @@ export class VaultIndex {
         if (file instanceof TFile && file.extension !== 'md') this.code.remove(file.path);
         if (!(file instanceof TFile) || file.extension !== 'md') return;
         this.embeds.remove(file.path);
+        if (inLatFolder(file.path)) this.lat.update(file.path, null);
         this.graph.removeNote(file.path);
       }),
       vault.on('rename', async (file, oldPath) => {
         if (file instanceof TFile && file.extension !== 'md') this.code.rename(file, oldPath);
         if (!(file instanceof TFile) || file.extension !== 'md') return;
         const note = await this.read(file);
+        if (inLatFolder(oldPath)) this.lat.update(oldPath, null);
         this.embeds.remove(oldPath);
         this.embeds.upsert(note.path, note.text);
         this.graph.renameNote(oldPath, note);
@@ -166,6 +173,7 @@ export class VaultIndex {
 
   /** Embeds first, so the graph change notification sees current embeds. */
   private upsert(note: NoteInput): void {
+    if (inLatFolder(note.path)) this.lat.update(note.path, note.text);
     this.embeds.upsert(note.path, note.text);
     this.graph.upsertNote(note);
   }

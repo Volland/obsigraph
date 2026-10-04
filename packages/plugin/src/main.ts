@@ -1,5 +1,6 @@
 import type { CodeMode, StyleSource } from '@obsigraph/core';
-import { getIcon, Plugin } from 'obsidian';
+import { getIcon, Keymap, Notice, Plugin } from 'obsidian';
+import { latLinkTarget } from './lat-links';
 import { makeStyler, type Styler } from './render/styler';
 import type { EditorView } from '@codemirror/view';
 import { edgeEmbedEditorExtension, edgeEmbedPostProcessor, refreshEmbeds } from './embeds/edge-embeds';
@@ -39,6 +40,25 @@ export default class ObsigraphPlugin extends Plugin {
     this.addCommand({ id: 'open-graph-view', name: 'Open graph view', callback: () => this.openGraphView() });
     this.addRibbonIcon('git-fork', 'Open graph view', () => this.openGraphView());
     registerSchemaCommands(this);
+
+    // lat.md ids such as [[file#Heading#Sub]] are not Obsidian heading links; resolve them with the lat resolver.
+    this.registerDomEvent(
+      document,
+      'click',
+      (evt: MouseEvent) => {
+        const a = (evt.target as HTMLElement | null)?.closest?.('a.internal-link');
+        const href = a?.getAttribute('data-href');
+        if (!href || this.index.lat.sections().length === 0) return;
+        const t = latLinkTarget(this.index.lat, href);
+        if (!t) return;
+        evt.preventDefault();
+        evt.stopPropagation();
+        if (t.kind === 'open') void this.app.workspace.openLinkText(t.path, '', Keymap.isModEvent(evt), { eState: { line: t.line } });
+        else if (t.kind === 'code') new Notice(`Source link: ${t.file}${t.symbol ? `#${t.symbol}` : ''}`);
+        else new Notice(`Ambiguous link, use one of: ${t.candidates.join(', ')}`);
+      },
+      true,
+    );
 
     this.registerMarkdownPostProcessor(edgeEmbedPostProcessor(this));
     this.registerEditorExtension(edgeEmbedEditorExtension(this, this.editors));

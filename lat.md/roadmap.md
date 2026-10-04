@@ -22,9 +22,9 @@ Done: add-embedding-provider, add-chunking-verbalization, add-vector-index, add-
 
 ## v0.5 tg CLI
 
-Planned as a single release: the `tg` CLI replacing lat.md, `@lat:` and `@tg:` annotations, an opt-in code layer in the graph, and lat.md vault integration with export. Designed in [[cli]].
+Built on branch `feat/tg-cli`, shipping as a single release: the `tg` CLI replacing lat.md, `@lat:` and `@tg:` annotations, an opt-in code layer in the graph, and lat.md vault integration with export. Designed in [[cli]].
 
-Nine OpenSpec changes, built in dependency order but released together: add-tg-cli-core, add-tg-lat-resolver, add-tg-check-commands, add-tg-symbol-provider, add-tg-annotations, add-tg-search, add-tg-agent-integration, add-tg-code-layer and add-tg-vault-integration. Gate: `tg check` matches `lat check` on this repository and on real lat.md projects. Because it ships as one release, the parity suite runs in CI throughout the build.
+Nine OpenSpec changes, built in dependency order (check-commands after annotations and the symbol provider, which it needs) but released together: add-tg-cli-core, add-tg-lat-resolver, add-tg-check-commands, add-tg-symbol-provider, add-tg-annotations, add-tg-search, add-tg-agent-integration, add-tg-code-layer and add-tg-vault-integration. All nine are implemented and archived; the sidecar mirror of code nodes, a task of add-tg-code-layer, is deferred. Gate: `tg check` matches `lat check` on this repository and on real lat.md projects. Because it ships as one release, the parity suite runs in CI throughout the build.
 
 ## Open questions
 

@@ -28,3 +28,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[tg-search]] — `tg search` lexical and hybrid ranking, keys and cache
 - [[tg-agent]] — `tg init`, `gen`, `hook`, `mcp` and bundled skills
 - [[code-layer]] — derived code nodes, modes, queries and rendering
+- [[tg-vault]] — lat.md folder in a vault, export and import

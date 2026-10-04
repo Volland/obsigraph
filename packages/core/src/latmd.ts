@@ -9,3 +9,5 @@ export { buildSearchDocs, fuseRanks, LexicalIndex, tokenize, vectorRank } from '
 export type { SearchDoc, SearchHit } from './latmd/search.js';
 export { buildLatGraph } from './latmd/graph.js';
 export type { LatGraphOptions } from './latmd/graph.js';
+export { exportLattice, LOSS_DESCRIPTIONS } from './latmd/export.js';
+export type { ExportFile, ExportNote, ExportResult, LossEntry, LossKind } from './latmd/export.js';

@@ -82,6 +82,23 @@ The plugin works on desktop and mobile, and it never modifies your notes.
 
 The full guide covers edge syntax, schema notes, styling precedence, the Cypher subset, embeds and settings: **[volland.github.io/obsigraph/docs.html](https://volland.github.io/obsigraph/docs.html)**.
 
+## CLI: `tg`
+
+`@typedgraph/cli` is a standalone command line, a drop-in replacement for [lat.md](https://www.npmjs.com/package/lat.md) that also links code into the typed graph. It reads the same `lat.md/` folder and gives the same `check` verdicts (a test compares it with `lat check` on real projects).
+
+```bash
+npx @typedgraph/cli init            # dry run: shows the CLAUDE.md block, hooks, MCP entry and skills it would add
+npx @typedgraph/cli init --write
+tg check                            # links, code refs, annotations, index files, section structure
+tg search "how are edges signed"    # lexical by default; hybrid with TG_EMBED_PROVIDER or a key
+tg section "edge-syntax#Sign"
+tg cypher "MATCH (s:Section)-[:references]->(t:Section) RETURN s.title, t.title LIMIT 5"
+tg export ./out --vault ~/vault     # vault notes to a lat.md folder (lossy, with a report)
+tg import ../project/lat.md         # adopt a lat.md folder (--mount to symlink)
+```
+
+Code points at docs with `// @lat: [[section]]` (a plain link) or a typed edge, `// @tg: implements:: [[auth#Login]] {since: 2}`. `tg mcp` serves the same commands to agents over MCP. In Obsidian, **Code in the graph** (settings or the Graph view dropdown) shows annotated symbols as nodes without writing anything to the vault. Design: `lat.md/cli.md`.
+
 ## For agents: the sidecar
 
 `packages/sidecar` is a headless service over a read-only copy of your vault. It needs no Obsidian. It offers REST, an MCP server, a LadybugDB mirror, local vector search and GraphRAG.
