@@ -24,10 +24,15 @@ export interface NoteInput {
   path: string;
   text: string;
   frontmatter?: Record<string, unknown> | null;
+  /** Pre-parsed edges added to those parsed from `text`; their targets are resolved like written links. */
+  edges?: ParsedEdge[];
 }
 
 /** Resolve link text written in `sourcePath` to an existing note path, or null. */
 export type LinkResolver = (link: string, sourcePath: string) => string | null;
+
+/** Resolve a link with a `#subpath` (e.g. `src/a.ts#login`) to a node id, or null to fall back to the plain resolver. */
+export type SubpathResolver = (link: string, subpath: string, sourcePath: string) => string | null;
 
 interface FileState {
   parsed: ParsedEdge[];
@@ -51,7 +56,10 @@ export class Graph {
   private readonly stubRefs = new Map<string, number>();
   private readonly listeners = new Set<(paths: string[]) => void>();
 
-  constructor(private readonly resolve: LinkResolver) {}
+  constructor(
+    private readonly resolve: LinkResolver,
+    private readonly resolveSub?: SubpathResolver,
+  ) {}
 
   // ---- queries -----------------------------------------------------------
 
@@ -108,7 +116,8 @@ export class Graph {
       props: { ...(note.frontmatter ?? {}), path: note.path, title: titleOf(note.path) },
       stub: false,
     });
-    const { edges, diagnostics } = parseEdges(note.text, note.path);
+    const { edges: parsed, diagnostics } = parseEdges(note.text, note.path);
+    const edges = note.edges?.length ? [...parsed, ...note.edges] : parsed;
     this.files.set(note.path, { parsed: edges, diagnostics, edgeIds: [] });
     this.addEdges(note.path);
 
@@ -156,7 +165,8 @@ export class Graph {
     const file = this.files.get(path)!;
     const ordinals = new Map<string, number>();
     for (const p of file.parsed) {
-      const resolved = this.resolve(p.target, path);
+      const sub = p.subpath ? this.resolveSub?.(p.target, p.subpath, path) : null;
+      const resolved = sub && this.nodeMap.has(sub) ? sub : this.resolve(p.target, path);
       const target = resolved ?? this.ensureStub(p.target);
       const key = `${path}#${p.type}#${target}`;
       const n = ordinals.get(key) ?? 0;

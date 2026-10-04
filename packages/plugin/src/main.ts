@@ -1,4 +1,4 @@
-import type { StyleSource } from '@obsigraph/core';
+import type { CodeMode, StyleSource } from '@obsigraph/core';
 import { getIcon, Plugin } from 'obsidian';
 import { makeStyler, type Styler } from './render/styler';
 import type { EditorView } from '@codemirror/view';
@@ -26,6 +26,8 @@ export default class ObsigraphPlugin extends Plugin {
       () => ({ nodes: this.settings.typeStyles, edges: this.settings.edgeStyles }),
       (name) => getIcon(name) !== null,
       () => ({ maxPathDepth: this.settings.maxPathDepth }),
+      () => this.settings.codeMode,
+      () => this.settings.codeRoot,
     );
     this.addSettingTab(new ObsigraphSettingTab(this.app, this));
 
@@ -77,6 +79,13 @@ export default class ObsigraphPlugin extends Plugin {
     await this.saveData(this.settings);
     this.index.invalidate();
     for (const fn of this.styleListeners) fn();
+  }
+
+  /** Switch the code layer between off, annotated and all; saves the setting and rebuilds the layer. */
+  async setCodeMode(mode: CodeMode): Promise<void> {
+    this.settings.codeMode = mode;
+    await this.saveSettings();
+    await this.index.code.refresh();
   }
 
   /** Styler over block header (optional), schema notes and settings, in that order. */

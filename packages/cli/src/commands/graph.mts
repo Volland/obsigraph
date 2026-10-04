@@ -1,6 +1,13 @@
-import { BuiltinEngine, buildLatGraph, CypherError, resultToJson, type QueryResult, type Value } from '@obsigraph/core';
+import { BuiltinEngine, buildLatGraph, CypherError, resultToJson, type CodeMode, type QueryResult, type Value } from '@obsigraph/core';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command } from '../cli.mjs';
 import { NoLatDir, Project } from '../project.mjs';
+
+function codeMode(flag: string | true | undefined, env: string | undefined): CodeMode {
+  const v = typeof flag === 'string' ? flag : env;
+  if (v === 'off' || v === 'all' || v === 'annotated') return v;
+  if (v) throw new Error(`unknown code mode "${v}"; expected off, annotated or all`);
+  return 'annotated';
+}
 
 function cell(v: Value): string {
   if (v === null || v === undefined) return 'null';
@@ -14,8 +21,9 @@ function cell(v: Value): string {
 export const cypher: Command = {
   name: 'cypher',
   summary: 'Run a read-only openCypher query over the section graph',
-  usage: 'cypher "<query>"',
-  run(ctx, args) {
+  usage: 'cypher [--code off|annotated|all] "<query>"',
+  flags: { code: 'string' },
+  run(ctx, args, flags) {
     const query = args.join(' ').trim();
     if (!query) {
       ctx.err('usage: tg cypher "<query>"\n');
@@ -33,7 +41,9 @@ export const cypher: Command = {
     }
     let result: QueryResult;
     try {
-      result = new BuiltinEngine(buildLatGraph(project.index()), () => ({ timeoutMs: 10_000 })).run(query);
+      const mode = codeMode(flags.get('code'), ctx.env.TG_CODE);
+      const files = mode === 'off' ? [] : project.codeSources();
+      result = new BuiltinEngine(buildLatGraph(project.index(), { code: { mode, files } }).graph, () => ({ timeoutMs: 10_000 })).run(query);
     } catch (e) {
       if (e instanceof CypherError) {
         ctx.err(`${e.message}${e.line > 0 ? ` (line ${e.line}, column ${e.column})` : ''}\n`);

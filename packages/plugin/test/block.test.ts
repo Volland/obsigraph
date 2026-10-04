@@ -30,7 +30,7 @@ describe('graph-query block', () => {
   // @lat: [[tests/graph-query-block#Header and query split]]
   it('splits the header from the query and maps the query start line', () => {
     const b = parseBlock('view: table\ncolumns: a, b\nheight: 500px\n\nMATCH (a)-->(b)\nRETURN a, b');
-    expect(b.options).toEqual({ view: 'table', columns: ['a', 'b'], height: 500, backend: null });
+    expect(b.options).toEqual({ view: 'table', columns: ['a', 'b'], height: 500, backend: null, code: 'show' });
     expect(b.query).toBe('MATCH (a)-->(b)\nRETURN a, b');
     expect(b.queryLine).toBe(4);
     expect(b.errors).toEqual([]);
@@ -39,7 +39,7 @@ describe('graph-query block', () => {
   // @lat: [[tests/graph-query-block#Query without header]]
   it('uses defaults when there is no header', () => {
     const b = parseBlock('MATCH (n:Person) RETURN n');
-    expect(b.options).toEqual({ view: 'auto', columns: null, height: 360, backend: null });
+    expect(b.options).toEqual({ view: 'auto', columns: null, height: 360, backend: null, code: 'show' });
     expect(b.query).toBe('MATCH (n:Person) RETURN n');
     expect(b.queryLine).toBe(0);
   });

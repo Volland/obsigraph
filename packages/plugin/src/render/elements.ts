@@ -76,3 +76,13 @@ export function sameElementSet(shown: { has(id: string): boolean; size: number }
 export function elementCount(g: GraphElements): number {
   return g.nodes.length + g.edges.length;
 }
+
+const CODE_LABELS = new Set(['CodeFile', 'CodeSymbol']);
+
+/** Remove code nodes and every edge touching them, e.g. for a block with `code: hide`. */
+// @lat: [[cli#Code layer]]
+export function excludeCode(g: GraphElements): GraphElements {
+  const nodes = g.nodes.filter((n) => !n.labels.some((l) => CODE_LABELS.has(l)));
+  const keep = new Set(nodes.map((n) => n.id));
+  return { nodes, edges: g.edges.filter((e) => keep.has(e.source) && keep.has(e.target)) };
+}

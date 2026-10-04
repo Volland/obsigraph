@@ -51,6 +51,12 @@ export class GraphView extends ItemView {
     this.input = bar.createEl('textarea', {
       attr: { rows: '2', placeholder: 'Enter a query, or leave empty to follow the active note' },
     });
+    const code = bar.createEl('select', { attr: { 'aria-label': 'Code in the graph', title: 'Show source code as nodes' } });
+    for (const [value, text] of [['off', 'Code: off'], ['annotated', 'Code: annotated'], ['all', 'Code: all']] as const) {
+      code.createEl('option', { value, text });
+    }
+    code.value = this.plugin.settings.codeMode;
+    code.addEventListener('change', () => void this.plugin.setCodeMode(code.value === 'all' ? 'all' : code.value === 'annotated' ? 'annotated' : 'off'));
     const run = bar.createEl('button', { text: 'Run', cls: 'mod-cta' });
     run.addEventListener('click', () => this.submit());
     this.input.addEventListener('keydown', (e) => {

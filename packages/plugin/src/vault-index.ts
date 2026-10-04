@@ -6,6 +6,7 @@ import {
   styleSource,
   styleSourcesFromSchemas,
   validateSchemas,
+  type CodeMode,
   type Diagnostic,
   type ExecOptions,
   type IconCheck,
@@ -14,6 +15,7 @@ import {
   type StyleSource,
 } from '@obsigraph/core';
 import { TFile, type App, type EventRef } from 'obsidian';
+import { CodeLayer } from './code-layer';
 
 const BATCH = 100;
 
@@ -26,6 +28,7 @@ export class VaultIndex {
   readonly graph: Graph;
   readonly engine: BuiltinEngine;
   readonly embeds = new EmbedIndex();
+  readonly code: CodeLayer;
   ready = false;
 
   private readonly listeners = new Set<() => void>();
@@ -42,11 +45,18 @@ export class VaultIndex {
     private readonly settingsStyles: () => { nodes: Record<string, unknown>; edges: Record<string, unknown> },
     private readonly iconExists: IconCheck,
     engineOptions: () => ExecOptions = () => ({}),
+    codeMode: () => CodeMode = () => 'off',
+    codeRoot: () => string = () => '',
   ) {
-    this.graph = new Graph((link, source) => {
-      const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
-      return f && f.extension === 'md' ? f.path : null;
-    });
+    this.graph = new Graph(
+      (link, source) => {
+        const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
+        return f && f.extension === 'md' ? f.path : null;
+      },
+      // `[[src/auth.ts#login]]` ends at the code node when the code layer has it.
+      (link, sub) => (this.graph.node(`${link}#${sub}`) ? `${link}#${sub}` : null),
+    );
+    this.code = new CodeLayer(app, this.graph, codeMode, codeRoot);
     this.engine = new BuiltinEngine(this.graph, engineOptions);
     this.graph.onChange(() => {
       this.invalidate();
@@ -102,6 +112,8 @@ export class VaultIndex {
 
   /** Index every markdown note in batches, yielding to the UI between them. */
   async build(onProgress?: (done: number, total: number) => void): Promise<void> {
+    // Code first, so notes linking to symbols resolve to them at once.
+    await this.code.load();
     const files = this.app.vault.getMarkdownFiles();
     for (let i = 0; i < files.length; i += BATCH) {
       for (const f of files.slice(i, i + BATCH)) this.upsert(await this.read(f));
@@ -116,16 +128,21 @@ export class VaultIndex {
   watch(): EventRef[] {
     const { metadataCache, vault } = this.app;
     this.refs.push(
+      vault.on('modify', (file) => {
+        if (file instanceof TFile && file.extension !== 'md') void this.code.update(file);
+      }),
       metadataCache.on('changed', (file, data, cache) => {
         if (file.extension !== 'md') return;
         this.upsert({ path: file.path, text: data, frontmatter: cache.frontmatter ?? null });
       }),
       vault.on('delete', (file) => {
+        if (file instanceof TFile && file.extension !== 'md') this.code.remove(file.path);
         if (!(file instanceof TFile) || file.extension !== 'md') return;
         this.embeds.remove(file.path);
         this.graph.removeNote(file.path);
       }),
       vault.on('rename', async (file, oldPath) => {
+        if (file instanceof TFile && file.extension !== 'md') this.code.rename(file, oldPath);
         if (!(file instanceof TFile) || file.extension !== 'md') return;
         const note = await this.read(file);
         this.embeds.remove(oldPath);

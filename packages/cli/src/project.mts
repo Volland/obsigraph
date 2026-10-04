@@ -92,6 +92,14 @@ export class Project {
     return this.annCache;
   }
 
+  /** Source files with their text, for the code layer. */
+  codeSources(): { path: string; text: string }[] {
+    return this.sourceFiles().flatMap((path) => {
+      const text = this.text(path);
+      return text === null || text.length > MAX_SOURCE_BYTES || text.includes('\0') ? [] : [{ path, text }];
+    });
+  }
+
   /** Error text for a source link whose file or symbol does not exist; null when fine or not judgeable. */
   checkSourceLink(file: string, symbol: string | null): string | null {
     if (!existsSync(join(this.root, file))) return `file "${file}" not found`;

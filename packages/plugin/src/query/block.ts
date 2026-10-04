@@ -10,6 +10,8 @@ export interface BlockOptions {
   height: number;
   /** Query engine; null uses the plugin default. */
   backend: 'builtin' | 'ladybug' | null;
+  /** `hide` removes code nodes from the graph; the code layer itself is a plugin setting. */
+  code: 'show' | 'hide';
 }
 
 export interface HeaderError {
@@ -33,9 +35,9 @@ export interface ParsedBlock {
 }
 
 const HEADER_LINE = /^\s*([A-Za-z][\w-]*(?:\.[\p{L}\p{N}_-]+)?)\s*:\s*(.*?)\s*$/u;
-const KNOWN = new Set(['view', 'columns', 'height', 'backend']);
+const KNOWN = new Set(['view', 'columns', 'height', 'backend', 'code']);
 
-export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, height: 360, backend: null };
+export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, height: 360, backend: null, code: 'show' };
 
 /**
  * Split a `graph-query` block into its `key: value` header and Cypher body.
@@ -63,7 +65,7 @@ export function parseBlock(source: string): ParsedBlock {
       continue;
     }
     if (!KNOWN.has(key)) {
-      errors.push({ line: i, message: `Unknown option '${m[1]}' (expected view, columns, height, backend, node.<Type> or edge.<type>)` });
+      errors.push({ line: i, message: `Unknown option '${m[1]}' (expected view, columns, height, backend, code, node.<Type> or edge.<type>)` });
       continue;
     }
     if (key === 'view') {
@@ -79,6 +81,10 @@ export function parseBlock(source: string): ParsedBlock {
       const b = value.toLowerCase();
       if (b === 'builtin' || b === 'ladybug') options.backend = b;
       else errors.push({ line: i, message: `Invalid backend '${value}' (expected builtin or ladybug)` });
+    } else if (key === 'code') {
+      const c = value.toLowerCase();
+      if (c === 'show' || c === 'hide') options.code = c;
+      else errors.push({ line: i, message: `Invalid code '${value}' (expected show or hide)` });
     } else if (key === 'height') {
       const h = Number(value.replace(/px$/, ''));
       if (!Number.isFinite(h) || h < 100 || h > 4000) errors.push({ line: i, message: `Invalid height '${value}' (100-4000)` });

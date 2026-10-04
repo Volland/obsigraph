@@ -192,6 +192,12 @@ function levels(sources: StyleSource[]): StyleSource[][] {
 
 export const BUILTIN = 'built-in default';
 
+/** Built-in look for the derived code layer, below every configured source. */
+const CODE_DEFAULTS: Record<string, { color: string; shape: NodeShape }> = {
+  CodeFile: { color: '#64748b', shape: 'rectangle' },
+  CodeSymbol: { color: '#0d9488', shape: 'round-rectangle' },
+};
+
 export interface ResolvedNodeStyle {
   color: string;
   shape: NodeShape;
@@ -228,8 +234,8 @@ export function resolveNodeStyle(labels: string[], sources: StyleSource[]): Reso
   const icon = pick('icon');
   const label = pick('label');
   return {
-    color: color?.[0] ?? (labels[0] ? colorFor(labels[0]) : DEFAULT_NODE_COLOR),
-    shape: shape?.[0] ?? 'ellipse',
+    color: color?.[0] ?? labels.map((l) => CODE_DEFAULTS[l]?.color).find(Boolean) ?? (labels[0] ? colorFor(labels[0]) : DEFAULT_NODE_COLOR),
+    shape: shape?.[0] ?? labels.map((l) => CODE_DEFAULTS[l]?.shape).find(Boolean) ?? 'ellipse',
     icon: icon?.[0] ?? null,
     label: label?.[0] ?? null,
     origin: {

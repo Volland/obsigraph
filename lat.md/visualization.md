@@ -8,6 +8,12 @@ Two surfaces share one renderer and one config: inline `graph-query` blocks and 
 
 Both use [[packages/plugin/src/render/graph-renderer.ts#GraphRenderer]]. Inline blocks are driven by [[packages/plugin/src/query/query-block.ts#QueryBlock]], which re-runs only while visible and reuses its renderer across refreshes to avoid flicker; [[packages/plugin/src/query/plan.ts#planRender]] picks graph or table and falls back to a table above the element cap. Only the leaf, [[packages/plugin/src/view/graph-view.ts#GraphView]], supports click-to-expand of neighbors; with an empty query it follows the active note's [[packages/plugin/src/view/view-state.ts#neighborhood]] and keeps expanded nodes across live refreshes. Patching or replacing the core graph view is explicitly out of scope; see [[visualization#Core graph view]].
 
+## Code nodes
+
+Derived `CodeFile` and `CodeSymbol` nodes from the code layer share the renderer: distinct built-in shapes and colors, a Code dropdown in the Graph view and a `code: hide` block option; see [[cli#Code layer]].
+
+The Graph view dropdown writes the plugin's `codeMode` setting, so the layer is global rather than per block; `code: hide` only filters what one block draws.
+
 ## Core graph view
 
 Obsidian's core Graph view is never patched; type coloring there is documented as a zero-code recipe using core color groups such as `[type:Person]`.

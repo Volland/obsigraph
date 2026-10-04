@@ -1,5 +1,5 @@
 import type { GraphNode, QueryResult } from '@obsigraph/core';
-import { elementCount, toElements, type GraphElements } from '../render/elements';
+import { elementCount, excludeCode, toElements, type GraphElements } from '../render/elements';
 import { chooseView, selectColumns, type BlockOptions } from './block';
 
 export type RenderPlan =
@@ -25,7 +25,8 @@ export function planRender(
   };
   if (view === 'table') return table(null);
 
-  const elements = toElements(result, lookup);
+  const shown = toElements(result, lookup);
+  const elements = options.code === 'hide' ? excludeCode(shown) : shown;
   const count = elementCount(elements);
   if (count > maxElements) {
     return table(`Graph has ${count} elements, above the limit of ${maxElements}; showing a table. Narrow the query or raise the limit in settings.`);

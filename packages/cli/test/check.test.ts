@@ -128,3 +128,19 @@ describe.skipIf(!hasLat)('parity with lat check', () => {
     expect(findings((await tg(UPSTREAM, 'check')).out)).toEqual(lat);
   }, 60_000);
 });
+
+// @lat: [[tests/code-layer#Derived code nodes#Vault untouched]]
+it('tg cypher --code all reads the project without creating or changing any file', async () => {
+  const { cpSync, mkdtempSync, readdirSync, statSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'tg-ro-'));
+  cpSync(SEEDED, dir, { recursive: true });
+  const snapshot = (d: string): string[] =>
+    readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? snapshot(join(d, e.name)) : [`${join(d, e.name)}:${statSync(join(d, e.name)).mtimeMs}:${statSync(join(d, e.name)).size}`]));
+  const before = snapshot(dir);
+  const r = await tg(dir, 'cypher', '--code', 'all', 'MATCH (c:CodeSymbol) RETURN c.name ORDER BY c.name');
+  expect(r.code).toBe(0);
+  expect(r.out).toContain('login');
+  expect(r.out).toContain('other');
+  expect(snapshot(dir)).toEqual(before);
+});

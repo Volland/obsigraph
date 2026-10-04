@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, type SettingDefinitionItem } from 'obsidian';
 import type ObsigraphPlugin from './main';
-import { DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
+import { DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type CodeMode, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
 import { parseEdgeStyles, parseTypeStyles } from './render/styles';
 
 export interface ObsigraphSettings {
@@ -23,6 +23,10 @@ export interface ObsigraphSettings {
   /** Typed Graph sidecar base URL, e.g. http://127.0.0.1:8765. */
   sidecarUrl: string;
   sidecarToken: string;
+  /** Derived code layer: off, annotated symbols only, or every symbol. */
+  codeMode: CodeMode;
+  /** Vault folder scanned for source files; empty means the whole vault. */
+  codeRoot: string;
 }
 
 export const DEFAULT_SETTINGS: ObsigraphSettings = {
@@ -36,6 +40,8 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   defaultBackend: 'builtin',
   sidecarUrl: '',
   sidecarToken: '',
+  codeMode: 'off',
+  codeRoot: '',
 };
 
 export class ObsigraphSettingTab extends PluginSettingTab {
@@ -74,6 +80,27 @@ export class ObsigraphSettingTab extends PluginSettingTab {
             this.plugin.settings.defaultBackend = v === 'ladybug' ? 'ladybug' : 'builtin';
             await this.plugin.saveSettings();
           }),
+      );
+
+    new Setting(containerEl)
+      .setName('Code in the graph')
+      .setDesc('Show source code as derived nodes. Annotated adds symbols carrying @lat or @tg comments and what they point at; all adds every symbol. Files are only read, never changed.')
+      .addDropdown((d) =>
+        d
+          .addOptions({ off: 'Off', annotated: 'Annotated symbols', all: 'All symbols' })
+          .setValue(this.plugin.settings.codeMode)
+          .onChange(async (v) => this.plugin.setCodeMode(v === 'all' ? 'all' : v === 'annotated' ? 'annotated' : 'off')),
+      );
+
+    new Setting(containerEl)
+      .setName('Code folder')
+      .setDesc('Vault folder to scan for source files. Leave empty to scan the whole vault.')
+      .addText((t) =>
+        t.setPlaceholder('src').setValue(this.plugin.settings.codeRoot).onChange(async (v) => {
+          this.plugin.settings.codeRoot = v.trim();
+          await this.plugin.saveSettings();
+          await this.plugin.index.code.refresh();
+        }),
       );
 
     new Setting(containerEl)
