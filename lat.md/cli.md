@@ -20,6 +20,12 @@ The section tree and link resolver live in `core` with no heavy dependencies, be
 
 Markdown is read by [[packages/core/src/latmd/markdown.ts#parseMarkdown]], a line scanner (no remark) that yields the section tree, wiki links outside code and the `require-code-mention` option; [[packages/core/src/latmd/markdown.ts#leadingParagraphIssue]] applies the 250-character rule. Intentional differences from lat.md: `.mts`, `.cts`, `.mjs` and `.cjs` are accepted as source targets. Edge targets already drop `#subpath`, so nested-heading links never make stub nodes; code targets in edges arrive with the code layer.
 
+## Symbols
+
+`lookupSymbol` in `packages/core/src/code/symbols.ts` answers found, absent or unresolvable for `file#Class#method` paths using regex finders for TS/JS, Python, Go, Rust and C.
+
+The finders mask comments and strings first (`maskCode`), then track brace depth, so nesting survives braces in strings and regex literals. Absence is only reported when the file scanned cleanly: unbalanced input or a body written on its declaration line makes the answer `unresolvable`, never a false error. Like lat.md, only top-level symbols and one level of members are addressable. `registerProvider` swaps in another implementation per language, the hook for a later tree-sitter package. `packages/cli/src/walk.mts` enumerates files with nested `.gitignore` support through the pure matcher `compileIgnore`.
+
 ## Packaging
 
 One bundled package `@typedgraph/cli` exposes the `tg` binary, built with esbuild like the plugin and sidecar. Workspace packages keep their `@obsigraph/*` names and `core` stays private.
