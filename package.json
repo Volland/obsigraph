@@ -7,14 +7,17 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -p packages/core && tsc -p packages/plugin && tsc -p packages/sidecar && tsc -p packages/cli",
+    "typecheck": "tsc -p packages/core && tsc -p packages/plugin && tsc -p packages/sidecar && tsc -p packages/cli && tsc -p packages/node-vault && tsc -p packages/graph-ui && tsc -p packages/vscode",
     "build": "npm run build -w @obsigraph/plugin",
     "build:sidecar": "npm run build -w @obsigraph/sidecar",
     "build:cli": "npm run build -w @typedgraph/cli",
     "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check",
     "version:bump": "node scripts/version-bump.mjs",
     "site:build": "node site/build.mjs",
-    "example:install": "node scripts/install-example.mjs"
+    "example:install": "node scripts/install-example.mjs",
+    "build:vscode": "npm run build -w typegraph-vscode",
+    "package:vscode": "npm run package -w typegraph-vscode",
+    "release:vscode": "node scripts/release-vscode.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

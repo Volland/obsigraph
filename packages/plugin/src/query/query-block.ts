@@ -4,6 +4,7 @@ import { runRemote, type Fetcher } from './remote';
 import { MarkdownRenderChild } from 'obsidian';
 import type ObsigraphPlugin from '../main';
 import { GraphRenderer } from '../render/graph-renderer';
+import { themeFrom } from '../render/theme';
 import { renderTable } from '../render/table';
 import { parseBlock, type ParsedBlock } from './block';
 import { planRender } from './plan';
@@ -131,9 +132,11 @@ export class QueryBlock extends MarkdownRenderChild {
       if (!this.renderer) {
         el.empty();
         this.warnEl = el.createDiv({ cls: 'obsigraph-notice' });
-        this.renderer = new GraphRenderer(el.createDiv(), {
+        const host = el.createDiv();
+        this.renderer = new GraphRenderer(host, {
           height: parsed.options.height,
           styler,
+          theme: () => themeFrom(host),
           onOpen: (path) => this.plugin.openNote(path, this.sourcePath),
         });
       } else {

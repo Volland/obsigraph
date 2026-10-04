@@ -5,7 +5,7 @@
   "type": "module",
   "dependencies": {
     "@obsigraph/core": "*",
-    "cytoscape": "^3.34.3"
+    "@obsigraph/graph-ui": "*"
   },
   "devDependencies": {
     "@codemirror/state": "^6.5.0",
