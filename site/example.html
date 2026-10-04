@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Typed Graph Demo Vault</title>
+  <meta name="description" content="A ready-to-open Obsidian vault that uses every Typed Graph feature and teaches typed graphs and openCypher with live examples.">
+  <meta property="og:title" content="Typed Graph demo vault">
+  <meta property="og:description" content="Download a small research-lab vault with the plugin preinstalled, a guide to typed graphs and a hands-on Cypher manual.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html" class="active">Example</a>
+        <a href="blog.html">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta">Example vault</div>
+    <h1>A vault that teaches itself</h1>
+    <p class="standfirst">The demo vault is a small research lab: five people, two companies, three projects, two papers and three topics. It uses every Typed Graph feature and includes a guide to typed graphs and a hands-on openCypher course. Every example in it runs live.</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip">Download the vault (.zip)</a>
+      <a class="btn" href="https://github.com/Volland/obsigraph/tree/main/example">Browse on GitHub</a>
+      <a class="btn" href="demo.html">Try it in the browser</a>
+    </div>
+
+    <h2>Open it in three steps</h2>
+    <ol class="steps">
+      <li>Download and unzip <code>typed-graph-demo-vault.zip</code>. The plugin is already inside.</li>
+      <li>In Obsidian, choose <em>Open another vault → Open folder as vault</em> and pick the unzipped folder.</li>
+      <li>Turn on community plugins when Obsidian asks, then open <strong>Start Here</strong>.</li>
+    </ol>
+    <p>If you work from a clone of the repository, <code>npm install &amp;&amp; npm run example:install</code> builds the plugin straight into <code>example/</code>.</p>
+
+    <h2>The guide</h2>
+    <table>
+      <tr><th>Note</th><th>What you learn</th></tr>
+      <tr><td><strong>Start Here</strong></td><td>A live graph to check the setup, a tour, and five things to try in two minutes.</td></tr>
+      <tr><td><strong>How typed graphs work</strong></td><td>Nodes and labels, typed edges, signs, properties, pinned ids, stubs, schema notes, style precedence and edge embeds, each with a live query.</td></tr>
+      <tr><td><strong>Cypher manual</strong></td><td>Twelve short lessons, from <code>MATCH</code> to variable-length paths, and a cheat sheet.</td></tr>
+      <tr><td><strong>Query gallery</strong></td><td>Every block option (<code>view</code>, <code>columns</code>, <code>height</code>, per-block styles) and recipes: ego networks, trust networks, funding chains, research maps.</td></tr>
+      <tr><td><strong>Sidecar and agents</strong></td><td>Running the sidecar on this vault, the HTTP API, LadybugDB-only Cypher, and connecting Claude through MCP.</td></tr>
+      <tr><td><strong>Diagnostics playground</strong></td><td>Deliberate mistakes: a broken property block, an unpinned embed, a missing edge, a syntax error and a write query.</td></tr>
+    </table>
+
+    <h2>The Cypher manual</h2>
+    <p>Each lesson is a few sentences and a live block you can edit. The result updates as you type.</p>
+    <ol>
+      <li>Nodes: <code>MATCH</code>, <code>RETURN</code>, labels and property maps</li>
+      <li>Relationships: direction, type alternation, edge properties</li>
+      <li>Filtering with <code>WHERE</code>: comparisons, <code>IN</code>, <code>CONTAINS</code>, <code>IS NULL</code></li>
+      <li>Signs and built-in properties: <code>r.sign</code>, <code>r.id</code>, <code>n.stub</code>, <code>type()</code>, <code>labels()</code></li>
+      <li>Several patterns at once, and longer chains</li>
+      <li><code>OPTIONAL MATCH</code> as a left join</li>
+      <li>Aggregation: <code>count</code>, <code>sum</code>, <code>avg</code>, <code>collect</code>, <code>DISTINCT</code></li>
+      <li>Chaining with <code>WITH</code>, and filtering on an aggregate</li>
+      <li>Variable-length paths and path variables</li>
+      <li>Sorting and paging</li>
+      <li>Stubs and schema checks written as queries</li>
+      <li>Limits of the built-in engine, and when to use <code>backend: ladybug</code></li>
+    </ol>
+<pre>```graph-query
+view: table
+
+MATCH (p:Person)-[:contributes]->(proj:Project)
+WITH p, count(proj) AS projects
+WHERE projects > 1
+RETURN p.title AS person, projects
+```</pre>
+
+    <h2>What is in the data</h2>
+    <p>The vault is small enough to read in ten minutes, and each feature appears somewhere in it:</p>
+    <ul>
+      <li><strong>Typed nodes</strong> in <code>People/</code>, <code>Companies/</code>, <code>Projects/</code>, <code>Papers/</code> and <code>Topics/</code>, with frontmatter properties.</li>
+      <li><strong>Multi-label nodes.</strong> Bob is <code>[Person, Engineer]</code> and Carol is <code>[Engineer, Person]</code>, so the first label decides how each is drawn.</li>
+      <li><strong>Typed edges with properties.</strong> Examples include <code>contributes:: [[Ranking]] {hours: 200}</code> and <code>funds:: [[Search]] {amount: 250000, currency: EUR}</code>.</li>
+      <li><strong>Signed edges.</strong> Alice trusts Bob and distrusts Mallory, and Initech competes with Globex.</li>
+      <li><strong>Pinned edge ids</strong>, used by the embeds in Alice's note.</li>
+      <li><strong>Stubs.</strong> Eve, Globex and "Property Graphs 101" are linked but have no note yet.</li>
+      <li><strong>Six schema notes</strong> in <code>Types/</code>, with required properties, allowed edges, colors, shapes, icons, a <code>label</code> property and templates.</li>
+      <li><strong>Advisory schema warnings.</strong> Dave has no required <code>role</code>, and Mallory has an edge type her schema does not allow.</li>
+    </ul>
+<pre>---
+type: Person
+role: research lead
+joined: 2019-03-01
+---
+Alice met Bob in {{edge: alice-knows-bob . since}}.
+
+## Team
+knows:: [[Bob]] {since: 2020, label: "met at NeurIPS", id: "alice-knows-bob"}
+mentors:: [[Dave]] {since: 2024}
+- works_at:: [[Acme]] {role: "research lead", since: 2019}
+leads:: [[Search]], [[Crawler]]
+
+## Trust
++trusts:: [[Bob]] {weight: 0.9}
+-distrusts:: [[Mallory]] {id: "alice-mallory", why: "phishing email"}</pre>
+
+    <h2>Tested like code</h2>
+    <p>The vault is part of the test suite. Every query in it must parse and return rows, every embed must resolve, and the schema warnings and stubs must be exactly the deliberate ones. If the plugin changes in a way that breaks an example, the build fails before a release ships.</p>
+
+    <div class="next">Read next: <a href="blog-typed-graph.html">Your vault as a property graph</a>, an introduction to everything Typed Graph does.</div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

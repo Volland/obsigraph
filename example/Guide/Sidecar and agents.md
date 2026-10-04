@@ -28,13 +28,41 @@ It listens on `127.0.0.1:8765`. The data directory must be outside the vault. In
 
 Add `backend: ladybug` to the header. The examples below are plain text so this note works without the sidecar; change the fence language to `graph-query` to run them.
 
+Any query the built-in engine understands runs unchanged. The sidecar translates labels and properties for LadybugDB:
+
+```cypher
+backend: ladybug
+
+MATCH (p:Person)-[c:contributes]->(proj:Project)
+WHERE c.hours >= 100
+RETURN p, c, proj
+```
+
+Queries that use syntax the built-in engine lacks (`CASE`, `UNWIND`, `=~`) are sent to LadybugDB **untranslated**. Write them against the mirror's layout:
+
+- Every note is a `Node`.
+- Labels are a list, tested with `list_contains(n.labels, "Person")`.
+- Properties are typed columns named `p_<name>_<kind>`, where the kind is `s` for text, `n` for number, `b` for boolean, `ls`/`ln` for lists and `j` for anything else. For example, `role` becomes `p_role_s` and `hours` becomes `p_hours_n`.
+- `title`, `path`, `stub` and `labels` keep their names.
+
+```cypher
+backend: ladybug
+view: table
+
+MATCH (p:Node)
+WHERE list_contains(p.labels, "Person")
+RETURN p.title AS name,
+       CASE WHEN p.p_role_s IS NULL THEN "no role yet" ELSE p.p_role_s END AS role
+ORDER BY name
+```
+
 ```cypher
 backend: ladybug
 view: table
 
 UNWIND ["Person", "Company", "Project"] AS label
-MATCH (n)
-WHERE label IN labels(n)
+MATCH (n:Node)
+WHERE list_contains(n.labels, label)
 RETURN label, count(n) AS nodes
 ```
 
@@ -42,9 +70,10 @@ RETURN label, count(n) AS nodes
 backend: ladybug
 view: table
 
-MATCH (p:Person)
-RETURN p.title AS name,
-       CASE WHEN p.role IS NULL THEN "no role yet" ELSE p.role END AS role
+MATCH (p:Node)-[c:contributes]->(proj:Node)
+RETURN p.title AS person, proj.title AS project,
+       CASE WHEN c.p_hours_n >= 100 THEN "core" ELSE "helper" END AS involvement
+ORDER BY person, project
 ```
 
 ## Ask over HTTP

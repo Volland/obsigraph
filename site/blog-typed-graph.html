@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vault as Property Graph</title>
+  <meta name="description" content="Typed Graph turns Obsidian links into typed, signed edges with properties, adds typed nodes and schema notes, and lets you query the vault with openCypher.">
+  <meta property="og:title" content="Your vault as a property graph">
+  <meta property="og:description" content="Typed, signed edges with properties, typed nodes, schema notes and openCypher queries, in plain Markdown.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/screenshots/graph.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 4 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>Your vault as a property graph</h1>
+    <p class="standfirst">An Obsidian link records that two notes are related, but not how. Typed Graph lets you write what each link means, give it properties, and query the whole vault like a graph database. Everything stays in plain Markdown.</p>
+
+    <h2>The missing half of a link</h2>
+    <p>Write <code>[[Bob]]</code> in Alice's note and Obsidian draws a line between them. That line might mean "knows", "manages", "disagrees with" or "cites". The graph view cannot tell these apart, and neither can search. As a vault grows, the meaning of its links ends up in your head instead of in your notes.</p>
+    <p>Graph databases solved this long ago with the <strong>property graph</strong> model:</p>
+    <ul>
+      <li><strong>Nodes</strong> have <em>labels</em> that say what kind of thing they are, and <em>properties</em> that hold facts about them.</li>
+      <li><strong>Relationships</strong> have a <em>type</em>, a <em>direction</em> and their own properties.</li>
+    </ul>
+    <p>Typed Graph brings this model to an Obsidian vault without a database, without a new file format, and without changing a single note.</p>
+
+    <h2>1. A typed edge is one line</h2>
+    <p>You write an edge where it belongs, in the note it starts from:</p>
+<pre>knows:: [[Bob]]
+works_at:: [[Acme]], [[Initech]]</pre>
+    <p>The word before <code>::</code> is the edge type. The note containing the line is the source and the link is the target. This is the syntax the Graph Link Types plugin uses, so vaults that already use it work unchanged, and Typed Graph does not need that plugin installed. Lines in code blocks and frontmatter are ignored. A plain <code>[[link]]</code> in prose stays a plain link.</p>
+
+    <h2>2. Edges can be negative</h2>
+    <p>Many relationships come in opposites: trusts and distrusts, supports and contradicts, agrees and disagrees. A <code>+</code> or <code>-</code> in front of the type sets the edge's sign:</p>
+<pre>+trusts:: [[Bob]]
+-distrusts:: [[Mallory]]</pre>
+    <p>Negative edges are drawn dashed and red with a flat arrow head. In queries the sign is <code>r.sign</code>, so "show me every conflict in this project" is one line of Cypher.</p>
+    <figure><img src="assets/screenshots/graph.png" alt="A typed graph with labeled edges and a negative edge drawn dashed and red" loading="lazy"><figcaption>Typed nodes, labeled edges, and a negative edge drawn dashed and red.</figcaption></figure>
+
+    <h2>3. Edges have properties</h2>
+    <p>Facts about a relationship belong on the relationship. Curly braces after the link hold them:</p>
+<pre>knows:: [[Bob]] {since: 2020, label: "met at NeurIPS"}
+contributes:: [[Ranking]] {hours: 200}
+funds:: [[Search]] {amount: 250000, currency: EUR}</pre>
+    <p>Values can be numbers, booleans, quoted or bare strings, or lists. A malformed block never loses the edge: the edge is kept and the problem shows up in <em>Show diagnostics</em>.</p>
+    <p>Every edge has an id. By default it is derived from the source, type, target and position. For anything you reference long-term, you can pin your own:</p>
+<pre>knows:: [[Bob]] {since: 2020, id: "alice-knows-bob"}</pre>
+
+    <h3>Edge properties inside your prose</h3>
+    <p>An <strong>edge embed</strong> shows an edge's property in the middle of a sentence and stays in sync with it:</p>
+<pre>Alice met Bob in {{edge: alice-knows-bob . since}}.
+Bob spent {{edge: Bob -contributes-> Search . hours}} hours on search.</pre>
+    <p>Embeds find an edge by pinned id or by its endpoints and type. Leave out the property to get a small table of all of them. When nothing matches, the embed shows a quiet marker, never an error. If an embed relies on an unpinned edge, diagnostics suggest pinning one, because derived ids can shift.</p>
+
+    <h2>4. Typed nodes and schema notes</h2>
+    <p>Every note is a node. Its labels come from the <code>type</code> field in frontmatter, and a list gives several:</p>
+<pre>---
+type: [Person, Engineer]
+role: engineer
+---</pre>
+    <p>To describe a type, add a <strong>schema note</strong>: a note in <code>Types/</code> named after the type. It declares properties (with kinds, defaults and required flags), which outgoing edges the type allows, how it looks, and a template for new notes:</p>
+<pre>---
+schema:
+  properties:
+    role: {kind: text, required: true}
+    joined: date
+  edges: [knows, works_at, mentors]
+  visualization:
+    color: "#7c5cff"
+    shape: ellipse
+    icon: user
+    edges:
+      knows: {color: orange, line: dotted}
+---
+## About</pre>
+    <p>Schemas are optional and <strong>advisory</strong>. A missing required property or an unexpected edge type shows up in the status bar and in <em>Show diagnostics</em>, but nothing is blocked. Your notes stay notes, not database rows. <em>Create note from type</em> uses the schema's defaults and template, and never overwrites a file.</p>
+
+    <h2>5. Ask the vault questions</h2>
+    <p>A <code>graph-query</code> code block runs <strong>openCypher</strong>, the query language of Neo4j and most graph databases. You draw the pattern you want with ASCII arrows:</p>
+<pre>```graph-query
+MATCH (p:Person)-[c:contributes]->(proj:Project)
+RETURN p.title AS person, proj.title AS project, c.hours AS hours
+ORDER BY hours DESC
+```</pre>
+    <figure><img src="assets/screenshots/table.png" alt="A query result rendered as a table" loading="lazy"><figcaption>Scalar results become a table. Nodes, relationships and paths become a graph.</figcaption></figure>
+    <p>The built-in engine runs inside Obsidian, on desktop and mobile, with no setup. It supports:</p>
+    <ul>
+      <li><code>MATCH</code> and <code>OPTIONAL MATCH</code></li>
+      <li><code>WHERE</code> with the usual operators</li>
+      <li><code>WITH</code> for multi-stage queries</li>
+      <li>aggregation: <code>count</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code> and <code>collect</code></li>
+      <li>variable-length paths such as <code>-[:depends_on*1..3]-&gt;</code>, and path variables</li>
+      <li>sorting and paging</li>
+      <li>35 functions</li>
+    </ul>
+    <p>Queries are read-only: <code>CREATE</code>, <code>SET</code> and <code>DELETE</code> are rejected, so a query can never touch a note. Errors point at the line and column.</p>
+    <p>Results are live. Edit an edge and every block that depends on it re-runs, and only the blocks you can see do the work.</p>
+    <figure><img src="assets/screenshots/paths.png" alt="Variable-length paths drawn as a graph" loading="lazy"><figcaption>Variable-length paths, drawn.</figcaption></figure>
+
+    <h2>6. Graphs that look like what they mean</h2>
+    <p>Results render with Cytoscape.js. Nodes get colors, shapes and icons from their type. Edges show their type as a label and their sign as a line style. Links to notes that do not exist yet appear as faded <strong>stubs</strong>, which double as a to-write list.</p>
+    <p>Each style attribute resolves separately, and the most specific source wins:</p>
+    <ol>
+      <li>the block header, for a one-off view (<code>node.Person: color=red, shape=star</code>)</li>
+      <li>the type's schema note</li>
+      <li>plugin settings</li>
+      <li>built-in defaults: a stable color per type, and red dashed lines for negative edges</li>
+    </ol>
+    <figure><img src="assets/screenshots/styled.png" alt="A graph restyled by its query block header" loading="lazy"><figcaption>One block, restyled from its header without touching the schema.</figcaption></figure>
+    <p>The <strong>Graph view</strong> is a full-pane explorer built on the same renderer:</p>
+    <ul>
+      <li>It follows the note you are reading.</li>
+      <li>Right-click a node to expand its neighbors in place.</li>
+      <li>Select anything to see its properties and where each style came from.</li>
+    </ul>
+    <p>It sits next to Obsidian's own graph view, which Typed Graph deliberately leaves alone.</p>
+
+    <h2>7. Markdown stays the source of truth</h2>
+    <p>Typed Graph only reads your vault. The graph is rebuilt from your notes in memory and updated incrementally as you type. If you uninstall the plugin, every edge is still a readable line of text. Nothing is locked in a database and nothing leaves your machine.</p>
+    <p>When you need more, an optional <strong>sidecar</strong> serves the same graph outside Obsidian:</p>
+    <ul>
+      <li>a LadybugDB mirror for full Cypher</li>
+      <li>local vector search over notes and edges</li>
+      <li>cited GraphRAG retrieval</li>
+      <li>an MCP server for AI agents</li>
+    </ul>
+    <p>It has its own article: <a href="blog-sidecar-rag.html">Your vault as RAG storage</a>.</p>
+
+    <h2>Try it</h2>
+    <ul>
+      <li><strong>In the browser:</strong> the <a href="demo.html">live demo</a> runs the real engine over an editable sample vault.</li>
+      <li><strong>In Obsidian:</strong> download the <a href="example.html">demo vault</a>. The plugin is preinstalled, and the vault has a guide and a Cypher course with live examples.</li>
+      <li><strong>In your own vault:</strong> see <a href="docs.html#install">Install</a>. Add <code>type: Person</code> to a note, write <code>knows:: [[Someone]]</code>, and add a <code>graph-query</code> block.</li>
+    </ul>
+
+    <div class="next">Next: <a href="blog-sidecar-rag.html">Your vault as RAG storage: the sidecar, vector search, GraphRAG and MCP →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

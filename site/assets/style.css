@@ -412,6 +412,108 @@ h2 {
   margin: 16px 0;
 }
 
+/* ---- blog and long-form pages ---- */
+.post {
+  max-width: 792px;
+  margin: 0 auto;
+  padding-top: 44px;
+  padding-bottom: 70px;
+  font-size: 17px;
+  line-height: 1.7;
+}
+.post h1 {
+  font-size: clamp(30px, 4.4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 8px 0 12px;
+}
+.post .meta {
+  color: var(--faint);
+  font-size: 14px;
+}
+.post .standfirst {
+  font-size: 20px;
+  color: var(--muted);
+  margin: 18px 0 28px;
+}
+.post h2 {
+  margin-top: 46px;
+}
+.post h3 {
+  margin-top: 30px;
+}
+.post figure {
+  margin: 26px 0;
+}
+.post figure img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.post figcaption {
+  color: var(--faint);
+  font-size: 14px;
+  margin-top: 8px;
+}
+.post table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 15px;
+  display: block;
+  overflow-x: auto;
+}
+.post th,
+.post td {
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.post th {
+  background: var(--bg-soft);
+}
+.post .next {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.post-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+}
+.post-card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+.post-card:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.post-card h2 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+}
+.post-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+.post-card .meta {
+  color: var(--faint);
+  font-size: 13px;
+}
+.tree {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
 /* ---- demo ---- */
 .demo {
   display: grid;
@@ -518,10 +620,10 @@ footer .wrap {
   .two-col,
   .demo,
   .docs {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .arch {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .hero-logo {
     max-width: 200px;
@@ -530,9 +632,37 @@ footer .wrap {
   .toc {
     position: static;
   }
+  .site-header .wrap {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .brand {
+    white-space: nowrap;
+  }
   .nav {
-    gap: 12px;
+    gap: 14px;
     font-size: 14px;
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 2px;
+  }
+  .theme-toggle {
+    flex-shrink: 0;
+  }
+  .doc table {
+    display: block;
+    overflow-x: auto;
+  }
+  .panel header {
+    flex-wrap: wrap;
+  }
+  .post {
+    font-size: 16px;
   }
   #vault {
     min-height: 320px;

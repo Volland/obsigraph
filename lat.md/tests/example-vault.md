@@ -18,6 +18,10 @@ The two broken queries in the diagnostics playground both raise errors, and the 
 
 Every `{{edge: ...}}` embed outside code resolves to a value or table, except the one embed the playground deliberately points at a missing edge.
 
+## Ladybug examples run
+
+Every example in the vault whose header is `backend: ladybug` runs on a real sidecar mirror of the vault without error and returns rows, so pass-through examples keep matching the mirror layout.
+
 ## Deliberate diagnostics only
 
 Schema validation flags only Dave (missing role) and Mallory (disallowed edge), syntax diagnostics come only from the playground, and the stubs are exactly Eve, Globex and Property Graphs 101.

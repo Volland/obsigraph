@@ -14,6 +14,8 @@ The plugin is listed as **Typed Graph** (id `typed-graph`): directory rules forb
 
 The demo bundles the real core engine, schema styling and the plugin's pure rendering modules (`site/src/demo.ts`, built by `npm run site:build`) over an editable sample vault, with a seeded force layout so screenshots are stable. Screenshots in `site/assets/screenshots/` are taken from the demo with headless Chrome (`?example=N&theme=light|dark`). The logo, a crystal of graph facets with a ladybug, is `site/assets/logo.svg`.
 
+Besides home, docs and demo, the site has `example.html` (the [[publishing#Example vault]] with a download link) and a blog: `blog.html` indexes long-form articles kept as flat pages (`blog-typed-graph.html` on the plugin's features, `blog-sidecar-rag.html` on the sidecar, vectors, GraphRAG and MCP), because the Pages workflow publishes `site/*.html`. Numbers and sample responses in the RAG article come from a real sidecar run over the example vault with local `nomic-embed-text`.
+
 ## Example vault
 
 `example/` is a demo vault (a small research lab) that uses every plugin feature and carries the user manual: concepts, a Cypher course, a query gallery, sidecar usage and a diagnostics playground.

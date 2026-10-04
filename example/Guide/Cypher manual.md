@@ -301,16 +301,17 @@ RETURN p.title AS person, type(r) AS unexpected_edge, x.title AS target
 
 The built-in engine is read-only. `CREATE`, `MERGE`, `SET`, `DELETE` and `REMOVE` are rejected with a clear error. It also does not support `UNWIND`, `UNION`, `CALL`, `CASE` or regular expressions (`=~`).
 
-For those, run the sidecar and add `backend: ladybug` to the block header. The same query then runs on the LadybugDB mirror. See [[Sidecar and agents]]. This example is shown as plain text so it does not fail without a sidecar:
+For those, run the sidecar and add `backend: ladybug` to the block header. Queries with such syntax run on the LadybugDB mirror **untranslated**, so they use its layout: every note is a `Node`, labels are a list, and properties are typed columns such as `p_role_s`. See [[Sidecar and agents]] for the details. This example is shown as plain text so it does not fail without a sidecar:
 
 ````markdown
 ```graph-query
 backend: ladybug
 view: table
 
-MATCH (p:Person)
+MATCH (p:Node)
+WHERE list_contains(p.labels, "Person")
 RETURN p.title AS name,
-       CASE WHEN p.role IS NULL THEN "unknown" ELSE p.role END AS role
+       CASE WHEN p.p_role_s IS NULL THEN "unknown" ELSE p.p_role_s END AS role
 ```
 ````
 

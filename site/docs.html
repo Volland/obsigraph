@@ -16,6 +16,8 @@
         <a href="./">Home</a>
         <a href="docs.html" class="active">Docs</a>
         <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html">Blog</a>
         <a href="https://github.com/Volland/obsigraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>
       </nav>
@@ -206,7 +208,22 @@ OBSIGRAPH_VAULT=/path/to/vault OBSIGRAPH_DATA=/path/to/data OBSIGRAPH_TOKEN=chan
       </table>
 
       <h2 id="ladybug">Ladybug backend</h2>
-      <p>The sidecar mirrors the graph one-way into <a href="https://github.com/LadybugDB/ladybug">LadybugDB</a>. Set the sidecar URL and token in plugin settings, then use <code>backend: ladybug</code> in a block. Queries the built-in parser reads are translated so they return the same results; other read Cypher (like <code>UNWIND</code>) runs as-is. A 52-query conformance suite keeps the two engines in agreement.</p>
+      <p>The sidecar mirrors the graph one-way into <a href="https://github.com/LadybugDB/ladybug">LadybugDB</a>. Set the sidecar URL and token in plugin settings, then use <code>backend: ladybug</code> in a block. Queries the built-in parser reads are translated so they return the same results. A 52-query conformance suite keeps the two engines in agreement.</p>
+      <p>Other read Cypher (<code>UNWIND</code>, <code>CASE</code>, <code>UNION</code>, <code>=~</code>) runs on LadybugDB <strong>untranslated</strong>, against the mirror layout. The result carries a notice saying so. In that layout:</p>
+      <ul>
+        <li>Every note is a <code>Node</code>, with <code>title</code>, <code>path</code>, <code>stub</code> and a <code>labels</code> list.</li>
+        <li>Each edge type is its own relationship table.</li>
+        <li>Properties are typed columns named <code>p_&lt;name&gt;_&lt;kind&gt;</code>. The kind is <code>s</code> (text), <code>n</code> (number), <code>b</code> (boolean), <code>ls</code> or <code>ln</code> (lists) or <code>j</code> (anything else).</li>
+      </ul>
+<pre>```graph-query
+backend: ladybug
+view: table
+
+MATCH (p:Node)-[c:contributes]->(proj:Node)
+WHERE list_contains(p.labels, "Person")
+RETURN p.title AS person, proj.title AS project,
+       CASE WHEN c.p_hours_n >= 100 THEN "core" ELSE "helper" END AS involvement
+```</pre>
 
       <h2 id="vectors">Vector search</h2>
       <p>Notes are chunked by heading with title, type and frontmatter as context; each edge becomes a sentence like <em>Alice (Person) knows Bob (Person) - met at NeurIPS</em>. Embeddings come from local Ollama by default.</p>
