@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tg and lat.md Compared</title>
+  <meta name="description" content="An honest comparison of the tg CLI with lat.md: same folder format and the same check verdicts, plus typed code edges, openCypher, offline search, export and Obsidian integration, and where lat.md is stronger.">
+  <meta property="og:title" content="tg and lat.md: what is the same, what differs">
+  <meta property="og:description" content="An honest comparison of the tg CLI with lat.md: same folder format and the same check verdicts, plus typed code edges, openCypher, offline search, export and Obsidian integration, and where lat.md is stronger.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 4 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>tg and lat.md: what is the same, what differs</h1>
+    <p class="standfirst"><code>tg</code> reads the same <code>lat.md/</code> folders as <a href="https://www.npmjs.com/package/lat.md">lat.md</a> and agrees with its <code>check</code>. It adds a graph, typed links from code and a few developer conveniences. lat.md is stronger in places too, and this page says where.</p>
+
+    <div class="callout">lat.md is a separate open-source project (MIT) by Yury Selivanov, and Typed Graph is not affiliated with it. Statements about lat.md below describe version 0.12.2, the one <code>tg</code> is tested against. Check its documentation for anything newer.</div>
+
+    <h2>The short version</h2>
+    <ul>
+      <li><strong>Same:</strong> the folder format, section ids, wiki links, <code>@lat:</code> comments, the leading-paragraph rule, <code>require-code-mention</code>, and the verdicts of <code>check</code>.</li>
+      <li><strong>Added by tg:</strong> typed, signed edges from code (<code>@tg:</code>), an openCypher query over docs and code, search that needs no model, export and import, and an Obsidian plugin that reads the folder in place.</li>
+      <li><strong>Better in lat.md:</strong> symbol parsing uses full grammars, more agent templates ship, and it has had far more real-world use.</li>
+    </ul>
+
+    <h2>Side by side</h2>
+    <table>
+      <thead><tr><th></th><th>lat.md 0.12</th><th>tg 0.5</th></tr></thead>
+      <tbody>
+        <tr><td>Folder format and ids</td><td><code>lat.md/</code>, <code>file#Heading#Sub</code>, short ids</td><td>The same</td></tr>
+        <tr><td><code>check</code> verdicts</td><td>Reference behavior</td><td>Same findings on the 3 projects it is tested on</td></tr>
+        <tr><td>Commands</td><td>locate, section, refs, check, expand, search, reindex, gen, init, hook, mcp, config</td><td>locate, section, refs, check, expand, search, reindex, gen, init, hook, mcp, plus cypher, edges, export, import</td></tr>
+        <tr><td>Code annotations</td><td><code>@lat:</code> plain links</td><td><code>@lat:</code> plus <code>@tg:</code> typed, signed edges with properties</td></tr>
+        <tr><td>Querying</td><td>Locate by name, refs, search</td><td>All of those, plus openCypher over sections and code</td></tr>
+        <tr><td>Code symbols</td><td>Tree-sitter grammars: TS, TSX, JS, JSX, Python, Rust, Go, C</td><td>Regex finders: TS/JS (also .mts .cts .mjs .cjs), Python, Go, Rust, C</td></tr>
+        <tr><td>Search</td><td>Semantic: a local offline model or a hosted API key</td><td>Lexical by default, no model; optional Ollama or OpenAI-compatible embeddings</td></tr>
+        <tr><td>Agents</td><td>Claude Code, Cursor, plus Pi and OpenCode templates</td><td>Claude Code, Cursor, <code>AGENTS.md</code></td></tr>
+        <tr><td>MCP tools</td><td>6 (locate, section, search, expand, check, refs)</td><td>8 (the same plus cypher and edges)</td></tr>
+        <tr><td>Obsidian</td><td>Folder opens as plain Markdown</td><td>Plugin resolves lat ids on click, shows diagnostics, draws code nodes in the graph</td></tr>
+        <tr><td>Move content between formats</td><td>No equivalent</td><td><code>export</code> (lossy, with a report) and <code>import</code></td></tr>
+        <tr><td>Install</td><td>npm package with tree-sitter grammars and a database client as dependencies</td><td>One bundled file, no runtime dependencies</td></tr>
+        <tr><td><code>check</code> on this repository</td><td>about 0.38 s</td><td>about 0.17 s</td></tr>
+      </tbody>
+    </table>
+    <p>The timing is one machine, warm caches, this repository's own <code>lat.md/</code>. Treat it as an order of magnitude, not a benchmark.</p>
+
+    <h2>What tg adds</h2>
+
+    <h3>Typed edges from code</h3>
+    <p>A lat.md reference says that this function relates to that section. A <code>@tg:</code> edge says how:</p>
+<pre>// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]</pre>
+    <p>Types, a negative sign and properties give you something to filter and count. Plain <code>@lat:</code> comments keep working, and a bare <code>@tg: [[x]]</code> is the same thing.</p>
+
+    <h3>A query language over docs and code</h3>
+    <p>Because sections and code symbols are graph nodes, questions that need several <code>grep</code>s become one query:</p>
+<pre>tg cypher "MATCH (c:CodeSymbol)-[:implements]->(s:Section)
+           RETURN s.title, count(c) AS functions
+           ORDER BY functions DESC"</pre>
+    <p>Which design sections have no implementation, which are implemented by many functions, which docs nothing links to. The engine is the one inside the Obsidian plugin, so the same queries run in both places.</p>
+
+    <h3>Search with no setup</h3>
+    <p>lat.md can search semantically, with a local model or an API key. <code>tg search</code> starts one step earlier: a lexical index with no model to download and no key to set, which is enough for a docs folder of a few hundred sections and safe to run inside a prompt hook. Embeddings are an option, not a requirement, and a provider outage degrades to lexical results rather than an error. The <code>LAT_LLM_KEY</code> variables are accepted as aliases.</p>
+
+    <h3>Obsidian and interchange</h3>
+    <p>If your notes live in Obsidian, the plugin makes a <code>lat.md/</code> folder in your vault navigable and checkable in place. <code>tg export</code> turns a vault into a lat.md folder that both tools accept. Typed edges and properties have no lat.md equivalent, so export flattens them and tells you what it dropped; it does not claim a lossless round trip.</p>
+
+    <h3>Safer setup</h3>
+    <p><code>tg init</code> prints a diff and writes nothing until you pass <code>--write</code>. Moving from lat.md is explicit: <code>--migrate</code> replaces the lat block, hooks and MCP entry, and leaves everything else in your files byte-for-byte as it was.</p>
+
+    <h2>Where lat.md is better</h2>
+    <ul>
+      <li><strong>Symbol accuracy.</strong> lat.md parses source with real grammars. <code>tg</code>'s regex finders cover common declarations, but unusual syntax, macros and generated code can slip past them. They say "cannot tell" rather than guess, yet a grammar is still more precise.</li>
+      <li><strong>Agent coverage.</strong> lat.md ships templates for Pi and OpenCode as well. <code>tg</code> covers Claude Code, Cursor and <code>AGENTS.md</code>.</li>
+      <li><strong>Maturity.</strong> It is the original, and the format is defined by it. <code>tg</code> follows the format, and when the two disagree, lat.md is right by definition unless the difference is listed.</li>
+      <li><strong>Semantic search out of the box.</strong> If you want embeddings without running or configuring anything else, lat.md's local model option is simpler than pointing <code>tg</code> at an embedding server.</li>
+    </ul>
+
+    <h2>The deliberate differences</h2>
+    <p><code>tg</code> accepts <code>.mts</code>, <code>.cts</code>, <code>.mjs</code> and <code>.cjs</code> as source links, which lat.md reports as unresolved. That is the only intentional difference in <code>check</code> verdicts, and the parity test normalizes it. Everything else the test compares has to match: on the upstream lat.md project snapshot, which has 231 findings, both tools report the same set.</p>
+
+    <h2>Which should you use</h2>
+    <ul>
+      <li><strong>Stay with lat.md</strong> if you want the reference tool, need Pi or OpenCode, or rely on grammar-accurate symbol links across many languages.</li>
+      <li><strong>Use tg</strong> if you want typed links from code, queries across docs and code, a no-setup search for hooks, or you also keep notes in Obsidian.</li>
+      <li><strong>Use both.</strong> They read the same folder, so trying <code>tg</code> on an existing project costs nothing: <code>tg check</code> should agree with <code>lat check</code>.</li>
+    </ul>
+
+    <h2>Switching in four commands</h2>
+<pre>npm install -g @typedgraph/cli
+tg check                       # should match lat check
+tg init                        # dry run: see the diff
+tg init --write --migrate      # swap the lat block, hooks and MCP entry</pre>
+    <p>Your <code>lat.md/</code> folder and <code>@lat:</code> comments stay as they are. If something differs from lat.md that is not on the list above, that is a bug, and the <a href="https://github.com/Volland/obsigraph/issues">issue tracker</a> is the place for it.</p>
+
+    <div class="next">Previous: <a href="blog-tg-cli.html">← tg: your docs and your code as one typed graph</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

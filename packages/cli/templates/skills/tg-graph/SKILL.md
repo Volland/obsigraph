@@ -17,7 +17,7 @@ description: Query the lat.md section graph with openCypher through tg. Use when
 
 ```cypher
 // Sections nothing links to
-MATCH (s:Section) WHERE NOT ()-[:references]->(s) RETURN s.section LIMIT 20
+MATCH (s:Section) OPTIONAL MATCH (a)-[r:references]->(s) WITH s, count(r) AS n WHERE n = 0 RETURN s.section LIMIT 20
 
 // Who references the Packaging section
 MATCH (a:Section)-[:references]->(b:Section {title: "Packaging"}) RETURN a.section, b.file
@@ -32,4 +32,4 @@ MATCH (s:Section)<-[r:references]-() RETURN s.section, count(r) AS n ORDER BY n 
 
 ## Limits
 
-Supported: MATCH, OPTIONAL MATCH, WITH, RETURN, ORDER BY, SKIP, LIMIT, aggregation and variable-length paths. Write clauses are rejected.
+Supported: MATCH, OPTIONAL MATCH, WITH, RETURN, ORDER BY, SKIP, LIMIT, aggregation and variable-length paths. Write clauses are rejected, and so are pattern predicates such as `WHERE NOT ()-[:x]->(s)`: use OPTIONAL MATCH with a count instead.

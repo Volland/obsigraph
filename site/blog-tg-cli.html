@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tg: Docs and Code as One Graph</title>
+  <meta name="description" content="tg is a command line for developers: check, search and query a lat.md documentation folder, link code to docs with typed annotations, and give coding agents the result over MCP.">
+  <meta property="og:title" content="tg: your docs and your code as one typed graph">
+  <meta property="og:description" content="tg is a command line for developers: check, search and query a lat.md documentation folder, link code to docs with typed annotations, and give coding agents the result over MCP.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 4 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>tg: your docs and your code as one typed graph</h1>
+    <p class="standfirst">Design notes drift from code because nothing connects them. <code>tg</code> is a command line that keeps a folder of Markdown design docs honest against the source, lets code point back at the docs with typed edges, and hands the result to coding agents.</p>
+
+    <h2>Why a CLI, when this site is about Obsidian</h2>
+    <p>Typed Graph started as an Obsidian plugin. The same model, notes as nodes and typed signed links as edges, turned out to fit a developer's <code>lat.md/</code> folder just as well: a set of cross-linked Markdown files that describe what a project does and why. <a href="blog-tg-vs-lat-md.html">lat.md</a> is an existing tool for that format. <code>tg</code> reads the same folder, gives the same verdicts, and adds the graph.</p>
+    <p>You can use it without Obsidian, in a terminal or in CI. In Obsidian the plugin reads the same folder in place.</p>
+
+    <h2>1. A lat.md folder, checked</h2>
+    <p>A <code>lat.md/</code> folder holds ordinary Markdown. Sections link to each other and to code with wiki links, and every section starts with a one-sentence overview:</p>
+<pre>## Token expiry
+
+Tokens past their expiry timestamp are rejected with 401, even if
+otherwise valid. Implemented by [[src/auth.ts#verifyToken]];
+see also [[security#Session lifetime]].</pre>
+    <p><code>tg check</code> validates all of it:</p>
+    <ul>
+      <li>every <code>[[link]]</code> reaches a section, or an existing source file and symbol (<code>file#Class#method</code>)</li>
+      <li>every section has a leading paragraph of at most 250 characters</li>
+      <li>every folder has an index file listing its children</li>
+      <li>files marked <code>require-code-mention: true</code> have a code reference for every leaf section, which is how test specs are kept covered</li>
+    </ul>
+    <p>It exits 1 when anything is wrong, so it works as a CI gate and as a hook that stops an agent from finishing with stale docs.</p>
+
+    <h2>2. Code that points back</h2>
+    <p>A comment links code to the docs that describe it:</p>
+<pre>// @<span></span>lat: [[auth#Token expiry]]
+export function verifyToken(token: string) { /* ... */ }</pre>
+    <p>That is a plain reference. With <code>@tg:</code> the link carries a type, a sign and properties, using the same edge syntax as notes:</p>
+<pre>// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}
+export function verifyToken(token: string) { /* ... */ }
+
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]
+function legacySessionCheck() { /* ... */ }</pre>
+    <p>The edge starts at the declaration that follows the comment, so it names the function, not the file. If nothing follows within three lines, the edge falls back to the file and <code>tg check</code> warns. A bare <code>@tg: [[x]]</code> means exactly what <code>@lat:</code> means, and projects that use <code>@lat:</code> need no changes.</p>
+
+    <h2>3. Ask the graph</h2>
+    <p>Sections and, when you ask for them, code symbols are nodes in one property graph. <code>tg cypher</code> runs read-only openCypher over it, with the same engine the plugin uses:</p>
+<pre>tg cypher --code annotated "
+  MATCH (c:CodeSymbol)-[r:implements]->(s:Section)
+  RETURN c.path, c.symbol, s.title"
+
+tg cypher "MATCH (s:Section)
+           OPTIONAL MATCH (a)-[r:references]->(s)
+           WITH s, count(r) AS n WHERE n = 0
+           RETURN s.section LIMIT 20"</pre>
+    <p>The first lists which functions implement which design sections. The second finds sections that nothing links to. Code nodes are derived in memory from your annotations and never written to disk: by default only annotated symbols and what they point at appear, and <code>--code all</code> adds every symbol.</p>
+
+    <h2>4. Search that works on a fresh clone</h2>
+    <p><code>tg search</code> ranks sections with a lexical index over title, overview and body. It needs no model, no key and no network, so it works in a new checkout and inside a hook. If you want semantic matches, point it at Ollama or any OpenAI-compatible endpoint with <code>TG_EMBED_PROVIDER</code> or a key, and it fuses both rankings. If the provider is down, you still get lexical results and a note.</p>
+
+    <h2>5. Agents get the picture first</h2>
+    <p><code>tg init</code> sets a project up for Claude Code, Cursor or any agent that reads <code>AGENTS.md</code>. It never writes without <code>--write</code>: the default run prints a diff of every file it would touch.</p>
+<pre>$ tg init
++++ b/CLAUDE.md          (instruction block: search first, check last)
++++ b/.claude/settings.json   (UserPromptSubmit and Stop hooks)
++++ b/.mcp.json          (the tg MCP server)
++++ b/.claude/skills/tg-docs/SKILL.md
++++ b/.claude/skills/tg-graph/SKILL.md
+Dry run: 5 files would change. Re-run with --write to apply.</pre>
+    <p>Once applied, the prompt hook reminds the agent to search before it works and expands any <code>[[refs]]</code> in your prompt. The stop hook blocks the agent from finishing when <code>tg check</code> fails or when it changed a lot of code without touching <code>lat.md/</code>. Hooks never fail the agent: on any internal error they exit 0.</p>
+    <p><code>tg mcp</code> serves eight tools to MCP clients: <code>tg_locate</code>, <code>tg_section</code>, <code>tg_search</code>, <code>tg_expand</code>, <code>tg_check</code>, <code>tg_refs</code>, <code>tg_cypher</code> and <code>tg_edges</code>. The two bundled skills teach an agent how to maintain the docs and how to query the graph.</p>
+
+    <h2>6. Obsidian, both ways</h2>
+    <ul>
+      <li><strong>In place.</strong> Obsidian cannot follow <code>[[file#Heading#Sub]]</code>. With the plugin, clicking such a link in a <code>lat.md/</code> folder opens the section, and broken links show up in the plugin's diagnostics. Your files are never rewritten.</li>
+      <li><strong>Code in the graph.</strong> Turn on <em>Code in the graph</em> in settings, or use the dropdown in the Graph view, and annotated symbols appear next to your notes. The plugin only reads source files.</li>
+      <li><strong>Export.</strong> <code>tg export ./out --vault ~/vault</code> projects vault notes into a lat.md folder so other tools can use them. Typed edges become plain links, property blocks are dropped, and a loss report says how much. It is deliberately lossy and does not promise a round trip.</li>
+      <li><strong>Import.</strong> <code>tg import ../project/lat.md</code> copies a folder into a vault, or mounts it with <code>--mount</code>, and never touches the source.</li>
+    </ul>
+
+    <h2>What it is not</h2>
+    <ul>
+      <li><strong>Not a parser for every language.</strong> Symbols come from small regex finders for TypeScript and JavaScript (including <code>.mts</code> and <code>.cjs</code>), Python, Go, Rust and C. They are fast and have no native dependencies, but a grammar-based parser is more precise. When a file looks unbalanced, or a class body sits on one line, <code>tg</code> answers "cannot tell" instead of reporting a false error.</li>
+      <li><strong>Young.</strong> The CLI is new in 0.5. The format is not: <code>tg check</code> is tested against the reference <a href="blog-tg-vs-lat-md.html">lat.md</a> on this repository, a seeded project and a snapshot of the upstream project, and reports the same findings.</li>
+    </ul>
+
+    <h2>Try it</h2>
+<pre>npm install -g @typedgraph/cli
+cd your-project
+tg init          # dry run
+tg check
+tg search "how are tokens validated"</pre>
+    <p>The full command reference is in the <a href="docs.html#cli">docs</a>. If you already use lat.md, read <a href="blog-tg-vs-lat-md.html">how <code>tg</code> compares</a> first.</p>
+
+    <div class="next">Next: <a href="blog-tg-vs-lat-md.html">tg and lat.md: what is the same, what differs →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

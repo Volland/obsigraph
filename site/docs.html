@@ -46,6 +46,12 @@
       <a href="#graphrag">GraphRAG</a>
       <a href="#mcp">MCP for agents</a>
       <a href="#security">Security</a>
+      <div class="group">CLI (tg)</div>
+      <a href="#cli">Commands</a>
+      <a href="#annotations">Annotations</a>
+      <a href="#code-layer">Code in the graph</a>
+      <a href="#cli-agents">Agents and hooks</a>
+      <a href="#export">Export and import</a>
       <div class="group">More</div>
       <a href="#settings">Settings</a>
       <a href="#faq">FAQ</a>
@@ -250,6 +256,54 @@ RETURN p.title AS person, proj.title AS project,
         <li>Retrieved note text is marked as untrusted content for agents.</li>
       </ul>
 
+      <h2 id="cli">CLI: tg</h2>
+      <p><code>tg</code> works on a <code>lat.md/</code> folder, the same format as <a href="blog-tg-vs-lat-md.html">lat.md</a>. Install with <code>npm install -g @typedgraph/cli</code>. It finds the project by walking up to the nearest <code>lat.md/</code> or <code>.tg/</code> folder; <code>--dir</code> overrides. Exit codes: 0 ok, 1 findings, 2 usage or internal error. <code>--json</code> prints machine-readable output on read commands.</p>
+      <table>
+        <tr><td><code>tg check [md|code-refs|index|sections]</code></td><td>Validate links (including source files and symbols), <code>@lat:</code> and <code>@tg:</code> references, <code>require-code-mention</code> coverage, directory index files and the 250-character leading-paragraph rule.</td></tr>
+        <tr><td><code>tg locate &lt;query&gt;</code></td><td>Find sections by id, short id or fuzzy name.</td></tr>
+        <tr><td><code>tg section &lt;query&gt;</code></td><td>Show a section with its links, what references it and the code that does.</td></tr>
+        <tr><td><code>tg refs [--scope md|code|md+code] &lt;query&gt;</code></td><td>Sections and code that reference a section.</td></tr>
+        <tr><td><code>tg expand &lt;text&gt;</code></td><td>Replace <code>[[refs]]</code> in text with full ids and locations.</td></tr>
+        <tr><td><code>tg search [--limit n] [--lexical] &lt;query&gt;</code></td><td>Lexical ranking by default. With <code>TG_EMBED_PROVIDER=ollama|openai</code> or a key (<code>TG_EMBED_KEY</code>, or <code>LAT_LLM_KEY</code>) it fuses lexical and vector ranks. <code>TG_EMBED_URL</code> and <code>TG_EMBED_MODEL</code> pick the endpoint and model. Vectors are cached in <code>.tg/</code>; <code>tg reindex</code> rebuilds them.</td></tr>
+        <tr><td><code>tg cypher [--code off|annotated|all] &lt;query&gt;</code></td><td>Read-only openCypher over the section graph: <code>Section</code> nodes (<code>section</code>, <code>title</code>, <code>file</code>, <code>depth</code>, <code>summary</code>), <code>contains</code> and <code>references</code> edges, and with <code>--code</code> <code>CodeFile</code> and <code>CodeSymbol</code> nodes. Pattern predicates such as <code>WHERE NOT ()-[:x]-&gt;(s)</code> are not supported; use <code>OPTIONAL MATCH</code> with a count.</td></tr>
+        <tr><td><code>tg edges [--type t] [--to s] [--file f]</code></td><td>List annotation edges from code to sections.</td></tr>
+        <tr><td><code>tg gen &lt;target&gt;</code></td><td>Print <code>agents.md</code>, <code>claude.md</code>, <code>cursor-rules.md</code>, <code>skill.md</code> or <code>graph-skill.md</code>.</td></tr>
+        <tr><td><code>tg init</code>, <code>tg hook</code>, <code>tg mcp</code></td><td>See <a href="#cli-agents">Agents and hooks</a>.</td></tr>
+        <tr><td><code>tg export</code>, <code>tg import</code></td><td>See <a href="#export">Export and import</a>.</td></tr>
+      </table>
+
+      <h2 id="annotations">Annotations in code</h2>
+      <p>Two comment forms link code to docs, in <code>//</code>, <code>#</code> and block comments:</p>
+<pre>// @<span></span>lat: [[auth#Token expiry]]                       a plain reference
+// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}   a typed edge
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]    a negative edge
+// @<span></span>tg: implements:: [[a#X]], tests:: [[b#Y]]           several edges
+// @<span></span>tg: [[a#X]]                                         same as @lat:</pre>
+      <p><code>@lat:</code> follows lat.md's exact pattern (a <code>//</code> or <code>#</code> comment and one link). <code>@tg:</code> uses the same <code>type:: [[Target]] {props}</code> grammar as notes, so signs, properties and several edges work as they do there. The edge starts at the declaration that follows the comment within three lines (a class member is <code>Class#member</code>); otherwise it belongs to the file and <code>tg check</code> warns. A schema note's <code>edges</code> list gives advisory checks on edge types.</p>
+      <p>Source links in docs, <code>[[src/server.ts#App#listen]]</code>, are checked against the file. Supported: TypeScript and JavaScript (<code>.ts .tsx .js .jsx .mts .cts .mjs .cjs</code>), Python, Go, Rust and C (<code>.c .h</code>). Symbols are found with regex finders, so a file whose strings or braces do not balance, or a class written on one line, is reported as "cannot tell" and never as a missing symbol.</p>
+
+      <h2 id="code-layer">Code in the graph</h2>
+      <p>Source files and symbols can appear as derived <code>CodeFile</code> and <code>CodeSymbol</code> nodes, keyed by <code>path</code> and <code>path#Class#method</code>, with <code>contains</code> edges and the annotation edges. They are built in memory and never written to disk or to your vault.</p>
+      <ul>
+        <li><strong>Modes.</strong> <code>off</code> (the plugin default), <code>annotated</code> (the CLI default: annotated symbols, what annotations point at, and their files) and <code>all</code>. In the CLI use <code>--code</code> or <code>TG_CODE</code>.</li>
+        <li><strong>In Obsidian.</strong> Settings → <em>Code in the graph</em> and <em>Code folder</em>, or the <em>Code</em> dropdown in the Graph view. A <code>graph-query</code> header line <code>code: hide</code> removes code nodes from one block. Code nodes have their own shapes and colors, below any style you configure.</li>
+        <li><strong>Links agree with nodes.</strong> <code>[[src/auth.ts#login]]</code> in a note ends at the <code>CodeSymbol</code> node, never at a stub.</li>
+      </ul>
+
+      <h2 id="cli-agents">Agents and hooks</h2>
+      <ul>
+        <li><code>tg init [--agent claude|agents|cursor] [--write] [--migrate]</code> prints a diff of every file it would create or change and writes only with <code>--write</code>. For Claude Code that is the <code>CLAUDE.md</code> block (between <code>%% tg:begin %%</code> markers), hooks in <code>.claude/settings.json</code>, the <code>tg</code> entry in <code>.mcp.json</code> and two skills, <code>tg-docs</code> and <code>tg-graph</code>. An existing lat.md block is replaced only with <code>--migrate</code>, which also swaps the <code>lat hook</code> commands and the <code>lat</code> MCP entry.</li>
+        <li><code>tg hook claude UserPromptSubmit|Stop</code> and <code>tg hook cursor stop</code> are called by the agent. The prompt hook reminds it to search first, expands <code>[[refs]]</code> in your prompt and adds the top lexical hits. The stop hook blocks finishing when <code>tg check</code> fails or five or more code lines changed with little change in <code>lat.md/</code>. Hooks always exit 0.</li>
+        <li><code>tg mcp</code> serves <code>tg_locate</code>, <code>tg_section</code>, <code>tg_search</code>, <code>tg_expand</code>, <code>tg_check</code>, <code>tg_refs</code>, <code>tg_cypher</code> and <code>tg_edges</code> over stdio: <code>claude mcp add tg -- tg mcp</code>.</li>
+      </ul>
+
+      <h2 id="export">Export and import</h2>
+      <ul>
+        <li><code>tg export &lt;out&gt; [--vault dir] [--folder sub] [--force]</code> writes vault notes under <code>&lt;out&gt;/lat.md/</code>. Typed edges become <code>type: [[link]]</code>, property blocks are dropped, <code>{{edge: …}}</code> embeds become their value, notes get a level-1 heading and directory index files if missing, and links to notes outside the export become plain text. It then runs the normal check and prints a loss report. Round trips are not guaranteed. It refuses a non-empty target without <code>--force</code>.</li>
+        <li><code>tg import &lt;path&gt; [--mount] [--into name]</code> copies a <code>lat.md/</code> folder (or the one inside a project) into the current vault or project, or symlinks it with <code>--mount</code>. It refuses a non-empty destination and never changes the source.</li>
+      </ul>
+      <p>In Obsidian, notes under a <code>lat.md/</code> folder get working <code>[[file#Heading#Sub]]</code> links and show link and section problems in the diagnostics list. Files are not modified.</p>
+
       <h2 id="settings">Settings</h2>
       <table>
         <tr><td>Maximum graph elements</td><td>Above this, graphs show as tables.</td></tr>
@@ -258,6 +312,7 @@ RETURN p.title AS person, proj.title AS project,
         <tr><td>Schema folder, Show diagnostics</td><td>Type schemas and the issue counter.</td></tr>
         <tr><td>Type styles, Edge styles</td><td>JSON style defaults.</td></tr>
         <tr><td>Refresh delay</td><td>Debounce before blocks re-run.</td></tr>
+        <tr><td>Code in the graph, Code folder</td><td>Show source symbols as nodes (off, annotated, all) and which vault folder to scan.</td></tr>
       </table>
 
       <h2 id="faq">FAQ</h2>

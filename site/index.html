@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Typed Graph — Typed Graphs for Obsidian</title>
-  <meta name="description" content="Typed Graph turns your Obsidian vault into a typed, signed, labeled property graph with edge properties, openCypher queries, a graph view, a LadybugDB mirror, vector search and GraphRAG for agents.">
+  <title>Typed Graph — Typed Graphs for Obsidian and Code</title>
+  <meta name="description" content="Typed Graph turns your Obsidian vault into a typed, signed, labeled property graph with edge properties, openCypher queries, a graph view, a LadybugDB mirror, vector search and GraphRAG for agents. For developers: the tg CLI links code to docs with typed edges.">
   <meta property="og:title" content="Typed Graph — Typed Graphs for Obsidian">
   <meta property="og:description" content="Typed, signed, labeled edges with properties, openCypher queries, and RAG-ready storage for your vault.">
   <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
@@ -33,7 +33,7 @@
       <div class="wrap">
         <div>
           <h1>Your notes, as a <span class="grad">real graph</span>.</h1>
-          <p class="lead">Typed Graph is an Obsidian plugin that turns links into typed, signed, labeled edges with properties, lets you query them with openCypher, and draws them as a graph that looks like what it means.</p>
+          <p class="lead">Typed Graph is an Obsidian plugin that turns links into typed, signed, labeled edges with properties, lets you query them with openCypher, and draws them as a graph that looks like what it means. Developers get <a href="#developers"><code>tg</code></a>, a CLI that ties your code to your design docs.</p>
           <div class="buttons">
             <a class="btn primary" href="demo.html">Try the live demo →</a>
             <a class="btn" href="https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip">Download demo vault</a>
@@ -101,6 +101,47 @@ ORDER BY hours DESC
       </div>
     </section>
 
+    <section id="developers">
+      <div class="wrap">
+        <h2>For developers: <code>tg</code></h2>
+        <p class="section-lead">A command line that keeps design docs honest against the code, lets code point back at the docs with typed edges, and gives coding agents the result. It reads the same <code>lat.md/</code> folders as <a href="blog-tg-vs-lat-md.html">lat.md</a> and agrees with its <code>check</code>.</p>
+        <div class="two-col">
+          <div>
+<pre>$ tg check
+Scanned 39 .md, 87 .ts ...
+All checks passed
+
+$ tg search "how are tokens validated"
+$ tg cypher "MATCH (c:CodeSymbol)-[:implements]->(s:Section)
+             RETURN s.title, count(c)"
+$ tg init              # dry run: shows every file it would touch</pre>
+          </div>
+          <div>
+<pre>// @<span></span>lat: [[auth#Token expiry]]
+export function verifyToken(t: string) {}
+
+// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]
+function legacyCheck() {}</pre>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card"><div class="icon">✓</div><h3>Check docs against code</h3><p>Links, symbols, section rules, index files and test-spec coverage, as a CI gate or an agent hook. Same verdicts as lat.md.</p></div>
+          <div class="card"><div class="icon">↗</div><h3>Typed edges from code</h3><p><code>@tg:</code> comments add a type, a sign and properties to a link from a function to a design section.</p></div>
+          <div class="card"><div class="icon">⌕</div><h3>Cypher over docs and code</h3><p>Sections and code symbols are nodes in one graph: which sections have no implementation, which are implemented by most.</p></div>
+          <div class="card"><div class="icon">≈</div><h3>Search with no setup</h3><p>Lexical ranking needs no model or key, so it runs in a fresh clone. Add Ollama or an OpenAI-compatible endpoint for hybrid search.</p></div>
+          <div class="card"><div class="icon">⚙</div><h3>Agents and MCP</h3><p><code>tg init</code> installs hooks, instructions and two skills for Claude Code and Cursor; <code>tg mcp</code> serves eight tools. Nothing is written without <code>--write</code>.</p></div>
+          <div class="card"><div class="icon">⇄</div><h3>Obsidian and export</h3><p>The plugin opens <code>lat.md</code> links in place and draws code nodes. <code>tg export</code> and <code>tg import</code> move content between a vault and a lat.md folder.</p></div>
+        </div>
+        <div class="buttons" style="margin-top:28px">
+          <a class="btn primary" href="blog-tg-cli.html">Read: docs and code as one graph →</a>
+          <a class="btn" href="blog-tg-vs-lat-md.html">tg vs lat.md</a>
+          <a class="btn" href="docs.html#cli">CLI reference</a>
+        </div>
+<pre style="margin-top:20px">npm install -g @typedgraph/cli</pre>
+      </div>
+    </section>
+
     <section class="soft">
       <div class="wrap">
         <h2>How it fits together</h2>
@@ -109,6 +150,7 @@ ORDER BY hours DESC
           <div class="card"><h3>core <span class="tag">TypeScript</span></h3><p>Edge parser, graph model, schemas, styles, openCypher engine, chunking. No Obsidian APIs.</p></div>
           <div class="card"><h3>plugin <span class="tag">Obsidian</span></h3><p>Query blocks, graph view, embeds, diagnostics. Works on desktop and mobile.</p></div>
           <div class="card"><h3>sidecar <span class="tag">optional</span></h3><p>Headless service over a read-only vault: REST, MCP, LadybugDB mirror, vectors.</p></div>
+          <div class="card"><h3>tg <span class="tag">CLI</span></h3><p>One bundled binary on the same core: check, search, query, agent setup, export. No Obsidian needed.</p></div>
         </div>
       </div>
     </section>
@@ -138,10 +180,12 @@ ORDER BY hours DESC
     <section class="soft">
       <div class="wrap">
         <h2>Learn more</h2>
-        <p class="section-lead">Two articles and a vault to explore.</p>
+        <p class="section-lead">Four articles and a vault to explore.</p>
         <div class="grid">
           <a class="post-card" href="blog-typed-graph.html"><div class="meta">Blog · Features</div><h2>Your vault as a property graph</h2><p>Typed, signed edges, schema notes, openCypher and styled graphs, in plain Markdown.</p></a>
           <a class="post-card" href="blog-sidecar-rag.html"><div class="meta">Blog · Sidecar and RAG</div><h2>Your vault as RAG storage</h2><p>LadybugDB, vector search over notes and edges, GraphRAG with citations, and MCP for agents.</p></a>
+          <a class="post-card" href="blog-tg-cli.html"><div class="meta">Blog · Developers</div><h2>Docs and code as one typed graph</h2><p>The tg CLI: check design docs against code, typed edges from comments, Cypher over both, and agent hooks.</p></a>
+          <a class="post-card" href="blog-tg-vs-lat-md.html"><div class="meta">Blog · Comparison</div><h2>tg and lat.md compared</h2><p>What is the same, what tg adds, where lat.md is stronger, and how to switch.</p></a>
           <a class="post-card" href="example.html"><div class="meta">Example vault</div><h2>A vault that teaches itself</h2><p>A research-lab vault with the plugin preinstalled and a hands-on Cypher course.</p></a>
         </div>
       </div>
@@ -150,7 +194,7 @@ ORDER BY hours DESC
 
   <footer>
     <div class="wrap">
-      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian or LadybugDB.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>
