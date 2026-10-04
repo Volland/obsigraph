@@ -14,6 +14,12 @@ The `tg` command line (package `@typedgraph/cli`) is a drop-in replacement for l
 
 The section tree and link resolver live in `core` with no heavy dependencies, because the plugin bundles `core` and the CLI must start fast in agent hooks. Symbols come from a regex finder behind a `SymbolProvider` interface; tree-sitter is an optional later package, not a base dependency. See [[architecture#Monorepo layout]].
 
+## Resolver
+
+[[packages/core/src/latmd/index.ts#LatIndex]] holds every parsed section and resolves ids and links exactly as lat.md does: case-insensitive, short file stems, implicit h1, tiered fuzzy locate.
+
+Markdown is read by [[packages/core/src/latmd/markdown.ts#parseMarkdown]], a line scanner (no remark) that yields the section tree, wiki links outside code and the `require-code-mention` option; [[packages/core/src/latmd/markdown.ts#leadingParagraphIssue]] applies the 250-character rule. Intentional differences from lat.md: `.mts`, `.cts`, `.mjs` and `.cjs` are accepted as source targets. Edge targets already drop `#subpath`, so nested-heading links never make stub nodes; code targets in edges arrive with the code layer.
+
 ## Packaging
 
 One bundled package `@typedgraph/cli` exposes the `tg` binary, built with esbuild like the plugin and sidecar. Workspace packages keep their `@obsigraph/*` names and `core` stays private.

@@ -53,3 +53,4 @@ export { fromJsonValue, resultFromJson, resultToJson, toJsonValue } from './cyph
 export type { JsonNode, JsonPath, JsonQueryResult, JsonRelationship, JsonValue } from './cypher/json.js';
 export { chunkContext, chunkNote, cosine, DEFAULT_CHUNK_CHARS, nodeScore, normalize, poolVectors, stableId, verbalizeEdge, verbOf } from './embed/chunk.js';
 export type { Chunk, ChunkInput, EdgeSentence, ScoreMode } from './embed/chunk.js';
+export * from './latmd.js';
