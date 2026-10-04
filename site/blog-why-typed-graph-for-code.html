@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why a Typed Graph for Code</title>
+  <meta name="description" content="Why a codebase needs typed links between its docs and its code, what tg does beyond lat.md, and why that graph cannot be generated from the source: intent has to be written by a person.">
+  <meta property="og:title" content="Why a typed graph for your codebase, and why you still write the docs">
+  <meta property="og:description" content="Why a codebase needs typed links between its docs and its code, what tg does beyond lat.md, and why that graph cannot be generated from the source: intent has to be written by a person.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 4 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>Why a typed graph for your codebase, and why you still write the docs</h1>
+    <p class="standfirst">A codebase already has a graph: imports, calls, inheritance. It does not have the graph that matters, the one that says why the code is the way it is. That one is typed, it is small, and a person has to write it.</p>
+
+    <h2>The graph you already have</h2>
+    <p>Every language server can tell you who calls <code>verifyToken</code>. Every indexer can draw the import tree. Tools that turn a repository into a knowledge graph by parsing it are easy to build and they work: files, classes, functions, edges for <em>calls</em>, <em>imports</em> and <em>extends</em>.</p>
+    <p>That graph answers <strong>what</strong> questions. What calls this? What breaks if I rename it? What does this module depend on? A coding agent that greps well, or has an LSP, can already answer those without any help.</p>
+    <p>It cannot answer the questions you actually get stuck on:</p>
+    <ul>
+      <li>Why are tokens checked here and not in the gateway?</li>
+      <li>Is this retry loop a requirement or an accident?</li>
+      <li>Which function is supposed to enforce the expiry rule?</li>
+      <li>We decided sessions are stateless. What in the code still contradicts that?</li>
+    </ul>
+    <p>None of these is in the source. The source says what the program does, not what it was meant to do. For that you need a second set of nodes, written by people: the design decisions, constraints and specs. And you need to connect the two.</p>
+
+    <h2>Why the links have to be typed</h2>
+    <p>The obvious way to connect docs and code is a link. A function mentions a section, a section mentions a function. <a href="https://www.npmjs.com/package/lat.md">lat.md</a> does exactly this well: <code>[[src/auth.ts#verifyToken]]</code> in a doc, <code>// @<span></span>lat: [[auth#Token expiry]]</code> in code, and a <code>check</code> that fails when a link points nowhere.</p>
+    <p>A plain link says two things are related. It does not say how. These are very different facts:</p>
+<pre>// this function implements the rule
+// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}
+
+// this function is a leftover that breaks the rule
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]
+
+// this test proves the rule
+// @<span></span>tg: verifies:: [[auth#Token expiry]]</pre>
+    <p>With plain links all three are "references", and a reader has to open each one to find out which. With types you can ask the graph. The edge starts at the declaration that follows the comment, so it names the function, not the file. A <code>-</code> in front of the type makes the edge negative, which gives you conflicts as a first-class thing instead of a note in a comment. Properties such as <code>{since: 2}</code> hold facts about the relationship itself.</p>
+    <p>Once links have types, whole classes of question become one query instead of an afternoon of grep:</p>
+<pre>-- design sections that no code implements
+MATCH (s:Section)
+OPTIONAL MATCH (c:CodeSymbol)-[r:implements]->(s)
+WITH s, count(r) AS n WHERE n = 0
+RETURN s.section
+
+-- everything that contradicts a design decision
+MATCH (c:CodeSymbol)-[r:contradicts]->(s:Section)
+RETURN c.path, c.symbol, s.title</pre>
+    <p>These run with <code>tg cypher --code annotated</code>, over the same openCypher engine the Obsidian plugin uses. The point is not the query language. The point is that "what is documented but not built" and "what is built against the design" stop being things you find out in code review.</p>
+
+    <h2>What tg does differently from lat.md</h2>
+    <p>tg reads the same <code>lat.md/</code> folder and agrees with lat.md's <code>check</code> on the projects it is tested against, so this is an extension, not a fork of the idea. The <a href="blog-tg-vs-lat-md.html">full comparison</a> has the table and says where lat.md is stronger. The short version of the differences that follow from the typed graph:</p>
+    <ul>
+      <li><strong>Typed, signed edges from code.</strong> <code>@<span></span>tg:</code> carries a type, a sign and properties. <code>@<span></span>lat:</code> still works and means a plain reference.</li>
+      <li><strong>A query over docs and code together.</strong> Sections and code symbols are nodes in one property graph. lat.md lets you locate by name, follow references and search; it has no query that joins them by relationship type.</li>
+      <li><strong>Search that needs no setup.</strong> A lexical index with no model and no key, so it works on a fresh clone and inside a prompt hook. Embeddings are optional, and a provider outage falls back to lexical results.</li>
+      <li><strong>Agents get graph tools.</strong> The MCP server has eight tools, the six lat.md has plus <code>tg_cypher</code> and <code>tg_edges</code>, so an agent can ask "what implements this?" instead of grepping for it.</li>
+      <li><strong>The same graph in Obsidian.</strong> If your notes live in a vault, the plugin shows code nodes next to them, with the same styling for edge types.</li>
+    </ul>
+    <h3>Where lat.md wins</h3>
+    <p>Honest accounting matters here, because "typed" is not free. lat.md parses source with real grammars; tg uses regex finders, so unusual syntax, macros and generated code can slip past it (tg says "cannot tell" rather than guess). lat.md ships more agent templates and has far more real-world use. If you only need links that are checked, and not queried, the plain format is enough and you gain nothing from typing them. Typing pays off when you want to <em>ask</em> the graph things, or when you keep contradiction and verification as separate facts.</p>
+
+    <h2>Why not generate the graph from the code</h2>
+    <p>This is the obvious objection. We already parse the code. Let a model read it, summarize each module into a doc, infer the edges, and keep the whole thing regenerated on every commit. No writing, no drift. It is a good idea for the structural half of the graph, and tg does not fight it: code nodes are derived in memory from the source and never written to disk. But it cannot replace the docs, for four reasons.</p>
+
+    <h3>1. Code is the only source of the "what", so it cannot check itself</h3>
+    <p>The value of <code>check</code> is that two independent things must agree: what you wrote down and what the code does. If you generate the docs from the code, they agree by construction. Drift becomes impossible to detect, because there is nothing left for the code to drift from. A bug becomes the spec. A generated doc that says "tokens are accepted for up to 90 days" is faithful and wrong, and it will pass every check you run on it.</p>
+
+    <h3>2. Intent is not in the artifact</h3>
+    <p>A model reading the source can see a retry loop with three attempts. It cannot know that three is the number your payment provider's SLA allows, that it was five until an outage, or that nobody may raise it. It will produce a plausible reason, and plausible reasons are the dangerous kind. The reasons, constraints and rejected alternatives exist only in the heads and discussions of the people who made the decision. Writing them down is the act of recording them; it cannot be recovered afterwards from the result.</p>
+
+    <h3>3. The graph worth having is a small curated one</h3>
+    <p>A graph inferred from code has an edge for every call, and it is as large as the code. Nobody reads it, and an agent pulls it into context as noise. The typed graph in a <code>lat.md/</code> folder has a node per decision and an edge per claim someone chose to make. It is small on purpose, a few hundred sections for a real project, and each one is something a person decided mattered. That curation <em>is</em> the information. A long list of things you could say about the code is not the same as the ten things that must stay true.</p>
+
+    <h3>4. Writing is where the design gets checked</h3>
+    <p>Writing "this function implements the expiry rule" forces you to find the rule, and to notice there are two functions, or none. Deriving the edge automatically skips that moment, and that moment is half of the value. The leading-paragraph rule in lat.md is the same idea in miniature: if a section cannot be summarized in a sentence, the section is not clear yet.</p>
+
+    <div class="callout">The division of labor: <strong>derive what the code can tell you, write what only people know, and let a machine check that the two agree.</strong></div>
+
+    <h2>What this looks like in practice</h2>
+    <table>
+      <thead><tr><th>Layer</th><th>Who produces it</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td>Structure</td><td>Derived from the source</td><td>Symbols, files, calls, imports</td></tr>
+        <tr><td>Intent</td><td>Written by people</td><td>Design sections, constraints, decisions, test specs</td></tr>
+        <tr><td>Typed links between them</td><td>Written by people, next to the code</td><td><code>implements</code>, <code>verifies</code>, <code>-contradicts</code></td></tr>
+        <tr><td>Consistency</td><td>Checked by a machine</td><td>Broken links, uncovered specs, sections nothing implements</td></tr>
+      </tbody>
+    </table>
+    <p>Agents can help with the written layers. An agent that has just changed a function is well placed to draft the doc update, and the stop hook that <code>tg init</code> installs blocks it from finishing when it changed a lot of code and touched nothing in <code>lat.md/</code>. But a person reads the sentence before it lands, because the sentence is a claim, and a claim nobody has read is the same as no claim.</p>
+
+    <h2>What it costs</h2>
+    <p>You write more than you would with a generator, and the typed syntax is one more thing to learn. We think the cost is right for the same reason tests are: it is the only part of the system that is not a function of the code. If you want to see whether it earns its keep, start small: write the five sections you most often explain to new people, link two or three functions to each, and run <code>tg check</code> and one query. If the graph tells you something you did not already know, keep going.</p>
+
+    <h2>Try it</h2>
+<pre>npm install -g @typedgraph/cli
+cd your-project
+tg init          # dry run: prints a diff, writes nothing
+tg check
+tg cypher --code annotated "MATCH (c:CodeSymbol)-[r]->(s:Section) RETURN c.symbol, type(r), s.title"</pre>
+    <p>The <a href="blog-tg-cli.html">CLI article</a> covers the commands, and the <a href="docs.html">docs</a> have the full reference.</p>
+
+    <div class="next">Related: <a href="blog-tg-vs-lat-md.html">tg and lat.md: what is the same, what differs →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
