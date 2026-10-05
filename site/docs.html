@@ -28,6 +28,7 @@
     <nav class="toc" aria-label="Contents">
       <div class="group">Start</div>
       <a href="#install">Install</a>
+      <a href="#install-vscode">VS Code</a>
       <a href="#quickstart">Quick start</a>
       <div class="group">Modelling</div>
       <a href="#edges">Edges</a>
@@ -65,6 +66,14 @@
         <li><strong>BRAT</strong>, for beta builds: install <em>Obsidian42 - BRAT</em>, run <em>BRAT: Add a beta plugin</em> and enter <code>Volland/obsigraph</code>.</li>
         <li><strong>Manual</strong>: from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> copy <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> into <code>&lt;vault&gt;/.obsidian/plugins/typed-graph/</code>, reload, enable.</li>
       </ul>
+      <h3 id="install-vscode">VS Code extension</h3>
+      <p>Without Obsidian, the TypeGraph extension shows typed backlinks and the graph for the markdown and <code>@lat:</code>/<code>@tg:</code>-annotated code in a workspace, and offers to run <code>tg init</code>. It is published on <a href="https://open-vsx.org/extension/typedgraph/typegraph-vscode">Open VSX</a> as <code>typedgraph.typegraph-vscode</code>.</p>
+      <ul>
+        <li><strong>VSCodium, Cursor, Windsurf, Gitpod, Theia</strong> (editors that use Open VSX): search <em>TypeGraph</em> in the Extensions view and install, or run <code>codium --install-extension typedgraph.typegraph-vscode</code>.</li>
+        <li><strong>VS Code</strong>: download the <code>.vsix</code> from the <a href="https://open-vsx.org/extension/typedgraph/typegraph-vscode">Open VSX page</a> and run <em>Extensions: Install from VSIX…</em>, or <code>code --install-extension typegraph-vscode-&lt;version&gt;.vsix</code>.</li>
+        <li><strong>From source</strong>: <code>npm install &amp;&amp; npm run package:vscode</code> builds <code>packages/vscode/typegraph.vsix</code>.</li>
+      </ul>
+      <p>Settings: <code>typegraph.roots</code> (folders that form the graph, default <code>["."]</code>) and <code>typegraph.ignore</code> (folder names to skip, default <code>["node_modules"]</code>).</p>
       <div class="callout"><strong>New to typed graphs?</strong> Download the <a href="https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip">demo vault</a>, unzip it and open the folder as a vault (<em>Open folder as vault</em>). The plugin comes preinstalled; turn on community plugins when Obsidian asks, then open <em>Start Here</em>. It uses every feature and includes a hands-on Cypher manual with live examples.</div>
 
       <h2 id="quickstart">Quick start</h2>
