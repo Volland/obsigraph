@@ -96,6 +96,14 @@ describe('SHACL import', () => {
     expect(single.writes.map((w) => [w.path, w.text])).toEqual([['Types/Org.md', '---\nschemas:\n  Company: {}\n  Person:\n    properties: {name: text}\n---\n']]);
   });
 
+  // @lat: [[tests/shacl-interop#Single layout warns about templates]]
+  it('warns that a single-note layout cannot keep template bodies', () => {
+    const withBody = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } } }), { body: () => '## Notes' });
+    const plan = planImport(importShacl(withBody), [], { layout: 'single', into: 'Org' });
+    expect(plan.warnings).toEqual(['Person: template body not kept, because Types/Org.md declares several types and its body is documentation (import with --layout per-type to keep it)']);
+    expect(planImport(importShacl(withBody), [], { layout: 'per-type' }).warnings).toEqual([]);
+  });
+
   // @lat: [[tests/shacl-interop#Existing body kept]]
   it('replaces only the schema keys of an existing note', () => {
     const existing: ExistingNote = { path: 'Types/Person.md', text: '---\ntags: [ontology]\nschema:\n  properties:\n    old: number\ncssclasses: wide\n---\n\n# Person\n\nHand-written notes.\n', frontmatter: null };

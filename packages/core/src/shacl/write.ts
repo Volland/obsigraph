@@ -35,6 +35,8 @@ export interface ImportPlan {
   conflicts: { path: string; message: string }[];
   /** Notes whose content would not change. */
   unchanged: string[];
+  /** Things the chosen layout cannot keep, such as template bodies in a `schemas:` note. */
+  warnings: string[];
 }
 
 const SCHEMA_KEYS = ['prefixes', 'schema', 'schemas', 'edgeTypes'] as const;
@@ -87,7 +89,7 @@ export function planImport(imp: ShaclImport, existing: ExistingNote[], opts: Imp
     prefixesFor.set(target, { ...prefixesFor.get(target), [p]: iri });
   }
 
-  const plan: ImportPlan = { writes: [], conflicts: [], unchanged: [] };
+  const plan: ImportPlan = { writes: [], conflicts: [], unchanged: [], warnings: [] };
   const byPath = new Map(existing.map((n) => [n.path, n]));
   for (const path of paths) {
     const g = groups.get(path)!;
@@ -102,6 +104,9 @@ export function planImport(imp: ShaclImport, existing: ExistingNote[], opts: Imp
       }
     }
     const title = titleOf(path);
+    for (const t of g.types) {
+      if (t.templateBody?.trim() && t.type !== title && !old) plan.warnings.push(`${t.type}: template body not kept, because ${path} declares several types and its body is documentation (import with --layout per-type to keep it)`);
+    }
     const fm = old?.frontmatter ?? {};
     const decl: Record<string, unknown> = {};
     for (const k of SCHEMA_KEYS) if (fm[k] !== undefined) decl[k] = clone(fm[k]);

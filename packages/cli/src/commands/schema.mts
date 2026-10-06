@@ -91,7 +91,7 @@ function runImport(ctx: Ctx, fileArg: string, vault: string, folder: string, fla
   }
   const code = plan.conflicts.length ? EXIT_FINDINGS : EXIT_OK;
   if (ctx.json) {
-    ctx.out(`${JSON.stringify({ file, types: imp.types.length, edgeTypes: imp.edgeTypes.length, writes: plan.writes.map(({ text: _t, ...w }) => w), unchanged: plan.unchanged, conflicts: plan.conflicts, dropped: imp.dropped }, null, 2)}\n`);
+    ctx.out(`${JSON.stringify({ file, types: imp.types.length, edgeTypes: imp.edgeTypes.length, writes: plan.writes.map(({ text: _t, ...w }) => w), unchanged: plan.unchanged, conflicts: plan.conflicts, warnings: plan.warnings, dropped: imp.dropped }, null, 2)}\n`);
     return code;
   }
   const lines = [`Imported ${imp.types.length} type${imp.types.length === 1 ? '' : 's'} and ${imp.edgeTypes.length} edge type${imp.edgeTypes.length === 1 ? '' : 's'} from ${relative(ctx.cwd, file)}.`];
@@ -100,6 +100,10 @@ function runImport(ctx: Ctx, fileArg: string, vault: string, folder: string, fla
   if (plan.conflicts.length) {
     lines.push('', 'Not changed:');
     for (const c of plan.conflicts) lines.push(`  ${c.message}`);
+  }
+  if (plan.warnings.length) {
+    lines.push('', 'Not kept by this layout:');
+    for (const w of plan.warnings) lines.push(`  ${w}`);
   }
   lines.push('', imp.dropped.length ? `Drop report (${imp.dropped.length} construct${imp.dropped.length === 1 ? '' : 's'} outside the TGS subset):` : 'Drop report: everything was imported.');
   for (const d of imp.dropped) lines.push(`  ${d.shape}: ${d.construct}`);

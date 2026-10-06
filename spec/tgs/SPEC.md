@@ -319,7 +319,7 @@ An importer MUST read:
 
 An importer MUST report, and otherwise skip, every construct outside this subset, including `sh:closed`, `sh:pattern`, `sh:minLength`, `sh:qualifiedValueShape`, `sh:sparql`, `sh:and`, `sh:xone`, `sh:not`, property paths other than a single IRI, unknown datatypes (read as `text`), `sh:maxCount` greater than 1 (read as many) and node shapes without a target class. It MUST import the rest of each shape.
 
-An importer that writes notes SHOULD write one note per type by default (or group types by `tgs:note`), MUST replace only the `schema`, `schemas`, `edgeTypes` and `prefixes` keys of an existing note, MUST NOT delete notes, and SHOULD refuse to rewrite a note that declares types missing from the import unless the user asks.
+An importer that writes notes SHOULD write one note per type by default (or group types by `tgs:note`), MUST replace only the `schema`, `schemas`, `edgeTypes` and `prefixes` keys of an existing note, MUST NOT delete notes, and SHOULD refuse to rewrite a note that declares types missing from the import unless the user asks. A note that declares several types has no template body, so an importer that groups types into one note SHOULD report each `tgs:templateBody` it cannot keep.
 
 ### 13.6 Round trip
 

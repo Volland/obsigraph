@@ -94,3 +94,11 @@ The system SHALL refuse to change a schema note that declares types not present 
 #### Scenario: Mixed note protected
 - **WHEN** `Types/Org.md` declares `Person` and `Team` and the import contains only `Person`
 - **THEN** the import reports the conflict and leaves `Types/Org.md` unchanged
+
+### Requirement: Layouts that cannot keep a template are reported
+The system SHALL report each template body that the chosen layout cannot keep, because a note declaring several types has no template body, and SHALL name the per-type layout as the way to keep it.
+
+#### Scenario: Single layout drops a template body
+- **WHEN** a type with a template body is imported with `--layout single`
+- **THEN** the import reports that its template body was not kept and suggests `--layout per-type`
+

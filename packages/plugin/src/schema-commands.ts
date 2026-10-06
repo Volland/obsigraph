@@ -214,6 +214,7 @@ class ImportReportModal extends Modal {
     list('Changed notes', plan.writes.map((w) => `${w.created ? 'Created' : 'Updated'} ${w.path}`));
     list('Unchanged', plan.unchanged);
     list('Not changed', plan.conflicts.map((c) => c.message.replace('--force', 'the CLI with --force')));
+    list('Not kept by this layout', plan.warnings);
     list('Dropped (outside the TGS subset)', imp.dropped.map((d) => `${d.shape}: ${d.construct}`));
     if (!imp.dropped.length) this.contentEl.createDiv({ text: 'Everything in the file was imported.', cls: 'obsigraph-status' });
   }

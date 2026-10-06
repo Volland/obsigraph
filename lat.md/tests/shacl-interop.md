@@ -30,6 +30,10 @@ Note path, template link, template body and visualization are written as `tgs:` 
 
 Import creates one note per type by default and a single note with `--layout single`.
 
+## Single layout warns about templates
+
+Importing into a single note reports each template body it cannot keep and names the per-type layout that does.
+
 ## Existing body kept
 
 Importing into an existing schema note replaces only its schema keys and leaves other frontmatter and the body unchanged.

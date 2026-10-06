@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Typed Graph Schema</title>
+  <meta name="description" content="Typed Graph Schema (TGS) is an open, hand-editable YAML format for the types of a markdown knowledge graph. It maps to and from W3C SHACL, so an ontology kept in your notes can be exchanged with RDF tools.">
+  <meta property="og:title" content="An ontology you can edit by hand, and hand to an RDF tool">
+  <meta property="og:description" content="Typed Graph Schema: schema notes in plain YAML that export to and import from W3C SHACL, published as an open specification with a JSON Schema and conformance examples.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 6 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>An ontology you can edit by hand, and hand to an RDF tool</h1>
+    <p class="standfirst">A typed vault needs somewhere to say what a Person is, what a Company is, and how they may relate. Typed Graph keeps that in ordinary notes, in YAML short enough to review in a pull request. Version 0.1 of the format is now an open specification, and it exports to and imports from W3C SHACL, so the same ontology can move between your notes and the RDF world.</p>
+
+    <h2>Where the ontology lives</h2>
+    <p>There is no separate ontology file. The schema is a folder of notes, <code>Types/</code> by default, and a note directly inside it declares types in its frontmatter. Notes elsewhere in the vault just say <code>type: Person</code>. That keeps the model next to the data, under the same version control, searchable and linkable like everything else.</p>
+    <p>A note can describe one type, with the body acting as the template for new notes of that type:</p>
+<pre>---
+schema:
+  properties:
+    name: text
+    email: {kind: text, required: true}
+    status: {kind: text, values: [active, alumni], default: active}
+  edges: {knows: Person, worksAt: Company}
+---
+## Notes</pre>
+    <p>Or it can describe a whole subsystem. <code>schemas:</code> holds as many types as you like, and <code>edgeTypes:</code> describes the relationships themselves:</p>
+<pre>---
+schemas:
+  Person:  {properties: {email: {required: true}}, edges: {worksAt: Company}}
+  Company: {uri: schema:Organization, properties: {founded: date}}
+edgeTypes:
+  worksAt:
+    uri: schema:worksFor
+    from: Person
+    to: Company
+    properties:
+      since: date
+      role: {kind: text, values: [engineer, manager], required: true}
+---
+How people and organisations relate.</pre>
+    <p>The choice of one note or many is yours. A small vault can keep one note per type. A team that wants one reviewable file for "billing" can put the whole billing model in one note.</p>
+
+    <h2>What the schema checks</h2>
+    <p>Validation is advisory. Nothing is removed from the graph and no note is rejected, but the status bar and <em>Show diagnostics</em> list what does not fit:</p>
+    <ul>
+      <li>a required property that is missing, or a value outside <code>values</code>;</li>
+      <li>an edge type the source type does not allow, a required edge that is absent, or a second edge where only one is allowed;</li>
+      <li>an edge that points at the wrong type of note, or leaves a type that is not in its <code>from</code> list;</li>
+      <li>an edge property that is missing, such as the <code>role</code> on <code>worksAt:: [[Acme]] {since: 2020}</code>.</li>
+    </ul>
+    <p>Links to notes that do not exist yet, and notes with no type, are never reported as having the wrong type, so a vault can be typed gradually.</p>
+    <p>Edge types are the part most note-based schemas leave out. In a property graph the relationship carries data too: <code>since</code>, <code>role</code>, a weight. Declaring those properties once, on the edge type, means every <code>worksAt</code> line in the vault is checked against the same description.</p>
+
+    <h2>Templates you do not have to write</h2>
+    <p>A new note made from a type takes its body from the first of three places: a note named by the type's <code>template</code> link, the body of the schema note, or a template generated from the schema. The generated one writes a key for every property, with defaults filled in, and an empty relation line for every allowed edge:</p>
+<pre>---
+type: Company
+name:
+founded:
+---
+
+## Notes
+
+## Relations
+
+- employs::</pre>
+    <p>The empty <code>employs::</code> line has no target, so it creates no edge and no stub node until you fill it in. Adding a property to the schema changes the next template, with nothing else to maintain.</p>
+
+    <h2>Why SHACL</h2>
+    <p>The Shapes Constraint Language is the W3C standard for saying what data should look like. It is what RDF tools, triple stores and semantic web pipelines already understand. Typed Graph's schema is a small, friendly subset of that idea: shapes for types, properties and relationships. So rather than invent an exchange format, TGS maps onto SHACL directly:</p>
+    <table>
+      <thead><tr><th>In your notes</th><th>In SHACL</th></tr></thead>
+      <tbody>
+        <tr><td>A type</td><td>A node shape with a target class</td></tr>
+        <tr><td><code>email: {required: true}</code></td><td>A property shape with <code>sh:datatype xsd:string</code>, <code>sh:minCount 1</code>, <code>sh:maxCount 1</code></td></tr>
+        <tr><td><code>values: [active, alumni]</code></td><td><code>sh:in ( "active" "alumni" )</code></td></tr>
+        <tr><td><code>worksAt: Company</code></td><td>A property shape with <code>sh:class</code> the Company class</td></tr>
+        <tr><td>An edge type with properties</td><td>A shape over <code>rdf:subject</code>, <code>rdf:predicate</code> and <code>rdf:object</code>, plus a property shape per edge property</td></tr>
+        <tr><td><code>uri: schema:Organization</code></td><td>The shape's target class IRI</td></tr>
+      </tbody>
+    </table>
+    <p>The edge type row deserves a word. An edge that carries <code>since</code> and <code>role</code> is a statement about a statement. Plain SHACL 1.0 has no direct way to say that, but it can constrain the RDF reification vocabulary, which every RDF toolkit knows. The export uses that, so any SHACL engine can read the result. The things SHACL has no word for, such as a type's visualization or the note it came from, are kept as annotations in a <code>tgs:</code> namespace that engines ignore.</p>
+
+    <h2>Export, import, and a real run</h2>
+    <p>From the command line, or the two plugin commands <em>Export schemas as SHACL</em> and <em>Import SHACL shapes</em>:</p>
+<pre>$ tg schema export shapes.ttl --vault example
+Exported 6 types and 2 edge types from Types/ to shapes.ttl as SHACL.
+
+$ tg schema import shapes.ttl --vault another-vault
+Imported 6 types and 2 edge types from shapes.ttl.
+  created Types/Company.md (Company)
+  created Types/Engineer.md (Engineer)
+  ...
+Drop report: everything was imported.</pre>
+    <p>That is the demo vault in the repository: its six type notes and one note of edge types come out as 327 lines of Turtle. Exporting twice gives the same bytes, so the file diffs cleanly in git. Importing it into an empty vault and exporting again also gives the same bytes. That round trip holds when each type goes back into its own note, which is the default. If you ask for <code>--layout single</code> to put everything in one note, the importer tells you which template bodies it could not keep, because a note that declares several types has no single body to be the template.</p>
+    <p>Importing someone else's shapes is the other direction. Point it at a file that uses schema.org IRIs and it creates types with a <code>uri</code> of <code>schema:Person</code> and properties with <code>schema:email</code>. Anything outside the supported subset, such as <code>sh:pattern</code>, <code>sh:closed</code>, <code>sh:or</code> over datatypes or a property path, is listed in a drop report with the shape it came from, and the rest of that shape is still imported. An import changes only the schema keys of the notes it writes, never deletes a note, and will not touch a note that also declares types missing from the file unless you pass <code>--force</code>.</p>
+
+    <h2>An open specification</h2>
+    <p>The format is no longer an internal detail. <a href="spec/tgs/v0.1/">Typed Graph Schema 0.1</a> is published as a standalone document that defines every key, its default and its meaning, the validation diagnostics and the SHACL mapping, without reference to this plugin's code. It comes with:</p>
+    <ul>
+      <li>a <a href="spec/tgs/v0.1/tgs.schema.json">JSON Schema</a> for the frontmatter, so an editor or a CI job can check a schema note;</li>
+      <li>five <a href="https://github.com/Volland/obsigraph/tree/main/spec/tgs/examples">conformance examples</a>, each a small vault with the declarations and diagnostics a correct implementation must produce;</li>
+      <li>three conformance levels: reader, validator, and SHACL exchanger;</li>
+      <li>a <a href="ns/tgs/">namespace page</a> for the <code>tgs:</code> annotations;</li>
+      <li>versioning rules: a published version never changes, minor versions only add optional keys, and a reader reports keys it does not know instead of failing.</li>
+    </ul>
+    <p>The reference implementation runs the same conformance examples in its test suite, so the specification and the code cannot drift apart unnoticed. If you build another reader, say a linter for a different editor, those examples are your test suite.</p>
+
+    <div class="callout">The spec text is CC BY 4.0, and the JSON Schema and examples are MIT. It is version 0.1, so expect it to grow: inheritance between types and RDF 1.2 reifiers are the first candidates, and neither will break a 0.1 note.</div>
+
+    <h2>Try it</h2>
+    <ol>
+      <li>Create a note in <code>Types/</code> with the command <em>Create schema note</em>, or copy one of the examples above.</li>
+      <li>Add a few <code>type: Person</code> notes and a <code>worksAt::</code> line or two, then open <em>Show diagnostics</em>.</li>
+      <li>Run <code>tg schema export shapes.ttl</code> and open the result, or load it into any SHACL-aware tool.</li>
+    </ol>
+    <p>The <a href="docs.html#schemas">docs</a> cover every key, and the <a href="spec/tgs/v0.1/">specification</a> is the reference. Questions and corrections are welcome in the <a href="https://github.com/Volland/obsigraph/issues">issue tracker</a>.</p>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB, lat.md or Google.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
