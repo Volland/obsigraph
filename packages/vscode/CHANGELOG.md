@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- Setup now installs `tg` 0.7.0, which adds `tg schema export` and `tg schema import` for exchanging Typed Graph Schema notes with SHACL. The extension itself does not read schema notes, so nothing else changes in the editor.
+
 ## 0.6.0
 
 - Typed edges written with markdown links (`knows:: [Bob](/people/bob.md)`) show up in backlinks and the graph, so Open Knowledge Format bundles work.
