@@ -35,3 +35,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[node-vault]] — shared Node loader listing and reading behaviors
 - [[graph-ui]] — shared renderer package behaviors
 - [[vscode-extension]] — VS Code indexer, backlinks, setup funnel, privacy and release behaviors
+- [[ontology-gallery]] — downloadable ontologies read, validate and compose

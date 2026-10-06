@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Files `tg init --agent claude` creates or changes in a fresh project; verified against the CLI by a test. */
-export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md'] as const;
+export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', 'lat.md/code-ontology.md', 'ontology/code-types.md'] as const;
 
 /** True when the workspace lacks `lat.md/` or any tg-managed instruction block. */
 export function needsSetup(workspace: string): boolean {

@@ -65,3 +65,20 @@ Skills shipped with the package.
 ### Skills installed
 
 `tg init --write` for Claude Code creates the docs-maintenance and graph-query skills under `.claude/skills/`.
+
+## Code ontology
+
+The shared vocabulary that `tg init` installs.
+
+### Ontology installed
+
+`tg init --write` creates `lat.md/code-ontology.md` and the TGS schema `ontology/code-types.md`, lists the note in the lat.md index, `tg check` passes, and the schema exports to SHACL with six types, eleven edge types and no diagnostics.
+
+### Ontology kept on re-run
+
+An ontology note that already exists is never overwritten, so a project can edit its vocabulary and run `tg init` again.
+
+### Ontology opt-out
+
+`--no-ontology` writes neither the note nor the schema.
+

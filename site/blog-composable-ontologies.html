@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Composable Ontology Graphs</title>
+  <meta name="description" content="A gallery of downloadable ontologies as plain Markdown (Zettelkasten, books, requirements, prompts and agents) and the rules for combining them: a shared core, multi-label notes and mixins.">
+  <meta property="og:title" content="Ontologies you can download, and combine">
+  <meta property="og:description" content="A gallery of downloadable ontologies as plain Markdown (Zettelkasten, books, requirements, prompts and agents) and the rules for combining them: a shared core, multi-label notes and mixins.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 6 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>Ontologies you can download, and combine</h1>
+    <p class="standfirst">A gallery of four ready-made ontologies as plain Markdown, how to use each, and the rules that let you put several into one graph without them stepping on each other.</p>
+
+<h2>Start from someone else&#39;s types</h2>
+<p>The hardest part of a typed graph is not the syntax. It is deciding what the types are. The <a href="blog-code-ontology.html">code ontology</a> answered that for one domain. This gallery does it for four, and each is a folder you can download and open:</p>
+<table>
+<thead>
+<tr>
+<th>Ontology</th>
+<th>Types</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Zettelkasten</strong></td>
+<td>Zettel, Source, Topic</td>
+<td>atomic notes that cite sources and live under topics</td>
+</tr>
+<tr>
+<td><strong>Book management</strong></td>
+<td>Book, Author, Series, Genre, Quote</td>
+<td>what you own, are reading, and want to read</td>
+</tr>
+<tr>
+<td><strong>Coding and requirements</strong></td>
+<td>Requirement, Scenario, Decision, Constraint, Concept, Change, Stakeholder, Release, Risk</td>
+<td>what the product SHALL do, why, for whom, and what could go wrong</td>
+</tr>
+<tr>
+<td><strong>Prompts and agents</strong></td>
+<td>Prompt, Agent, Tool, Skill, Knowledge, Eval</td>
+<td>a catalogue of prompts, agents and what they call and read</td>
+</tr>
+</tbody></table>
+<p>The <a href="ontologies.html">gallery page</a> has the downloads. There is also a fifth folder, <code>core</code>, which we will come back to, because it is the reason the other four can be combined.</p>
+<h2>What you are downloading</h2>
+<p>An ontology here is not a file format of its own. It is a folder:</p>
+<pre>library/
+  Types/
+    Library.md        the schema: types, edge types, properties
+  Examples/
+    Dune.md           a few notes so the graph is not empty
+    Frank Herbert.md
+  README.md</pre>
+<p><code>Library.md</code> is an ordinary Markdown note whose frontmatter is the schema, written in the open Typed Graph Schema (TGS) format:</p>
+<pre>---
+tgs: &quot;0.1&quot;
+schemas:
+  Book:
+    properties:
+      status: {values: [wishlist, to-read, reading, finished, abandoned], default: to-read}
+      rating: number
+      started: date
+    edges:
+      written_by: {target: Author, required: true}
+      in_series: Series
+edgeTypes:
+  in_series: {from: Book, to: Series, properties: {volume: number}}
+---</pre>
+<p>A data note says what it is with <code>type:</code> and links with typed edges:</p>
+<pre>---
+type: Book
+status: reading
+started: 2026-03-02
+---
+## Links
+
+written_by:: [[Frank Herbert]] {role: &quot;author&quot;}
+in_series:: [[Dune Chronicles]] {volume: 2}</pre>
+<p>Because the schema is data, the plugin can validate the note, color the graph by type, and offer the types when you create a note. A missing <code>written_by</code> is a warning on the note. Nothing is ever removed from the graph.</p>
+<h2>Using one</h2>
+<ol>
+<li>Download the <code>.zip</code> and unzip it.</li>
+<li>In Obsidian, open the folder as a vault and turn on the Typed Graph plugin. The schema folder is <code>Types/</code>, the plugin&#39;s default.</li>
+<li>Open an example note, then ask the graph something. In the book vault, what am I reading?</li>
+</ol>
+<pre>MATCH (b:Book {status: &quot;reading&quot;}) RETURN b.title, b.started ORDER BY b.started</pre>
+<ol start="4">
+<li>Delete <code>Examples/</code> and write your own notes.</li>
+</ol>
+<p>To add an ontology to a vault you already have, copy its schema notes into your schema folder. Notes without a matching <code>type:</code> are untouched.</p>
+<p>Outside Obsidian, the same files work from the command line, and <code>tg schema export shapes.ttl --vault &lt;folder&gt;</code> writes any of them as W3C SHACL for RDF tools.</p>
+<h2>Why composition needs rules</h2>
+<p>A single ontology is easy. The interesting case is a person who keeps a Zettelkasten, a reading list and a product backlog in one vault, or a team whose prompts and agents must point at the requirements they implement. They want the types of several ontologies at once.</p>
+<p>TGS lets you do that by putting several schema notes in the schema folder. Each note declares its own types and edge types, and the reader merges them. The rules are short, and they are written in the specification.</p>
+<ul>
+<li><strong>A type or edge type is declared once.</strong> If two notes declare the same name, the reader uses the one whose path sorts first and reports a duplicate naming both notes.</li>
+<li><strong>A note can have several labels.</strong> <code>type: [Book, Source]</code> gives the note the properties and edges of both. For properties the first declaration wins. For edges the allowed lists are combined.</li>
+<li><strong>Edge rules live in two places.</strong> A type says which edges it may have, an edge type says which types its ends may be, and when both name targets the type&#39;s entry wins for sources of that type.</li>
+</ul>
+<h2>What went wrong the first time</h2>
+<p>I put all four ontologies in one folder and ran the validator. Two diagnostics:</p>
+<pre>Types/Zettelkasten.md  Edge type 'contradicts' is declared in both Types/Requirements.md and Types/Zettelkasten.md; using Types/Requirements.md
+zettelkasten/Examples/Folders are enough.md  Edge 'contradicts' expects source type Requirement or Decision, found Zettel</pre>
+<p>Both ontologies used the word <code>contradicts</code>, and both declared it. The Zettelkasten wanted it between zettels. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other&#39;s edges became errors.</p>
+<p>Nothing was wrong with either ontology on its own. The clash only exists when they meet, which is exactly when you cannot see it from inside either one.</p>
+<h2>The shared core</h2>
+<p>The fix is a pattern, not a patch. An edge type that more than one ontology uses is declared once, in a small base note that every ontology builds on:</p>
+<pre>---
+tgs: &quot;0.1&quot;
+edgeTypes:
+  contradicts:
+    properties: {why: text, until: text, ticket: text}
+    visualization: {color: &quot;#e5484d&quot;, line: dashed}
+---</pre>
+<p>This is <code>core/Types/Core.md</code>. It says what the edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type&#39;s <code>edges</code> list, and how to draw it. Zettelkasten allows <code>contradicts</code> between zettels. Requirements allow it from a requirement or decision to a decision, requirement or constraint.</p>
+<p>Every download already contains <code>Core.md</code>, and <code>all.zip</code> is the four ontologies and the core composed in one vault. With the core in place, the same combined vault validates with no diagnostics.</p>
+<p>The rule of thumb: <strong>the first time a second ontology needs a word the first already declared, move the declaration to the core.</strong> Names that only one ontology uses stay in that ontology.</p>
+<h2>Bridging with a mixin</h2>
+<p>Sharing an edge name is the easy case. The harder one is a link that belongs to neither ontology: a prompt that implements a requirement. <code>Prompt</code> knows nothing about <code>Requirement</code>, and <code>Requirement</code> knows nothing about <code>Prompt</code>. You cannot add the edge to <code>Prompt</code> without editing the agents ontology, and editing a downloaded ontology is how you lose the ability to update it.</p>
+<p>The way out is a <strong>mixin</strong>: a small type, in your own bridge note, that exists only to grant an edge.</p>
+<pre>---
+schemas:
+  Traceable:
+    edges:
+      implements: Requirement
+edgeTypes:
+  implements: {to: Requirement}
+---</pre>
+<p>A note that needs the link takes both labels:</p>
+<pre>---
+type: [Prompt, Traceable]
+purpose: Explain token expiry
+---
+## Links
+
+implements:: [[Tokens expire after 15 minutes]]</pre>
+<p>Because allowed edges from several labels are combined, the note may have everything a <code>Prompt</code> may have and also <code>implements</code>. A prompt without the <code>Traceable</code> label that tries the same edge gets a warning that <code>implements</code> is not allowed. I ran both cases against the real validator, and they behave that way.</p>
+<p>This keeps each ontology intact. The agents ontology stays a download you can update. Your bridge note is yours, and it is a few lines.</p>
+<h2>The same trick for shared notes</h2>
+<p>Mixins also solve the case where one real thing belongs in two ontologies. A book you read is a <code>Book</code> in the library and a <code>Source</code> in your Zettelkasten. Do not make two notes. Label one:</p>
+<pre>---
+type: [Book, Source]
+author: Donella Meadows
+status: finished
+---
+## Links
+
+written_by:: [[Donella Meadows]]</pre>
+<p>Your zettel <code>cites::</code> it, and your reading log <code>written_by::</code> it. Both ontologies see the same node, with properties from each and no duplication. The test suite does exactly this and expects no diagnostics.</p>
+<h2>Design advice for your own ontologies</h2>
+<p>If you build one for the gallery or for your team, these are the habits that kept the four above composable.</p>
+<ul>
+<li><strong>Prefix a name only when you have to.</strong> Plain names such as <code>Book</code> and <code>cites</code> read well, but they are the ones that clash. Keep the generic words for the core and make anything specific to your domain unlikely to collide, such as <code>written_by</code> over <code>by</code>.</li>
+<li><strong>Do not restrict the ends of an edge type you expect others to reuse.</strong> Put the restriction on the type&#39;s own <code>edges</code> list, where it belongs to your ontology, and leave the edge type open.</li>
+<li><strong>Give every type and edge type a <code>uri</code> when you plan to exchange it.</strong> A type can say it is <code>schema:Book</code>, so a tool that knows schema.org understands it, and two ontologies that map to the same identifier can be matched even when their local names differ.</li>
+<li><strong>Keep one concern per ontology.</strong> A reading list and a Zettelkasten are separate until a note belongs to both, and then a label bridges them.</li>
+<li><strong>Test the composition, not only the parts.</strong> Each ontology here validates alone, and one test puts them all in a folder together. The clash above was found by that test, not by reading.</li>
+</ul>
+<h2>What it does not do</h2>
+<ul>
+<li><strong>There is no import statement.</strong> Composition is &quot;put the notes in the same folder&quot;. That is simple and it makes clashes yours to resolve.</li>
+<li><strong>Validation is advisory.</strong> A disallowed edge is a diagnostic on the note. It never blocks you and never deletes anything.</li>
+<li><strong>The <code>tg</code> command line does not validate against these schemas.</strong> In a code repository <code>tg check</code> verifies links and test coverage. The schemas are enforced by the Obsidian plugin and exported to other tools, and agents can read them.</li>
+<li><strong>They are starting points.</strong> Expect to rename half of every ontology. The point of making them plain notes is that renaming is an edit.</li>
+</ul>
+<h2>Try it</h2>
+<p>Download <a href="ontologies/all.zip">all.zip</a>, open it as a vault and look at the graph: a book, a zettel that cites it, a requirement and a prompt in one view, colored by type. Then remove the three ontologies you do not need.</p>
+<p>If you make one you would like to share, send a pull request to the <code>ontologies/</code> folder. It needs to read without diagnostics, and the tests check that for every ontology and for their composition.</p>
+<p class="note"><em>Typed Graph and the <code>tg</code> CLI are open source (MIT). Docs and the other articles are at <a href="https://volland.github.io/obsigraph/">volland.github.io/obsigraph</a>. TGS is an open specification and SHACL is a W3C standard.</em></p>
+
+    <div class="next">Related: <a href="ontologies.html">The ontology gallery: download and use →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

@@ -87,4 +87,20 @@ describe('code layer', () => {
     expect(new Set([file.color, sym.color, note.color]).size).toBe(3);
     expect(resolveNodeStyle(['CodeSymbol'], [{ name: 'settings', nodes: { CodeSymbol: { color: '#ff0000' } }, edges: {} }]).color).toBe('#ff0000');
   });
+
+  // @lat: [[tests/code-layer#Queryable code nodes#File type labels]]
+  it('labels sections below the title with the file type: list', () => {
+    const index = new LatIndex([
+      { path: 'lat.md/lat.md', text: '# Lat\n\nIndex.\n' },
+      { path: 'lat.md/req.md', text: '---\ntype: [Requirement, Scenario]\n---\n# Req\n\nTop.\n\n## Expiry\n\nTokens expire.\n' },
+      { path: 'lat.md/dec.md', text: '---\ntype: Decision # why\n---\n# Dec\n\nTop.\n\n## Stateless\n\nNo state.\n' },
+      { path: 'lat.md/blk.md', text: '---\ntype:\n  - Concept\n---\n# Blk\n\nTop.\n\n## Term\n\nA word.\n' },
+    ]);
+    const { graph: g } = buildLatGraph(index);
+    expect(g.node('lat.md/req#Req#Expiry')!.labels).toEqual(['Section', 'Requirement', 'Scenario']);
+    expect(g.node('lat.md/req#Req')!.labels).toEqual(['Section']);
+    expect(g.node('lat.md/dec#Dec#Stateless')!.labels).toEqual(['Section', 'Decision']);
+    expect(g.node('lat.md/blk#Blk#Term')!.labels).toEqual(['Section', 'Concept']);
+    expect(rows(g, 'MATCH (s:Requirement) RETURN s.section')).toEqual([['lat.md/req#Req#Expiry']]);
+  });
 });

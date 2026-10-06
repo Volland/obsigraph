@@ -29,6 +29,8 @@ export interface WikiRef {
 
 export interface Frontmatter {
   requireCodeMention?: boolean;
+  /** Labels from `type: Decision` or `type: [A, B]`; they label the file's sections below the title. */
+  types?: string[];
 }
 
 export interface ParsedMarkdown {
@@ -41,7 +43,32 @@ export interface ParsedMarkdown {
 export function parseFrontmatter(content: string): Frontmatter {
   const m = /^---\n([\s\S]*?)\n---/.exec(content);
   if (!m) return {};
-  return /require-code-mention:\s*true/i.test(m[1]!) ? { requireCodeMention: true } : {};
+  const out: Frontmatter = {};
+  if (/require-code-mention:\s*true/i.test(m[1]!)) out.requireCodeMention = true;
+  const types = fileTypes(m[1]!);
+  if (types.length) out.types = types;
+  return out;
+}
+
+/** The top-level `type:` key as a list of names: a scalar, an inline list or a block list. */
+function fileTypes(yaml: string): string[] {
+  const lines = yaml.split('\n');
+  const at = lines.findIndex((l) => /^type:/.test(l));
+  if (at === -1) return [];
+  const clean = (v: string) => v.trim().replace(/^["']|["']$/g, '').trim();
+  const rest = lines[at]!.slice(5).replace(/\s+#.*$/, '').trim();
+  let raw: string[];
+  if (rest.startsWith('[')) raw = rest.replace(/^\[|\]$/g, '').split(',');
+  else if (rest) raw = [rest];
+  else {
+    raw = [];
+    for (const l of lines.slice(at + 1)) {
+      const item = /^\s+-\s+(.*)$/.exec(l);
+      if (!item) break;
+      raw.push(item[1]!);
+    }
+  }
+  return [...new Set(raw.map(clean).filter(Boolean))];
 }
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;

@@ -2,6 +2,20 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **Code ontology in `tg init`.** `tg init --write` now also writes `lat.md/code-ontology.md`, a guide to six intent types (Decision, Requirement, Scenario, Constraint, Concept, Change) and eleven edge types (`implements`, `verifies`, `-contradicts`, `supersedes`, `motivated_by`, `constrains`, `refines`, `depends_on`, `defines`, `introduced_by`, `changed_by`), and `ontology/code-types.md`, the same vocabulary as a TGS schema that exports to SHACL (`tg schema export shapes.ttl --schema-folder ontology`). The note is appended to the lat.md index; neither file is overwritten on a later run. `--no-ontology` skips both, and `tg gen ontology.md` / `ontology-schema.md` print them.
+- **File types label sections.** A `type:` in a lat.md file's frontmatter (scalar, inline list or block list) labels every section below the title, so `tg cypher` can match `(s:Requirement)` or `(s:Decision)`.
+- **Ontology gallery.** `ontologies/` holds four downloadable ontologies as plain Markdown vaults (Zettelkasten, book management, requirements and coding, prompts and agents) plus a shared `core` that declares edge types several of them use, so they can be combined. The website has a gallery page with downloads and usage (`ontologies.html`; zips built by `npm run site:ontologies`) and an article on composing ontologies with a shared core, multi-label notes and mixins.
+- Articles: the coding-ontology article is extended and a new one covers using the ontology by role.
+
+### Changed
+
+- The agent instruction block and the `tg-graph` skill mention the ontology vocabulary.
+- `.gitignore` skips the rendered `articles/*.html`, whose code samples contain `@tg:` examples that `tg check` read as real annotations.
+
 ## 0.7.1 — 2026-10-06
 
 Fixes for the community review of 0.7.0.

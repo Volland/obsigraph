@@ -70,6 +70,10 @@ const INDEX = `# Project
 This directory defines the high-level concepts, business logic and architecture of the project in markdown, managed with the \`tg\` CLI (compatible with lat.md). Run \`tg check\` to validate it.
 `;
 
+const INDEX_ONTOLOGY = `
+- [[code-ontology]] — shared vocabulary of intent types and typed edges between intent and code
+`;
+
 function readJson(path: string): Record<string, unknown> {
   try {
     return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
@@ -86,14 +90,25 @@ function read(path: string): string | null {
   }
 }
 
-export function planInit(root: string, agent: string, migrate: boolean): { changes: Change[]; notes: string[] } {
+export function planInit(root: string, agent: string, migrate: boolean, ontology = true): { changes: Change[]; notes: string[] } {
   const changes: Change[] = [];
   const notes: string[] = [];
   const add = (rel: string, after: string) => {
     const before = read(join(root, rel));
     if (before !== after) changes.push({ path: rel, before, after });
   };
-  if (!existsSync(join(root, 'lat.md'))) add('lat.md/lat.md', INDEX);
+  if (!existsSync(join(root, 'lat.md'))) add('lat.md/lat.md', ontology ? `${INDEX}${INDEX_ONTOLOGY}` : INDEX);
+  if (ontology) {
+    // Project-owned once written: never overwritten, so local edits to the vocabulary survive a re-run.
+    for (const [rel, text] of [['lat.md/code-ontology.md', TEMPLATES.ontologyGuide], ['ontology/code-types.md', TEMPLATES.ontologySchema]] as const) {
+      if (!existsSync(join(root, rel))) add(rel, text);
+    }
+    // The lat.md index must list every file, or `tg check` would fail right after init.
+    const index = read(join(root, 'lat.md/lat.md'));
+    if (index !== null && !existsSync(join(root, 'lat.md/code-ontology.md')) && !index.includes('[[code-ontology]]')) {
+      add('lat.md/lat.md', `${index}${index.endsWith('\n') ? '' : '\n'}${INDEX_ONTOLOGY.trimStart()}`);
+    }
+  }
   const doc = agent === 'claude' ? 'CLAUDE.md' : 'AGENTS.md';
   if (agent === 'cursor') {
     add('.cursor/rules/tg.mdc', TEMPLATES.cursor);
@@ -114,9 +129,9 @@ export function planInit(root: string, agent: string, migrate: boolean): { chang
 
 export const init: Command = {
   name: 'init',
-  summary: 'Set up lat.md/, agent instructions, hooks, MCP and skills (dry run unless --write)',
-  usage: 'init [dir] [--agent claude|agents|cursor] [--write] [--migrate]',
-  flags: { write: 'bool', migrate: 'bool', agent: 'string' },
+  summary: 'Set up lat.md/, the code ontology, agent instructions, hooks, MCP and skills (dry run unless --write)',
+  usage: 'init [dir] [--agent claude|agents|cursor] [--write] [--migrate] [--no-ontology]',
+  flags: { write: 'bool', migrate: 'bool', agent: 'string', 'no-ontology': 'bool' },
   noProject: true,
   run(ctx, args, flags) {
     const root = resolve(ctx.cwd, args[0] ?? ctx.root);
@@ -125,7 +140,7 @@ export const init: Command = {
       ctx.err(`unknown agent "${agent}"; expected claude, agents or cursor\n`);
       return EXIT_ERROR;
     }
-    const { changes, notes } = planInit(root, agent, flags.has('migrate'));
+    const { changes, notes } = planInit(root, agent, flags.has('migrate'), !flags.has('no-ontology'));
     const write = flags.has('write');
     if (ctx.json) {
       ctx.out(`${JSON.stringify({ root, write, changes: changes.map((c) => ({ path: c.path, created: c.before === null })), notes })}\n`);

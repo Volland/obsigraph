@@ -38,6 +38,8 @@ Run `tg --help` when in doubt about available commands or options.
 - **Code refs**: `// @lat: [[section-id]]` (JS/TS/Rust/Go/C) or `# @lat: [[section-id]]` (Python) — a plain link from code to a concept.
 - **Typed code edges**: `// @tg: implements:: [[auth#Login]] {since: 2}` — a labeled edge from the next declaration to a section; `-contradicts::` makes it negative; a bare `// @tg: [[x]]` equals `@lat:`.
 
+- **Ontology**: if `lat.md/code-ontology.md` exists, use its edge names (`implements`, `verifies`, `-contradicts`, ...) instead of inventing synonyms, and give a file of decisions or requirements a `type:` in its frontmatter so `tg cypher` can label it.
+
 # Test specs
 
 Key tests can be described as sections in `lat.md/` files (e.g. `tests.md`). Add frontmatter to require that every leaf section is referenced by an `@lat:` or `@tg:` comment in test code:

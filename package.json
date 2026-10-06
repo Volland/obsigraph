@@ -14,6 +14,8 @@
     "verify": "npm run -s typecheck && vitest run --reporter=dot && lat check",
     "version:bump": "node scripts/version-bump.mjs",
     "site:build": "node site/build.mjs",
+    "site:ontologies": "node scripts/build-ontologies.mjs",
+    "site:articles": "node site/build-articles.mjs",
     "example:install": "node scripts/install-example.mjs",
     "build:vscode": "npm run build -w typegraph-vscode",
     "package:vscode": "npm run package -w typegraph-vscode",

@@ -2,9 +2,11 @@ import agents from '../../templates/agents.md';
 import cursor from '../../templates/cursor-rules.md';
 import docsSkill from '../../templates/skills/tg-docs/SKILL.md';
 import graphSkill from '../../templates/skills/tg-graph/SKILL.md';
+import ontologyGuide from '../../templates/ontology/code-ontology.md';
+import ontologySchema from '../../templates/ontology/code-types.md';
 import { EXIT_ERROR, EXIT_OK, register, type Command } from '../cli.mjs';
 
-export const TEMPLATES = { agents, cursor, docsSkill, graphSkill };
+export const TEMPLATES = { agents, cursor, docsSkill, graphSkill, ontologyGuide, ontologySchema };
 
 const TARGETS: Record<string, string> = {
   'agents.md': agents,
@@ -12,11 +14,13 @@ const TARGETS: Record<string, string> = {
   'cursor-rules.md': cursor,
   'skill.md': docsSkill,
   'graph-skill.md': graphSkill,
+  'ontology.md': ontologyGuide,
+  'ontology-schema.md': ontologySchema,
 };
 
 export const gen: Command = {
   name: 'gen',
-  summary: 'Print agent instructions: agents.md, claude.md, cursor-rules.md, skill.md, graph-skill.md',
+  summary: 'Print agent instructions: agents.md, claude.md, cursor-rules.md, skill.md, graph-skill.md, ontology.md, ontology-schema.md',
   usage: 'gen <target>',
   noProject: true,
   run(ctx, args) {

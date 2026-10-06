@@ -4,7 +4,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'spec/**', 'packages/core/**', 'packages/plugin/src/**', '.github/workflows/pages.yml']
+    paths: ['site/**', 'spec/**', 'ontologies/**', 'scripts/build-ontologies.mjs', 'packages/core/**', 'packages/plugin/src/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,6 +27,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run site:build
+      - run: node scripts/build-ontologies.mjs
       - name: Collect the publishable files
         run: |
           mkdir _site
@@ -34,6 +35,7 @@ jobs:
           cp -r site/assets _site/assets
           cp -r site/spec _site/spec
           cp -r site/ns _site/ns
+          cp -r site/ontologies _site/ontologies
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

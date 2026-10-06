@@ -136,3 +136,36 @@ it('installs both skills for Claude Code', async () => {
   expect(read(dir, '.claude/skills/tg-docs/SKILL.md')).toContain('name: tg-docs');
   expect(read(dir, '.claude/skills/tg-graph/SKILL.md')).toContain('name: tg-graph');
 });
+
+// @lat: [[tests/tg-agent#Code ontology#Ontology installed]]
+it('installs the ontology note and schema, and the project still checks clean', async () => {
+  const dir = project();
+  await tg(dir, ['init', '--write']);
+  expect(read(dir, 'lat.md/code-ontology.md')).toContain('# Code Ontology');
+  expect(read(dir, 'ontology/code-types.md')).toContain('edgeTypes:');
+  expect(read(dir, 'lat.md/lat.md')).toContain('[[code-ontology]]');
+  const checked = await tg(dir, ['check']);
+  expect(checked.err + checked.out).not.toContain('broken');
+  expect(checked.code).toBe(0);
+  const exported = await tg(dir, ['schema', 'export', 'shapes.ttl', '--schema-folder', 'ontology', '--json']);
+  const report = JSON.parse(exported.out) as { types: number; edgeTypes: number; diagnostics: unknown[] };
+  expect(report).toMatchObject({ types: 6, edgeTypes: 11, diagnostics: [] });
+});
+
+// @lat: [[tests/tg-agent#Code ontology#Ontology kept on re-run]]
+it('does not overwrite an edited ontology note on a later init', async () => {
+  const dir = project();
+  await tg(dir, ['init', '--write']);
+  writeFileSync(join(dir, 'lat.md/code-ontology.md'), '# Ours\n\nOur own words.\n');
+  const again = await tg(dir, ['init', '--write']);
+  expect(again.out).toContain('already set up');
+  expect(read(dir, 'lat.md/code-ontology.md')).toBe('# Ours\n\nOur own words.\n');
+});
+
+// @lat: [[tests/tg-agent#Code ontology#Ontology opt-out]]
+it('leaves the ontology out with --no-ontology', async () => {
+  const dir = project();
+  await tg(dir, ['init', '--write', '--no-ontology']);
+  expect(existsSync(join(dir, 'lat.md/code-ontology.md'))).toBe(false);
+  expect(existsSync(join(dir, 'ontology'))).toBe(false);
+});

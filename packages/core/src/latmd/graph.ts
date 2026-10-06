@@ -56,7 +56,7 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
       path: s.id,
       text: '',
       edges,
-      frontmatter: { type: 'Section', section: s.id, file: s.filePath, depth: s.depth, startLine: s.startLine, endLine: s.endLine, summary: s.firstParagraph },
+      frontmatter: { type: ['Section', ...(s.depth > 1 ? (index.files.get(s.filePath)?.frontmatter.types ?? []) : [])], section: s.id, file: s.filePath, depth: s.depth, startLine: s.startLine, endLine: s.endLine, summary: s.firstParagraph },
     });
     // Node titles default to the last path segment, which for a section id is not the heading.
     graph.node(s.id)!.props.title = s.heading;

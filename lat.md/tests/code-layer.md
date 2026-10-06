@@ -38,6 +38,10 @@ Cypher over code.
 
 `MATCH (c:CodeSymbol)-[r:implements]->(s) RETURN c.path, s.title` returns one row per implementing symbol, and relationship signs are queryable.
 
+### File type labels
+
+A `type:` scalar, inline list or block list in a lat.md file's frontmatter labels every section below the title with those names besides `Section`, so a query can match `Requirement` or `Decision`; the title section stays a plain `Section`.
+
 ## Link and node identity agree
 
 A link and a node with the same target are the same node.

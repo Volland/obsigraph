@@ -9,7 +9,7 @@ description: Query the lat.md section graph with openCypher through tg. Use when
 
 ## Model
 
-- Nodes: label `Section`, properties `section` (the lat id), `title`, `file`, `depth`, `startLine`, `endLine`, `summary`.
+- Nodes: label `Section` (plus the file's `type:` frontmatter, e.g. `Decision` or `Requirement`, on sections below the title), properties `section` (the lat id), `title`, `file`, `depth`, `startLine`, `endLine`, `summary`.
 - Edges: `contains` (parent section to child section) and `references` (a wiki link that resolves to a section).
 - Edge properties: `r.sign` (+1 or -1) and `r.id`.
 
@@ -24,6 +24,18 @@ MATCH (a:Section)-[:references]->(b:Section {title: "Packaging"}) RETURN a.secti
 
 // Biggest hubs
 MATCH (s:Section)<-[r:references]-() RETURN s.section, count(r) AS n ORDER BY n DESC LIMIT 10
+```
+
+## Ontology queries
+
+With the vocabulary in `lat.md/code-ontology.md` and `tg cypher --code annotated`:
+
+```cypher
+// Requirements nothing implements
+MATCH (s:Requirement) OPTIONAL MATCH (c)-[r:implements]->(s) WITH s, count(r) AS n WHERE n = 0 RETURN s.section
+
+// Knowing contradictions, with their expiry
+MATCH (c)-[r:contradicts]->(d) RETURN c.symbol, d.section, r.until, r.ticket
 ```
 
 ## Typed code edges

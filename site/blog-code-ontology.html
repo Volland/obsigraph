@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Using the Code Ontology</title>
+  <meta name="description" content="One small ontology that tg init installs: how developers, architects, product people and coding agents use it, and how it exports to SHACL.">
+  <meta property="og:title" content="One vocabulary for the whole team: using the code ontology">
+  <meta property="og:description" content="One small ontology that tg init installs: how developers, architects, product people and coding agents use it, and how it exports to SHACL.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 6 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>One vocabulary for the whole team: using the code ontology</h1>
+    <p class="standfirst">How developers, architects, product people and coding agents share one small ontology that <code>tg init</code> installs, that lives in plain files, and that exports to any tool that reads SHACL.</p>
+
+<h2>The problem it solves</h2>
+<p>In <a href="blog-typed-graph-for-coders.html">the first article</a> the argument was that a codebase has two graphs: the structure graph your tools derive, and the intent graph only people can write. Typed links connect them.</p>
+<p>That left a practical question: which types? If every team invents its own words, a developer writes <code>implements</code>, an architect writes <code>realizes</code>, an agent writes <code>relates_to</code>, and the graph stops answering questions because nobody asks for the same thing twice.</p>
+<p>So the vocabulary now ships with the tool. Run:</p>
+<pre>tg init --write</pre>
+<p>and next to the agent instructions, hooks and skills you get two more files:</p>
+<ul>
+<li><code>lat.md/code-ontology.md</code>, a short guide note: the types, the edges, the rules of use. It is an ordinary lat.md section, so <code>tg check</code> verifies its links, and people and agents find it with <code>tg search</code>.</li>
+<li><code>ontology/code-types.md</code>, the same vocabulary as a schema in the open Typed Graph Schema (TGS) format. It is YAML frontmatter in a Markdown note.</li>
+</ul>
+<p>Nothing here needs a server or a database. Both are files in git.</p>
+<h2>What is in it</h2>
+<p>Six kinds of intent, written by people:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>It records</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Decision</code></td>
+<td>a choice, its reason, the alternatives rejected</td>
+</tr>
+<tr>
+<td><code>Requirement</code></td>
+<td>something the system SHALL do</td>
+</tr>
+<tr>
+<td><code>Scenario</code></td>
+<td>a checkable example of a requirement</td>
+</tr>
+<tr>
+<td><code>Constraint</code></td>
+<td>a rule nobody here chose: a regulation, an SLA, a platform limit</td>
+</tr>
+<tr>
+<td><code>Concept</code></td>
+<td>a domain term with one exact meaning</td>
+</tr>
+<tr>
+<td><code>Change</code></td>
+<td>a unit of work that moves intent and code together</td>
+</tr>
+</tbody></table>
+<p>Code is the other layer. <code>tg</code> derives <code>CodeFile</code> and <code>CodeSymbol</code> nodes from your source, so you never write them.</p>
+<p>Eleven kinds of edge connect the two:</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Edges</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Is it built, and does it work?</td>
+<td><code>implements</code>, <code>verifies</code></td>
+</tr>
+<tr>
+<td>Does it agree?</td>
+<td><code>-contradicts</code>, <code>supersedes</code></td>
+</tr>
+<tr>
+<td>Why is it this way?</td>
+<td><code>motivated_by</code>, <code>constrains</code>, <code>refines</code></td>
+</tr>
+<tr>
+<td>What does it touch?</td>
+<td><code>depends_on</code>, <code>defines</code></td>
+</tr>
+<tr>
+<td>How did it change?</td>
+<td><code>introduced_by</code>, <code>changed_by</code></td>
+</tr>
+</tbody></table>
+<p>The minus sign is reserved for disagreement. Facts about the relationship go on the relationship: <code>since</code>, <code>until</code>, <code>ticket</code>, <code>confidence</code>.</p>
+<h2>Writing it down</h2>
+<p>There are two things to do, and both are small.</p>
+<p><strong>Give a file a type.</strong> Put <code>type:</code> in the frontmatter of any file under <code>lat.md/</code>, and every section below its title gets that label:</p>
+<pre>---
+type: Requirement
+---
+# Requirements
+
+Authentication requirements for the API.
+
+## Token expiry
+
+Access tokens SHALL expire after 15 minutes.</pre>
+<p>A file holds one kind of thing, or a list: <code>type: [Requirement, Scenario]</code>.</p>
+<p><strong>Link code to intent</strong> with a comment above the declaration it describes:</p>
+<pre>// @<span></span>tg: implements:: [[requirements#Token expiry]] {since: &quot;2.3&quot;}
+export function verifyToken() {}
+
+// @<span></span>tg: -contradicts:: [[decisions#Stateless sessions]] {until: &quot;2026-Q4&quot;}
+export function session() {}</pre>
+<p>Then ask the graph. I ran these in a scratch project with exactly the files above plus a second requirement, <code>Refresh</code>, that nothing implements. The output is real:</p>
+<pre>tg cypher --code annotated &quot;
+  MATCH (s:Requirement)
+  OPTIONAL MATCH (c)-[r:implements]-&gt;(s)
+  WITH s, count(r) AS n WHERE n = 0
+  RETURN s.section&quot;
+
+s.section
+--------------------------------------------
+lat.md/requirements#Requirements#Refresh</pre>
+<pre>tg cypher --code annotated &quot;MATCH (c)-[r:contradicts]-&gt;(d) RETURN c.symbol, d.section, r.until, r.ticket&quot;
+
+c.symbol | d.section                                     | r.until | r.ticket
+session  | lat.md/decisions#Decisions#Stateless sessions | 2026-Q4 | null</pre>
+<p>One requirement nothing implements, and one place where the code knowingly goes against a decision, with an expiry date. Neither answer needed a meeting.</p>
+<h2>Who does what</h2>
+<p>The same graph serves four kinds of reader. What differs is which part each one owns.</p>
+<h3>Developers</h3>
+<p>You own the <code>@<span></span>tg:</code> comments. The habit is the same as a test: when you write a function that realizes a requirement, you say so in one line above it. When you work against a decision and cannot fix it today, you write <code>-contradicts</code> with an <code>until</code> and a ticket, so the debt names what it is against.</p>
+<p>Before you finish, <code>tg check</code> tells you if a link points at something that no longer exists. In review, a missing or wrong edge shows up in the diff like any other line.</p>
+<h3>Architects</h3>
+<p>You own Decisions, Constraints and Concepts. A decision is a section: what was decided, why, and what was rejected. A constraint names its <code>source</code>, because a constraint nobody can trace is a rumor.</p>
+<p>The edges you read are <code>contradicts</code> and <code>supersedes</code>. The first query is &quot;every knowing contradiction, soonest expiry first&quot;. The second is &quot;decisions with nothing superseding them&quot;, which is your list of what is still live.</p>
+<h3>Product</h3>
+<p>You own Requirements and Scenarios. Tag them with a <code>status</code> (draft, stable, deprecated), a <code>risk</code> (low, medium, high) and an <code>owner</code>. Those three cover most of what gets asked.</p>
+<p>Your questions are coverage questions. What did we promise that nothing implements? What is implemented but has no test that proves it? The second is one query:</p>
+<pre>tg cypher --code annotated &quot;
+  MATCH (s:Requirement)&lt;-[:implements]-(c)
+  OPTIONAL MATCH (t)-[v:verifies]-&gt;(s)
+  WITH s, count(v) AS n WHERE n = 0
+  RETURN DISTINCT s.section&quot;</pre>
+<p>In the scratch project it returned <code>Token expiry</code>: built, never verified.</p>
+<p>You do not need to read code. You need the section names, and the graph tells you which are healthy.</p>
+<h3>Agents</h3>
+<p>An agent reads the project cold. The ontology gives it two things the files alone cannot.</p>
+<p>First, a vocabulary. <code>tg init</code> adds a line to the managed block in <code>CLAUDE.md</code> or <code>AGENTS.md</code> telling the agent to use the edge names in <code>lat.md/code-ontology.md</code> and not to invent synonyms. A model that writes <code>@<span></span>tg: realizes::</code> is guessing. One that reads the guide writes <code>implements</code>.</p>
+<p>Second, a way to ask. Over MCP the agent calls <code>tg_cypher</code> with the queries above, so &quot;what is the rule here and what is a workaround?&quot; becomes a lookup. The <code>tg-graph</code> skill that <code>tg init</code> installs includes the ontology queries as examples.</p>
+<p>An agent should write edges, and a person reads them before they land. An edge is a claim, and a claim nobody has read is the same as no claim.</p>
+<h2>Taking it somewhere else</h2>
+<p>The schema is the portable part. TGS is an open format with a JSON Schema, and it maps to the W3C SHACL standard:</p>
+<pre>tg schema export shapes.ttl --schema-folder ontology</pre>
+<p>That writes the six types and eleven edge types as SHACL shapes in Turtle; the test suite checks that the export reports exactly those counts and no diagnostics. Hand the file to any RDF tool, load it into a triple store, or keep it as the contract between teams. <code>tg schema import</code> goes the other way, so an existing SHACL model can become a schema note you edit by hand.</p>
+<p>In Obsidian, open the project folder as a vault and set the schema folder to <code>ontology</code>. The plugin validates notes against the types and colors the graph by type, and the schema styles <code>contradicts</code> as a red dashed line. The same approach works for a research vault, a company wiki or a product spec folder: only what the node types mean changes.</p>
+<p>Because the vocabulary is data, a team that disagrees with a name changes one file. Rename <code>Decision</code> to <code>ADR</code>, drop <code>Concept</code>, add <code>Risk</code>, and the exported shapes follow.</p>
+<h2>What it does not do</h2>
+<p>The limits decide whether this fits you.</p>
+<ul>
+<li><strong>Names are a convention, not a lock.</strong> <code>tg check</code> validates that links resolve and that test specs are covered. It does not reject an edge name that is missing from the schema. The schema is enforced in an Obsidian vault, exported to other tools, and read by agents.</li>
+<li><strong>Typed edges start in code.</strong> <code>@<span></span>tg:</code> types the edge from a declaration to a section. A link between two sections in <code>lat.md/</code> is a plain <code>references</code> edge in <code>tg cypher</code>, so write the relation in the sentence (&quot;This replaces ...&quot;) and keep the typed edge for code or an Obsidian vault.</li>
+<li><strong><code>type:</code> labels a whole file.</strong> Every section below the title gets it, so keep one kind of thing per file.</li>
+<li><strong>It costs writing.</strong> A generator would write less, and the previous article explains why a generated intent graph cannot check the code. If you only need checked links, plain <code>@<span></span>lat:</code> comments are cheaper.</li>
+</ul>
+<h2>Start in ten minutes</h2>
+<pre>npm install -g @typedgraph/cli
+cd your-project
+tg init            # dry run: shows every file it would write
+tg init --write</pre>
+<p>Then:</p>
+<ol>
+<li>Create <code>lat.md/requirements.md</code> with <code>type: Requirement</code> and three requirements you actually argue about.</li>
+<li>Add one <code>@<span></span>tg: implements::</code> above the function that does each, and one <code>verifies::</code> above a test.</li>
+<li>Run <code>tg check</code>, then the &quot;requirements nothing implements&quot; query.</li>
+<li>If the answer surprised you, write the decisions next. If it didn&#39;t, stop and use plain links.</li>
+</ol>
+<p><code>tg init</code> does not overwrite the two ontology files on later runs, so edit them to fit your team. Pass <code>--no-ontology</code> for the agent setup without them. These features are in the next release; until then, build <code>tg</code> from this repository.</p>
+<hr>
+<p>Want ontologies for other domains, such as books, notes or agents? See the <a href="ontologies.html">ontology gallery</a> and <a href="blog-composable-ontologies.html">how they combine</a>.</p>
+<p class="note"><em>Typed Graph and the <code>tg</code> CLI are open source (MIT). Docs and the other articles are at <a href="https://volland.github.io/obsigraph/">volland.github.io/obsigraph</a>. TGS is an open specification and SHACL is a W3C standard. lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it.</em></p>
+
+    <div class="next">Related: <a href="blog-typed-graph-for-coders.html">Your codebase has two graphs. You only maintain one. →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

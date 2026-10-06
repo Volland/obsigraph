@@ -181,7 +181,7 @@ owner: platform
 # auth Specification
 ```
 
-- **`type`** becomes the node's label, so a query can say `MATCH (s:Spec)` instead of "some Markdown file". A list gives several labels. The graph model also supports configurable fallbacks that map a folder or a tag to a type when the frontmatter is absent, which suits a convention like "everything under `openspec/specs/` is a `Spec`".
+- **`type`** becomes the node's label, so a query can say `MATCH (s:Spec)` instead of "some Markdown file". A list gives several labels. In a vault this labels the note. In a `lat.md/` folder it labels every section below the file's title, so a file of decisions with `type: Decision` gives you `MATCH (d:Decision)`. The vault graph model also supports configurable fallbacks that map a folder or a tag to a type when the frontmatter is absent.
 - **Tags** are the orthogonal axis. Types say *what kind of thing* it is. Tags say which concerns it touches: a capability, a risk class, a team, a release. You will want to ask "show me every `security` spec that has no test", and that is a tag filter combined with a graph traversal.
 
 A habit that pays off: tag specs by **capability** (what area), **risk** (what happens if it's wrong) and **status** (draft, stable, deprecated). Those three cover most of the questions people ask in practice.
@@ -194,9 +194,11 @@ If you are going to type your graph, the first question is: which types? This is
 
 The opposite failure is also real. If every edge is `related_to`, you are back to untyped links.
 
-The rule I'd suggest: **a type earns its place only if you would ask a question that depends on it.** If you can't name the query, drop the type. What follows is a deliberately small starting set, about seven kinds of node and about ten kinds of edge, designed around the questions engineers and agents actually ask.
+The rule I'd suggest: **a type earns its place only if you would ask a question that depends on it.** If you can't name the query, drop the type. What follows is a deliberately small starting set, six kinds of intent node and eleven kinds of edge, designed around the questions engineers and agents actually ask.
 
-To be clear about the status of what follows: this is a **proposal**, a conventions layer you can adopt today. Edge types are free-form in the syntax (the word before `::` is whatever you write), and node types are whatever you put in `type:`. None of the names below are built in or enforced. Treat them as a vocabulary to agree on with your team, and write them into a schema note so the tool can warn when someone invents a synonym.
+To be clear about the status of what follows: this is a **convention**, and in the next release it ships with the tool. `tg init --write` installs it as two files: a guide note, `lat.md/code-ontology.md`, and a Typed Graph Schema, `ontology/code-types.md`. A [follow-up article](code-ontology-in-practice.md) shows how each role uses them.
+
+It is still a convention and not an enforced rule. Edge types are free-form in the syntax (the word before `::` is whatever you write), and node types are whatever you put in `type:`. `tg check` does not reject an unknown edge name. The schema is what an Obsidian vault validates against, what exports to SHACL for other tools, and what an agent reads to stop inventing synonyms. The files are yours after the first run: `tg init` never overwrites them.
 
 ### The two layers
 
@@ -250,7 +252,7 @@ These two are the backbone. With only these, you already get coverage questions:
 
 - `introduced_by` / `changed_by` (anything → change): ties a requirement or decision to the change that created or altered it. In OpenSpec terms, the archived change is the provenance.
 
-Ten edge types. A useful sanity check on any vocabulary like this is to count how many of them you can explain with a one-line query. For these, you can.
+Eleven edge types, counting `introduced_by` and `changed_by` separately. A useful sanity check on any vocabulary like this is to count how many of them you can explain with a one-line query. For these, you can.
 
 ### Using the sign and the properties
 
@@ -297,7 +299,9 @@ A fair account has to include the price.
 
 **If you only need checked links, plain links are enough.** Typing pays off when you want to *ask* the graph things, or when you want contradiction and verification recorded as separate facts. If neither is true for you, the untyped format is simpler and costs nothing extra.
 
-**The ontology above is a starting point, not a standard.** It is small on purpose and it has not been battle-tested across many teams. Expect to rename half of it.
+**The ontology above is a starting point, not a standard.** It is small on purpose and it has not been battle-tested across many teams. Expect to rename half of it. It is declared in the open TGS format, so renaming means editing one note, and the result still exports to SHACL.
+
+**Typed edges between two sections stay plain links in the CLI.** The `@tg:` syntax types the edge from code to a section. A line like `supersedes:: [[x]]` inside a `lat.md/` section is a `references` edge in `tg cypher`. Decision-to-decision relations are typed in an Obsidian vault, where the plugin reads them.
 
 **OpenSpec files are not yet graph nodes in the CLI.** As covered above, today you bridge them through `lat.md/` sections and tags. That is a real gap.
 
@@ -317,11 +321,12 @@ Don't start with the ontology. Start with five sections.
 npm install -g @typedgraph/cli
 cd your-project
 tg init          # dry run: prints a diff, writes nothing
+tg init --write  # agent files, hooks, skills, and the code ontology
 tg check
 tg cypher --code annotated "MATCH (c:CodeSymbol)-[r]->(s:Section) RETURN c.symbol, type(r), s.title"
 ```
 
-`tg init` sets the project up for Claude Code, Cursor or any agent that reads `AGENTS.md`. It writes nothing without `--write`, and it installs a prompt hook that reminds the agent to search the docs before it works and a stop hook that blocks it from finishing when the check fails or when it changed a lot of code without touching the docs.
+`tg init` sets the project up for Claude Code, Cursor or any agent that reads `AGENTS.md`. It writes nothing without `--write`, adds the code ontology note and schema (skip them with `--no-ontology`), and installs a prompt hook that reminds the agent to search the docs before it works and a stop hook that blocks it from finishing when the check fails or when it changed a lot of code without touching the docs.
 
 ---
 
@@ -335,4 +340,4 @@ Everything else, the structure, the symbols, the call edges, the index and the c
 
 ---
 
-*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [typedgraph.org](https://typedgraph.org). lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it. OpenSpec is a separate project, and nothing here implies it is affiliated either.*
+*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/). lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it. OpenSpec is a separate project, and nothing here implies it is affiliated either.*

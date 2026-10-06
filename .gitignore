@@ -6,8 +6,13 @@ lat.md/.cache/
 .DS_Store
 site/assets/demo.js
 site/spec/
+site/ontologies/
 site/ns/
 example/.obsidian/*
 !example/.obsidian/community-plugins.json
 packages/vscode/dist/
 packages/vscode/*.vsix
+
+# Rendered articles (quarto); their code samples contain @tg: examples that are not real annotations
+articles/*.html
+articles/*_files/
