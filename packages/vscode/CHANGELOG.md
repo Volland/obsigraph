@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+- Typed edges written with markdown links (`knows:: [Bob](/people/bob.md)`) show up in backlinks and the graph, so Open Knowledge Format bundles work.
+- A frontmatter `title` is used as the node title in the graph.
+- Published on Open VSX as `pavlyshyn.typegraph-vscode`; the manifest's publisher now matches.
+
 ## 0.5.0
 
 - Typed backlinks panel for the active markdown note or source file, grouped by edge type with sign and properties.
