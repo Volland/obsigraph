@@ -7,6 +7,9 @@ edgeTypes:
       until: text
       ticket: text
     visualization: {color: "#e5484d", line: dashed}
+  derived_from:
+    properties:
+      transform: text
 ---
 The shared core: edge types that more than one ontology uses, declared once so the ontologies can be combined without a duplicate-declaration clash.
 

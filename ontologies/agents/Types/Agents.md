@@ -54,7 +54,6 @@ edgeTypes:
   has_skill: {from: Agent, to: Skill}
   reads: {from: Agent, to: Knowledge}
   delegates_to: {from: Agent, to: Agent, properties: {when: text}}
-  derived_from: {from: Prompt, to: Prompt}
   composes: {from: Prompt, to: Prompt, properties: {order: number}}
   evaluated_by:
     from: [Prompt, Agent]
@@ -66,3 +65,5 @@ edgeTypes:
 The prompt and agent ontology: a gallery of prompts, the agents that use them, the tools and skills those agents call and the knowledge they read, each scored by evals.
 
 `autonomy` says how far an agent may act alone, and a tool's `side_effects` says what a call can break, so a query can find every autonomous agent that can reach a destructive tool.
+
+`derived_from` is declared once in the shared `core` ontology; here each type only says what it may derive from.

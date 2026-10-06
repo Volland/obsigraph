@@ -8,6 +8,7 @@ Ready-made Typed Graph ontologies. Each one is a folder of plain Markdown: schem
 | `library/` | book management: books, authors, series, genres, quotes |
 | `requirements/` | coding and requirement management: requirements, decisions, constraints, releases, risks |
 | `agents/` | a catalogue of prompts, agents, tools, skills, knowledge and evals |
+| `okf/` | a data catalog (tables, metrics, dashboards, terms, runbooks) that exports as an Open Knowledge Format bundle |
 | `core/` | edge types shared by several ontologies, declared once so they can be combined |
 
 ## Use one

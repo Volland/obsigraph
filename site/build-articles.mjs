@@ -74,6 +74,7 @@ for (const p of POSTS) {
         <a href="docs.html">Docs</a>
         <a href="demo.html">Demo</a>
         <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
         <a href="blog.html" class="active">Blog</a>
         <a href="https://github.com/Volland/obsigraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>

@@ -1,12 +1,12 @@
 # Ontologies you can download, and combine
 
-*A gallery of four ready-made ontologies as plain Markdown, how to use each, and the rules that let you put several into one graph without them stepping on each other.*
+*A gallery of five ready-made ontologies as plain Markdown, how to use each, and the rules that let you put several into one graph without them stepping on each other.*
 
 ---
 
 ## Start from someone else's types
 
-The hardest part of a typed graph is not the syntax. It is deciding what the types are. The [code ontology](code-ontology-in-practice.md) answered that for one domain. This gallery does it for four, and each is a folder you can download and open:
+The hardest part of a typed graph is not the syntax. It is deciding what the types are. The [code ontology](code-ontology-in-practice.md) answered that for one domain. This gallery does it for five, and each is a folder you can download and open:
 
 | Ontology | Types | For |
 |---|---|---|
@@ -14,8 +14,9 @@ The hardest part of a typed graph is not the syntax. It is deciding what the typ
 | **Book management** | Book, Author, Series, Genre, Quote | what you own, are reading, and want to read |
 | **Coding and requirements** | Requirement, Scenario, Decision, Constraint, Concept, Change, Stakeholder, Release, Risk | what the product SHALL do, why, for whom, and what could go wrong |
 | **Prompts and agents** | Prompt, Agent, Tool, Skill, Knowledge, Eval | a catalogue of prompts, agents and what they call and read |
+| **OKF knowledge catalog** | Table, Metric, Dashboard, Term, Runbook, Person | a data catalog that exports as an [Open Knowledge Format](blog-okf-ready.html) bundle |
 
-The [gallery page](ontologies.html) has the downloads. There is also a fifth folder, `core`, which we will come back to, because it is the reason the other four can be combined.
+The [gallery page](ontologies.html) has the downloads. There is also a sixth folder, `core`, which we will come back to, because it is the reason the other five can be combined.
 
 ## What you are downloading
 
@@ -94,7 +95,7 @@ TGS lets you do that by putting several schema notes in the schema folder. Each 
 
 ## What went wrong the first time
 
-I put all four ontologies in one folder and ran the validator. Two diagnostics:
+I put the ontologies in one folder and ran the validator. Two diagnostics:
 
 ```
 Types/Zettelkasten.md  Edge type 'contradicts' is declared in both Types/Requirements.md and Types/Zettelkasten.md; using Types/Requirements.md
@@ -102,6 +103,8 @@ zettelkasten/Examples/Folders are enough.md  Edge 'contradicts' expects source t
 ```
 
 Both ontologies used the word `contradicts`, and both declared it. The Zettelkasten wanted it between zettels. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other's edges became errors.
+
+It happened again when I added the OKF ontology: `derived_from` meant "this prompt was based on that prompt" in one and "this table is built from that table" in the other. The validator said so in the same words, and the fix was the same.
 
 Nothing was wrong with either ontology on its own. The clash only exists when they meet, which is exactly when you cannot see it from inside either one.
 
@@ -116,12 +119,14 @@ edgeTypes:
   contradicts:
     properties: {why: text, until: text, ticket: text}
     visualization: {color: "#e5484d", line: dashed}
+  derived_from:
+    properties: {transform: text}
 ---
 ```
 
-This is `core/Types/Core.md`. It says what the edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type's `edges` list, and how to draw it. Zettelkasten allows `contradicts` between zettels. Requirements allow it from a requirement or decision to a decision, requirement or constraint.
+This is `core/Types/Core.md`. It says what each edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type's `edges` list, and how to draw it. Prompts derive from prompts and tables from tables, because each type's own `edges` list says so. Zettelkasten allows `contradicts` between zettels. Requirements allow it from a requirement or decision to a decision, requirement or constraint.
 
-Every download already contains `Core.md`, and `all.zip` is the four ontologies and the core composed in one vault. With the core in place, the same combined vault validates with no diagnostics.
+Every download already contains `Core.md`, and `all.zip` is the five ontologies and the core composed in one vault. With the core in place, the same combined vault validates with no diagnostics.
 
 The rule of thumb: **the first time a second ontology needs a word the first already declared, move the declaration to the core.** Names that only one ontology uses stay in that ontology.
 
@@ -177,13 +182,24 @@ Your zettel `cites::` it, and your reading log `written_by::` it. Both ontologie
 
 ## Design advice for your own ontologies
 
-If you build one for the gallery or for your team, these are the habits that kept the four above composable.
+If you build one for the gallery or for your team, these are the habits that kept the five above composable.
 
 - **Prefix a name only when you have to.** Plain names such as `Book` and `cites` read well, but they are the ones that clash. Keep the generic words for the core and make anything specific to your domain unlikely to collide, such as `written_by` over `by`.
 - **Do not restrict the ends of an edge type you expect others to reuse.** Put the restriction on the type's own `edges` list, where it belongs to your ontology, and leave the edge type open.
 - **Give every type and edge type a `uri` when you plan to exchange it.** A type can say it is `schema:Book`, so a tool that knows schema.org understands it, and two ontologies that map to the same identifier can be matched even when their local names differ.
 - **Keep one concern per ontology.** A reading list and a Zettelkasten are separate until a note belongs to both, and then a label bridges them.
-- **Test the composition, not only the parts.** Each ontology here validates alone, and one test puts them all in a folder together. The clash above was found by that test, not by reading.
+- **Test the composition, not only the parts.** Each ontology here validates alone, and one test puts them all in a folder together. Both clashes above were found by that test, not by reading.
+
+## The OKF ontology
+
+The fifth ontology exists because of a format, not a domain. The Open Knowledge Format is a folder of Markdown concepts that an agent can read without an SDK, and a conformant bundle needs a `type` on every concept and benefits from a `title`, `description`, `resource` and `tags`. The OKF ontology bakes those keys into every type and makes `description` required, so a vault that follows it exports cleanly:
+
+```
+tg export bundle --format okf
+tg okf check bundle
+```
+
+The example catalog (tables, a metric, a dashboard, a glossary term, a runbook and their owner) exports with no conformance errors, and the typed edges survive as prose with bundle-absolute links, which is how OKF expects relationships to be told. [Getting your vault OKF-ready](blog-okf-ready.html) covers the format itself.
 
 ## What it does not do
 
@@ -194,7 +210,7 @@ If you build one for the gallery or for your team, these are the habits that kep
 
 ## Try it
 
-Download [all.zip](ontologies/all.zip), open it as a vault and look at the graph: a book, a zettel that cites it, a requirement and a prompt in one view, colored by type. Then remove the three ontologies you do not need.
+Download [all.zip](ontologies/all.zip), open it as a vault and look at the graph: a book, a zettel that cites it, a requirement and a prompt in one view, colored by type. Then remove the ontologies you do not need.
 
 If you make one you would like to share, send a pull request to the `ontologies/` folder. It needs to read without diagnostics, and the tests check that for every ontology and for their composition.
 

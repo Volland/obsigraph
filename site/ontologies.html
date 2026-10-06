@@ -57,7 +57,7 @@
         <h3>Book management</h3>
         <p>What you own, are reading and want to read, with authors, series, genres and saved quotes. <code>status</code>, <code>started</code> and <code>finished</code> give you a reading log.</p>
         <p class="chips"><strong>5 types</strong> <span class="tag">Book</span> <span class="tag">Author</span> <span class="tag">Series</span> <span class="tag">Genre</span> <span class="tag">Quote</span></p>
-        <p class="chips"><strong>7 edge types</strong> <span class="tag">written_by</span> <span class="tag">in_series</span> <span class="tag">has_genre</span> <span class="tag">sequel_of</span> <span class="tag">inspired_by</span> <span class="tag">influenced</span> <span class="tag">quoted_from</span></p>
+        <p class="chips"><strong>6 edge types</strong> <span class="tag">written_by</span> <span class="tag">in_series</span> <span class="tag">has_genre</span> <span class="tag">sequel_of</span> <span class="tag">inspired_by</span> <span class="tag">influenced</span> <span class="tag">quoted_from</span></p>
         <p class="asks"><em>It answers:</em> What am I reading? Which series have I started and not finished?</p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/library.zip" download>Download vault (.zip)</a>
@@ -89,8 +89,20 @@
           <a class="btn" href="https://github.com/Volland/obsigraph/tree/main/ontologies/agents">GitHub</a>
         </div>
       </div>
+      <div class="card onto" id="okf">
+        <h3>OKF knowledge catalog</h3>
+        <p>Tables, metrics, dashboards, glossary terms, runbooks and their owners, with the keys the Open Knowledge Format recommends on every type. A vault using it exports as a conformant OKF bundle.</p>
+        <p class="chips"><strong>6 types</strong> <span class="tag">Table</span> <span class="tag">Metric</span> <span class="tag">Dashboard</span> <span class="tag">Term</span> <span class="tag">Runbook</span> <span class="tag">Person</span></p>
+        <p class="chips"><strong>6 edge types</strong> <span class="tag">owned_by</span> <span class="tag">derived_from</span> <span class="tag">computed_from</span> <span class="tag">defined_by</span> <span class="tag">shown_in</span> <span class="tag">covers</span></p>
+        <p class="asks"><em>It answers:</em> Which metrics are computed from this table? Who owns the dashboard that shows them? What does the export look like for an agent? See <a href="blog-okf-ready.html">Getting your vault OKF-ready</a>.</p>
+        <div class="buttons">
+          <a class="btn primary" href="ontologies/okf.zip" download>Download vault (.zip)</a>
+          <a class="btn" href="ontologies/okf/OKF.md" download>Schema note (.md)</a>
+          <a class="btn" href="https://github.com/Volland/obsigraph/tree/main/ontologies/okf">GitHub</a>
+        </div>
+      </div>
     </div>
-    <p>Two of them, Zettelkasten and Requirements, use the edge <code>contradicts</code>. It is declared once in a small shared <a href="ontologies/core/Core.md" download><code>core</code></a> note that every download already contains, which is what lets them be combined. <a href="blog-composable-ontologies.html">The article</a> explains why.</p>
+    <p>Several of them use the same edge words: <code>contradicts</code> in Zettelkasten and Requirements, <code>derived_from</code> in Prompts and agents and OKF. Each is declared once in a small shared <a href="ontologies/core/Core.md" download><code>core</code></a> note that every download already contains, which is what lets them be combined. <a href="blog-composable-ontologies.html">The article</a> explains why.</p>
 
     <h2>Use one</h2>
     <ol class="steps">
@@ -104,7 +116,7 @@
     <p>Copy the <code>.md</code> files from the ontology's <code>Types/</code> folder into your vault's schema folder. Nothing else changes: notes with no <code>type:</code> are untouched, and notes whose type matches a schema are validated against it. Validation is advisory, so a missing property or a disallowed edge is a warning on the note and never removes anything from the graph.</p>
 
     <h2>Combine several</h2>
-    <p>Put the schema notes of every ontology you want into the same <code>Types/</code> folder, with <code>Core.md</code>. One note can then carry labels from two ontologies, for example <code>type: [Book, Source]</code> for a book that is also a source in your Zettelkasten. <code>all.zip</code> is exactly that: all four ontologies composed in one vault. Each type and edge type must be declared in one note only; the reader reports a duplicate and uses the first by path.</p>
+    <p>Put the schema notes of every ontology you want into the same <code>Types/</code> folder, with <code>Core.md</code>. One note can then carry labels from two ontologies, for example <code>type: [Book, Source]</code> for a book that is also a source in your Zettelkasten. <code>all.zip</code> is exactly that: all five ontologies composed in one vault. Each type and edge type must be declared in one note only; the reader reports a duplicate and uses the first by path.</p>
 
     <h2>Use it from a project or another tool</h2>
 <pre>tg schema export shapes.ttl --vault path/to/vault     # any ontology as W3C SHACL

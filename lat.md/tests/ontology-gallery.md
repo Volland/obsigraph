@@ -21,3 +21,7 @@ Declaring a shared edge type in a second note is reported as a duplicate declara
 ## Mixin bridges two ontologies
 
 A small mixin type that allows an edge to a type from another ontology grants that edge to notes labelled with both types, and the edge is reported as not allowed on notes without the mixin.
+
+## OKF ontology exports conformant
+
+The example notes of the OKF ontology export as an Open Knowledge Format bundle that passes the conformance check, and typed edges survive as prose with bundle-absolute links.

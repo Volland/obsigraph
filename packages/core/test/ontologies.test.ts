@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import Ajv from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import { Graph, schemasFromGraph, splitFrontmatter, validateSchemas, type NoteInput } from '../src/index.js';
+import { checkOkf, exportOkf, Graph, schemasFromGraph, splitFrontmatter, validateSchemas, type NoteInput } from '../src/index.js';
 import { exportShacl } from '../src/shacl.js';
 
 const ROOT = join(__dirname, '../../../ontologies');
@@ -38,8 +38,8 @@ function check(notes: NoteInput[]) {
 }
 
 describe('ontology gallery', () => {
-  it('has the four ontologies and the shared core', () => {
-    expect(ALL).toEqual(['agents', 'core', 'library', 'requirements', 'zettelkasten']);
+  it('has the five ontologies and the shared core', () => {
+    expect(ALL).toEqual(['agents', 'core', 'library', 'okf', 'requirements', 'zettelkasten']);
   });
 
   // @lat: [[tests/ontology-gallery#Each ontology stands alone]]
@@ -57,7 +57,7 @@ describe('ontology gallery', () => {
   it('core declares the shared edge types and nothing else', () => {
     const { set, diagnostics } = check(load('core'));
     expect(diagnostics).toEqual([]);
-    expect([...set.edgeTypes.keys()]).toEqual(['contradicts']);
+    expect([...set.edgeTypes.keys()].sort()).toEqual(['contradicts', 'derived_from']);
     expect(set.schemas.size).toBe(0);
   });
 
@@ -108,5 +108,17 @@ describe('ontology gallery', () => {
     expect(check([...merged, bridge, prompt(['Prompt', 'Traceable'])]).diagnostics).toEqual([]);
     const without = check([...merged, bridge, prompt(['Prompt'])]).diagnostics;
     expect(without.some((d) => /'implements' is not allowed for/.test(d))).toBe(true);
+  });
+
+  // @lat: [[tests/ontology-gallery#OKF ontology exports conformant]]
+  it('exports the OKF ontology as a bundle with no conformance errors', () => {
+    const notes = load('okf').filter((n) => n.path.startsWith('Examples/'));
+    const { files } = exportOkf(notes.map((n) => ({ path: n.path, text: n.text, frontmatter: n.frontmatter })));
+    const bundle = files.map((f) => {
+      const { yaml } = splitFrontmatter(f.text);
+      return { ...f, frontmatter: yaml === null ? null : (parseYaml(yaml) as Record<string, unknown>) };
+    });
+    expect(checkOkf(bundle).filter((f) => f.severity === 'error')).toEqual([]);
+    expect(files.find((f) => f.path === 'Examples/orders.md')!.text).toContain('derived_from:: [raw_orders](/Examples/raw_orders.md)');
   });
 });
