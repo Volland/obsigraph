@@ -10,6 +10,7 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
 - [[cli]] — planned `tg` CLI: lat.md replacement, annotations, code layer, vault integration
 - [[okf]] — Open Knowledge Format: reading bundles, OKF export and conformance check
+- [[shacl]] — SHACL export and import of schema notes and the open Typed Graph Schema spec
 - [[vscode]] — VS Code extension: typed backlinks, graph webview, tg init funnel
 - [[roadmap]] — phased delivery v0.1 to v0.4 and open questions
 - [[tests]] — test specifications tied to test code

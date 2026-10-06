@@ -45,3 +45,52 @@ Editing a schema note changes the next validation result without rebuilding anyt
 ## Scaffold is a valid schema
 
 The scaffold for a new schema note parses without diagnostics and leaves edges unrestricted.
+
+## Multi-type notes
+
+One schema note can declare several types under `schemas:`, alongside the title type under `schema:`; notes in subfolders or outside the schema folder declare nothing.
+
+## Property attributes read
+
+Properties read `many`, `values`, `uri` and the `datetime` and `list` kinds.
+
+## Edge map form
+
+Edges declared as a map read target types, `many` and `required`, and a malformed `edges` value is reported.
+
+## Edge types read
+
+Edge types under `edgeTypes:` read endpoints, properties, `uri` and visualization.
+
+## Duplicate types reported
+
+A type declared in two notes uses the first by path and a diagnostic names both notes.
+
+## Identifiers expanded
+
+CURIEs expand with built-in and declared prefixes, full IRIs pass through, and an unknown prefix is reported.
+
+## TGS version handling
+
+A newer minor version reads with unknown keys reported; another major version is reported and its schema ignored.
+
+## Value and cardinality validation
+
+Values outside an enum, lists in single-valued properties, missing required edges and repeated single edges are reported.
+
+## Edge property validation
+
+Missing required and enum-violating edge properties are reported at the edge's line and undeclared properties are accepted.
+
+## Edge endpoint validation
+
+An edge to or from the wrong type is reported, while stubs and untyped notes are not.
+
+## Template note used
+
+A `template` link in a wikilink, markdown link or path form picks the template body ahead of the schema note's body.
+
+## Template generated
+
+A type with no template gets a generated one with property placeholders and edge lines that create no edges.
+

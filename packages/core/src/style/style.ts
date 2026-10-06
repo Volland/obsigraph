@@ -1,5 +1,5 @@
 import type { Diagnostic, Sign } from '../edges/parse.js';
-import type { TypeSchema } from '../schema/schema.js';
+import type { EdgeTypeSchema, TypeSchema } from '../schema/schema.js';
 
 export const NODE_SHAPES = ['ellipse', 'rectangle', 'round-rectangle', 'diamond', 'hexagon', 'triangle', 'star'] as const;
 export type NodeShape = (typeof NODE_SHAPES)[number];
@@ -157,15 +157,24 @@ export function styleSource(
 }
 
 /**
- * One source per schema note, in type-name order. A schema's `visualization`
- * block styles its own type; its `edges` map styles edge types.
+ * One source per schema type, in type-name order. A schema's `visualization`
+ * block styles its own type; its `edges` map styles edge types. Edge types
+ * declared under `edgeTypes` come first, so their own `visualization` wins
+ * per attribute within the schema level.
  */
 export function styleSourcesFromSchemas(
   schemas: Map<string, TypeSchema>,
   iconExists?: IconCheck,
+  edgeTypes?: Map<string, EdgeTypeSchema>,
 ): { sources: StyleSource[]; diagnostics: Diagnostic[] } {
   const sources: StyleSource[] = [];
   const diagnostics: Diagnostic[] = [];
+  for (const et of [...(edgeTypes?.values() ?? [])].sort((a, b) => a.type.localeCompare(b.type))) {
+    if (!et.style) continue;
+    const r = styleSource(`schema ${et.path}`, et.path, {}, { [et.type]: et.style }, iconExists);
+    sources.push({ ...r.source, level: 'schema' });
+    diagnostics.push(...r.diagnostics);
+  }
   for (const schema of [...schemas.values()].sort((a, b) => a.type.localeCompare(b.type))) {
     if (!schema.style) continue;
     const { edges: rawEdges, ...nodeRaw } = schema.style;

@@ -53,3 +53,7 @@ Editing a schema note's color changes the resolved style on the next resolution 
 ## Restyle keeps layout
 
 An unchanged element set is detected so a refresh restyles elements in place instead of re-running layout.
+
+## Edge type entry styles edges
+
+An `edgeTypes` entry's `visualization` styles that edge type and wins per attribute over a type's `visualization.edges`.

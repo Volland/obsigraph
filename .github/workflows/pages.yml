@@ -4,7 +4,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'packages/core/**', 'packages/plugin/src/**', '.github/workflows/pages.yml']
+    paths: ['site/**', 'spec/**', 'packages/core/**', 'packages/plugin/src/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -32,6 +32,8 @@ jobs:
           mkdir _site
           cp site/*.html _site/
           cp -r site/assets _site/assets
+          cp -r site/spec _site/spec
+          cp -r site/ns _site/ns
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

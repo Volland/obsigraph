@@ -1,7 +1,7 @@
 import { parseEdges, type Diagnostic, type Sign } from '../edges/parse.js';
 import type { Props } from '../edges/props.js';
 import type { LatIndex, LinkResult } from '../latmd/index.js';
-import type { TypeSchema } from '../schema/schema.js';
+import { edgeNames, type TypeSchema } from '../schema/schema.js';
 import { scanFile, type CodeSymbol } from './symbols.js';
 
 export interface AnnotationEdge {
@@ -147,6 +147,7 @@ export function checkAnnotationTarget(index: LatIndex, edge: AnnotationEdge): An
 
 /** Advisory schema check: edge types an annotated code symbol's schema does not allow. */
 export function schemaIssues(schema: TypeSchema | undefined, annotation: Annotation): string[] {
-  if (!schema?.edges) return [];
-  return annotation.edges.filter((e) => !schema.edges!.includes(e.type)).map((e) => `Edge type '${e.type}' is not allowed for ${schema.type} (allowed: ${schema.edges!.join(', ') || 'none'})`);
+  const allowed = schema ? edgeNames(schema) : null;
+  if (!schema || !allowed) return [];
+  return annotation.edges.filter((e) => !allowed.includes(e.type)).map((e) => `Edge type '${e.type}' is not allowed for ${schema.type} (allowed: ${allowed.join(', ') || 'none'})`);
 }

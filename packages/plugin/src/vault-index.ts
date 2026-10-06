@@ -97,7 +97,8 @@ export class VaultIndex {
   // @lat: [[visualization#Styling]]
   styleSources(): { sources: StyleSource[]; diagnostics: Diagnostic[] } {
     if (!this.styleCache) {
-      const schemas = styleSourcesFromSchemas(this.schemas().schemas, this.iconExists);
+      const set = this.schemas();
+      const schemas = styleSourcesFromSchemas(set.schemas, this.iconExists, set.edgeTypes);
       const { nodes, edges } = this.settingsStyles();
       const settings = styleSource('settings', null, nodes, edges, this.iconExists);
       this.styleCache = {

@@ -114,13 +114,14 @@ age: 40
       <p>Frontmatter fields, <code>title</code> and <code>path</code> are node properties.</p>
 
       <h2 id="schemas">Schema notes</h2>
-      <p>A note directly in <code>Types/</code> (configurable) describes the type named by its title:</p>
+      <p>Notes directly in <code>Types/</code> (configurable) declare types. <code>schema:</code> describes the type named by the note's title, and its body is that type's template:</p>
 <pre>---
 schema:
   properties:
-    status: {kind: text, default: active}
+    status: {kind: text, default: active, values: [active, alumni]}
     born: {kind: date, required: true}
-  edges: [knows, works_at]
+    aliases: list
+  edges: {knows: Person, worksAt: Company}
   visualization:
     color: "#7c5cff"
     shape: ellipse
@@ -130,12 +131,27 @@ schema:
       knows: {color: orange, line: dotted}
 ---
 ## Notes</pre>
+      <p>One note can also describe a whole subsystem: several types under <code>schemas:</code> and edge types with their own properties under <code>edgeTypes:</code>.</p>
+<pre>---
+schemas:
+  Person: {properties: {email: {required: true}}, edges: {worksAt: Company}}
+  Company: {uri: schema:Organization, properties: {founded: date}}
+edgeTypes:
+  worksAt:
+    from: Person
+    to: Company
+    properties: {since: date, role: {values: [engineer, manager]}}
+    visualization: {color: green}
+---</pre>
       <ul>
-        <li>Kinds: <code>text</code>, <code>number</code>, <code>boolean</code>, <code>date</code>, <code>link</code>.</li>
-        <li><code>edges</code> lists allowed outgoing edge types; omit it to allow any.</li>
-        <li>The body is the template for <em>Create note from type</em>, which never overwrites a note.</li>
-        <li>Validation is advisory: issues show in the status bar and <em>Show diagnostics</em>.</li>
+        <li>Kinds: <code>text</code>, <code>number</code>, <code>boolean</code>, <code>date</code>, <code>datetime</code>, <code>link</code>, <code>list</code>. Properties take <code>required</code>, <code>many</code>, <code>values</code>, <code>default</code> and <code>uri</code>.</li>
+        <li><code>edges</code> is a list of allowed outgoing edge types, or a map to target types (<code>worksAt: Company</code>) or to <code>{target, many, required}</code>. Omit it to allow any edge.</li>
+        <li><code>uri</code> accepts an IRI or a CURIE such as <code>schema:Person</code>; add prefixes with a <code>prefixes:</code> key.</li>
+        <li><em>Create note from type</em> uses the <code>template</code> note if set, else the <code>schema:</code> note's body, else a template generated from the schema. It never overwrites a note.</li>
+        <li>Validation is advisory: required and allowed values, lists, allowed, required and single edges, edge endpoints and edge properties. Issues show in the status bar and <em>Show diagnostics</em>.</li>
+        <li><em>Export schemas as SHACL</em> and <em>Import SHACL shapes</em> exchange schemas with RDF tools, as do <code>tg schema export</code> and <code>tg schema import</code>.</li>
       </ul>
+      <p>The format is an open specification, <a href="spec/tgs/v0.1/">Typed Graph Schema (TGS) 0.1</a>, with a JSON Schema and conformance examples.</p>
 
       <h2 id="embeds">Edge property embeds</h2>
 <pre>We met in {{edge: Alice -knows-> Bob . since}}.
@@ -278,7 +294,7 @@ RETURN p.title AS person, proj.title AS project,
         <tr><td><code>tg edges [--type t] [--to s] [--file f]</code></td><td>List annotation edges from code to sections.</td></tr>
         <tr><td><code>tg gen &lt;target&gt;</code></td><td>Print <code>agents.md</code>, <code>claude.md</code>, <code>cursor-rules.md</code>, <code>skill.md</code> or <code>graph-skill.md</code>.</td></tr>
         <tr><td><code>tg init</code>, <code>tg hook</code>, <code>tg mcp</code></td><td>See <a href="#cli-agents">Agents and hooks</a>.</td></tr>
-        <tr><td><code>tg export</code>, <code>tg import</code></td><td>See <a href="#export">Export and import</a>.</td></tr>
+        <tr><td><code>tg export</code>, <code>tg import</code>, <code>tg schema</code></td><td>See <a href="#export">Export and import</a>.</td></tr>
         <tr><td><code>tg okf check [dir]</code></td><td>Check any folder against <a href="blog-okf-ready.html">Open Knowledge Format</a> v0.2 conformance: concepts need parseable frontmatter with a string <code>type</code>, index files no frontmatter (except <code>okf_version</code> at the root), log date headings <code>YYYY-MM-DD</code>. Broken links, wikilinks and missing descriptions are warnings. Exit 1 only on errors.</td></tr>
       </table>
 
@@ -312,6 +328,8 @@ RETURN p.title AS person, proj.title AS project,
         <li><code>tg export &lt;out&gt; [--vault dir] [--folder sub] [--force]</code> writes vault notes under <code>&lt;out&gt;/lat.md/</code>. Typed edges become <code>type: [[link]]</code>, property blocks are dropped, <code>{{edge: …}}</code> embeds become their value, notes get a level-1 heading and directory index files if missing, and links to notes outside the export become plain text. It then runs the normal check and prints a loss report. Round trips are not guaranteed. It refuses a non-empty target without <code>--force</code>.</li>
         <li><code>tg export &lt;out&gt; --format okf [--default-type T] [--title T]</code> writes an <a href="blog-okf-ready.html">Open Knowledge Format</a> bundle at <code>&lt;out&gt;/</code> instead. Wikilinks become bundle-absolute markdown links, and typed edge lines keep their type, sign and properties (<code>knows:: [Bob](/People/Bob.md) {since: 2020}</code>), so Typed Graph reads the bundle back into the same graph. Every concept gets a string <code>type</code> (default <code>Note</code>), plus a <code>title</code> and <code>description</code> if missing. Notes named <code>index.md</code> or <code>log.md</code> are renamed, embedded attachments are copied, and every folder gets an <code>index.md</code>. The command prints a change report and verifies the result with <code>tg okf check</code>.</li>
         <li><code>tg import &lt;path&gt; [--mount] [--into name]</code> copies a <code>lat.md/</code> folder (or the one inside a project) into the current vault or project, or symlinks it with <code>--mount</code>. It refuses a non-empty destination and never changes the source.</li>
+        <li><code>tg schema export &lt;out.ttl&gt; [--vault dir] [--schema-folder Types] [--base iri]</code> writes every type and edge type in the schema folder as W3C SHACL shapes in Turtle, following the <a href="spec/tgs/v0.1/#13-shacl-mapping">TGS mapping</a>. The output is deterministic, so it diffs cleanly.</li>
+        <li><code>tg schema import &lt;file.ttl&gt; [--layout auto|per-type|single] [--into name] [--force]</code> turns SHACL shapes into schema notes: one note per type by default, or all of them in one note. It rewrites only the schema keys of existing notes, leaves alone notes that also declare types missing from the file (unless <code>--force</code>), and prints a drop report of SHACL features outside the TGS subset.</li>
       </ul>
       <p>In Obsidian, notes under a <code>lat.md/</code> folder get working <code>[[file#Heading#Sub]]</code> links and show link and section problems in the diagnostics list. Files are not modified.</p>
 
@@ -328,7 +346,7 @@ RETURN p.title AS person, proj.title AS project,
 
       <h2 id="faq">FAQ</h2>
       <h3>Does it change my notes?</h3>
-      <p>No. The plugin and the sidecar only read notes. Only <em>Create note from type</em> and <em>Create schema note</em> create new files, on request.</p>
+      <p>No. The plugin and the sidecar only read notes. Only <em>Create note from type</em>, <em>Create schema note</em> and <em>Import SHACL shapes</em> write files, on request; the import changes only the schema keys of notes in the schema folder.</p>
       <h3>Do I need Graph Link Types or Dataview?</h3>
       <p>No. Typed Graph reads the same <code>type:: [[Target]]</code> lines on its own.</p>
       <h3>Does my vault leave my machine?</h3>

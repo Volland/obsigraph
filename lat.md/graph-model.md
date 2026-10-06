@@ -24,7 +24,13 @@ A schema note such as `Types/Person.md` declares a type's properties, defaults, 
 
 Schema notes are optional; the graph works without them. Creating a note from a type applies its template.
 
-A note directly in the schema folder (setting, default `Types/`) declares the type named by its title in frontmatter under `schema:` — `properties` (map, kind shorthand or list; kinds text, number, boolean, date, link; `default`, `required`), `edges` (allowed outgoing types, absent means unrestricted) and `style` (consumed by visualization config). The body is the template. Read by [[packages/core/src/schema/schema.ts#readSchema]], validated by [[packages/core/src/schema/schema.ts#validateSchemas]] (advisory diagnostics only) and rendered into new notes by [[packages/core/src/schema/schema.ts#renderNoteFromType]]. Multi-label notes merge schemas in label order: first property declaration wins, allowed edge lists are unioned.
+A note directly in the schema folder (setting, default `Types/`) declares types in its frontmatter. `schema:` declares the type named by the note title, with the body as its template; `schemas:` declares any number of types by name, so one note can describe a whole subsystem; `edgeTypes:` declares edge types; `prefixes:` adds CURIE prefixes. All may appear together. The format is published as the open [[shacl#Typed Graph Schema]] specification.
+
+A type has `properties` (map, kind shorthand or list; kinds text, number, boolean, date, datetime, link, list; `default`, `required`, `many`, `values`, `uri`), `edges` (absent means unrestricted; a list of types, or a map to target types or `{target, many, required}`), `template` (a link to a template note), `uri` and `visualization` (alias `style`, consumed by visualization config). An edge type has `from`, `to`, `properties`, `uri` and `visualization`. Read by [[packages/core/src/schema/schema.ts#readSchemaNote]] and collected by [[packages/core/src/schema/schema.ts#schemasFromGraph]], where the first declaration by path wins and duplicates are reported.
+
+Validation is advisory and never removes anything from the graph ([[packages/core/src/schema/schema.ts#validateSchemas]]): required and enum properties, lists in single-valued properties, allowed, required and single edges, edge endpoint types (stubs and untyped notes are skipped) and edge properties. Multi-label notes merge schemas in label order: first property declaration wins, allowed edge rules are unioned. Identifiers are IRIs or CURIEs, with built-in prefixes and a base IRI (`urn:tgs:`) for the rest.
+
+Templates come from the note a type's `template` links to, else the body of a `schema:` note, else one generated from the schema ([[packages/core/src/schema/schema.ts#chooseTemplate]], [[packages/core/src/schema/schema.ts#renderNoteFromType]]); generated edge lines are empty `- type::` placeholders that create no edges. Schemas are exchanged with RDF tools through [[shacl]].
 
 ## Edges
 

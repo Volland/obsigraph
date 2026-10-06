@@ -115,10 +115,25 @@ schema:
       knows: {color: "#f5a524", line: dotted}
 ```
 
-- **properties**: kinds are `text`, `number`, `boolean`, `date` and `link`, with an optional `default` and `required`.
-- **edges**: the outgoing edge types allowed. Leave it out to allow any.
+- **properties**: kinds are `text`, `number`, `boolean`, `date`, `datetime`, `link` and `list`, with optional `default`, `required`, `many` (a list value) and `values` (allowed values).
+- **edges**: the outgoing edge types allowed, as a list or as a map to target types (`works_at: Company`). Leave it out to allow any.
 - **visualization**: node `color`, `shape`, `icon` and `label` (a property shown instead of the title), plus per-edge-type `color` and `line`.
-- **The body is a template.** *Create note from type* fills in the frontmatter with defaults and copies the body.
+- **The body is a template.** *Create note from type* fills in the frontmatter with defaults and copies the body. A type can point to a separate template note with `template: "[[...]]"`, and a type with no template gets one generated from its schema.
+
+One schema note can also describe several types under `schemas:` and edge types under `edgeTypes:`. [[Relations]] declares no type of its own. It says that `works_at` runs from a Person to a Company and needs a `role`, and that `mentors` connects two people:
+
+```yaml
+edgeTypes:
+  works_at:
+    uri: schema:worksFor
+    from: Person
+    to: Company
+    properties:
+      role: {kind: text, required: true}
+      since: number
+```
+
+An edge pointing at the wrong type of note, or missing a required edge property, is reported like any other schema issue. *Export schemas as SHACL* turns all of this into W3C SHACL shapes for RDF tools, and *Import SHACL shapes* reads shapes back into schema notes. The format is the open [Typed Graph Schema](https://volland.github.io/obsigraph/spec/tgs/v0.1/) specification.
 
 Schemas are optional and **advisory**. A missing required property ([[Dave]]) or an edge type the schema does not list ([[Mallory]]'s `sells_to`) appears in the status bar and in *Show diagnostics*, but the note and edge still work.
 

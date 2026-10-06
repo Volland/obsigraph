@@ -1,4 +1,5 @@
-import { normalizeFolder, renderNoteFromType, scaffoldSchemaNote, splitFrontmatter, type Diagnostic, type TypeSchema } from '@obsigraph/core';
+import { chooseTemplate, isSchemaPath, normalizeFolder, renderNoteFromType, scaffoldSchemaNote, splitFrontmatter, templatePath, type Diagnostic, type TypeSchema } from '@obsigraph/core';
+import { exportShacl, importShacl, planImport, type ExistingNote, type ImportPlan, type ShaclImport } from '@obsigraph/core/src/shacl.js';
 import { App, Modal, Notice, normalizePath, Setting, SuggestModal, TFile } from 'obsidian';
 import type ObsigraphPlugin from './main';
 
@@ -12,8 +13,11 @@ class PromptModal extends Modal {
     app: App,
     private readonly title: string,
     private readonly onSubmit: (value: string) => void,
+    private readonly initial = '',
+    private readonly action = 'Create',
   ) {
     super(app);
+    this.value = initial;
   }
 
   onOpen(): void {
@@ -29,10 +33,10 @@ class PromptModal extends Modal {
         t.inputEl.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') submit();
         });
-        t.onChange((v) => (this.value = v));
+        t.setValue(this.initial).onChange((v) => (this.value = v));
         window.setTimeout(() => t.inputEl.focus(), 0);
       })
-      .addButton((b) => b.setButtonText('Create').setCta().onClick(submit));
+      .addButton((b) => b.setButtonText(this.action).setCta().onClick(submit));
   }
 
   onClose(): void {
@@ -139,19 +143,152 @@ export function registerSchemaCommands(plugin: ObsigraphPlugin): void {
   });
 
   plugin.addCommand({
+    id: 'export-schemas-shacl',
+    name: 'Export schemas as SHACL',
+    callback: () => new PromptModal(app, 'Write SHACL shapes to', (path) => void exportSchemas(plugin, path), 'shapes.ttl', 'Export').open(),
+  });
+
+  plugin.addCommand({
+    id: 'import-shacl-shapes',
+    name: 'Import SHACL shapes',
+    callback: () =>
+      new PromptModal(app, 'Import SHACL shapes from (Turtle file in the vault)', (path) => {
+        new LayoutModal(app, (layout) => {
+          if (layout !== 'single') void importShapes(plugin, path, layout);
+          else new PromptModal(app, 'Note for all imported types', (into) => void importShapes(plugin, path, layout, into), 'Shapes', 'Import').open();
+        }).open();
+      }, 'shapes.ttl', 'Next').open(),
+  });
+
+  plugin.addCommand({
     id: 'show-diagnostics',
     name: 'Show diagnostics',
     callback: () => new DiagnosticsModal(app, plugin.index.diagnostics(), (p, line) => plugin.openNoteAt(p, line)).open(),
   });
 }
 
+type Layout = 'auto' | 'per-type' | 'single';
+
+class LayoutModal extends SuggestModal<{ layout: Layout; label: string; hint: string }> {
+  constructor(
+    app: App,
+    private readonly onPick: (layout: Layout) => void,
+  ) {
+    super(app);
+    this.setPlaceholder('Where should imported types go?');
+  }
+  getSuggestions(): { layout: Layout; label: string; hint: string }[] {
+    return [
+      { layout: 'auto', label: 'As exported', hint: 'the notes recorded in the shapes, else one note per type' },
+      { layout: 'per-type', label: 'One note per type', hint: 'Types/Person.md, Types/Company.md, ...' },
+      { layout: 'single', label: 'A single note', hint: 'every type under schemas: in one note' },
+    ];
+  }
+  renderSuggestion(o: { label: string; hint: string }, el: HTMLElement): void {
+    el.createDiv({ text: o.label });
+    el.createEl('small', { text: o.hint, cls: 'obsigraph-muted' });
+  }
+  onChooseSuggestion(o: { layout: Layout }): void {
+    this.onPick(o.layout);
+  }
+}
+
+/** Shows what an import changed and what it dropped. */
+class ImportReportModal extends Modal {
+  constructor(
+    app: App,
+    private readonly imp: ShaclImport,
+    private readonly plan: ImportPlan,
+  ) {
+    super(app);
+  }
+  onOpen(): void {
+    const { imp, plan } = this;
+    this.titleEl.setText(`Imported ${imp.types.length} types and ${imp.edgeTypes.length} edge types`);
+    const list = (heading: string, items: string[]) => {
+      if (!items.length) return;
+      this.contentEl.createEl('h4', { text: heading });
+      const ul = this.contentEl.createEl('ul');
+      for (const i of items) ul.createEl('li', { text: i });
+    };
+    list('Changed notes', plan.writes.map((w) => `${w.created ? 'Created' : 'Updated'} ${w.path}`));
+    list('Unchanged', plan.unchanged);
+    list('Not changed', plan.conflicts.map((c) => c.message.replace('--force', 'the CLI with --force')));
+    list('Dropped (outside the TGS subset)', imp.dropped.map((d) => `${d.shape}: ${d.construct}`));
+    if (!imp.dropped.length) this.contentEl.createDiv({ text: 'Everything in the file was imported.', cls: 'obsigraph-status' });
+  }
+  onClose(): void {
+    this.contentEl.empty();
+  }
+}
+
+/** Schema notes with their text and cached frontmatter. */
+async function schemaNotes(plugin: ObsigraphPlugin): Promise<ExistingNote[]> {
+  const { app } = plugin;
+  const folder = normalizeFolder(plugin.settings.schemaFolder);
+  const files = app.vault.getMarkdownFiles().filter((f) => isSchemaPath(f.path, folder));
+  return Promise.all(files.map(async (f) => ({ path: f.path, text: await app.vault.cachedRead(f), frontmatter: app.metadataCache.getFileCache(f)?.frontmatter ?? null })));
+}
+
+// @lat: [[shacl#Commands]]
+async function exportSchemas(plugin: ObsigraphPlugin, path: string): Promise<void> {
+  const { app } = plugin;
+  const set = plugin.index.schemas();
+  const bodies = new Map((await schemaNotes(plugin)).map((n) => [n.path, splitFrontmatter(n.text).body]));
+  const target = normalizePath(path);
+  await app.vault.adapter.write(target, exportShacl(set, { base: plugin.settings.schemaBaseIri, body: (p) => bodies.get(p) ?? null }));
+  new Notice(`Exported ${set.schemas.size} types and ${set.edgeTypes.size} edge types to ${target}.`);
+}
+
+// @lat: [[shacl#Commands]]
+async function importShapes(plugin: ObsigraphPlugin, path: string, layout: Layout, into?: string): Promise<void> {
+  const { app } = plugin;
+  const source = normalizePath(path);
+  if (!(await app.vault.adapter.exists(source))) {
+    new Notice(`${source} does not exist.`);
+    return;
+  }
+  let imp: ShaclImport;
+  try {
+    imp = importShacl(await app.vault.adapter.read(source), { base: plugin.settings.schemaBaseIri });
+  } catch (e) {
+    new Notice(`Cannot read ${source} as Turtle: ${(e as Error).message}`);
+    return;
+  }
+  const folder = normalizeFolder(plugin.settings.schemaFolder);
+  if (!folder) {
+    new Notice('Set a schema folder in the plugin settings first.');
+    return;
+  }
+  const plan = planImport(imp, await schemaNotes(plugin), { folder, layout, into });
+  if (plan.writes.length && !(await ensureFolder(app, folder))) return;
+  for (const w of plan.writes) {
+    const file = app.vault.getAbstractFileByPath(w.path);
+    if (file instanceof TFile) await app.vault.modify(file, w.text);
+    else await app.vault.create(w.path, w.text);
+  }
+  new ImportReportModal(app, imp, plan).open();
+}
+
+/** Body of a markdown file without its frontmatter, or null when it does not exist. */
+async function bodyOf(app: App, path: string | null): Promise<string | null> {
+  const file = path ? app.vault.getAbstractFileByPath(path) : null;
+  return file instanceof TFile ? splitFrontmatter(await app.vault.cachedRead(file)).body : null;
+}
+
+// @lat: [[graph-model#Schema notes]]
 async function createFromType(plugin: ObsigraphPlugin, schema: TypeSchema, title: string): Promise<void> {
   const { app } = plugin;
-  const schemaFile = app.vault.getAbstractFileByPath(schema.path);
-  const body = schemaFile instanceof TFile ? splitFrontmatter(await app.vault.cachedRead(schemaFile)).body : '';
+  let linkedBody: string | null = null;
+  if (schema.template) {
+    const resolve = (link: string, from: string) => app.metadataCache.getFirstLinkpathDest(link, from)?.path ?? null;
+    linkedBody = await bodyOf(app, templatePath(schema.template, schema.path, resolve));
+    if (linkedBody === null) new Notice(`Template ${schema.template} for ${schema.type} was not found; using the next template source.`);
+  }
+  const { body, generated } = chooseTemplate(schema, { linkedBody, schemaBody: (await bodyOf(app, schema.path)) ?? '' });
   const parent = app.fileManager.getNewFileParent(app.workspace.getActiveFile()?.path ?? '');
   const dir = parent.isRoot() ? '' : `${parent.path}/`;
-  await createNote(app, `${dir}${title}.md`, renderNoteFromType(schema, body), title);
+  await createNote(app, `${dir}${title}.md`, renderNoteFromType(schema, body, { placeholders: generated }), title);
 }
 
 /** Create a note, refusing to overwrite an existing one. */

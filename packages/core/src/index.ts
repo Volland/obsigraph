@@ -16,17 +16,30 @@ export type { Column, ColumnKind, ExecOptions, QueryResult } from './cypher/exec
 export { NodeRef, PathRef, RelRef } from './cypher/values.js';
 export type { Value } from './cypher/values.js';
 export {
+  BUILTIN_PREFIXES,
+  chooseTemplate,
+  DEFAULT_BASE_IRI,
   DEFAULT_SCHEMA_FOLDER,
+  edgeNames,
+  expandIri,
+  generateTemplateBody,
+  iriOf,
   isSchemaPath,
   mergeSchemas,
   normalizeFolder,
+  PROPERTY_KINDS,
   readSchema,
+  readSchemaNote,
   renderNoteFromType,
   scaffoldSchemaNote,
+  schemaSetFromNotes,
   schemasFromGraph,
+  templatePath,
+  TGS_NAMESPACE,
+  TGS_VERSION,
   validateSchemas,
 } from './schema/schema.js';
-export type { PropertyKind, PropertySchema, SchemaSet, TypeSchema } from './schema/schema.js';
+export type { EdgeRule, EdgeTypeSchema, PropertyKind, PropertySchema, SchemaNote, SchemaSet, TypeSchema } from './schema/schema.js';
 export { splitFrontmatter, toYaml } from './schema/frontmatter.js';
 export {
   BUILTIN,

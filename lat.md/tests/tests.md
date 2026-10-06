@@ -30,6 +30,8 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[code-layer]] — derived code nodes, modes, queries and rendering
 - [[tg-vault]] — lat.md folder in a vault, export and import
 - [[okf-compat]] — OKF links, link edges, OKF export and conformance check
+- [[shacl-interop]] — SHACL export, import, round trip and the tg schema commands
+- [[tgs-spec]] — Typed Graph Schema conformance examples and JSON Schema
 - [[node-vault]] — shared Node loader listing and reading behaviors
 - [[graph-ui]] — shared renderer package behaviors
 - [[vscode-extension]] — VS Code indexer, backlinks, setup funnel, privacy and release behaviors

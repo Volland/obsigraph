@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, type SettingDefinitionItem } from 'obsidian';
 import type ObsigraphPlugin from './main';
-import { DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type CodeMode, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
+import { DEFAULT_BASE_IRI, DEFAULT_MAX_PATH_DEPTH, DEFAULT_SCHEMA_FOLDER, type CodeMode, type EdgeStyle, type NodeStyle } from '@obsigraph/core';
 import { parseEdgeStyles, parseTypeStyles } from './render/styles';
 
 export interface ObsigraphSettings {
@@ -14,6 +14,8 @@ export interface ObsigraphSettings {
   edgeStyles: Record<string, EdgeStyle>;
   /** Folder whose notes declare type schemas. */
   schemaFolder: string;
+  /** Base IRI for schema declarations without a `uri`, used by SHACL export and import. */
+  schemaBaseIri: string;
   /** Show the diagnostics count in the status bar. */
   showDiagnostics: boolean;
   /** Depth cap for unbounded variable-length relationships. */
@@ -35,6 +37,7 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   typeStyles: {},
   edgeStyles: {},
   schemaFolder: DEFAULT_SCHEMA_FOLDER,
+  schemaBaseIri: DEFAULT_BASE_IRI,
   showDiagnostics: true,
   maxPathDepth: DEFAULT_MAX_PATH_DEPTH,
   defaultBackend: 'builtin',
@@ -152,11 +155,21 @@ export class ObsigraphSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Schema folder')
-      .setDesc('Each note directly in this folder declares the schema for the type named by its title.')
+      .setDesc('Each note directly in this folder declares types: the one named by its title under `schema:`, others under `schemas:`, and edge types under `edgeTypes:`.')
       .addText((t) =>
         t.setPlaceholder(DEFAULT_SCHEMA_FOLDER).setValue(this.plugin.settings.schemaFolder).onChange(async (v) => {
           this.plugin.settings.schemaFolder = v.trim() || DEFAULT_SCHEMA_FOLDER;
           this.plugin.index.invalidate();
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Schema base IRI')
+      .setDesc('Names types, properties and edge types without a `uri` when exporting to or importing from SHACL.')
+      .addText((t) =>
+        t.setPlaceholder(DEFAULT_BASE_IRI).setValue(this.plugin.settings.schemaBaseIri).onChange(async (v) => {
+          this.plugin.settings.schemaBaseIri = v.trim() || DEFAULT_BASE_IRI;
           await this.plugin.saveSettings();
         }),
       );

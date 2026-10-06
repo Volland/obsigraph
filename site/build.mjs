@@ -1,4 +1,4 @@
-// Bundle the live demo into site/assets/demo.js. The rest of the site is static.
+// Bundle the live demo into site/assets/demo.js and publish the TGS spec pages. The rest of the site is static.
 import { build } from 'esbuild';
 
 await build({
@@ -11,3 +11,5 @@ await build({
   outfile: 'site/assets/demo.js',
   logLevel: 'info',
 });
+
+await import('./build-spec.mjs');
