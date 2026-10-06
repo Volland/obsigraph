@@ -8,6 +8,12 @@ An edge is a single line `type:: [[Target]] {props}` where the property block is
 
 Implemented by [[packages/core/src/edges/parse.ts#parseEdges]], with property blocks parsed by [[packages/core/src/edges/props.ts#parseProps]]. Example: `knows:: [[Bob]] {since: 2020, label: "met at conf"}`. List items and comma-separated links are accepted; YAML frontmatter and fenced code are skipped. Source heading is recorded as edge metadata so sub-note nodes can be added later without breaking edges.
 
+## Markdown link targets
+
+A standard markdown link to a note works as an edge target, alone or mixed with wikilinks: `knows:: [Bob](/people/bob.md) {since: 2020}`.
+
+Parsed by [[packages/core/src/edges/parse.ts#markdownTarget]], which normalizes the destination to a vault path: percent escapes decoded, `#anchor` kept as the subpath, `./` and `../` resolved against the source note's folder, a leading `/` meaning the vault root, `.md` added when there is no extension. Links with a URL scheme, pure anchors, directory links and links to non-note files are not edges. This is what makes [[okf]] bundles and exports readable as typed graphs.
+
 ## Sign
 
 An edge's sign comes from a `+` or `-` prefix on its type, defaults to +1, and is exposed to queries and styling.

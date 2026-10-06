@@ -1,5 +1,5 @@
-export { parseEdges } from './edges/parse.js';
-export type { ParsedEdge, Diagnostic, ParseResult, Sign } from './edges/parse.js';
+export { LINK_EDGE_TYPE, markdownTarget, parseEdges } from './edges/parse.js';
+export type { ParsedEdge, Diagnostic, ParseOptions, ParseResult, Sign } from './edges/parse.js';
 export { parseProps, PropsSyntaxError } from './edges/props.js';
 export type { Props, PropValue } from './edges/props.js';
 export { Graph, labelsOf, titleOf } from './graph/graph.js';
@@ -55,3 +55,4 @@ export { chunkContext, chunkNote, cosine, DEFAULT_CHUNK_CHARS, nodeScore, normal
 export type { Chunk, ChunkInput, EdgeSentence, ScoreMode } from './embed/chunk.js';
 export * from './latmd.js';
 export * from './code.js';
+export * from './okf.js';

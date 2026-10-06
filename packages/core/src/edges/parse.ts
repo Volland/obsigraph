@@ -29,9 +29,22 @@ export interface ParseResult {
   diagnostics: Diagnostic[];
 }
 
+export interface ParseOptions {
+  /** Also turn plain links in prose into untyped `links_to` edges, as OKF consumers read them. */
+  linkEdges?: boolean;
+}
+
+/** Edge type given to plain links when link edges are on. */
+export const LINK_EDGE_TYPE = 'links_to';
+
 // Optional list marker or blockquote, optional sign, type, `::`, then the value.
 const EDGE_LINE = /^\s*(?:(?:[-*+]|\d+[.)])\s+|>\s*)*([+-]?)([\p{L}_][\p{L}\p{N}_-]*)::\s*(.*)$/u;
 const LINK = /\[\[([^\]|#]*)(?:#([^\]|]*))?(?:\|([^\]]*))?\]\]/y;
+// `[text](dest)` or `[text](<dest with spaces>)`, with an optional title.
+const MD_LINK = /\[((?:[^\[\]]|\[[^\]]*\])*)\]\(\s*(<[^>\n]*>|[^)\s]*)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/y;
+const PROSE_LINK = /(!?)(?:\[\[([^\]|#\r\n]*)(?:#([^\]|\r\n]*))?(?:\|([^\]\r\n]*))?\]\]|\[((?:[^\[\]\r\n]|\[[^\]\r\n]*\])*)\]\(\s*(<[^>\n]*>|[^)\s]*)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\))/g;
+const INLINE_CODE = /(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
+const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const FENCE = /^\s*(```|~~~)/;
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
 
@@ -42,7 +55,7 @@ const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
  * links share the type and props. Lines in fenced code or frontmatter are skipped.
  */
 // @lat: [[edge-syntax#Inline edge form]]
-export function parseEdges(text: string, path: string | null = null): ParseResult {
+export function parseEdges(text: string, path: string | null = null, options: ParseOptions = {}): ParseResult {
   const edges: ParsedEdge[] = [];
   const diagnostics: Diagnostic[] = [];
   const lines = text.split(/\r?\n/);
@@ -75,12 +88,14 @@ export function parseEdges(text: string, path: string | null = null): ParseResul
     }
 
     const m = EDGE_LINE.exec(line);
-    if (!m) continue;
+    const links = m ? scanLinks(m[3]!, path) : null;
+    if (!m || !links || links.links.length === 0) {
+      if (options.linkEdges) edges.push(...proseLinks(line, path, n, heading));
+      continue;
+    }
 
     const [, signChar, type, value] = m as unknown as [string, string, string, string];
     const valueStart = line.length - value.length;
-    const links = scanLinks(value);
-    if (links.links.length === 0) continue;
 
     let props: Props = {};
     let rest = value.slice(links.end).trimStart();
@@ -109,26 +124,98 @@ export function parseEdges(text: string, path: string | null = null): ParseResul
   return { edges, diagnostics };
 }
 
-function scanLinks(value: string): {
-  links: Pick<ParsedEdge, 'target' | 'subpath' | 'alias'>[];
+type LinkParts = Pick<ParsedEdge, 'target' | 'subpath' | 'alias'>;
+
+function scanLinks(value: string, path: string | null): {
+  links: LinkParts[];
   end: number;
 } {
-  const links: Pick<ParsedEdge, 'target' | 'subpath' | 'alias'>[] = [];
+  const links: LinkParts[] = [];
   let i = 0;
   for (;;) {
     while (value[i] === ' ' || value[i] === '\t') i++;
     LINK.lastIndex = i;
+    MD_LINK.lastIndex = i;
     const m = LINK.exec(value);
-    if (!m) break;
-    const target = m[1]!.trim();
-    if (target) {
-      links.push({ target, subpath: m[2]?.trim() || null, alias: m[3]?.trim() || null });
+    if (m) {
+      const target = m[1]!.trim();
+      if (target) links.push({ target, subpath: m[2]?.trim() || null, alias: m[3]?.trim() || null });
+      i = LINK.lastIndex;
+    } else {
+      const md = MD_LINK.exec(value);
+      if (!md) break;
+      const link = markdownTarget(md[2]!, path);
+      if (link) links.push({ ...link, alias: md[1]!.trim() || null });
+      i = MD_LINK.lastIndex;
     }
-    i = LINK.lastIndex;
     let j = i;
     while (value[j] === ' ' || value[j] === '\t') j++;
     if (value[j] !== ',') break;
     i = j + 1;
   }
   return { links, end: i };
+}
+
+/**
+ * Normalize a markdown link destination to a vault path with `.md`: percent
+ * escapes decoded, `#anchor` split off, `./` and `../` resolved against the
+ * source note's folder, a leading `/` meaning the vault root. Null for URLs
+ * with a scheme, pure anchors and links to files that are not notes.
+ */
+// @lat: [[edge-syntax#Markdown link targets]]
+export function markdownTarget(dest: string, sourcePath: string | null): { target: string; subpath: string | null } | null {
+  let raw = dest.trim();
+  if (raw.startsWith('<') && raw.endsWith('>')) raw = raw.slice(1, -1).trim();
+  if (!raw || SCHEME.test(raw)) return null;
+  const hash = raw.indexOf('#');
+  const pathPart = hash === -1 ? raw : raw.slice(0, hash);
+  const anchor = hash === -1 ? null : raw.slice(hash + 1);
+  if (!pathPart || pathPart.endsWith('/')) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathPart);
+  } catch {
+    decoded = pathPart;
+  }
+  const base = decoded.slice(decoded.lastIndexOf('/') + 1);
+  const dot = base.lastIndexOf('.');
+  if (dot > 0 && base.slice(dot).toLowerCase() !== '.md') return null;
+  const segments: string[] = [];
+  if (!decoded.startsWith('/') && sourcePath?.includes('/')) segments.push(...sourcePath.slice(0, sourcePath.lastIndexOf('/')).split('/'));
+  for (const seg of decoded.split('/')) {
+    if (seg === '' || seg === '.') continue;
+    if (seg === '..') segments.pop();
+    else segments.push(seg);
+  }
+  if (!segments.length) return null;
+  const target = segments.join('/');
+  let sub: string | null = null;
+  if (anchor) {
+    try {
+      sub = decodeURIComponent(anchor).trim() || null;
+    } catch {
+      sub = anchor.trim() || null;
+    }
+  }
+  return { target: dot > 0 ? target : `${target}.md`, subpath: sub };
+}
+
+/** Plain wikilinks and markdown links to notes in a prose line, as untyped edges; images and code spans are skipped. */
+// @lat: [[graph-model#Plain link edges]]
+function proseLinks(line: string, path: string | null, n: number, heading: string | null): ParsedEdge[] {
+  const text = line.replace(INLINE_CODE, (c) => ' '.repeat(c.length));
+  const out: ParsedEdge[] = [];
+  for (const m of text.matchAll(PROSE_LINK)) {
+    if (m[1]) continue;
+    let link: LinkParts | null = null;
+    if (m[5] === undefined) {
+      const target = m[2]?.trim();
+      if (target) link = { target, subpath: m[3]?.trim() || null, alias: m[4]?.trim() || null };
+    } else {
+      const t = markdownTarget(m[6]!, path);
+      if (t) link = { ...t, alias: m[5].trim() || null };
+    }
+    if (link) out.push({ type: LINK_EDGE_TYPE, sign: 1, ...link, props: {}, line: n, heading });
+  }
+  return out;
 }

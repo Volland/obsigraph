@@ -11,7 +11,8 @@ await build({
   target: 'node20',
   outfile: 'dist/tg.mjs',
   define: { __TG_VERSION__: JSON.stringify(version) },
-  banner: { js: '#!/usr/bin/env node' },
+  // createRequire lets bundled CommonJS dependencies (yaml) require node builtins from ESM.
+  banner: { js: "#!/usr/bin/env node\nimport { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
   loader: { '.md': 'text' },
   logLevel: 'info',
 });

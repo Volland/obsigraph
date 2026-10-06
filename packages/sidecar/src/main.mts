@@ -83,6 +83,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   const sync = new VaultSync(config.vaultDir, data, processors, {
     debounceMs: config.debounceMs,
     pollMs: config.pollMs,
+    linkEdges: config.linkEdges,
   });
   await sync.start();
   sync.watch();

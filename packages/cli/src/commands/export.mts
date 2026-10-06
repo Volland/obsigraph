@@ -1,7 +1,8 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { checkLattice, exportLattice, LOSS_DESCRIPTIONS, type ExportFile, type Finding } from '@obsigraph/core';
+import { checkLattice, checkOkf, exportLattice, exportOkf, LOSS_DESCRIPTIONS, OKF_CHANGE_DESCRIPTIONS, type ExportFile, type Finding } from '@obsigraph/core';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command, type Ctx } from '../cli.mjs';
+import { readOkfNotes } from '../okf.mjs';
 import { Project } from '../project.mjs';
 import { walkProject } from '../walk.mjs';
 
@@ -27,16 +28,59 @@ function verify(out: string): Finding[] {
   });
 }
 
+const USAGE = 'export <outDir> [--format lat|okf] [--vault dir] [--folder sub] [--default-type T] [--title T] [--force]';
+
+/** Write an OKF v0.2 bundle into `out`, copy embedded attachments, then verify it with the OKF check. */
+// @lat: [[okf#Export]]
+function exportOkfBundle(ctx: Ctx, base: string, out: string, flags: Map<string, string | true>): number {
+  const { notes, others } = readOkfNotes(base);
+  if (!notes.length) {
+    ctx.err(`no markdown notes found under ${base}\n`);
+    return EXIT_ERROR;
+  }
+  const str = (k: string) => (typeof flags.get(k) === 'string' ? (flags.get(k) as string) : undefined);
+  const { files, attachments, report } = exportOkf(notes, { defaultType: str('default-type'), title: str('title'), attachments: others });
+  for (const f of files) {
+    const full = join(out, f.path);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, f.text);
+  }
+  for (const a of attachments) {
+    mkdirSync(dirname(join(out, a)), { recursive: true });
+    cpSync(join(base, a), join(out, a));
+  }
+  const errors = checkOkf(readOkfNotes(out).notes).filter((f) => f.severity === 'error');
+  if (ctx.json) {
+    ctx.out(`${JSON.stringify({ out, format: 'okf', files: files.length, attachments: attachments.length, report, errors }, null, 2)}\n`);
+    return errors.length ? EXIT_FINDINGS : EXIT_OK;
+  }
+  const lines = [`Exported ${notes.length} notes to ${relative(ctx.cwd, out) || '.'} as an OKF v0.2 bundle (${files.length} files${attachments.length ? `, ${attachments.length} attachments` : ''}).`, ''];
+  lines.push(report.length ? 'Change report:' : 'Change report: nothing was added or changed.');
+  for (const e of report) lines.push(`  ${String(e.count).padStart(4)}  ${OKF_CHANGE_DESCRIPTIONS[e.kind]}${e.examples.length ? ` (e.g. ${e.examples.join(', ')})` : ''}`);
+  if (errors.length) {
+    lines.push('', `${errors.length} conformance error${errors.length === 1 ? '' : 's'} remain:`);
+    for (const f of errors.slice(0, 20)) lines.push(`  - ${f.file}:${f.line}: ${f.message}`);
+    if (errors.length > 20) lines.push(`  ... and ${errors.length - 20} more`);
+  } else lines.push('', 'Verified: tg okf check passes on the output.');
+  ctx.out(`${lines.join('\n')}\n`);
+  return errors.length ? EXIT_FINDINGS : EXIT_OK;
+}
+
 export const exportCmd: Command = {
   name: 'export',
-  summary: 'Project vault notes into a lat.md-conformant folder (lossy, with a report)',
-  usage: 'export <outDir> [--vault dir] [--folder sub] [--force]',
-  flags: { vault: 'string', folder: 'string', force: 'bool' },
+  summary: 'Project vault notes into a lat.md folder (lossy) or an OKF bundle, with a report',
+  usage: USAGE,
+  flags: { vault: 'string', folder: 'string', force: 'bool', format: 'string', 'default-type': 'string', title: 'string' },
   noProject: true,
   run(ctx: Ctx, args, flags) {
     const outArg = args[0];
     if (!outArg) {
-      ctx.err('usage: tg export <outDir> [--vault dir] [--folder sub] [--force]\n');
+      ctx.err(`usage: tg ${USAGE}\n`);
+      return EXIT_ERROR;
+    }
+    const format = typeof flags.get('format') === 'string' ? (flags.get('format') as string) : 'lat';
+    if (format !== 'lat' && format !== 'okf') {
+      ctx.err(`unknown format "${format}"; expected lat or okf\n`);
       return EXIT_ERROR;
     }
     const out = resolve(ctx.cwd, outArg);
@@ -54,6 +98,7 @@ export const exportCmd: Command = {
       ctx.err(`refusing to overwrite ${out}: it is not empty (use --force to write into it)\n`);
       return EXIT_ERROR;
     }
+    if (format === 'okf') return exportOkfBundle(ctx, base, out, flags);
     const notes = walkProject(base)
       .filter((p) => p.endsWith('.md'))
       .map((p) => ({ path: p, text: readFileSync(join(base, p), 'utf8') }));

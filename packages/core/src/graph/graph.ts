@@ -1,4 +1,4 @@
-import { parseEdges, type Diagnostic, type ParsedEdge, type Sign } from '../edges/parse.js';
+import { parseEdges, type Diagnostic, type ParsedEdge, type ParseOptions, type Sign } from '../edges/parse.js';
 import type { Props } from '../edges/props.js';
 
 export interface GraphNode {
@@ -59,6 +59,8 @@ export class Graph {
   constructor(
     private readonly resolve: LinkResolver,
     private readonly resolveSub?: SubpathResolver,
+    /** `linkEdges` also turns plain links in prose into `links_to` edges. */
+    private readonly options: ParseOptions = {},
   ) {}
 
   // ---- queries -----------------------------------------------------------
@@ -113,10 +115,11 @@ export class Graph {
     this.nodeMap.set(note.path, {
       id: note.path,
       labels: labelsOf(note.frontmatter),
-      props: { ...(note.frontmatter ?? {}), path: note.path, title: titleOf(note.path) },
+      // A frontmatter `title` (OKF's display name) wins over the file name.
+      props: { ...(note.frontmatter ?? {}), path: note.path, title: frontmatterTitle(note.frontmatter) ?? titleOf(note.path) },
       stub: false,
     });
-    const { edges: parsed, diagnostics } = parseEdges(note.text, note.path);
+    const { edges: parsed, diagnostics } = parseEdges(note.text, note.path, this.options);
     const edges = note.edges?.length ? [...parsed, ...note.edges] : parsed;
     this.files.set(note.path, { parsed: edges, diagnostics, edgeIds: [] });
     this.addEdges(note.path);
@@ -241,9 +244,15 @@ export class Graph {
 
 // @lat: [[graph-model#Node types]]
 export function labelsOf(frontmatter: Record<string, unknown> | null | undefined): string[] {
-  const t = frontmatter?.type;
-  const raw = Array.isArray(t) ? t : t == null ? [] : [t];
+  const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : v == null ? [] : [v]);
+  // `types` is where an OKF export keeps the full list, since OKF's `type` is a single string.
+  const raw = [...list(frontmatter?.type), ...list(frontmatter?.types)];
   return [...new Set(raw.filter((x): x is string | number => typeof x === 'string' || typeof x === 'number').map(String).map((s) => s.trim()).filter(Boolean))];
+}
+
+function frontmatterTitle(frontmatter: Record<string, unknown> | null | undefined): string | null {
+  const t = frontmatter?.title;
+  return typeof t === 'string' && t.trim() ? t.trim() : null;
 }
 
 export function titleOf(path: string): string {

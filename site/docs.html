@@ -279,6 +279,7 @@ RETURN p.title AS person, proj.title AS project,
         <tr><td><code>tg gen &lt;target&gt;</code></td><td>Print <code>agents.md</code>, <code>claude.md</code>, <code>cursor-rules.md</code>, <code>skill.md</code> or <code>graph-skill.md</code>.</td></tr>
         <tr><td><code>tg init</code>, <code>tg hook</code>, <code>tg mcp</code></td><td>See <a href="#cli-agents">Agents and hooks</a>.</td></tr>
         <tr><td><code>tg export</code>, <code>tg import</code></td><td>See <a href="#export">Export and import</a>.</td></tr>
+        <tr><td><code>tg okf check [dir]</code></td><td>Check any folder against <a href="blog-okf-ready.html">Open Knowledge Format</a> v0.2 conformance: concepts need parseable frontmatter with a string <code>type</code>, index files no frontmatter (except <code>okf_version</code> at the root), log date headings <code>YYYY-MM-DD</code>. Broken links, wikilinks and missing descriptions are warnings. Exit 1 only on errors.</td></tr>
       </table>
 
       <h2 id="annotations">Annotations in code</h2>
@@ -309,6 +310,7 @@ RETURN p.title AS person, proj.title AS project,
       <h2 id="export">Export and import</h2>
       <ul>
         <li><code>tg export &lt;out&gt; [--vault dir] [--folder sub] [--force]</code> writes vault notes under <code>&lt;out&gt;/lat.md/</code>. Typed edges become <code>type: [[link]]</code>, property blocks are dropped, <code>{{edge: …}}</code> embeds become their value, notes get a level-1 heading and directory index files if missing, and links to notes outside the export become plain text. It then runs the normal check and prints a loss report. Round trips are not guaranteed. It refuses a non-empty target without <code>--force</code>.</li>
+        <li><code>tg export &lt;out&gt; --format okf [--default-type T] [--title T]</code> writes an <a href="blog-okf-ready.html">Open Knowledge Format</a> bundle at <code>&lt;out&gt;/</code> instead. Wikilinks become bundle-absolute markdown links, and typed edge lines keep their type, sign and properties (<code>knows:: [Bob](/People/Bob.md) {since: 2020}</code>), so Typed Graph reads the bundle back into the same graph. Every concept gets a string <code>type</code> (default <code>Note</code>), plus a <code>title</code> and <code>description</code> if missing. Notes named <code>index.md</code> or <code>log.md</code> are renamed, embedded attachments are copied, and every folder gets an <code>index.md</code>. The command prints a change report and verifies the result with <code>tg okf check</code>.</li>
         <li><code>tg import &lt;path&gt; [--mount] [--into name]</code> copies a <code>lat.md/</code> folder (or the one inside a project) into the current vault or project, or symlinks it with <code>--mount</code>. It refuses a non-empty destination and never changes the source.</li>
       </ul>
       <p>In Obsidian, notes under a <code>lat.md/</code> folder get working <code>[[file#Heading#Sub]]</code> links and show link and section problems in the diagnostics list. Files are not modified.</p>

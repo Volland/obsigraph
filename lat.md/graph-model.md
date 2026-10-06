@@ -14,6 +14,10 @@ A node's labels come from frontmatter `type: Person` or `type: [Person, Employee
 
 Configurable fallbacks map folder or tag to type when frontmatter is absent.
 
+A non-empty frontmatter `title` becomes the node's `title` property; otherwise it is the file name.
+
+A `types` list adds labels after those from `type`, deduplicated; the [[okf]] export writes it because OKF's `type` is a single string.
+
 ## Schema notes
 
 A schema note such as `Types/Person.md` declares a type's properties, defaults, allowed edge types and visualization, in the spirit of typed templates.
@@ -27,3 +31,9 @@ A note directly in the schema folder (setting, default `Types/`) declares the ty
 Edges carry a type, optional label, sign, properties, a derived or pinned ID and the heading they were written under.
 
 Syntax is defined in [[edge-syntax]].
+
+## Plain link edges
+
+With the `linkEdges` graph option, every plain wikilink or markdown link to a note in prose becomes an untyped `links_to` edge (sign +1), as OKF consumers read links.
+
+The option is off by default so existing vaults keep their graphs and queries; it is the third argument of [[packages/core/src/graph/graph.ts#Graph]] and is passed to the parser. Lines that already produce typed edges, fenced and inline code, frontmatter and image embeds (`![..](..)`, `![[..]]`) never yield link edges; missing targets become stubs as usual. The sidecar turns it on with `OBSIGRAPH_LINK_EDGES=1`.

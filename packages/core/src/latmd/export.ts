@@ -49,21 +49,22 @@ const FENCE = /^\s*(```|~~~)/;
 const WIKI = /(!?)\[\[([^\]|\r\n]+)(?:\|([^\]\r\n]+))?\]\]/g;
 const INLINE_CODE = /(`+[^`\n]*`+)/;
 
-class Report {
-  private readonly map = new Map<LossKind, LossEntry>();
-  add(kind: LossKind, where: string): void {
+/** Counts per kind with up to three example places; shared by the lat.md and OKF exports. */
+export class Report<K extends string = LossKind> {
+  private readonly map = new Map<K, { kind: K; count: number; examples: string[] }>();
+  add(kind: K, where: string): void {
     const e = this.map.get(kind) ?? { kind, count: 0, examples: [] };
     e.count++;
     if (e.examples.length < 3) e.examples.push(where);
     this.map.set(kind, e);
   }
-  entries(): LossEntry[] {
+  entries(): { kind: K; count: number; examples: string[] }[] {
     return [...this.map.values()];
   }
 }
 
 /** Apply `fn` to the parts of a line outside inline code spans. */
-function outsideCode(line: string, fn: (part: string) => string): string {
+export function outsideCode(line: string, fn: (part: string) => string): string {
   return line
     .split(INLINE_CODE)
     .map((part, i) => (i % 2 === 1 ? part : fn(part)))
@@ -73,7 +74,7 @@ function outsideCode(line: string, fn: (part: string) => string): string {
 const titleOf = (path: string): string => path.slice(path.lastIndexOf('/') + 1).replace(/\.md$/, '');
 
 /** Walk body lines outside frontmatter and fenced code, letting `fn` rewrite each. */
-function mapProse(text: string, fn: (line: string, n: number) => string): string {
+export function mapProse(text: string, fn: (line: string, n: number) => string): string {
   const lines = text.split('\n');
   let i = 0;
   if (lines[0]?.trim() === '---') {
@@ -113,7 +114,7 @@ function flattenEdges(path: string, text: string, report: Report): string {
   });
 }
 
-function expandEmbeds(path: string, text: string, graph: Graph, report: Report): string {
+export function expandEmbeds(path: string, text: string, graph: Graph, report: { add(kind: 'edge-embed', where: string): void }): string {
   if (findEmbeds(text).length === 0) return text;
   return mapProse(text, (line, n) =>
     outsideCode(line, (part) =>

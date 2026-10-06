@@ -8,7 +8,7 @@ The sidecar imports the same `core` package as the plugin, so edge syntax, IDs a
 
 It watches the vault directory, maintains the [[ladybug-mirror|Ladybug mirror]] and the [[vector-search|vector index]] server-side, which also lifts the desktop-only limit on vector search.
 
-`VaultSync` (`packages/sidecar/src/sync.mts`) builds the graph from every note on start, then hands only files whose content hash changed since the stored state to downstream processors (the mirror and vectors plug in here). It watches with debounced native events, a one-time catch-up scan after the watcher starts, and an optional polling fallback for bind mounts. Frontmatter is parsed with a YAML library and links resolve like Obsidian through [[packages/core/src/graph/resolve.ts#pathResolver]].
+`VaultSync` (`packages/sidecar/src/sync.mts`) builds the graph from every note on start, then hands only files whose content hash changed since the stored state to downstream processors (the mirror and vectors plug in here). It watches with debounced native events, a one-time catch-up scan after the watcher starts, and an optional polling fallback for bind mounts. Frontmatter is parsed with a YAML library and links resolve like Obsidian through [[packages/core/src/graph/resolve.ts#pathResolver]]. `OBSIGRAPH_LINK_EDGES=1` turns on [[graph-model#Plain link edges]] for serving [[okf]] bundles.
 
 Sidecar sources use the `.mts` extension (Node ES-module TypeScript). The Obsidian directory scanner lints every `.ts` file as plugin code; `.mts` marks the sidecar as the Node service it is. lat cannot resolve symbols in `.mts`, so the sidecar sections cite files in plain text.
 

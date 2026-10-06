@@ -60,9 +60,9 @@ export class VaultSync {
     private readonly vaultDir: string,
     private readonly data: DataDir,
     private readonly processors: Processor[] = [],
-    private readonly opts: { debounceMs: number; pollMs: number } = { debounceMs: 300, pollMs: 0 },
+    private readonly opts: { debounceMs: number; pollMs: number; linkEdges?: boolean } = { debounceMs: 300, pollMs: 0 },
   ) {
-    this.graph = new Graph(pathResolver(() => this.known));
+    this.graph = new Graph(pathResolver(() => this.known), undefined, { linkEdges: opts.linkEdges ?? false });
   }
 
   /** Content hash of a note as last read, for downstream change detection. */

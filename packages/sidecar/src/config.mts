@@ -23,6 +23,8 @@ export interface Config {
   vectors: boolean;
   /** Delay before retrying an unreachable embedding provider. */
   embedRetryMs: number;
+  /** Plain links in prose become `links_to` edges, as OKF consumers read them. */
+  linkEdges: boolean;
 }
 
 export class ConfigError extends Error {}
@@ -100,5 +102,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, opts: { require
     ladybug: env.OBSIGRAPH_LADYBUG !== '0',
     vectors: env.OBSIGRAPH_VECTORS !== '0',
     embedRetryMs: int(env, 'OBSIGRAPH_EMBED_RETRY_MS', 30_000, 10),
+    linkEdges: env.OBSIGRAPH_LINK_EDGES === '1',
   };
 }

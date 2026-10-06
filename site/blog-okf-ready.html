@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getting Your Vault OKF-Ready</title>
+  <meta name="description" content="How to make Obsidian notes conformant with Google Cloud's Open Knowledge Format (OKF v0.2): types, descriptions, links and reserved names, a one-command export that keeps typed edges, a conformance check, and reading OKF bundles as a typed graph.">
+  <meta property="og:title" content="Getting your vault OKF-ready">
+  <meta property="og:description" content="Make your notes conformant with Google Cloud's Open Knowledge Format, export them in one command without losing typed edges, and read any OKF bundle as a typed graph.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 6 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>Getting your vault OKF-ready</h1>
+    <p class="standfirst">The Open Knowledge Format is a plain folder of markdown that agents can read without an SDK. A typed vault is already most of the way there. This article covers the four habits that close the gap, the export command that does the rest without losing your typed edges, and how to read anyone's OKF bundle as a graph.</p>
+
+    <div class="callout">The Open Knowledge Format is a Google Cloud specification, published in <a href="https://github.com/GoogleCloudPlatform/knowledge-catalog">GoogleCloudPlatform/knowledge-catalog</a>. Typed Graph is not affiliated with Google. This article describes OKF version 0.2. Check the spec for anything newer.</div>
+
+    <h2>OKF in one minute</h2>
+    <p>An OKF <em>bundle</em> is a directory of markdown files. Each file is a <em>concept</em>: a table, a metric, a runbook, a person, anything. The rules are short:</p>
+    <ul>
+      <li>Every concept starts with YAML frontmatter, and that frontmatter has a <code>type</code>. This is the only required field.</li>
+      <li><code>title</code>, <code>description</code>, <code>resource</code> and <code>tags</code> are recommended. Any other key is allowed, and consumers must keep keys they don't know.</li>
+      <li>Concepts link with standard markdown links, preferably bundle-absolute: <code>[customers](/tables/customers.md)</code>. A link says that a relationship exists, and the surrounding prose says what kind.</li>
+      <li><code>index.md</code> and <code>log.md</code> are reserved in every folder, for listings and change history.</li>
+    </ul>
+    <p>That's all conformance requires. Broken links, unknown types and missing descriptions must not make a consumer reject the bundle. Version 0.2 also adds optional fields for provenance and trust (<code>sources</code>, <code>generated</code>, <code>verified</code>, <code>status</code>, <code>stale_after</code>). They come up again near the end.</p>
+    <p>The point of the format is that nothing is locked in. If you can <code>cat</code> a file you can read it, and if you can <code>git clone</code> a repository you can ship it. An agent gets curated context without anyone building an integration.</p>
+
+    <h2>Where a vault stands</h2>
+    <table>
+      <thead><tr><th>OKF expects</th><th>A typical Obsidian vault</th><th>A Typed Graph vault</th></tr></thead>
+      <tbody>
+        <tr><td>Frontmatter with a <code>type</code></td><td>Often no frontmatter</td><td><code>type: Person</code> already drives labels and schemas</td></tr>
+        <tr><td><code>type</code> is one string</td><td>n/a</td><td>Sometimes a list: <code>[Person, Engineer]</code></td></tr>
+        <tr><td>A one-line <code>description</code></td><td>Rare</td><td>Rare</td></tr>
+        <tr><td>Standard markdown links</td><td><code>[[wikilinks]]</code></td><td><code>[[wikilinks]]</code> and <code>knows:: [[Bob]] {since: 2020}</code></td></tr>
+        <tr><td>No concept named <code>index.md</code> or <code>log.md</code></td><td>Folder notes are sometimes called <code>index.md</code></td><td>Same</td></tr>
+        <tr><td>Typed relationships</td><td>Not in OKF: links are untyped</td><td>Typed, signed edges with properties</td></tr>
+      </tbody>
+    </table>
+    <p>The last row is the interesting one. OKF chose untyped links on purpose, and Typed Graph is built around typed ones. Further down you'll see that the two fit together better than you might expect.</p>
+
+    <h2>Four habits that make the export clean</h2>
+    <p>You can export any vault today, and the command fills in what is missing. The result is better when the notes already say what they are.</p>
+
+    <h3>1. Give every note a type</h3>
+    <p>This is the one hard requirement. A note without a type gets the default (<code>Note</code>, or whatever you pass as <code>--default-type</code>), which is conformant but tells an agent nothing. Choose types that a stranger would understand without context, because OKF has no central registry: <code>Person</code>, <code>Paper</code>, <code>Runbook</code>, <code>API Endpoint</code>. If you already keep <a href="blog-typed-graph.html">schema notes</a> in <code>Types/</code>, those names are your type list.</p>
+    <p>Multiple labels are fine. The export keeps the first as <code>type</code> and the full list as <code>types</code>, and Typed Graph reads both back:</p>
+<pre>---
+type: Person
+types: [Person, Engineer]
+---</pre>
+
+    <h3>2. Write a one-sentence description</h3>
+    <p>OKF consumers use <code>description</code> for index listings, search snippets and previews. It is what an agent reads before it decides whether to open the file. When a note has none, the export takes the first sentence of the first paragraph. Often that works. Sometimes it gets "This note is a draft." A description you write yourself is always better:</p>
+<pre>---
+type: Runbook
+description: Steps to triage a freshness alert on the orders pipeline.
+---</pre>
+
+    <h3>3. Keep writing wikilinks, or switch edges to markdown links</h3>
+    <p>You don't have to give up <code>[[wikilinks]]</code>. The export rewrites them as bundle-absolute markdown links and resolves short names the way Obsidian does. If you want the vault itself to render on GitHub and work with OKF tools without an export step, Typed Graph now accepts markdown links in edge lines too:</p>
+<pre>knows:: [[Bob]] {since: 2020}
+knows:: [Bob](/People/Bob.md) {since: 2020}</pre>
+    <p>Both lines produce the same typed edge. Relative paths (<code>../Companies/Acme.md</code>) work as well. Links to web pages are never treated as edges.</p>
+
+    <h3>4. Don't call a note <code>index.md</code> or <code>log.md</code></h3>
+    <p>OKF reserves these names. The export renames such notes to <code>index-note.md</code> and <code>log-note.md</code> and updates links to them, but a name that says what the note is works better anyway.</p>
+
+    <h2>Export: one command</h2>
+<pre>tg export ./bundle --vault ~/vault --format okf --title "Research lab"</pre>
+    <p>Here is the real report for the <a href="example.html">demo vault</a>, which has 29 notes, typed edges, embeds and deliberate gaps:</p>
+<pre>Exported 29 notes to bundle as an OKF v0.2 bundle (38 files).
+
+Change report:
+    76  wikilinks rewritten as bundle-absolute markdown links
+    29  titles added from the first heading or file name
+    29  descriptions added from the first paragraph
+     3  links to notes outside the export kept as links to not-yet-written concepts
+    14  notes without a type given the default type
+    13  {{edge: ...}} embeds replaced by their value as text
+     2  list types reduced to their first entry as "type", the full list kept as "types"
+     9  directory index.md files generated
+
+Verified: tg okf check passes on the output.</pre>
+    <p>Read the report as a to-do list. The 14 untyped notes are the guide pages, and giving them a real type (<code>Guide</code>, say) makes the bundle more useful. The 3 broken links are intentional stubs. OKF calls them "not-yet-written knowledge" and keeps them as links.</p>
+    <p>Every folder gets a generated <code>index.md</code>, so an agent can see what is there before it opens anything:</p>
+<pre># People
+
+* [Alice](Alice.md) - Alice runs search research at Acme.
+* [Bob](Bob.md) - Bob builds the search backend.
+* [Carol](Carol.md) - Carol works at Initech and contributes to two Acme projects.</pre>
+    <p>The root index declares the version (<code>okf_version: "0.2"</code>). That is the only frontmatter OKF allows in an index file. The vault itself is never modified, and like the lat.md export, the command refuses to write into a non-empty folder unless you pass <code>--force</code>.</p>
+
+    <h2>What happens to typed edges</h2>
+    <p>This is the part I care about most. Here is a typed edge in Bob's note before and after:</p>
+<pre>works_at:: [[Acme]] {role: engineer, since: 2020}
+works_at:: [Acme](/Companies/Acme.md) {role: engineer, since: 2020}</pre>
+    <p>For an OKF consumer, the second line is a link to <code>Acme</code> with the words "works_at" in front of it. That is exactly how the spec wants relationships described: <em>the specific kind is conveyed by the surrounding prose</em>. An agent reading it understands the relationship. A graph view that treats every link as untyped still draws the edge.</p>
+    <p>For Typed Graph, the same line is still a <code>works_at</code> edge with two properties. So the export is not a lossy projection like the <a href="blog-tg-vs-lat-md.html">lat.md export</a>. Load the bundle back and you get the same typed edges, with the same signs, targets and properties, and the same labels. A test in the repository checks exactly this. Only <code>{{edge: ...}}</code> embeds (expanded to their value) and <code>![[note]]</code> transclusions (turned into links) don't come back.</p>
+    <p>You can publish one folder that OKF tools read as a knowledge bundle and Typed Graph reads as a typed property graph, without keeping two copies in sync.</p>
+
+    <h2>Check any folder</h2>
+<pre>$ tg okf check ./bundle
+Checked 38 markdown files against OKF v0.2
+
+3 warnings (consumers must tolerate these):
+  Companies/Initech.md:12: link to Globex.md does not resolve in the bundle
+  Papers/Typed Links in Practice.md:15: link to Property Graphs 101.md does not resolve in the bundle
+  People/Mallory.md:12: link to Eve.md does not resolve in the bundle
+
+Conformant with OKF v0.2</pre>
+    <p>The check fails only on the spec's own conformance rules:</p>
+    <ul>
+      <li>a concept with no frontmatter or broken YAML</li>
+      <li>a missing <code>type</code>, an empty one or a list</li>
+      <li>frontmatter in a nested <code>index.md</code></li>
+      <li>a <code>log.md</code> date heading that is not <code>YYYY-MM-DD</code></li>
+    </ul>
+    <p>Everything a consumer must tolerate is a warning: broken links, wikilinks that OKF tools won't follow, missing descriptions, and the v0.1 <code>timestamp</code> key. It exits 1 only on errors and supports <code>--json</code>, so it fits in CI next to <code>tg check</code>. Google's sample bundles (<code>acme_retail</code>, <code>ga4</code>) pass it.</p>
+
+    <h2>Reading OKF bundles as a graph</h2>
+    <p>This works the other way too. Point the <a href="blog-sidecar-rag.html">sidecar</a> at any OKF bundle and turn on link edges:</p>
+<pre>OBSIGRAPH_VAULT=./ga4 OBSIGRAPH_DATA=./data OBSIGRAPH_LINK_EDGES=1 node server.mjs --stdio</pre>
+    <p>Each concept becomes a node labeled with its <code>type</code> and titled with its <code>title</code>. Each prose link becomes a <code>links_to</code> edge, and a link to a concept that doesn't exist yet becomes a stub. Typed edge lines stay typed. Google's GA4 sample has 14 files, which give 14 nodes, 22 <code>links_to</code> edges and no stubs. After that it's an ordinary Cypher question:</p>
+<pre>MATCH (t:`BigQuery Table`)-[:links_to]->(m:Reference)
+RETURN t.title AS table, count(m) AS metrics
+
+table              | metrics
+GA4 Events Export  | 7</pre>
+    <p>Link edges are off by default, because turning every wikilink in an existing vault into an edge would change your graphs and queries. Typed edges written with markdown links work everywhere, including the Obsidian plugin. Plain link edges are a sidecar setting for now.</p>
+
+    <h2>Trust fields are yours to write</h2>
+    <p>OKF 0.2 lets a concept record who wrote it, who checked it and when it goes stale:</p>
+<pre>---
+type: Runbook
+description: Steps to triage a freshness alert on the orders pipeline.
+generated: { by: human:volodymyr, at: 2026-10-06T09:00:00Z }
+verified: { by: human:volodymyr, at: 2026-10-06T09:00:00Z }
+status: stable
+stale_after: 2027-04-01T00:00:00Z
+---</pre>
+    <p>The export keeps these fields when you write them and never makes them up. A vault doesn't know whether a person checked a note against its source, and a <code>verified</code> field the tool invented would be worse than none, because consumers derive a trust tier from it. If an agent will act on a note, mark it <code>verified</code> by a <code>human:</code> actor once you have actually checked it.</p>
+
+    <h2>Checklist</h2>
+    <ul>
+      <li>Every note has a <code>type</code> a stranger would understand.</li>
+      <li>Notes an agent will read have a one-sentence <code>description</code>.</li>
+      <li>No note is called <code>index.md</code> or <code>log.md</code>.</li>
+      <li>Typed edges stay typed. Write them with wikilinks or markdown links.</li>
+      <li>Run <code>tg export ./bundle --format okf</code> and read the change report.</li>
+      <li>Run <code>tg okf check ./bundle</code> in CI.</li>
+      <li>Add <code>verified</code> by hand where trust matters.</li>
+    </ul>
+    <p>The commands are in the <a href="docs.html#cli">CLI reference</a>, and the details of the format are in the <a href="https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md">OKF specification</a>.</p>
+
+    <div class="next">Next: <a href="blog-why-typed-graph-for-code.html">Why a typed graph for your codebase →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB, lat.md or Google.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
