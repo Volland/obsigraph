@@ -2,6 +2,15 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.7.1 — 2026-10-06
+
+Fixes for the community review of 0.7.0.
+
+### Changed
+
+- Release assets `main.js` and `styles.css` carry GitHub build-provenance attestations.
+- Lint cleanups: unnecessary regex escapes, a control character in the SHACL exporter's IRI escaping, redundant type assertions, and an inline style in the VS Code graph webview.
+
 ## 0.7.0 — 2026-10-06
 
 Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by hand](https://volland.github.io/obsigraph/blog-typed-graph-schema.html) and the [specification](https://volland.github.io/obsigraph/spec/tgs/v0.1/).

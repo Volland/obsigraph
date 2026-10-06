@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   const tree: vscode.TreeDataProvider<Node> = {
-    onDidChangeTreeData: changed.event as vscode.Event<void>,
+    onDidChangeTreeData: changed.event,
     getTreeItem(n) {
       if (n.kind === 'empty') return new vscode.TreeItem(n.text);
       if (n.kind === 'group') {

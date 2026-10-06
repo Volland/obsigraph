@@ -22,7 +22,6 @@ const renderer = new GraphRenderer(host, {
   onOpen: (path) => vscode.postMessage({ type: 'open', path }),
   onExpand: (id) => vscode.postMessage({ type: 'expand', id }),
 });
-host.style.height = '100vh';
 window.addEventListener('resize', () => renderer.cy.resize());
 
 window.addEventListener('message', (e: MessageEvent<{ type: string; elements?: GraphElements }>) => {

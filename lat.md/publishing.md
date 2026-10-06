@@ -4,7 +4,7 @@ How the plugin reaches users and how the website is built; both are automated fr
 
 ## Plugin releases
 
-A pushed tag equal to the manifest version (no `v`) triggers `.github/workflows/release.yml`, which tests, builds and attaches `main.js`, `manifest.json` and `styles.css`.
+A pushed tag equal to the manifest version (no `v`) triggers `.github/workflows/release.yml`, which tests, builds and attaches `main.js`, `manifest.json` and `styles.css`, with GitHub build-provenance attestations for `main.js` and `styles.css` (the community review asks for them).
 
 Each release adds a section to the root `CHANGELOG.md` (plugin, CLI, core and sidecar) in the release commit; the VS Code extension keeps `packages/vscode/CHANGELOG.md`.
 

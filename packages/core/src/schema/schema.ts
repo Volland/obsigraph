@@ -260,7 +260,7 @@ function readEdges(raw: unknown, diag: Diag): EdgeRule[] | null {
 function readNames(raw: unknown, what: string, diag: Diag): string[] | null {
   if (raw === undefined || raw === null) return null;
   if (typeof raw === 'string') return [raw];
-  if (Array.isArray(raw) && raw.every((x) => typeof x === 'string')) return raw as string[];
+  if (Array.isArray(raw) && raw.every((x) => typeof x === 'string')) return raw;
   diag(`${what} must be a type name or a list of type names`);
   return null;
 }

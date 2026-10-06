@@ -29,7 +29,7 @@ const EMPTY: Backlinks = { kind: 'empty', groups: [] };
 
 function fromEdge(e: GraphEdge, graph: Graph): BacklinkItem {
   const src = graph.node(e.source);
-  return { path: e.source, line: e.line + 1, label: src && !src.stub ? titleOf(e.source) : e.source, sign: e.sign, props: e.props as Record<string, unknown> };
+  return { path: e.source, line: e.line + 1, label: src && !src.stub ? titleOf(e.source) : e.source, sign: e.sign, props: e.props };
 }
 
 /**
@@ -47,7 +47,7 @@ export function backlinksFor(index: WorkspaceIndex, path: string): Backlinks {
         const file = e.target.split('#')[0]!;
         const resolved = graph.resolveLink(file, path);
         if (resolved && !index.isNote(resolved)) continue;
-        items.push({ path: resolved ?? file, line: 1, label: e.target, sign: e.sign, props: e.props as Record<string, unknown>, target: e.target });
+        items.push({ path: resolved ?? file, line: 1, label: e.target, sign: e.sign, props: e.props, target: e.target });
       }
     }
     return items.length ? { kind: 'source', groups: [{ title: 'describes', items }] } : EMPTY;

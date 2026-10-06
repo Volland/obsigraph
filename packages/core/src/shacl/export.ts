@@ -118,7 +118,7 @@ export function compact(iri: string, base: string, prefixes: Record<string, stri
     if (iri.startsWith(ns) && PN_LOCAL.test(iri.slice(ns.length)) && (!best || ns.length > best[1].length || (ns.length === best[1].length && p < best[0]))) best = [p, ns];
   }
   if (best) return `${best[0]}:${iri.slice(best[1].length)}`;
-  return `<${iri.replace(/[\x00-\x20<>"{}|^`\\]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)}>`;
+  return `<${Array.from(iri, (c) => (c.charCodeAt(0) <= 0x20 || '<>"{}|^`\\'.includes(c) ? `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}` : c)).join('')}>`;
 }
 
 function isScalar(v: unknown): v is string | number | boolean {
