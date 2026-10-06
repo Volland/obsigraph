@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>typed-graph-for-coders</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="typed-graph-for-coders_files/libs/clipboard/clipboard.min.js"></script>
+<script src="typed-graph-for-coders_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="typed-graph-for-coders_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="typed-graph-for-coders_files/libs/quarto-html/popper.min.js"></script>
+<script src="typed-graph-for-coders_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="typed-graph-for-coders_files/libs/quarto-html/anchor.min.js"></script>
+<link href="typed-graph-for-coders_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="typed-graph-for-coders_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="typed-graph-for-coders_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="typed-graph-for-coders_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="typed-graph-for-coders_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="your-codebase-has-two-graphs.-you-only-maintain-one." class="level1">
+<h1>Your codebase has two graphs. You only maintain one.</h1>
+<p><em>A deep dive into typed graphs as a working tool for developers: what to model, what to leave to the machine, and where specs belong now that they live in the repo.</em></p>
+<hr>
+<section id="the-graph-you-already-have" class="level2">
+<h2 class="anchored" data-anchor-id="the-graph-you-already-have">The graph you already have</h2>
+<p>Every codebase already is a graph. Files import files. Functions call functions. Classes extend classes. Your language server, your IDE and your coding agent all walk this graph all day, and they are good at it. If you ask “what calls <code>verifyToken</code>?” you get an answer in milliseconds, and nobody needs to write anything down for that to work.</p>
+<p>This is the <em>structure graph</em>. It is derived from the source. It is always up to date, because it is the source. And there is a whole category of tools that turn it into a pretty picture and call it a knowledge graph.</p>
+<p>It answers one family of questions very well: <strong>what</strong>. What depends on this? What breaks if I change it? Where is this symbol used?</p>
+<p>But watch what happens when you try to use it to answer the questions that actually slow a team down:</p>
+<ul>
+<li>Why do we validate tokens in the service and not at the gateway?</li>
+<li>Is the three-attempt retry loop a requirement, or did someone pick a number?</li>
+<li>Which function is supposed to enforce the expiry rule?</li>
+<li>We agreed sessions are stateless. What in the code still disagrees?</li>
+<li>Which parts of the payment flow have no test that proves they work?</li>
+</ul>
+<p>None of these can be answered from the structure graph, and not because the tool is weak. The information is not in the source. The source says what the program does. It does not say what the program is <em>meant</em> to do, why it was built this way, or what was rejected on the way.</p>
+<p>That information lives somewhere else. It lives in design docs, in decision records, in tickets, in a Slack thread from March, and mostly in the heads of the people who were in the room. Call this the <em>intent graph</em>. It is the second graph in your codebase, and for most teams it is barely a graph at all: a pile of prose with no reliable connection to the code it describes.</p>
+<p>This article is about connecting the two, and about why the connection needs <strong>types</strong>.</p>
+<hr>
+</section>
+<section id="why-linked-is-not-enough" class="level2">
+<h2 class="anchored" data-anchor-id="why-linked-is-not-enough">Why “linked” is not enough</h2>
+<p>The first step most teams take is to add links. A design doc mentions a function. A comment in the code points back at a doc section. This is a real improvement, and tools built around it, such as <a href="https://www.npmjs.com/package/lat.md">lat.md</a>, do it well. A <code>lat.md/</code> folder is a set of cross-linked Markdown files that describe what a project does and why, and a <code>check</code> command fails when a link points at something that no longer exists. That alone turns “the docs are stale” from a feeling into a build failure.</p>
+<p>But a plain link has a limit. It says two things are related. It does not say how. Consider three comments, all of which link a function to the same section of a design doc:</p>
+<ul>
+<li>This function <em>implements</em> the rule.</li>
+<li>This function <em>violates</em> the rule, and is a leftover we haven’t deleted.</li>
+<li>This function is a <em>test</em> that proves the rule holds.</li>
+</ul>
+<p>To a plain link they are identical. A reader, human or agent, has to open each one and read the code to find out which it is. The information that matters, the <em>relationship</em>, is exactly the part the link throws away.</p>
+<p>A <strong>typed graph</strong> keeps it. Each link has a type, a direction and, optionally, a sign and properties:</p>
+<pre><code>// @tg: implements:: [[auth#Token expiry]] {since: 2}
+// @tg: -contradicts:: [[design#Stateless sessions]]
+// @tg: verifies:: [[auth#Token expiry]]</code></pre>
+<p>The word before <code>::</code> is the edge type. A <code>-</code> in front makes the edge negative, so conflict is a first-class fact rather than a remark in a comment. The braces hold properties of the relationship itself. The edge starts at the declaration that follows the comment, so it names the function, not the whole file.</p>
+<p>This is the same property-graph model that graph databases have used for years: nodes with labels and properties, relationships with a type, a direction and their own properties. The difference is where it lives. There is no database. The graph is rebuilt from plain Markdown and source comments, in memory, every time you ask.</p>
+<p>Once links have types, you can <em>ask</em> the graph things:</p>
+<pre><code>tg cypher --code annotated "
+  MATCH (s:Section)
+  OPTIONAL MATCH (c:CodeSymbol)-[r:implements]-&gt;(s)
+  WITH s, count(r) AS n WHERE n = 0
+  RETURN s.section"</code></pre>
+<p>That lists every design section that nothing implements. Replace <code>implements</code> with <code>contradicts</code> and you get the places where the code works against a decision. Questions that used to cost an afternoon of grep and a meeting become one query. I ran both of these against the CLI while writing this.</p>
+<hr>
+</section>
+<section id="what-a-typed-graph-is-for" class="level2">
+<h2 class="anchored" data-anchor-id="what-a-typed-graph-is-for">What a typed graph is for</h2>
+<p>Before going further, it is worth being precise about the job. A typed graph for a codebase is not documentation in a fancy format, and it is not a dashboard. It does three things.</p>
+<p><strong>It makes drift detectable.</strong> Documentation rots because nothing connects it to the code. When a link has a target that must exist and a coverage rule that must hold, drift becomes an error you see in CI instead of a surprise you meet in production.</p>
+<p><strong>It makes intent queryable.</strong> “Which requirements have no test?”, “which decisions has nothing superseded?”, “what is the blast radius of changing this rule?” are graph questions. They are not search questions and they are not grep questions, because they depend on the <em>kind</em> of relationship between things.</p>
+<p><strong>It gives agents the missing half of the picture.</strong> A coding agent can read your files, but it reads them cold. It does not know which function is the rule and which is a workaround. If the graph tells it that this function implements a constraint and that one is flagged as contradicting a decision, it stops guessing at intent and starts reading it. That is also the cheapest context you can give a model: a handful of typed edges, not the whole file tree.</p>
+<hr>
+</section>
+<section id="why-you-cannot-generate-the-intent-graph" class="level2">
+<h2 class="anchored" data-anchor-id="why-you-cannot-generate-the-intent-graph">Why you cannot generate the intent graph</h2>
+<p>At this point the obvious objection arrives. <em>We already parse the code. Let a model read it, summarize every module into a doc, infer the edges, and regenerate the whole thing on every commit. No writing, no drift.</em></p>
+<p>It is a good idea for the structure graph, and a typed-graph tool should do exactly that: the code nodes in <code>tg</code> are derived in memory from your source and never written to disk. But for the intent graph it fails, for four reasons.</p>
+<section id="generated-docs-cannot-check-the-code" class="level3">
+<h3 class="anchored" data-anchor-id="generated-docs-cannot-check-the-code">1. Generated docs cannot check the code</h3>
+<p>The value of a consistency check is that two <em>independent</em> things have to agree: what someone wrote down, and what the code does. If you generate the doc from the code, they agree by construction. Drift is no longer detectable, because there is nothing left for the code to drift <em>from</em>.</p>
+<p>Worse, a bug becomes the specification. A generated doc that says “tokens are accepted for up to 90 days” is a faithful description of a mistake, and it will pass every check you run on it.</p>
+</section>
+<section id="intent-is-not-in-the-artifact" class="level3">
+<h3 class="anchored" data-anchor-id="intent-is-not-in-the-artifact">2. Intent is not in the artifact</h3>
+<p>A model reading the source can see a retry loop with three attempts. It cannot know that three is the number your payment provider’s SLA allows, that it used to be five until an outage, or that nobody should raise it again. It will produce a <em>plausible</em> reason, and plausible reasons are the dangerous kind: they read as fact and they are invented.</p>
+<p>Reasons, constraints and rejected alternatives exist only in the decision. Writing them down is the act of recording them. They cannot be recovered afterwards from the result.</p>
+</section>
+<section id="the-graph-worth-having-is-small" class="level3">
+<h3 class="anchored" data-anchor-id="the-graph-worth-having-is-small">3. The graph worth having is small</h3>
+<p>A graph inferred from code has an edge for every call. It is as large as the code, nobody reads it, and an agent pulls it into its context window as noise.</p>
+<p>The graph you write by hand has a node per decision and an edge per claim someone chose to make. It is small on purpose, hundreds of sections for a serious project rather than hundreds of thousands of edges. That curation <em>is</em> the information. A long list of things you could say about the code is not the same as the ten things that must stay true.</p>
+</section>
+<section id="writing-is-where-the-design-gets-checked" class="level3">
+<h3 class="anchored" data-anchor-id="writing-is-where-the-design-gets-checked">4. Writing is where the design gets checked</h3>
+<p>Writing “this function implements the expiry rule” forces you to find the rule, and to notice that there are two functions, or none. Deriving the edge automatically skips that moment, and that moment is half the value. lat.md’s leading-paragraph rule is the same idea in miniature: if a section can’t be summarized in one sentence, it isn’t clear yet.</p>
+<p>So the division of labor is this:</p>
+<blockquote class="blockquote">
+<p><strong>Derive what the code can tell you. Write what only people know. Let a machine check that the two agree.</strong></p>
+</blockquote>
+<p>Agents can and should help with the writing. An agent that has just changed a function is well placed to draft the doc update, and a stop hook can refuse to let it finish if it changed a lot of code and touched nothing in the docs. But a person reads the sentence before it lands, because the sentence is a claim, and a claim nobody has read is the same as no claim.</p>
+<hr>
+</section>
+</section>
+<section id="specs-are-code-now" class="level2">
+<h2 class="anchored" data-anchor-id="specs-are-code-now">Specs are code now</h2>
+<p>Something changed in the last couple of years that matters for all of this, and it is easy to miss because it happened in tooling rather than in theory.</p>
+<p>For a long time, a specification was a separate thing. It lived in a wiki, a Confluence space, a Google Doc or a PDF. It was written <em>about</em> the software by someone who was, in a sense, outside it. It had its own lifecycle, its own owners, its own review process and, inevitably, its own drift.</p>
+<p>Spec-driven workflows reverse this. Take <a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a>, the one this repository uses. A project has an <code>openspec/</code> folder, checked into git next to the source:</p>
+<pre><code>openspec/
+  specs/
+    tg-check/
+      spec.md          # the current truth for one capability
+    code-layer/
+      spec.md
+  changes/
+    add-tg-annotations/
+      proposal.md      # why
+      design.md        # how
+      tasks.md         # the work
+      specs/           # the delta this change makes to the specs
+  changes/archive/     # finished changes, dated</code></pre>
+<p>Each spec is written as requirements with scenarios, in a deliberately mechanical register:</p>
+<pre><code>### Requirement: Check
+The system SHALL report every broken wiki link ... and SHALL exit 1 when any exist.
+
+#### Scenario: Uncovered test spec
+- **WHEN** a file with `require-code-mention: true` has a leaf section no code comment references
+- **THEN** `tg check` reports that section and exits 1</code></pre>
+<p>Look at what this is. It is versioned in git. It changes in the same pull request as the code. A reviewer sees the spec diff and the code diff side by side. A change is a proposal, a design and a task list, and when it lands it is <em>archived</em> with a date, in the repository, forever. An agent implementing the work reads these files as its instructions.</p>
+<p>That is not documentation about the software. That is <strong>part of the software</strong>. The spec is a source artifact with the same status as a module, a migration or a config file: it is reviewed, versioned, diffed, built from and, if you use it right, tested against.</p>
+<p>This is the shift worth stating plainly, because it changes what a graph of a codebase should contain. If specs are code, then <strong>a graph of the codebase that leaves them out is missing a layer of the codebase</strong>. Requirements and scenarios should be nodes. A change should be a node with a lifecycle. The relationship between a requirement and the function that implements it, or the test that proves it, should be an edge, and a typed one.</p>
+<p>Here is the part that follows directly from the previous section and is easy to get wrong. Specs are code, but they are <em>written</em> code: they are the intent layer, hand-authored, and the whole point of them is that a person decided them. The graph should connect them to the structure layer, and a machine should check that the connection holds. It should not generate them. A spec derived from the implementation is a transcript, not a spec.</p>
+<section id="honest-status-what-works-today-and-what-does-not" class="level3">
+<h3 class="anchored" data-anchor-id="honest-status-what-works-today-and-what-does-not">Honest status: what works today and what does not</h3>
+<p>I tested this while writing it, and the result is worth stating.</p>
+<p><strong>Works today.</strong> <code>tg</code> links code to sections of a <code>lat.md/</code> folder with typed edges, and builds <code>Section</code>, <code>CodeFile</code> and <code>CodeSymbol</code> nodes into one queryable graph. <code>tg check</code> verifies the links and, with <code>require-code-mention</code>, that every leaf section of a test-spec file is referenced from code. This repository uses both: <code>lat.md/</code> for architecture and test specifications, and OpenSpec for the change workflow. The roadmap names the OpenSpec change that implemented each release.</p>
+<p><strong>Does not work yet.</strong> A <code>@tg:</code> annotation cannot point at a file under <code>openspec/</code>. I tried <code>[[openspec/specs/auth/spec.md]]</code> as a target and <code>tg check</code> reported it as unresolved (“no matching section found”), because link targets are sections in the <code>lat.md/</code> folder or source files with symbols, not arbitrary Markdown elsewhere in the repo. And a typed <code>refines:: [[...]]</code> line written inside a <code>lat.md/</code> section shows up in <code>tg cypher</code> as a plain <code>references</code> edge; the types come from <code>@tg:</code> annotations in code. In the Obsidian plugin, where a vault is made of notes, typed edges and <code>type:</code> frontmatter labels work in notes as written.</p>
+<p>So today, OpenSpec requirements are part of your <em>repository</em> but not yet nodes in the <em>CLI’s graph</em>. The pragmatic bridge is to keep one <code>lat.md/</code> section per capability that names the OpenSpec capability and links to the code, and to use the vault or the Obsidian plugin to see specs as notes. Making <code>openspec/specs/**/spec.md</code> a first-class source of <code>Spec</code> and <code>Requirement</code> nodes is the obvious next feature, and I would rather say so than imply it exists.</p>
+</section>
+<section id="specs-can-be-tagged-and-should-be" class="level3">
+<h3 class="anchored" data-anchor-id="specs-can-be-tagged-and-should-be">Specs can be tagged, and should be</h3>
+<p>Because a spec is a plain Markdown file, it can carry metadata, and that is the cheapest useful step you can take right now. Frontmatter gives you two things a graph can use immediately:</p>
+<pre><code>---
+type: Spec
+tags: [auth, security, p1]
+status: stable
+owner: platform
+---
+# auth Specification</code></pre>
+<ul>
+<li><strong><code>type</code></strong> becomes the node’s label, so a query can say <code>MATCH (s:Spec)</code> instead of “some Markdown file”. A list gives several labels. The graph model also supports configurable fallbacks that map a folder or a tag to a type when the frontmatter is absent, which suits a convention like “everything under <code>openspec/specs/</code> is a <code>Spec</code>”.</li>
+<li><strong>Tags</strong> are the orthogonal axis. Types say <em>what kind of thing</em> it is. Tags say which concerns it touches: a capability, a risk class, a team, a release. You will want to ask “show me every <code>security</code> spec that has no test”, and that is a tag filter combined with a graph traversal.</li>
+</ul>
+<p>A habit that pays off: tag specs by <strong>capability</strong> (what area), <strong>risk</strong> (what happens if it’s wrong) and <strong>status</strong> (draft, stable, deprecated). Those three cover most of the questions people ask in practice.</p>
+<hr>
+</section>
+</section>
+<section id="a-small-ontology-for-code" class="level2">
+<h2 class="anchored" data-anchor-id="a-small-ontology-for-code">A small ontology for code</h2>
+<p>If you are going to type your graph, the first question is: which types? This is where most efforts go wrong. The temptation is to model everything, producing thirty node types and sixty edge types, and then nobody uses them, because every annotation becomes a taxonomy exercise.</p>
+<p>The opposite failure is also real. If every edge is <code>related_to</code>, you are back to untyped links.</p>
+<p>The rule I’d suggest: <strong>a type earns its place only if you would ask a question that depends on it.</strong> If you can’t name the query, drop the type. What follows is a deliberately small starting set, about seven kinds of node and about ten kinds of edge, designed around the questions engineers and agents actually ask.</p>
+<p>To be clear about the status of what follows: this is a <strong>proposal</strong>, a conventions layer you can adopt today. Edge types are free-form in the syntax (the word before <code>::</code> is whatever you write), and node types are whatever you put in <code>type:</code>. None of the names below are built in or enforced. Treat them as a vocabulary to agree on with your team, and write them into a schema note so the tool can warn when someone invents a synonym.</p>
+<section id="the-two-layers" class="level3">
+<h3 class="anchored" data-anchor-id="the-two-layers">The two layers</h3>
+<p>Split the nodes into two layers and keep them apart in your head.</p>
+<p><strong>Intent layer</strong> (written by people):</p>
+<ul>
+<li><code>Decision</code>: a choice that was made, with its reason and the alternatives rejected. The unit of “why”. An ADR is a <code>Decision</code>.</li>
+<li><code>Requirement</code>: something the system SHALL do. This is the OpenSpec requirement, one level below a whole spec file.</li>
+<li><code>Scenario</code>: a concrete, checkable example of a requirement (WHEN/THEN). The bridge between prose and test.</li>
+<li><code>Constraint</code>: something the system must not violate, usually from outside: a regulation, an SLA, a platform limit, a security rule. Differs from a requirement in that nobody chose it.</li>
+<li><code>Concept</code>: a domain term with an exact meaning, so “account”, “tenant” and “workspace” stop being used interchangeably.</li>
+</ul>
+<p><strong>Realization layer</strong> (derived, or annotated in place):</p>
+<ul>
+<li><code>Module</code>/<code>CodeSymbol</code>: the code. Derived, never written by hand.</li>
+<li><code>Test</code>: a symbol that runs against a requirement or a scenario.</li>
+</ul>
+<p>Plus one thing that is neither: a <code>Change</code>, the unit of work that moves the intent layer and the code together. In OpenSpec that is a change folder with a proposal, design and tasks. It is the only node that has a lifecycle: proposed, applied, archived.</p>
+<p>That is the whole node vocabulary. It is intentionally missing <code>Service</code>, <code>Team</code>, <code>Ticket</code>, <code>Epic</code> and the like. Those are real, but they are the answer to a different set of questions and they live well in other systems.</p>
+</section>
+<section id="the-edges-that-matter" class="level3">
+<h3 class="anchored" data-anchor-id="the-edges-that-matter">The edges that matter</h3>
+<p>Here is the edge vocabulary, grouped by the question each one answers.</p>
+<p><strong>“Is it built, and does it work?”</strong></p>
+<ul>
+<li><code>implements</code> (code → requirement or decision): this code realizes that intent.</li>
+<li><code>verifies</code> (test → requirement or scenario): this test proves that claim.</li>
+</ul>
+<p>These two are the backbone. With only these, you already get coverage questions: a requirement with no <code>implements</code> is unbuilt, and one with an <code>implements</code> but no <code>verifies</code> is untested.</p>
+<p><strong>“Does it agree?”</strong></p>
+<ul>
+<li><code>contradicts</code> (negative sign, code or doc → decision, requirement or constraint): this disagrees with that, and we know it. Written as <code>-contradicts::</code>. This is the honest way to record technical debt, because it names <em>what</em> the debt is against.</li>
+<li><code>supersedes</code> (decision → decision): this replaces that. Keeps history navigable and answers “is this decision still live?”.</li>
+</ul>
+<p><strong>“Why is it this way?”</strong></p>
+<ul>
+<li><code>motivated_by</code> (decision → constraint or concept): the reason behind a choice.</li>
+<li><code>constrains</code> (constraint → requirement or code): what rules bind this part.</li>
+<li><code>refines</code> (requirement → requirement, scenario → requirement): this is a more specific version of that.</li>
+</ul>
+<p><strong>“What does it touch?”</strong></p>
+<ul>
+<li><code>depends_on</code> (requirement → requirement, code → requirement): a real dependency of intent, not an import.</li>
+<li><code>defines</code> (concept → anything): where a term is given its meaning.</li>
+</ul>
+<p><strong>“How did it change?”</strong></p>
+<ul>
+<li><code>introduced_by</code> / <code>changed_by</code> (anything → change): ties a requirement or decision to the change that created or altered it. In OpenSpec terms, the archived change is the provenance.</li>
+</ul>
+<p>Ten edge types. A useful sanity check on any vocabulary like this is to count how many of them you can explain with a one-line query. For these, you can.</p>
+</section>
+<section id="using-the-sign-and-the-properties" class="level3">
+<h3 class="anchored" data-anchor-id="using-the-sign-and-the-properties">Using the sign and the properties</h3>
+<p>The two features untyped links can’t offer are worth using on purpose.</p>
+<p><strong>Sign.</strong> Reserve the negative sign for <em>disagreement</em>, and keep it that way. <code>-contradicts</code> is the obvious one. A team that uses <code>-</code> for anything else dilutes the signal. If a dashboard shows red dashed lines, they should mean “something here is wrong or knowingly wrong”.</p>
+<p><strong>Properties.</strong> Put facts about the <em>relationship</em> on the relationship. Examples that earn their keep:</p>
+<pre><code>// @tg: implements:: [[auth#Token expiry]] {since: "2.3", confidence: "partial"}
+// @tg: -contradicts:: [[design#Stateless sessions]] {until: "2026-Q4", ticket: "PLAT-481"}</code></pre>
+<p><code>since</code> makes a graph answer “what changed in 2.3”. <code>until</code> and <code>ticket</code> turn a contradiction from a shame into a tracked item with an expiry. <code>confidence: partial</code> is how you say “this implements the happy path only”, which is more honest than either claiming full coverage or not linking at all.</p>
+</section>
+<section id="worked-questions" class="level3">
+<h3 class="anchored" data-anchor-id="worked-questions">Worked questions</h3>
+<p>A vocabulary is only as good as the questions it makes cheap. With the sets above:</p>
+<p><em>What requirements have no code?</em> A requirement with no incoming <code>implements</code>.</p>
+<p><em>What is built but unproven?</em> Requirements that have an <code>implements</code> but no incoming <code>verifies</code>.</p>
+<p><em>What are we knowingly doing against our own decisions?</em> Every <code>-contradicts</code> edge, sorted by its <code>until</code> property so the expired ones come first.</p>
+<p><em>What is the blast radius of changing this constraint?</em> Walk <code>constrains</code> outward, one to three hops, and list the code at the end.</p>
+<p><em>Which decisions are dead?</em> Decisions with an incoming <code>supersedes</code>.</p>
+<p><em>Show me everything tagged <code>security</code> that is not covered by a test.</em> A tag filter on the requirement, plus the missing-<code>verifies</code> pattern.</p>
+<p>The first query in the article, “sections that nothing implements”, is the real command today. The others are the same shape with a different edge type. Because the query language is openCypher, anyone who has used Neo4j reads them without learning anything new, and a coding agent that can call <code>tg_cypher</code> over MCP can ask them directly instead of grepping.</p>
+<hr>
+</section>
+</section>
+<section id="what-it-costs-and-where-this-does-not-fit" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-costs-and-where-this-does-not-fit">What it costs, and where this does not fit</h2>
+<p>A fair account has to include the price.</p>
+<p><strong>You write more.</strong> A generator would write less. Typed annotations are one more thing to learn and one more thing a code review has to look at. I think it is worth it for the same reason tests are: it is the only part of the system that is not a function of the code. But it is a cost, and on a weekend project it is not worth it.</p>
+<p><strong>Regex-based symbol finding is imprecise.</strong> <code>tg</code> finds code symbols with small regex finders for TypeScript and JavaScript, Python, Go, Rust and C. They are fast and have no native dependencies, but a grammar-based parser is more precise, and unusual syntax, macros and generated code can slip past. When a file looks unbalanced, <code>tg</code> says it cannot tell instead of guessing. lat.md, the tool it is compatible with, parses with real grammars and has had far more real-world use, so for grammar-accurate links across many languages it is the stronger choice.</p>
+<p><strong>If you only need checked links, plain links are enough.</strong> Typing pays off when you want to <em>ask</em> the graph things, or when you want contradiction and verification recorded as separate facts. If neither is true for you, the untyped format is simpler and costs nothing extra.</p>
+<p><strong>The ontology above is a starting point, not a standard.</strong> It is small on purpose and it has not been battle-tested across many teams. Expect to rename half of it.</p>
+<p><strong>OpenSpec files are not yet graph nodes in the CLI.</strong> As covered above, today you bridge them through <code>lat.md/</code> sections and tags. That is a real gap.</p>
+<hr>
+</section>
+<section id="how-to-start" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-start">How to start</h2>
+<p>Don’t start with the ontology. Start with five sections.</p>
+<ol type="1">
+<li>Pick the five things you most often explain to new people, or to your agent. Write each as a short section: one sentence of what it is, a few lines of why.</li>
+<li>Link two or three functions to each with <code>@tg: implements::</code>. Link one test with <code>verifies::</code>.</li>
+<li>If you use OpenSpec, add <code>type: Spec</code> and a few tags to the spec files you care about most.</li>
+<li>Run <code>tg check</code>, then one query for “sections with nothing implementing them”.</li>
+<li>If the output told you something you did not already know, write five more. If it didn’t, stop and use the plain format.</li>
+</ol>
+<pre><code>npm install -g @typedgraph/cli
+cd your-project
+tg init          # dry run: prints a diff, writes nothing
+tg check
+tg cypher --code annotated "MATCH (c:CodeSymbol)-[r]-&gt;(s:Section) RETURN c.symbol, type(r), s.title"</code></pre>
+<p><code>tg init</code> sets the project up for Claude Code, Cursor or any agent that reads <code>AGENTS.md</code>. It writes nothing without <code>--write</code>, and it installs a prompt hook that reminds the agent to search the docs before it works and a stop hook that blocks it from finishing when the check fails or when it changed a lot of code without touching the docs.</p>
+<hr>
+</section>
+<section id="the-point" class="level2">
+<h2 class="anchored" data-anchor-id="the-point">The point</h2>
+<p>The old picture of documentation was a separate artifact that described the code from the outside, and that kept falling behind. The new picture, which spec-driven workflows are already moving toward, is that the intent is part of the repository: reviewed, versioned and built against like everything else.</p>
+<p>A typed graph is what makes that picture checkable. It gives intent and implementation the same address space, gives each connection between them a meaning, and gives a machine enough to tell you when the two have stopped agreeing. What it asks of you is the one thing that cannot be automated: deciding, in writing, what the code is supposed to be.</p>
+<p>Everything else, the structure, the symbols, the call edges, the index and the checking, the machine can do. Let it.</p>
+<hr>
+<p><em>Typed Graph and the <code>tg</code> CLI are open source (MIT). Docs and the other articles are at <a href="https://typedgraph.org">typedgraph.org</a>. lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it. OpenSpec is a separate project, and nothing here implies it is affiliated either.</em></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
