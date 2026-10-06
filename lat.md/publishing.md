@@ -6,6 +6,8 @@ How the plugin reaches users and how the website is built; both are automated fr
 
 A pushed tag equal to the manifest version (no `v`) triggers `.github/workflows/release.yml`, which tests, builds and attaches `main.js`, `manifest.json` and `styles.css`.
 
+Each release adds a section to the root `CHANGELOG.md` (plugin, CLI, core and sidecar) in the release commit; the VS Code extension keeps `packages/vscode/CHANGELOG.md`.
+
 The plugin is listed as **Typed Graph** (id `typed-graph`): directory rules forbid names with `Obsidian` or variations like `Obsi-`, so the earlier name Obsigraph was rejected; the repository, website URL, packages and `OBSIGRAPH_*` variables keep the old name internally. Obsidian reads `manifest.json` and `versions.json` at the repository root, so `scripts/version-bump.mjs` keeps the root manifest, `packages/plugin/manifest.json`, `versions.json` and every package version in step, then refreshes `package-lock.json`; workspaces depend on `@obsigraph/core` as `*` so a bump never sends `npm ci` to the registry for an unpublished version. Store listing is a web submission at community.obsidian.md (Obsidian account plus linked GitHub), followed by an automated review; it passed and the plugin is listed at https://community.obsidian.md/plugins/typed-graph (install link `obsidian://show-plugin?id=typed-graph`); `obsidianmd/obsidian-releases` only mirrors the directory, so pull requests to its JSON no longer list a plugin.
 
 ## Website
