@@ -2,6 +2,24 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.7.0 — 2026-10-06
+
+Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by hand](https://volland.github.io/obsigraph/blog-typed-graph-schema.html) and the [specification](https://volland.github.io/obsigraph/spec/tgs/v0.1/).
+
+### Added
+
+- **Several types in one schema note.** `schemas:` declares any number of types, so one note can describe a whole subsystem; `schema:` (the type named by the note title) still works and both can be combined. A type declared twice uses the first by path and reports both notes.
+- **Edge types.** `edgeTypes:` declares an edge type with `from`, `to`, its own `properties`, `uri` and `visualization`. Edge properties, required edge properties and edge endpoint types are validated.
+- **Richer edges and properties.** `edges` accepts a map (`worksAt: Company`, or `{target, many, required}`); properties gain `many`, `values` and `uri`, and the kinds `datetime` and `list`. IRIs and CURIEs with built-in and declared prefixes, and a `tgs:` version key.
+- **Templates.** A type can link a template note with `template:`; a type with no template gets one generated from its schema.
+- **SHACL.** `tg schema export <out.ttl>` and `tg schema import <file.ttl>`, and the plugin commands *Export schemas as SHACL* and *Import SHACL shapes*. Export is deterministic and round-trips losslessly; import reports every construct outside the supported subset and never deletes notes. New setting: Schema base IRI.
+- **An open specification.** [TGS 0.1](https://volland.github.io/obsigraph/spec/tgs/v0.1/) with a JSON Schema, conformance examples and the `tgs:` namespace page.
+
+### Changed
+
+- An `edgeTypes` entry's `visualization` styles that edge type and wins per attribute over a type's `visualization.edges`.
+- Schema `edges` are now rules internally; code that used `TypeSchema.edges` as a string list should use `edgeNames()`.
+
 ## 0.6.0 — 2026-10-06
 
 Open Knowledge Format (OKF v0.2) compatibility. See [Getting your vault OKF-ready](https://volland.github.io/obsigraph/blog-okf-ready.html).
