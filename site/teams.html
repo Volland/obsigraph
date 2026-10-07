@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TypeGraph for teams — specs that fail the build when code drifts</title>
+  <meta name="description" content="Check design docs against code in CI, link functions to decisions with typed edges, and give developers, architects, product and agents one vocabulary.">
+  <meta property="og:title" content="TypeGraph for teams — specs that fail the build when code drifts">
+  <meta property="og:description" content="Check design docs against code in CI, link functions to decisions with typed edges, and give developers, architects, product and agents one vocabulary.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
+        <a href="blog.html">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Specs that <span class="grad">fail the build</span> when the code drifts.</h1>
+          <p class="lead">TypeGraph ties your design docs to the code that implements them, checks the links in CI, and gives developers, architects, product people and agents one vocabulary.</p>
+          <div class="buttons">
+            <a class="btn primary" href="#ci">Add the CI gate →</a>
+            <a class="btn" href="blog-code-ontology.html">The code ontology</a>
+            <a class="btn" href="install.html">Install</a>
+          </div>
+        </div>
+        <img class="hero-logo" src="assets/logo.svg" alt="TypeGraph logo">
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>See it work</h2>
+        <figure class="demo-video"><video autoplay loop muted playsinline preload="metadata" poster="assets/demos/code-annotations.jpg" aria-label="Terminal: tg check passes, a Cypher query finds a requirement with no implementation, a typed comment fixes it, and a typo fails the check"><source src="assets/demos/code-annotations.webm" type="video/webm"><source src="assets/demos/code-annotations.mp4" type="video/mp4"></video><figcaption>Real <code>tg</code> output on an example checkout API with requirements, <code>@tg:</code> annotations and an OpenSpec change folder. A query finds the requirement with no implementation; one typed comment closes it; a typo fails the check.</figcaption></figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap two-col">
+        <div>
+          <h2>Point code at the decision</h2>
+          <p class="section-lead">A comment says which design section a function implements, and how.</p>
+<pre>// @<span></span>lat: [[auth#Token expiry]]
+export function verifyToken(t: string) {}
+
+// @<span></span>tg: implements:: [[auth#Token expiry]] {since: 2}
+// @<span></span>tg: -contradicts:: [[design#Stateless sessions]]
+function legacyCheck() {}</pre>
+        </div>
+        <div>
+          <h2>Ask what the graph knows</h2>
+          <p class="section-lead">Sections and code symbols are nodes in one graph.</p>
+<pre>tg cypher "MATCH (c:CodeSymbol)-[:implements]->(s:Section)
+           RETURN s.title, count(c) AS functions
+           ORDER BY functions DESC"</pre>
+          <p class="section-lead">Which sections have no implementation, which have many, which docs nothing links to.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="soft" id="ci">
+      <div class="wrap">
+        <h2>A gate your CI and your agents both use</h2>
+        <p class="section-lead"><code>tg check</code> validates links, symbols, section rules, index files and test-spec coverage, with the same verdicts as lat.md. It exits non-zero on findings.</p>
+<pre>- run: npm install -g @typedgraph/cli
+- run: tg check</pre>
+        <div class="grid" style="margin-top:24px">
+          <div class="card"><div class="icon">✓</div><h3>Docs that cannot rot quietly</h3><p>Broken links, missing symbols and untested spec sections fail the build, not a review a month later.</p></div>
+          <div class="card"><div class="icon">⚙</div><h3>The same gate for agents</h3><p>A stop hook blocks an agent from finishing while <code>tg check</code> fails. <a href="agents.html">Agents guide</a>.</p></div>
+          <div class="card"><div class="icon">◆</div><h3>One vocabulary</h3><p><code>tg init</code> installs a small code ontology, so people and agents use the same edge names. <a href="blog-code-ontology.html">By role</a>.</p></div>
+          <div class="card"><div class="icon">⇄</div><h3>Plain files in git</h3><p>No server or database. Reviews, blame and history work as they do for code.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Read more</h2>
+        <div class="grid">
+          <a class="post-card" href="blog-tg-cli.html"><div class="meta">Blog · Developers</div><h2>Docs and code as one typed graph</h2><p>Check design docs against code, typed edges from comments, Cypher over both.</p></a>
+          <a class="post-card" href="blog-why-typed-graph-for-code.html"><div class="meta">Blog · Essay</div><h2>Why a typed graph for your codebase</h2><p>Why intent cannot be generated from the source.</p></a>
+          <a class="post-card" href="compare.html"><div class="meta">Comparison</div><h2>TypeGraph and the alternatives</h2><p>Next to lat.md, plain Obsidian and vector-only memory.</p></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="install.html">Install</a> · <a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="ontologies.html">Ontologies</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Typed Graph — Typed Graphs for Obsidian and Code</title>
-  <meta name="description" content="Typed Graph turns your Obsidian vault into a typed, signed, labeled property graph with edge properties, openCypher queries, a graph view, a LadybugDB mirror, vector search and GraphRAG for agents. For developers: the tg CLI links code to docs with typed edges.">
-  <meta property="og:title" content="Typed Graph — Typed Graphs for Obsidian">
-  <meta property="og:description" content="Typed, signed, labeled edges with properties, openCypher queries, and RAG-ready storage for your vault.">
+  <title>TypeGraph — A shared space for agents and humans</title>
+  <meta name="description" content="TypeGraph turns your Markdown and your code into one typed, checked graph. Write it in Obsidian or your editor; your agent queries it from Claude Code, Cursor or any MCP client. Both see the same truth.">
+  <meta property="og:title" content="TypeGraph — A shared space for agents and humans">
+  <meta property="og:description" content="One typed, checked graph of your docs and code. Humans write it in Obsidian or an editor; agents query it with the tg CLI and MCP.">
   <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -15,9 +15,12 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
       <nav class="nav">
         <a href="./" class="active">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
         <a href="docs.html">Docs</a>
         <a href="demo.html">Demo</a>
         <a href="example.html">Example</a>
@@ -33,16 +36,61 @@
     <section class="hero">
       <div class="wrap">
         <div>
-          <h1>Your notes, as a <span class="grad">real graph</span>.</h1>
-          <p class="lead">Typed Graph is an Obsidian plugin that turns links into typed, signed, labeled edges with properties, lets you query them with openCypher, and draws them as a graph that looks like what it means. Developers get <a href="#developers"><code>tg</code></a>, a CLI that ties your code to your design docs.</p>
+          <h1>A shared space for <span class="grad">agents and humans</span>.</h1>
+          <p class="lead">TypeGraph turns your Markdown and your code into one typed, checked graph. You write it in Obsidian or your editor. Your agent queries it from Claude Code, Cursor or any MCP client. Both see the same truth, in plain files.</p>
           <div class="buttons">
-            <a class="btn primary" href="demo.html">Try the live demo →</a>
-            <a class="btn" href="https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip">Download demo vault</a>
-            <a class="btn" href="obsidian://show-plugin?id=typed-graph">Install in Obsidian</a>
+            <a class="btn primary" href="install.html">Install in 60 seconds →</a>
+            <a class="btn" href="demo.html">Try the live demo</a>
             <a class="btn" href="https://github.com/Volland/obsigraph">GitHub</a>
           </div>
+          <p class="section-lead" style="margin-top:18px">Works with Obsidian · VS Code · Cursor · Windsurf · VSCodium · Claude Code · any MCP client</p>
         </div>
-        <img class="hero-logo" src="assets/logo.svg" alt="Typed Graph logo: a crystal made of graph edges with a ladybug">
+        <img class="hero-logo" src="assets/logo.svg" alt="TypeGraph logo: a crystal made of graph edges with a ladybug">
+      </div>
+    </section>
+
+    <section id="get-started">
+      <div class="wrap">
+        <h2>Install where you already work</h2>
+        <p class="section-lead">Pick your tool. Each one takes about a minute, and they all read the same Markdown.</p>
+        <div class="grid">
+          <div class="card"><div class="icon">⚙</div><h3>Claude Code</h3><p>Install the CLI and let <code>tg init</code> wire hooks, instructions and skills. Nothing is written without <code>--write</code>.</p><pre>npm i -g @typedgraph/cli
+tg init --write
+tg mcp</pre><p><a href="agents.html">Agents guide →</a></p></div>
+          <div class="card"><div class="icon">◎</div><h3>VS Code, Cursor, Windsurf</h3><p>Typed backlinks and the graph for your Markdown and annotated code. On the VS Code Marketplace and on Open VSX.</p><pre>code --install-extension \
+  pavlyshyn.typegraph-vscode</pre><p><a href="https://marketplace.visualstudio.com/items?itemName=pavlyshyn.typegraph-vscode">VS Code Marketplace</a> · <a href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">Open VSX</a></p></div>
+          <div class="card"><div class="icon">◆</div><h3>Obsidian</h3><p>Typed, signed edges, openCypher query blocks and a graph view, in the community plugin directory as Typed Graph.</p><pre>Settings → Community plugins
+→ Browse → "Typed Graph"</pre><p><a href="obsidian://show-plugin?id=typed-graph">Open in Obsidian</a> · <a href="obsidian.html">Obsidian guide →</a></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="soft">
+      <div class="wrap">
+        <h2>See it work</h2>
+        <p class="section-lead">Two short recordings, both made by script from real runs.</p>
+        <div class="two-col">
+          <figure class="demo-video"><video autoplay loop muted playsinline preload="metadata" poster="assets/demos/zettelkasten.jpg" aria-label="Zettelkasten notes queried with openCypher: a typed graph, then a table of citations with page numbers"><source src="assets/demos/zettelkasten.webm" type="video/webm"><source src="assets/demos/zettelkasten.mp4" type="video/mp4"></video><figcaption><strong>Notes.</strong> A Zettelkasten as a typed graph, queried live. <a href="obsidian.html">Obsidian guide →</a></figcaption></figure>
+          <figure class="demo-video"><video autoplay loop muted playsinline preload="metadata" poster="assets/demos/code-annotations.jpg" aria-label="Terminal: tg check passes, a Cypher query finds a requirement with no implementation, a typed comment fixes it, and a typo fails the check"><source src="assets/demos/code-annotations.webm" type="video/webm"><source src="assets/demos/code-annotations.mp4" type="video/mp4"></video><figcaption><strong>Code.</strong> Requirements, annotated code and a check that fails on drift. <a href="teams.html">Teams guide →</a></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="soft">
+      <div class="wrap">
+        <h2>Why a shared space</h2>
+        <p class="section-lead">One graph in plain Markdown, edited by people and read by agents, with a check that fails when it drifts.</p>
+        <div class="grid">
+          <div class="card"><div class="icon">⇄</div><h3>Humans and agents, same files</h3><p>You write <code>implements:: [[Token expiry]]</code> in Obsidian or an editor. The agent runs <code>tg cypher</code> or an MCP tool over the same file. No export, no sync, no second store.</p></div>
+          <div class="card"><div class="icon">✓</div><h3>Documented and reliable</h3><p><code>tg check</code> validates links, symbols, section rules and test-spec coverage, as a CI gate or an agent hook. The example vault is tested against the engine, so the manual cannot drift.</p></div>
+          <div class="card"><div class="icon">↗</div><h3>Memory an agent can query</h3><p>Typed edges such as <code>implements</code>, <code>contradicts</code> and <code>supersedes</code> give an agent relationships to traverse, not a pile of text to re-read. Add vectors and cited GraphRAG when you want them.</p></div>
+        </div>
+        <div class="buttons" style="margin-top:28px">
+          <a class="btn primary" href="agents.html">For agents and AI coders →</a>
+          <a class="btn" href="obsidian.html">For Obsidian users</a>
+          <a class="btn" href="teams.html">For product engineers</a>
+          <a class="btn" href="compare.html">TypeGraph and the alternatives</a>
+        </div>
       </div>
     </section>
 
@@ -138,7 +186,7 @@ function legacyCheck() {}</pre>
           <a class="btn primary" href="blog-tg-cli.html">Read: docs and code as one graph →</a>
           <a class="btn" href="blog-tg-vs-lat-md.html">tg vs lat.md</a>
           <a class="btn" href="docs.html#cli">CLI reference</a>
-          <a class="btn" href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">VS Code extension</a>
+          <a class="btn" href="https://marketplace.visualstudio.com/items?itemName=pavlyshyn.typegraph-vscode">VS Code extension</a>
         </div>
 <pre style="margin-top:20px">npm install -g @typedgraph/cli</pre>
       </div>
@@ -167,15 +215,15 @@ function legacyCheck() {}</pre>
             <li><strong>Manually</strong>: download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/Volland/obsigraph/releases/latest">latest release</a> into <code>&lt;vault&gt;/.obsidian/plugins/typed-graph/</code> and enable it.</li>
           </ol>
           <h3 id="install-vscode" style="margin-top:32px">Without Obsidian: VS Code and its forks</h3>
-          <p class="section-lead">The TypeGraph extension shows typed backlinks and the graph for the markdown and annotated code in a workspace. It is on <a href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">Open VSX</a>.</p>
+          <p class="section-lead">The TypeGraph extension shows typed backlinks and the graph for the markdown and annotated code in a workspace. It is on the <a href="https://marketplace.visualstudio.com/items?itemName=pavlyshyn.typegraph-vscode">VS Code Marketplace</a> and on <a href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">Open VSX</a>.</p>
           <ol class="steps">
-            <li><strong>VSCodium, Cursor, Windsurf, Gitpod</strong>: search <em>TypeGraph</em> in the Extensions view, or run <code>codium --install-extension pavlyshyn.typegraph-vscode</code>.</li>
-            <li><strong>VS Code</strong>: download the <code>.vsix</code> from the <a href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">Open VSX page</a>, then run <em>Extensions: Install from VSIX…</em> or <code>code --install-extension typegraph-vscode-&lt;version&gt;.vsix</code>.</li>
+            <li><strong>VS Code</strong>: search <em>TypeGraph</em> in the Extensions view, or run <code>code --install-extension pavlyshyn.typegraph-vscode</code>.</li>
+            <li><strong>Cursor, Windsurf, VSCodium, Gitpod</strong>: search <em>TypeGraph</em> (Open VSX), or run <code>codium --install-extension pavlyshyn.typegraph-vscode</code>.</li>
           </ol>
         </div>
         <div>
           <h2>For agents</h2>
-          <p class="section-lead">Run the sidecar next to your vault and give your agent the graph:</p>
+          <p class="section-lead">With a CLI, <code>tg mcp</code> serves the graph to Claude Code (see the <a href="agents.html">agents guide</a>). With an Obsidian vault, run the sidecar next to your vault and give your agent the graph:</p>
 <pre>claude mcp add typed-graph \
   -e OBSIGRAPH_VAULT=/path/to/vault \
   -e OBSIGRAPH_DATA=/path/to/data \
@@ -190,6 +238,9 @@ function legacyCheck() {}</pre>
         <h2>Learn more</h2>
         <p class="section-lead">Articles, a gallery of ready-made ontologies and a vault to explore.</p>
         <div class="grid">
+          <a class="post-card" href="blog-shared-space.html"><div class="meta">Blog · Manifesto</div><h2>A shared space for agents and humans</h2><p>Why coding agents need the same documented, checked knowledge as people, in plain files.</p></a>
+          <a class="post-card" href="blog-claude-code-memory.html"><div class="meta">Blog · Tutorial</div><h2>Give Claude Code a memory in five minutes</h2><p>Install tg, run tg init, write a typed link, and let the agent search, query and check.</p></a>
+          <a class="post-card" href="compare.html"><div class="meta">Comparison</div><h2>TypeGraph and the alternatives</h2><p>Next to lat.md, plain Obsidian and vector-only memory, including where each is better.</p></a>
           <a class="post-card" href="blog-typed-graph.html"><div class="meta">Blog · Features</div><h2>Your vault as a property graph</h2><p>Typed, signed edges, schema notes, openCypher and styled graphs, in plain Markdown.</p></a>
           <a class="post-card" href="blog-sidecar-rag.html"><div class="meta">Blog · Sidecar and RAG</div><h2>Your vault as RAG storage</h2><p>LadybugDB, vector search over notes and edges, GraphRAG with citations, and MCP for agents.</p></a>
           <a class="post-card" href="blog-tg-cli.html"><div class="meta">Blog · Developers</div><h2>Docs and code as one typed graph</h2><p>The tg CLI: check design docs against code, typed edges from comments, Cypher over both, and agent hooks.</p></a>
@@ -209,7 +260,7 @@ function legacyCheck() {}</pre>
 
   <footer>
     <div class="wrap">
-      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="ontologies.html">Ontologies</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

@@ -26,7 +26,25 @@ const POSTS = [
     related: ['ontologies.html', 'The ontology gallery: download and use'],
   },
 ];
-const LINKS = { 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html' };
+POSTS.push(
+  {
+    src: 'articles/shared-space-for-agents-and-humans.md',
+    out: 'site/blog-shared-space.html',
+    title: 'A Shared Space for Agents and Humans',
+    description: 'Why coding agents need the same documented, checked knowledge as the people they work with, and how TypeGraph keeps it in plain Markdown with typed links, a check and agent hooks.',
+    date: '7 October 2026',
+    related: ['blog-claude-code-memory.html', 'Give Claude Code a memory in five minutes'],
+  },
+  {
+    src: 'articles/claude-code-memory-in-five-minutes.md',
+    out: 'site/blog-claude-code-memory.html',
+    title: 'Give Claude Code a Memory in Five Minutes',
+    description: 'Install the tg CLI, let tg init wire up Claude Code, write a first typed link, and see what the agent gets: search first, a graph to query and a check it cannot skip.',
+    date: '7 October 2026',
+    related: ['agents.html', 'TypeGraph for agents'],
+  },
+);
+const LINKS = { 'shared-space-for-agents-and-humans.md': 'blog-shared-space.html', 'claude-code-memory-in-five-minutes.md': 'blog-claude-code-memory.html', 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html' };
 const DATE = '6 October 2026';
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -68,9 +86,12 @@ for (const p of POSTS) {
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
       <nav class="nav">
         <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
         <a href="docs.html">Docs</a>
         <a href="demo.html">Demo</a>
         <a href="example.html">Example</a>
@@ -83,7 +104,7 @@ for (const p of POSTS) {
   </header>
 
   <main class="wrap post">
-    <div class="meta"><a href="blog.html">Blog</a> · ${DATE} · Volodymyr Pavlyshyn</div>
+    <div class="meta"><a href="blog.html">Blog</a> · ${p.date ?? DATE} · Volodymyr Pavlyshyn</div>
     <h1>${escape(heading)}</h1>
 ${sub ? `    <p class="standfirst">${marked.parseInline(sub[1])}</p>\n` : ''}
 ${html}
@@ -93,7 +114,7 @@ ${html}
 
   <footer>
     <div class="wrap">
-      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

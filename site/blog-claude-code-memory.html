@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Give Claude Code a Memory in Five Minutes</title>
+  <meta name="description" content="Install the tg CLI, let tg init wire up Claude Code, write a first typed link, and see what the agent gets: search first, a graph to query and a check it cannot skip.">
+  <meta property="og:title" content="Give Claude Code a memory in five minutes">
+  <meta property="og:description" content="Install the tg CLI, let tg init wire up Claude Code, write a first typed link, and see what the agent gets: search first, a graph to query and a check it cannot skip.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 7 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>Give Claude Code a memory in five minutes</h1>
+    <p class="standfirst">A hands-on setup: install the tg CLI, let <code>tg init</code> wire up Claude Code, write your first typed link, and see what the agent gets.</p>
+
+<h2>What you will have at the end</h2>
+<p>A project where Claude Code searches your design docs before it answers, can query a graph of docs and code, and is stopped from finishing while the documentation does not match the code. It needs Node.js, and you can use an existing project.</p>
+<p>You do not need Obsidian, a database, a model or an API key.</p>
+<h2>1. Install the CLI</h2>
+<pre>npm install -g @typedgraph/cli</pre>
+<p><code>tg</code> is one bundled binary with no runtime dependencies.</p>
+<h2>2. Look before you write</h2>
+<pre>tg init</pre>
+<p>With no flags, <code>tg init</code> is a dry run. It prints a diff of every file it would create or change and writes nothing. Read it. For Claude Code the managed pieces are a block in <code>CLAUDE.md</code>, hooks in <code>.claude/settings.json</code>, an entry in <code>.mcp.json</code>, and two skills, <code>tg-docs</code> and <code>tg-graph</code>. It also installs a small <a href="blog-code-ontology.html">code ontology</a>, a shared vocabulary for intent and code.</p>
+<p>When it looks right:</p>
+<pre>tg init --write</pre>
+<p>The <code>CLAUDE.md</code> block sits between markers, so running it again replaces only that block. Use <code>--agent cursor</code> for Cursor or <code>--agent agents</code> for a plain <code>AGENTS.md</code>. If the project already uses lat.md, <code>--migrate</code> swaps its block, hooks and MCP entry, and leaves the rest of your files alone.</p>
+<h2>3. Write one design note</h2>
+<p>Create a <code>lat.md/</code> folder if <code>init</code> did not, and add a note about a decision that matters. For example <code>lat.md/auth.md</code>:</p>
+<pre># Auth
+
+How sessions and tokens work.
+
+## Token expiry
+
+Tokens expire after fifteen minutes and are refreshed on the next request.</pre>
+<p>Every section needs a short leading paragraph, and a folder needs an index file named <code>lat.md/lat.md</code> that lists its notes. <code>tg check</code> enforces both:</p>
+<pre>- [[auth]] — How sessions and tokens work.</pre>
+<h2>4. Point the code at it</h2>
+<p>In the function that implements the decision, add a comment:</p>
+<pre>// @<span></span>tg: implements:: [[auth#Token expiry]]
+export function verifyToken(token: string) {}</pre>
+<p><code>@<span></span>lat: [[auth#Token expiry]]</code> also works if you only need a plain link. The <code>@<span></span>tg:</code> form adds a type, an optional <code>-</code> sign for negative edges, and properties in braces.</p>
+<h2>5. Check it</h2>
+<pre>tg check</pre>
+<p>It reports broken links, missing symbols, missing index files and sections without a leading paragraph, and exits non-zero on findings, so the same command works in CI.</p>
+<h2>6. Ask the graph</h2>
+<pre>tg search &quot;how are tokens validated&quot;
+tg cypher &quot;MATCH (c:CodeSymbol)-[:implements]-&gt;(s:Section) RETURN s.title, count(c)&quot;</pre>
+<p>Search is lexical by default, which needs no setup. Add Ollama or an OpenAI-compatible embeddings endpoint later for hybrid search. The Cypher query lists which design sections have implementations and how many.</p>
+<h2>7. Let the agent use it</h2>
+<p>Start Claude Code in the project. Three things now happen without you asking:</p>
+<ul>
+<li>When you send a prompt, a hook reminds the agent to search first, expands any <code>[[refs]]</code> in your prompt, and adds the top lexical hits.</li>
+<li>The agent can call the tools of <code>tg mcp</code>, including <code>cypher</code> and <code>edges</code>, for the graph.</li>
+<li>When the agent tries to finish, a stop hook blocks it if <code>tg check</code> fails, or if several code lines changed with little change in <code>lat.md/</code>.</li>
+</ul>
+<p>Hooks run offline and always exit 0, so a hook failure never stops your session.</p>
+<h2>Where to go next</h2>
+<ul>
+<li>Add the check to CI: <code>tg check</code> as a step.</li>
+<li>Read <a href="blog-code-ontology.html">the code ontology</a> to pick edge names your team shares.</li>
+<li>Keep notes in Obsidian? The <a href="obsidian.html">plugin</a> opens <code>lat.md</code> links in place and draws code nodes in the graph.</li>
+<li>Coming from lat.md? See <a href="compare.html">the comparison</a>.</li>
+</ul>
+
+    <div class="next">Related: <a href="agents.html">TypeGraph for agents →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

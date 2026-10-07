@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install TypeGraph — Claude Code, VS Code, Cursor, Obsidian</title>
+  <meta name="description" content="Install TypeGraph from the tg CLI, the VS Code Marketplace, Open VSX (Cursor, Windsurf, VSCodium) or the Obsidian community plugin directory.">
+  <meta property="og:title" content="Install TypeGraph — Claude Code, VS Code, Cursor, Obsidian">
+  <meta property="og:description" content="Install TypeGraph from the tg CLI, the VS Code Marketplace, Open VSX (Cursor, Windsurf, VSCodium) or the Obsidian community plugin directory.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
+        <a href="blog.html">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Install <span class="grad">TypeGraph</span>.</h1>
+          <p class="lead">One graph, four ways in. They all read the same Markdown, so use whichever fits where you work, and add the others later.</p>
+        </div>
+        <img class="hero-logo" src="assets/logo.svg" alt="TypeGraph logo">
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="grid">
+          <div class="card" id="claude-code"><div class="icon">⚙</div><h3>Claude Code and the CLI</h3><p>Check, search, Cypher, agent setup and export. No Obsidian needed.</p><pre>npm install -g @typedgraph/cli
+tg init --write
+tg mcp</pre><p><a href="agents.html">Agents guide</a> · <a href="docs.html#cli">CLI reference</a></p></div>
+          <div class="card" id="vscode"><div class="icon">◎</div><h3>VS Code</h3><p>Typed backlinks and the graph for Markdown and annotated code.</p><pre>code --install-extension \
+  pavlyshyn.typegraph-vscode</pre><p><a href="https://marketplace.visualstudio.com/items?itemName=pavlyshyn.typegraph-vscode">VS Code Marketplace</a></p></div>
+          <div class="card" id="cursor"><div class="icon">◎</div><h3>Cursor, Windsurf, VSCodium, Gitpod</h3><p>The same extension from Open VSX. Search <em>TypeGraph</em> in the Extensions view.</p><pre>codium --install-extension \
+  pavlyshyn.typegraph-vscode</pre><p><a href="https://open-vsx.org/extension/pavlyshyn/typegraph-vscode">Open VSX</a></p></div>
+          <div class="card" id="obsidian"><div class="icon">◆</div><h3>Obsidian</h3><p>Settings → Community plugins → Browse → search <em>Typed Graph</em> → Install → Enable.</p><pre>obsidian://show-plugin?id=typed-graph</pre><p><a href="obsidian://show-plugin?id=typed-graph">Open in Obsidian</a> · <a href="https://community.obsidian.md/plugins/typed-graph">Directory page</a> · <a href="obsidian.html">Guide</a></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="soft">
+      <div class="wrap">
+        <h2>Not sure where to start?</h2>
+        <div class="buttons">
+          <a class="btn primary" href="demo.html">Try the live demo</a>
+          <a class="btn" href="https://github.com/Volland/obsigraph/releases/latest/download/typed-graph-demo-vault.zip">Download demo vault</a>
+          <a class="btn" href="docs.html#install">Beta builds and manual install</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="install.html">Install</a> · <a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="ontologies.html">Ontologies</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

@@ -26,3 +26,13 @@
     window.dispatchEvent(new Event('obsigraph-theme'));
   });
 })();
+
+// Respect reduced motion: show the poster frame and let people press play instead of looping.
+(function () {
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.demo-video video').forEach(function (v) {
+    v.removeAttribute('autoplay');
+    v.pause();
+    v.controls = true;
+  });
+})();

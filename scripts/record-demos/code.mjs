@@ -1,0 +1,13 @@
+import { chromium } from 'playwright-core';
+import { readFileSync } from 'node:fs';
+const steps = JSON.parse(readFileSync(new URL('transcript.json', import.meta.url), 'utf8'));
+const REC = true;
+const OUT = process.argv[2] ?? 'demo-out';
+const b = await chromium.launch({ channel: 'chrome' });
+const ctx = await b.newContext({ viewport: { width: 1100, height: 640 }, ...(REC ? { recordVideo: { dir: OUT, size: { width: 1100, height: 640 } } } : {}) });
+const p = await ctx.newPage();
+await p.goto(new URL('term.html', import.meta.url).href);
+await p.evaluate((s) => window.play(s), steps).catch(()=>{});
+await p.waitForFunction(() => window.done, null, { timeout: 120000 });
+await p.waitForTimeout(600);
+await ctx.close(); await b.close();

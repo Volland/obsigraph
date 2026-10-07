@@ -26,7 +26,7 @@ function page({ title, description, depth, body }) {
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="${up}"><img src="${up}assets/logo.svg" alt="">Typed Graph</a>
+      <a class="brand" href="${up}"><img src="${up}assets/logo.svg" alt="">TypeGraph</a>
       <nav class="nav">
         <a href="${up}">Home</a>
         <a href="${up}docs.html">Docs</a>

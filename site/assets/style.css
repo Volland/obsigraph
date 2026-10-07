@@ -238,7 +238,7 @@ h2 {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 18px;
 }
 .card {
@@ -277,7 +277,7 @@ h2 {
 
 .shots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 22px;
 }
 .shot {
@@ -669,7 +669,15 @@ footer .wrap {
   }
 }
 
-.onto-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.onto-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
 .onto .chips { margin: 10px 0 0; line-height: 2; }
 .onto .chips strong { display: block; font-size: 13px; color: var(--text); line-height: 1.4; }
 .onto .asks { margin: 10px 0 14px; font-size: 14px; }
+
+.demo-video { margin: 0; }
+.demo-video video { display: block; width: 100%; max-width: 1000px; height: auto; border: 1px solid var(--border, #2a2a40); border-radius: 12px; }
+.demo-video figcaption { margin-top: 10px; font-size: 14px; color: var(--muted, #8b8bab); max-width: 1000px; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll .result-table { min-width: 720px; }
+.post, .doc, .card { overflow-wrap: anywhere; }
+.steps li { overflow-wrap: anywhere; }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TypeGraph vs lat.md, plain Obsidian and vector memory</title>
+  <meta name="description" content="An honest comparison of TypeGraph with lat.md, plain Obsidian and vector-only memory for coding agents, including where each one is the better choice.">
+  <meta property="og:title" content="TypeGraph vs lat.md, plain Obsidian and vector memory">
+  <meta property="og:description" content="An honest comparison of TypeGraph with lat.md, plain Obsidian and vector-only memory for coding agents, including where each one is the better choice.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
+        <a href="blog.html">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>TypeGraph and the <span class="grad">alternatives</span>.</h1>
+          <p class="lead">Where TypeGraph fits next to lat.md, plain Obsidian and vector-only memory, including where each of them is the better choice.</p>
+          <div class="buttons">
+            <a class="btn primary" href="install.html">Install TypeGraph →</a>
+            <a class="btn" href="blog-tg-vs-lat-md.html">Full lat.md comparison</a>
+          </div>
+        </div>
+        <img class="hero-logo" src="assets/logo.svg" alt="TypeGraph logo">
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>At a glance</h2>
+        <p class="section-lead">Everything here is something you can check. lat.md facts are for version 0.12.2, the one <code>tg</code> is tested against.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Comparison table">
+        <table class="result-table">
+          <thead><tr><th></th><th>TypeGraph</th><th>lat.md</th><th>Plain Obsidian</th><th>Vector-only memory</th></tr></thead>
+          <tbody>
+            <tr><td>Source of truth</td><td>Markdown files</td><td>Markdown files</td><td>Markdown files</td><td>An index built from the text</td></tr>
+            <tr><td>Links carry meaning</td><td>Typed, signed edges with properties</td><td>Plain links</td><td>Plain links</td><td>No explicit links</td></tr>
+            <tr><td>Docs checked against code</td><td><code>tg check</code>, same verdicts as lat.md</td><td><code>lat check</code></td><td>No</td><td>No</td></tr>
+            <tr><td>Query</td><td>openCypher over docs and code</td><td>Locate, refs, search</td><td>Search and Dataview-style plugins</td><td>Similarity search</td></tr>
+            <tr><td>Agent access</td><td>CLI, hooks and 8 MCP tools</td><td>CLI, hooks and 6 MCP tools</td><td>Through third-party tools</td><td>Usually an API or MCP server</td></tr>
+            <tr><td>Setup for search</td><td>Lexical, no model or key; embeddings optional</td><td>Semantic, local model or API key</td><td>Built-in search</td><td>An embedding model</td></tr>
+            <tr><td>Human editing</td><td>Obsidian plugin and VS Code extension</td><td>Any editor</td><td>Obsidian</td><td>Rarely designed for it</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="soft">
+      <div class="wrap">
+        <h2>The honest version</h2>
+        <div class="grid">
+          <div class="card"><h3>vs lat.md</h3><p>TypeGraph reads the same <code>lat.md/</code> folders and agrees with <code>lat check</code>, so you can try it at no cost and use both. It adds typed edges from code, openCypher, a visual graph, no-setup search and an Obsidian plugin. lat.md is stronger on grammar-accurate symbol parsing, agent templates (Pi, OpenCode) and maturity. <a href="blog-tg-vs-lat-md.html">Read the full comparison</a>.</p></div>
+          <div class="card"><h3>vs plain Obsidian</h3><p>Obsidian links say that two notes are related, not how. TypeGraph keeps your notes and your links and adds types, signs, properties, schemas, queries and a graph that follows the schema. Existing <code>type:: [[Target]]</code> lines keep working. <a href="obsidian.html">Obsidian guide</a>.</p></div>
+          <div class="card"><h3>vs vector-only memory</h3><p>Similarity finds text that looks like your question, but cannot say what implements what or what contradicts what. TypeGraph retrieves by relationship, can add vectors on top, and returns cited results. If you only need fuzzy recall over loose notes, a vector store alone is simpler. <a href="blog-sidecar-rag.html">Vault as RAG storage</a>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap two-col">
+        <div>
+          <h2>Switching from lat.md</h2>
+          <p class="section-lead">Your <code>lat.md/</code> folder and <code>@lat:</code> comments stay as they are.</p>
+<pre>npm install -g @typedgraph/cli
+tg check                       # should match lat check
+tg init                        # dry run: see the diff
+tg init --write --migrate      # swap the lat block, hooks and MCP entry</pre>
+        </div>
+        <div>
+          <h2>Not affiliated</h2>
+          <p class="section-lead">lat.md is a separate open-source project by Yury Selivanov. TypeGraph is not affiliated with it, Obsidian or LadybugDB. If a statement here is out of date, please open an issue.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="install.html">Install</a> · <a href="docs.html">Docs</a> · <a href="demo.html">Demo</a> · <a href="ontologies.html">Ontologies</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>

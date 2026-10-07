@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><style>
+html,body{margin:0;background:#0b0b14;height:100%}
+.win{margin:18px;border-radius:12px;background:#12121f;border:1px solid #2a2a40;height:calc(100% - 38px);overflow:hidden;display:flex;flex-direction:column;font-family:ui-monospace,Menlo,monospace}
+.bar{padding:10px 14px;background:#191930;color:#8b8bab;font-size:13px;display:flex;gap:8px;align-items:center}
+.dot{width:11px;height:11px;border-radius:50%;background:#3a3a55}.dot:nth-child(1){background:#e5484d}.dot:nth-child(2){background:#f5a524}.dot:nth-child(3){background:#30a46c}
+#t{padding:16px 20px;color:#d7d7ea;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow:hidden;flex:1}
+.p{color:#a78bfa}.ok{color:#4ade80}.err{color:#f87171}.dim{color:#8b8bab}.cur{display:inline-block;width:8px;height:16px;background:#d7d7ea;vertical-align:text-bottom;margin-left:1px}
+.line{min-height:1.5em}
+</style><div class="win"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:8px">checkout-api — real tg output</span></div><div id="t"></div></div>
+<script>
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const t=document.getElementById('t');
+function cls(l){return /All checks passed/.test(l)?'ok':/error|no matching/.test(l)?'err':/^(-+\+?-*|\d+ rows?|Scanned)/.test(l)?'dim':''}
+window.play=async(steps)=>{
+ for(const s of steps){
+  const row=document.createElement('div');row.className='line';
+  t.scrollTop=t.scrollHeight;row.innerHTML='<span class="p">$ </span><span class="c"></span><span class="cur"></span>';t.appendChild(row);
+  const c=row.querySelector('.c');
+  for(const ch of s.cmd){c.textContent+=ch;t.scrollTop=t.scrollHeight;await sleep(11)}
+  await sleep(250);row.querySelector('.cur').remove();
+  for(const l of s.out.split('\n')){const d=document.createElement('div');d.className='line '+cls(l);d.textContent=l;t.appendChild(d);t.scrollTop=t.scrollHeight;await sleep(25)}
+  while(t.scrollHeight>t.clientHeight+2&&t.firstChild&&t.children.length>1&&t.scrollHeight>t.clientHeight){break}
+  await sleep(800);
+  t.appendChild(Object.assign(document.createElement('div'),{className:'line'}));
+ }
+ window.done=true;
+}
+</script>
