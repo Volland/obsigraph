@@ -2,7 +2,7 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
-## Unreleased
+## 0.8.0 — 2026-10-07
 
 ### Added
 

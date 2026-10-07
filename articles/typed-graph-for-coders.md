@@ -196,7 +196,7 @@ The opposite failure is also real. If every edge is `related_to`, you are back t
 
 The rule I'd suggest: **a type earns its place only if you would ask a question that depends on it.** If you can't name the query, drop the type. What follows is a deliberately small starting set, six kinds of intent node and eleven kinds of edge, designed around the questions engineers and agents actually ask.
 
-To be clear about the status of what follows: this is a **convention**, and in the next release it ships with the tool. `tg init --write` installs it as two files: a guide note, `lat.md/code-ontology.md`, and a Typed Graph Schema, `ontology/code-types.md`. A [follow-up article](code-ontology-in-practice.md) shows how each role uses them.
+To be clear about the status of what follows: this is a **convention**, and since 0.8.0 it ships with the tool. `tg init --write` installs it as two files: a guide note, `lat.md/code-ontology.md`, and a Typed Graph Schema, `ontology/code-types.md`. A [follow-up article](code-ontology-in-practice.md) shows how each role uses them.
 
 It is still a convention and not an enforced rule. Edge types are free-form in the syntax (the word before `::` is whatever you write), and node types are whatever you put in `type:`. `tg check` does not reject an unknown edge name. The schema is what an Obsidian vault validates against, what exports to SHACL for other tools, and what an agent reads to stop inventing synonyms. The files are yours after the first run: `tg init` never overwrites them.
 

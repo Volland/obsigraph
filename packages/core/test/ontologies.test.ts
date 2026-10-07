@@ -113,7 +113,7 @@ describe('ontology gallery', () => {
   // @lat: [[tests/ontology-gallery#OKF ontology exports conformant]]
   it('exports the OKF ontology as a bundle with no conformance errors', () => {
     const notes = load('okf').filter((n) => n.path.startsWith('Examples/'));
-    const { files } = exportOkf(notes.map((n) => ({ path: n.path, text: n.text, frontmatter: n.frontmatter })));
+    const { files } = exportOkf(notes.map((n) => ({ path: n.path, text: n.text, frontmatter: n.frontmatter ?? null })));
     const bundle = files.map((f) => {
       const { yaml } = splitFrontmatter(f.text);
       return { ...f, frontmatter: yaml === null ? null : (parseYaml(yaml) as Record<string, unknown>) };

@@ -187,7 +187,7 @@ Then:
 3. Run `tg check`, then the "requirements nothing implements" query.
 4. If the answer surprised you, write the decisions next. If it didn't, stop and use plain links.
 
-`tg init` does not overwrite the two ontology files on later runs, so edit them to fit your team. Pass `--no-ontology` for the agent setup without them. These features are in the next release; until then, build `tg` from this repository.
+`tg init` does not overwrite the two ontology files on later runs, so edit them to fit your team. Pass `--no-ontology` for the agent setup without them. This ships in `tg` 0.8.0.
 
 ---
 
