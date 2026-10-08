@@ -38,6 +38,7 @@ export function luhmannTypes(set: SchemaSet): TypeSchema[] {
  * The Luhmann id of the note at `path`, using the first of its types that has
  * a Luhmann rule and a value; null when the note has none.
  */
+// @tg: implements:: [[openspec:typed-note-creation#Luhmann placement]]
 export function findLuhmannParent(graph: Graph, set: SchemaSet, path: string): LuhmannParent | null {
   const node = graph.node(path);
   if (!node || node.stub) return null;
@@ -60,6 +61,7 @@ const TOKEN = /\{\{\s*([a-z][\w-]*)\s*\}\}/gi;
  * such as edge embeds, is left alone, and a line that mentions a parent token
  * is dropped when there is no parent.
  */
+// @tg: implements:: [[openspec:typed-note-creation#Template tokens]]
 export function expandTokens(body: string, vars: Record<string, string>): string {
   const hasParent = vars.parent !== undefined;
   return body
@@ -99,6 +101,8 @@ export interface NewNotePlan {
  * carries an id when the rule says so. Pure; the host writes the file.
  */
 // @lat: [[graph-model#Schema notes]]
+// @tg: implements:: [[openspec:schema-notes#Create a note from a type]]
+// @tg: implements:: [[openspec:typed-note-creation#File name carries the id]]
 export function planNewNote(req: NewNoteRequest): NewNotePlan {
   const { schema, title } = req;
   const now = req.now ?? new Date();

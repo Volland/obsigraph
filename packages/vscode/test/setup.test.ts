@@ -23,6 +23,7 @@ function deps(hasTg: boolean, answer: boolean) {
 }
 
 // @lat: [[tests/vscode-extension#Set up TypeGraph#Confirmation first]]
+// @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Confirmation first]]
 it('lists the files before running anything and runs nothing when declined', async () => {
   const yes = deps(true, true);
   expect(await runSetup(yes.deps)).toBe(true);
@@ -35,6 +36,7 @@ it('lists the files before running anything and runs nothing when declined', asy
 });
 
 // @lat: [[tests/vscode-extension#Set up TypeGraph#Global tg preferred]]
+// @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Global tg preferred]]
 it('uses a global tg when present and npx otherwise', () => {
   expect(setupCommand(true)).toBe('tg init --write');
   expect(setupCommand(false)).toBe('npx @typedgraph/cli init --write');

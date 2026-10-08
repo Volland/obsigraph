@@ -6,6 +6,7 @@ export const SH = BUILTIN_PREFIXES.sh!;
 export const TGS = BUILTIN_PREFIXES.tgs!;
 
 /** Datatype written for each property kind; `link` uses `sh:nodeKind sh:IRI` instead. */
+// @tg: implements:: [[openspec:shacl-interop#Node type mapping]]
 export const KIND_DATATYPE: Record<Exclude<PropertyKind, 'link'>, string> = {
   text: `${XSD}string`,
   list: `${XSD}string`,
@@ -16,6 +17,7 @@ export const KIND_DATATYPE: Record<Exclude<PropertyKind, 'link'>, string> = {
 };
 
 /** Kind read back from a datatype; anything else becomes text and is reported. */
+// @tg: implements:: [[openspec:shacl-interop#Reverse mapping]]
 export const DATATYPE_KIND: Record<string, PropertyKind> = {
   [`${XSD}string`]: 'text',
   [`${RDF}langString`]: 'text',

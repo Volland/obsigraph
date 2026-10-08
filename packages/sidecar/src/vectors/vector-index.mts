@@ -126,6 +126,7 @@ export class VectorIndex implements Processor {
   }
 
   /** Start indexing a graph: anything new, changed or pending is queued. */
+  // @tg: implements:: [[openspec:vector-index#Index is derived and rebuildable]]
   attach(graph: Graph): void {
     this.graph = graph;
     for (const n of graph.nodes()) {
@@ -160,6 +161,8 @@ export class VectorIndex implements Processor {
   }
 
   /** Discard every vector and re-embed the vault with the active model. */
+  // @tg: implements:: [[openspec:vector-index#Index is derived and rebuildable]]
+  // @tg: implements:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild]]
   async rebuild(): Promise<void> {
     await this.idle();
     this.notes.clear();
@@ -176,6 +179,7 @@ export class VectorIndex implements Processor {
 
   /** Top-k nodes by best chunk (or pooled) similarity, optionally filtered by type. */
   // @lat: [[vector-search#Node chunks]]
+  // @tg: implements:: [[openspec:vector-index#Vector search over nodes]]
   async searchNodes(query: string, k: number, opts: { types?: string[]; mode?: ScoreMode } = {}): Promise<NodeHit[]> {
     return this.searchNodesBy(await this.embedQuery(query), k, opts);
   }
@@ -186,6 +190,7 @@ export class VectorIndex implements Processor {
   }
 
   /** Similarity of each chunk of a note to a query vector, best first. */
+  // @tg: implements:: [[openspec:sidecar-mcp-graphrag#Citations on every chunk]]
   chunksOf(path: string, q: number[]): { heading: string | null; text: string; score: number }[] {
     const n = this.notes.get(path);
     if (!n) return [];
@@ -198,6 +203,7 @@ export class VectorIndex implements Processor {
     return null;
   }
 
+  // @tg: implements:: [[openspec:vector-index#Vector search over nodes]]
   searchNodesBy(q: number[], k: number, opts: { types?: string[]; mode?: ScoreMode } = {}): NodeHit[] {
     const hits: NodeHit[] = [];
     for (const n of this.notes.values()) {
@@ -219,10 +225,12 @@ export class VectorIndex implements Processor {
 
   /** Top-k edges by similarity of their verbalized sentence. */
   // @lat: [[vector-search#Edge verbalization]]
+  // @tg: implements:: [[openspec:vector-index#Vector search over edges]]
   async searchEdges(query: string, k: number): Promise<EdgeHit[]> {
     return this.searchEdgesBy(await this.embedQuery(query), k);
   }
 
+  // @tg: implements:: [[openspec:vector-index#Vector search over edges]]
   searchEdgesBy(q: number[], k: number): EdgeHit[] {
     const hits: EdgeHit[] = [];
     for (const n of this.notes.values()) {
@@ -246,6 +254,7 @@ export class VectorIndex implements Processor {
     });
   }
 
+  // @tg: implements:: [[openspec:vector-index#Unavailable provider degrades gracefully]]
   private async drain(): Promise<void> {
     if (!(await this.checkIdentity())) return;
     this.st = { state: 'building', message: null };
@@ -267,6 +276,10 @@ export class VectorIndex implements Processor {
   }
 
   /** Probe the active model; refuse to write when it differs from the stored identity. */
+  // @tg: implements:: [[openspec:embedding-provider#Mismatch never mixes vectors]]
+  // @tg: implements:: [[openspec:sidecar-service#Embedding provider configuration]]
+  // @tg: implements:: [[openspec:vector-index#Index records model identity]]
+  // @tg: implements:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild]]
   private async checkIdentity(): Promise<boolean> {
     let active: EmbeddingIdentity;
     try {
@@ -291,6 +304,7 @@ export class VectorIndex implements Processor {
     return true;
   }
 
+  // @tg: implements:: [[openspec:vector-index#Unavailable provider degrades gracefully]]
   private scheduleRetry(): void {
     if (this.retry) return;
     this.retry = setTimeout(() => {
@@ -300,6 +314,8 @@ export class VectorIndex implements Processor {
     this.retry.unref?.();
   }
 
+  // @tg: implements:: [[openspec:vector-index#Incremental update per file]]
+  // @tg: implements:: [[openspec:vector-index#Index covers nodes and edges]]
   private async indexNote(path: string): Promise<void> {
     const graph = this.graph!;
     const node = graph.node(path);
@@ -328,6 +344,7 @@ export class VectorIndex implements Processor {
   }
 
   /** Embed only texts not already in the cache. */
+  // @tg: implements:: [[openspec:vector-index#Incremental update per file]]
   private async vectorsFor(texts: string[]): Promise<number[][]> {
     const missing = [...new Set(texts.filter((t) => !this.cache.has(hash(t))))];
     if (missing.length) {

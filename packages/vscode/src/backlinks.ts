@@ -38,6 +38,9 @@ function fromEdge(e: GraphEdge, graph: Graph): BacklinkItem {
  * its annotations point at. Whole-file granularity.
  */
 // @lat: [[vscode#Backlinks]]
+// @tg: implements:: [[openspec:vscode-extension#Backlinks for source files]]
+// @tg: implements:: [[openspec:vscode-extension#Empty and unsupported states]]
+// @tg: implements:: [[openspec:vscode-extension#Typed backlinks for notes]]
 export function backlinksFor(index: WorkspaceIndex, path: string): Backlinks {
   const graph = index.graph;
   if (index.isSource(path)) {
@@ -66,4 +69,33 @@ export function backlinksFor(index: WorkspaceIndex, path: string): Backlinks {
   const code = index.annotationsTargeting(path).map((r): BacklinkItem => ({ path: r.file, line: r.line, label: r.file, sign: null, props: {}, target: r.target }));
   if (code.length) groups.push({ title: 'referenced from code', items: code.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line) });
   return groups.length ? { kind: 'note', groups } : EMPTY;
+}
+
+/** One row of the Backlinks view: a short message, an edge group, or the setup offer. */
+export type PanelRow = { kind: 'message'; text: string } | { kind: 'group'; group: BacklinkGroup } | { kind: 'setup' };
+
+/** The active editor's file: a workspace-relative path, or any path with `inWorkspace` false. */
+export interface ActiveFile {
+  path: string;
+  inWorkspace: boolean;
+}
+
+/**
+ * The top-level rows of the Backlinks view. A file outside `typegraph.roots`
+ * gets its own message. While setup is needed the offer is appended as a row,
+ * except with no active file, where no rows are returned so VS Code shows the
+ * welcome content with its "Set up TypeGraph" link.
+ */
+// @tg: implements:: [[openspec:vscode-extension#Empty and unsupported states]]
+// @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
+export function panelRows(index: WorkspaceIndex, file: ActiveFile | null, needsSetup: boolean): PanelRow[] {
+  if (!file) return needsSetup ? [] : [{ kind: 'message', text: 'Open a markdown or source file.' }];
+  const name = file.path.split(/[\\/]/).pop() ?? file.path;
+  let rows: PanelRow[];
+  if (!file.inWorkspace || !index.accepts(file.path)) rows = [{ kind: 'message', text: `${name} is outside the configured roots (typegraph.roots).` }];
+  else {
+    const r = backlinksFor(index, file.path);
+    rows = r.kind === 'empty' ? [{ kind: 'message', text: `No typed edges for ${name}.` }] : r.groups.map((group) => ({ kind: 'group', group }));
+  }
+  return needsSetup ? [...rows, { kind: 'setup' }] : rows;
 }

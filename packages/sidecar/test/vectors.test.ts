@@ -98,6 +98,7 @@ async function settle(sc: Sidecar, cond: () => boolean | Promise<boolean>) {
 
 describe('vector index', { timeout: 20000 }, () => {
   // @lat: [[tests/vector-index#Chunks and edges indexed]]
+  // @tg: verifies:: [[openspec:vector-index#Index covers nodes and edges#Note and edge indexed]]
   it('indexes chunk vectors per node and one sentence vector per edge', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -111,6 +112,8 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Model identity recorded]]
+  // @tg: verifies:: [[openspec:sidecar-service#Vector search over REST#Status shows vectors]]
+  // @tg: verifies:: [[openspec:vector-index#Index records model identity#Metadata stored]]
   it('records the model identity with the index', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider('nomic-embed-text', 768));
@@ -120,6 +123,10 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Model change blocks writes]]
+  // @tg: verifies:: [[openspec:embedding-provider#Mismatch never mixes vectors#Model changed]]
+  // @tg: verifies:: [[openspec:sidecar-service#Embedding provider configuration#Model mismatch]]
+  // @tg: verifies:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild#Model changed]]
+  // @tg: verifies:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild#Rebuild confirmed]]
   it('blocks writes on a model change, keeps searching the stale index, and rebuilds on request', async () => {
     const f = vault();
     await (await start(f, new FakeProvider('model-a'))).stop();
@@ -142,7 +149,42 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(b.embedded.some((t) => t.includes('quantum'))).toBe(true);
   });
 
+  // @lat: [[tests/mcp-graphrag#Retrieve flags a stale index]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Model mismatch with equal dimensions]]
+  it('answers retrieve from the old index with stale: true and a notice naming both models', async () => {
+    const f = vault();
+    await (await start(f, new FakeProvider('model-a', 768))).stop();
+    running.pop();
+    const sc = await start(f, new FakeProvider('model-b', 768));
+    const r = await api(sc, '/retrieve', { question: 'machine learning', k: 2 });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ stale: true });
+    expect(r.body.chunks.length).toBeGreaterThan(0);
+    expect(r.body.notices[0]).toMatch(/stale index.*model-a.*model-b/);
+  });
+
+  // @lat: [[tests/vector-index#Dimension change refuses queries]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Model mismatch with different dimensions]]
+  // @tg: verifies:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild#Dimension changed]]
+  it('refuses search and retrieve with a rebuild error when the active dimension differs', async () => {
+    const f = vault();
+    await (await start(f, new FakeProvider('model-a', 768))).stop();
+    running.pop();
+    const sc = await start(f, new FakeProvider('model-b', 1024));
+    expect(sc.vectors!.status()).toMatchObject({ state: 'mismatch' });
+    for (const [path, body] of [
+      ['/search', { query: 'machine learning' }],
+      ['/search', { query: 'machine learning', target: 'edges' }],
+      ['/retrieve', { question: 'machine learning' }],
+    ] as const) {
+      const r = await api(sc, path, body);
+      expect(r.status).toBe(503);
+      expect(r.body.error.message).toMatch(/768-dimension vectors but the active model produces 1024; rebuild/);
+    }
+  });
+
   // @lat: [[tests/vector-index#Only edited chunk re-embedded]]
+  // @tg: verifies:: [[openspec:vector-index#Incremental update per file#One paragraph edited]]
   it('re-embeds only the edited chunk of a five-chunk note', async () => {
     const sections = ['alpha', 'beta', 'gamma', 'delta', 'epsilon'].map((w) => `## ${w}\n${w} text here`);
     const f = vault({ 'Five.md': sections.join('\n') });
@@ -155,6 +197,8 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Removed edge and note dropped]]
+  // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Edge removed]]
+  // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Note deleted]]
   it('drops the sentence of a removed edge and every vector of a deleted note', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -168,6 +212,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Rename reuses vectors]]
+  // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Note renamed]]
   it('re-attributes vectors on a folder move without re-embedding unchanged text', async () => {
     const f = vault();
     const p = new FakeProvider();
@@ -181,6 +226,8 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Top nodes with citations]]
+  // @tg: verifies:: [[openspec:sidecar-service#Vector search over REST#Vector search over REST]]
+  // @tg: verifies:: [[openspec:vector-index#Vector search over nodes#Top nodes]]
   it('returns at most k nodes by descending score with their best chunk citation', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -194,6 +241,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Edge search returns sentences]]
+  // @tg: verifies:: [[openspec:vector-index#Vector search over edges#Relationship query]]
   it('finds edges by the meaning of their sentence', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -206,6 +254,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Search then traverse]]
+  // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Vector hits then traversal]]
   it('feeds vector hits into a Cypher query as $hits', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -220,6 +269,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Type filter]]
+  // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Type filter]]
   it('restricts node search to a type', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -228,6 +278,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Rebuild gives same results]]
+  // @tg: verifies:: [[openspec:vector-index#Index is derived and rebuildable#Index deleted]]
   it('gives the same results after the index storage is deleted and rebuilt', async () => {
     const f = vault();
     const sc = await start(f, new FakeProvider());
@@ -240,6 +291,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Provider down keeps old vectors]]
+  // @tg: verifies:: [[openspec:vector-index#Unavailable provider degrades gracefully#Ollama down during edit]]
   it('keeps old vectors searchable while the provider is down and catches up later', async () => {
     const f = vault();
     const p = new FakeProvider();
@@ -258,6 +310,7 @@ describe('vector index', { timeout: 20000 }, () => {
   });
 
   // @lat: [[tests/vector-index#Provider unreachable at start]]
+  // @tg: verifies:: [[openspec:sidecar-service#Embedding provider configuration#Provider unreachable at start]]
   it('starts, serves graph queries and reports degraded when the provider is down at start', async () => {
     const f = vault();
     const p = new FakeProvider();

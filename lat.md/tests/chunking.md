@@ -30,6 +30,10 @@ Chunking the same note twice gives identical chunks, and editing one paragraph c
 
 A node scores as its best chunk by default, or as the similarity of the pooled chunk vector.
 
+## Cosine refuses mixed dimensions
+
+Comparing vectors of different length throws a `RangeError` naming both dimensions instead of returning a NaN score.
+
 ## Edge sentence with properties
 
 An edge reads as `Source (Type) verb Target (Type) - props`, with `label` shown bare and the pinned id omitted.

@@ -18,6 +18,7 @@ function open(ctx: Ctx): Project | null {
   }
 }
 
+// @tg: implements:: [[openspec:tg-search#Hybrid ranking]]
 export const search: Command = {
   name: 'search',
   summary: 'Search sections: lexical by default, hybrid when embeddings are configured',
@@ -77,6 +78,7 @@ export const search: Command = {
   },
 };
 
+// @tg: implements:: [[openspec:tg-search#Derived cache]]
 export const reindex: Command = {
   name: 'reindex',
   summary: 'Rebuild the derived embedding cache in .tg/',

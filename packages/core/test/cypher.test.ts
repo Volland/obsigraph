@@ -36,6 +36,7 @@ const fail = (q: string): CypherError => {
 
 describe('cypher subset', () => {
   // @lat: [[tests/cypher-query#Typed traversal with filter]]
+  // @tg: verifies:: [[openspec:cypher-query#Supported clauses#Typed traversal with filter]]
   it('matches typed traversals filtered by relationship properties', () => {
     const r = run('MATCH (a:Person)-[r:knows]->(b) WHERE r.since > 2019 RETURN a, r, b');
     expect(r.rows).toHaveLength(2);
@@ -51,6 +52,7 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Ordering and limit]]
+  // @tg: verifies:: [[openspec:cypher-query#Supported clauses#Ordering and limit]]
   it('orders, skips and limits rows', () => {
     expect(titles(run('MATCH (n:Person) RETURN n ORDER BY n.title LIMIT 3'))).toEqual(['Alice', 'Bob', 'Carol']);
     expect(titles(run('MATCH (n:Person) RETURN n.title AS t ORDER BY n.age DESC SKIP 1 LIMIT 2'))).toEqual(['Eve', 'Alice']);
@@ -58,6 +60,7 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Sign and id are queryable]]
+  // @tg: verifies:: [[openspec:cypher-query#Edge sign and id are queryable#Filter negative edges]]
   it('exposes r.sign, r.id and n.stub', () => {
     const neg = run('MATCH (a)-[r]->(b) WHERE r.sign = -1 RETURN a.title, b.title, r.id');
     expect(neg.rows).toEqual([['Alice', 'Eve', 'Alice.md#distrusts#Eve.md#0']]);
@@ -66,6 +69,7 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Write clauses rejected]]
+  // @tg: verifies:: [[openspec:cypher-query#Read-only#Write attempt]]
   it('rejects every write clause as read-only', () => {
     for (const q of ['CREATE (n:Person)', 'MATCH (n) SET n.x = 1 RETURN n', 'MATCH (n) DELETE n', 'MERGE (n {a: 1})', 'MATCH (n) REMOVE n.x', 'MATCH (n) DETACH DELETE n']) {
       const e = fail(q);
@@ -75,6 +79,8 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Unsupported syntax named]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly#Unsupported function]]
+  // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Unsupported clause]]
   it('names unsupported clauses and functions', () => {
     const cases: [string, RegExp][] = [
       ['UNWIND [1] AS x RETURN x', /UNWIND/],
@@ -94,7 +100,44 @@ describe('cypher subset', () => {
     }
   });
 
+  // @lat: [[tests/cypher-query#Unsupported expression constructs named]]
+  // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Unsupported expression construct]]
+  it('names list comprehensions, map projections, pattern predicates and subqueries as unsupported', () => {
+    const cases: [string, RegExp][] = [
+      ['MATCH (n) RETURN [x IN labels(n) | toLower(x)]', /List comprehensions/],
+      ['MATCH (n) RETURN [x IN labels(n) WHERE x <> "Person"]', /List comprehensions/],
+      ['MATCH (a) RETURN [(a)-->(b) | b.title]', /Pattern comprehensions/],
+      ['MATCH (n) RETURN n {.title, .age}', /Map projections/],
+      ['MATCH (a), (b) WHERE (a)-[:knows]->(b) RETURN a', /Pattern predicates/],
+      ['MATCH (a) WHERE NOT (a)<--() RETURN a', /Pattern predicates/],
+      ['MATCH (a) WHERE (a:Person)--(:Company) RETURN a', /Pattern predicates/],
+      ['MATCH (a) RETURN COUNT { (a)-->() } AS n', /COUNT \{\} subqueries/],
+      ['MATCH (a) WHERE EXISTS { (a)-->() } RETURN a', /EXISTS \{\} subqueries/],
+    ];
+    for (const [q, re] of cases) {
+      const e = fail(q);
+      expect(e.kind, q).toBe('unsupported');
+      expect(e.message, q).toMatch(re);
+    }
+    // Parenthesised arithmetic is not mistaken for a pattern.
+    expect(run('MATCH (n:Person) WHERE (n.age) - 1 > 35 RETURN n.title').rows).toEqual([['Bob']]);
+  });
+
+  // @lat: [[tests/cypher-query#Variable-length relationship is a list column]]
+  it('reports a variable-length relationship variable as a scalar list column', () => {
+    const r = run('MATCH (a {title: "Alice"})-[rs:knows*1..2]->(b) RETURN rs, b ORDER BY b.title');
+    expect(r.columns).toEqual([
+      { name: 'rs', kind: 'scalar' },
+      { name: 'b', kind: 'node' },
+    ]);
+    for (const [rs] of r.rows) {
+      expect(Array.isArray(rs)).toBe(true);
+      expect((rs as unknown[]).every((x) => x instanceof RelRef)).toBe(true);
+    }
+  });
+
   // @lat: [[tests/cypher-query#Syntax errors have positions]]
+  // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Syntax error]]
   it('reports syntax errors with line and column', () => {
     const e = fail('MATCH (a RETURN a');
     expect(e.kind).toBe('syntax');
@@ -106,6 +149,7 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Column kinds reported]]
+  // @tg: verifies:: [[openspec:cypher-query#Result shape#Mixed columns]]
   it('reports column kinds statically, even for empty results', () => {
     const r = run('MATCH (a)-[r:knows]->(b) WHERE a.title = "Nobody" RETURN a, r, r.since');
     expect(r.rows).toEqual([]);
@@ -117,6 +161,7 @@ describe('cypher subset', () => {
   });
 
   // @lat: [[tests/cypher-query#Stubs included by default]]
+  // @tg: verifies:: [[openspec:cypher-query#Deterministic stub handling#Exclude stubs]]
   it('includes stubs by default and lets queries exclude them', () => {
     expect(run('MATCH (n) RETURN n').rows).toHaveLength(6);
     expect(titles(run('MATCH (n) WHERE n.stub = false RETURN n ORDER BY n.title'))).toEqual(['Acme', 'Alice', 'Bob', 'Carol', 'Eve']);

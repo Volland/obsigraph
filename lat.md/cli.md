@@ -1,3 +1,6 @@
+---
+openspec: [code-layer, lat-resolver, lat-vault-integration, symbol-provider, tg-agent-integration, tg-annotations, tg-check, tg-cli, tg-search, tg-trace]
+---
 # CLI
 
 The `tg` command line (package `@typedgraph/cli`) is a drop-in replacement for lat.md that also links code into the typed graph. Parts land as OpenSpec changes named `add-tg-*`; sections below say what exists.
@@ -50,9 +53,9 @@ The public product name is Typed Graph (see [[publishing#Plugin releases]]), so 
 
 Code points at docs with `@lat: [[section]]`, a plain `references` link, or `@tg:` followed by the existing inline edge grammar, e.g. `// @tg: implements:: [[auth#Login]] {since: 2}`.
 
-One grammar serves notes, docs and code (see [[edge-syntax#Inline edge form]]). A bare `@tg: [[x]]` equals `@lat:`. The edge source is the symbol declared within three lines after the comment, else the file with a warning. Arrow syntax is deferred.
+One grammar serves notes, docs and code (see [[edge-syntax#Inline edge form]]). A bare `@tg: [[x]]` equals `@lat:`. The edge source is the symbol declared within three lines after the comment, else the file; only a `@tg:` annotation that falls back to the file gets a warning, an `@lat:` one attaches silently as lat.md does. Arrow syntax is deferred.
 
-[[packages/core/src/code/annotations.ts#scanAnnotations]] finds them: `@lat:` uses lat.md's exact pattern (`//` or `#` comments, one link) so both tools see the same references, while `@tg:` also accepts block, JSDoc and SQL-style comments. Targets are checked with [[packages/core/src/code/annotations.ts#checkAnnotationTarget]]; a schema note's `edges` list gives advisory checks through [[packages/core/src/code/annotations.ts#schemaIssues]].
+[[packages/core/src/code/annotations.ts#scanAnnotations]] finds them: `@lat:` uses lat.md's exact pattern (`//` or `#` comments, one link) so both tools see the same references, while `@tg:` also accepts block, JSDoc and SQL-style comments. [[packages/core/src/code/annotations.ts#checkAnnotationTarget]] (resolve one edge target) and [[packages/core/src/code/annotations.ts#schemaIssues]] (advisory checks against a schema note's `edges` list) are tested core helpers for other callers; `tg check` does not call them and resolves annotation targets through its own link check.
 
 ## Code layer
 
@@ -84,7 +87,17 @@ The templates live in `packages/cli/templates/ontology/` and print with `tg gen 
 
 The lattice becomes a property graph that `tg cypher`, `tg edges` and the MCP server query.
 
-[[packages/core/src/latmd/graph.ts#buildLatGraph]] turns the lattice into a graph for [[query-engine]]: `Section` nodes with `section`, `title`, `file`, `depth`, `startLine`, `endLine` and `summary`, `contains` edges parent to child and `references` edges for resolved wiki links. `tg cypher` runs the built-in engine over it; `tg edges` lists annotation edges. `tg mcp` (`createTgMcpServer` in `packages/cli/src/commands/mcp-server.mts`) exposes `tg_locate`, `tg_section`, `tg_search`, `tg_expand`, `tg_check`, `tg_refs`, `tg_cypher` and `tg_edges`, each wrapping the CLI command, and loads the MCP SDK only on demand so other commands stay fast. Cypher results use the sidecar's `_type`-tagged contract from [[sidecar#Interfaces]].
+[[packages/core/src/latmd/graph.ts#buildLatGraph]] turns the lattice into a graph for [[query-engine]]: `Section` nodes with `section`, `title`, `file`, `depth`, `startLine`, `endLine` and `summary`, `contains` edges parent to child and `references` edges for resolved wiki links. `tg cypher` runs the built-in engine over it; `tg edges` lists annotation edges. `tg mcp` (`createTgMcpServer` in `packages/cli/src/commands/mcp-server.mts`) exposes `tg_locate`, `tg_section`, `tg_search`, `tg_expand`, `tg_check`, `tg_refs`, `tg_cypher`, `tg_edges` and `tg_trace`, each wrapping the CLI command, and loads the MCP SDK only on demand so other commands stay fast. Cypher results use the sidecar's `_type`-tagged contract from [[sidecar#Interfaces]].
+
+## Requirement trace
+
+`tg` reads OpenSpec requirements and links them to code, tests and docs: `@tg: implements::` on code, `@tg: verifies::` on tests, `openspec:` frontmatter in lat.md files, and `tg trace` reports the gaps.
+
+[[packages/core/src/openspec/index.ts#SpecIndex]] parses `openspec/specs/<capability>/spec.md` and the ADDED and MODIFIED requirements of unarchived changes (status `pending`, REMOVED names recorded in `removedBy`). Targets are `openspec:<capability>#<requirement>[#<scenario>]`, matched case-insensitively with whitespace collapsed; a main-spec requirement wins over a pending one, and misses get a nearest-id suggestion. The `openspec:` scheme keeps these ids out of lat.md id space, so short-id resolution and `lat check` parity are untouched: lat ignores `@tg:` and unknown frontmatter keys.
+
+A `@tg:` comment directly above a test call (`it`, `test`, `describe`, with `.each`, `.skip`, `.only` and similar) attaches to the file without a warning and puts `test: <name>` on each edge, so a test carries `@lat:` for its test-spec section and `@tg: verifies::` for the scenario it proves. A lat.md file lists what it explains as `openspec: [capability, "capability#Requirement"]` in frontmatter.
+
+`tg check` passes the index to [[packages/core/src/latmd/check.ts#checkLattice]], which reports unresolved `openspec:` annotation targets and unknown frontmatter entries; hosts that pass no index (plugin, export) skip these checks. Missing traceability is never a check finding. [[packages/core/src/openspec/trace.ts#traceRequirements]] builds the matrix for `tg trace [capability...] [--gaps] [--strict] [--json]` (`packages/cli/src/commands/trace.mts`): a requirement is implemented when an `implements` edge reaches it or a scenario, verified when every scenario has a `verifies` edge, and documented when frontmatter names it. `--strict` exits 1 on any unimplemented or unverified requirement. [[packages/core/src/latmd/graph.ts#buildLatGraph]] adds `Requirement` and `Scenario` nodes linked by `contains`, so `tg cypher`, `tg edges` and the `tg_trace` MCP tool see the same links.
 
 ## Vault integration
 

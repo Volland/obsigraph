@@ -29,6 +29,8 @@ description: Write and maintain the lat.md/ documentation folder with the tg CLI
 
 `// @tg: implements:: [[auth#Login]] {since: 2}` makes a labeled edge from the next declaration. Use `-type::` for a negative edge. Edge types may be restricted by a schema note's `edges` list.
 
+OpenSpec requirements are targets too: `// @tg: implements:: [[openspec:auth#Login]]` on code, `// @tg: verifies:: [[openspec:auth#Login#Expired token]]` above a test call (it attaches to the test, with its name). `tg check` rejects a target that does not resolve and suggests the nearest one; `tg trace [capability] --gaps` lists requirements with no implementation or unverified scenarios.
+
 ## Test specs
 
 Describe tests as leaf sections in `lat.md/tests/*.md` and put exactly one `@lat:` comment next to the test that covers each.

@@ -22,6 +22,8 @@ async function tg(cwd: string, ...args: string[]) {
 }
 
 // @lat: [[tests/shacl-interop#Schema commands]]
+// @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Empty schema folder]]
+// @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Export from the CLI]]
 it('exports schema notes as SHACL and imports them into another vault with a report', async () => {
   const v = folder({
     'Types/Person.md': '---\nschema:\n  properties: {email: {required: true}}\n  edges: {worksAt: Company}\n---\n\n## Notes\n',

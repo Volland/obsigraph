@@ -20,6 +20,8 @@ const err = (message: string, line = 0, column = 0): RemoteOutcome => ({ kind: '
  * while the mirror is still building.
  */
 // @lat: [[ladybug-mirror#Hosted by the sidecar]]
+// @tg: implements:: [[openspec:ladybug-backend#Clear error when unavailable]]
+// @tg: implements:: [[openspec:ladybug-backend#Errors reported with position]]
 export async function runRemote(fetcher: Fetcher, cfg: RemoteConfig, query: string, params: Record<string, unknown> = {}): Promise<RemoteOutcome> {
   const url = cfg.url.trim().replace(/\/+$/, '');
   if (!url) return err('Ladybug queries run in the Typed Graph sidecar. Set the sidecar URL and token in Typed Graph settings.');

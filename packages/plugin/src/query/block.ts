@@ -44,6 +44,10 @@ export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, heig
  * The header is every leading line of that form; a blank line may separate it.
  */
 // @lat: [[query-engine#Query block]]
+// @tg: implements:: [[openspec:graph-query-block#Block structure]]
+// @tg: implements:: [[openspec:graph-query-block#View override and columns]]
+// @tg: implements:: [[openspec:ladybug-backend#Backend selection]]
+// @tg: implements:: [[openspec:visualization-config#Block header style entries]]
 export function parseBlock(source: string): ParsedBlock {
   const lines = source.split(/\r?\n/);
   const options: BlockOptions = { ...DEFAULT_OPTIONS };
@@ -96,6 +100,7 @@ export function parseBlock(source: string): ParsedBlock {
 }
 
 /** Parse `color=red, shape=diamond` (also `;`-separated); commas inside parentheses are kept. */
+// @tg: implements:: [[openspec:visualization-config#Block header style entries]]
 export function parseStylePairs(value: string): Record<string, string> | string {
   const parts: string[] = [];
   let depth = 0;
@@ -122,12 +127,15 @@ export function parseStylePairs(value: string): Record<string, string> | string 
 }
 
 /** Pick the renderer: graph when any column holds nodes or relationships. */
+// @tg: implements:: [[openspec:cypher-extensions#Result shapes]]
+// @tg: implements:: [[openspec:graph-query-block#Renderer chosen by result shape]]
 export function chooseView(result: QueryResult, view: ViewMode): 'table' | 'graph' {
   if (view !== 'auto') return view;
   return result.columns.some((c) => c.kind !== 'scalar') ? 'graph' : 'table';
 }
 
 /** Resolve the `columns` option to column indexes; unknown names are errors. */
+// @tg: implements:: [[openspec:graph-query-block#View override and columns]]
 export function selectColumns(result: QueryResult, columns: string[] | null): { indexes: number[]; errors: string[] } {
   if (!columns) return { indexes: result.columns.map((_, i) => i), errors: [] };
   const indexes: number[] = [];

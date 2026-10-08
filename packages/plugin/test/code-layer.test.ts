@@ -38,6 +38,7 @@ it('code: hide removes code nodes and their edges from a block graph', () => {
 });
 
 // @lat: [[tests/code-layer#Visible on demand#Over the cap]]
+// @tg: verifies:: [[openspec:code-layer#Visible on demand#Over the cap]]
 it('falls back to a table with a notice when all-mode code exceeds the element cap', () => {
   const { run } = world(40);
   const plan = run('', 30);

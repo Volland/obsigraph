@@ -1,3 +1,6 @@
+---
+openspec: [sidecar-mcp-graphrag, sidecar-service]
+---
 # Sidecar
 
 A headless Docker service that mounts a vault read-only and serves it as RAG-ready graph and vector storage, with no Obsidian running.
@@ -20,9 +23,9 @@ Hybrid retrieve takes vector hits, expands their graph neighborhood and returns 
 
 Implemented by `createApi` (`packages/sidecar/src/http.mts`): `GET /health` (open), `GET /status`, `POST /query` with `{query, params, backend}`, `POST /search` (see [[vector-search#Vector index]]), `POST /retrieve`, `POST /vectors/rebuild` and `POST /mcp`. REST and MCP share `Ops` (`packages/sidecar/src/ops.mts`), so both surfaces return identical results.
 
-`createMcpServer` (`packages/sidecar/src/mcp/server.mts`) exposes three read-only tools, `cypher_query`, `vector_search` and `graphrag_retrieve`, over stateless streamable HTTP at `/mcp` behind the same token, bind address and limits, or over stdio with `server.mjs --stdio` (no listener, no token), e.g. `claude mcp add obsigraph -e OBSIGRAPH_VAULT=/vault -e OBSIGRAPH_DATA=/data -- node server.mjs --stdio`.
+`createMcpServer` (`packages/sidecar/src/mcp/server.mts`) exposes three read-only tools, `cypher_query`, `vector_search` and `graphrag_retrieve`, over stateless streamable HTTP at `/mcp` behind the same token, bind address and limits, or over stdio with `server.mjs --stdio` (no listener, no token), e.g. `claude mcp add obsigraph -e OBSIGRAPH_VAULT=/vault -e OBSIGRAPH_DATA=/data -- node server.mjs --stdio`. The server identifies as `typed-graph` with the sidecar package version, injected by the esbuild build and read from `package.json` when run from source (`packages/sidecar/src/version.mts`).
 
-`retrieve` (`packages/sidecar/src/rag/retrieve.mts`) embeds the question once, takes top-k node and edge hits (an edge hit seeds both endpoints), expands `depth` hops breadth-first ranking neighbors by their best chunk with a per-node cap, then returns up to `chunk_cap` best chunks, hits first and neighbors by distance, each cited with path, heading, score, role and distance, plus hit and connecting edges. Truncation is flagged, and chunk text is marked as untrusted vault content. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`: 400 for syntax, unsupported and read-only, 504 for timeouts, never stack traces.
+`retrieve` (`packages/sidecar/src/rag/retrieve.mts`) embeds the question once, takes top-k node and edge hits (an edge hit seeds both endpoints), expands `depth` hops breadth-first ranking neighbors by their best chunk with a per-node cap, then returns up to `chunk_cap` best chunks within a total text budget (16,000 characters by default), hits first and neighbors by distance, each cited with path, heading, score, role and distance, plus hit and connecting edges. Truncation by the neighbor cap, the chunk cap or the text budget is flagged as `truncated`, and chunk text is marked as untrusted vault content. Like search, retrieve reports `stale` and notices for a mismatched index and refuses a query of another dimension. Results use the plugin's contract, serialized by [[packages/core/src/cypher/json.ts#toJsonValue]] with `_type`-tagged nodes, relationships and paths. Errors are JSON `{error: {kind, message, line?, column?}}`, never stack traces: 400 for bad input, syntax, unsupported and read-only, 401 without a valid token, 404 for an unknown route, 405 for a wrong method, 413 for an oversized body, 503 when embeddings, vectors or the Ladybug backend are unavailable, and 504 for timeouts.
 
 ## Security
 

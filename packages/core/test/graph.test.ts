@@ -21,6 +21,7 @@ function vault() {
 
 describe('graph model', () => {
   // @lat: [[tests/graph-store#One node per note]]
+  // @tg: verifies:: [[openspec:graph-model#One note is one node#Note with headings]]
   it('creates exactly one node per note regardless of headings', () => {
     const { graph, put } = vault();
     put({ path: 'Alice.md', text: '# A\n## B\n### C\nknows:: [[Bob]]\nlikes:: [[Bob]]' });
@@ -28,6 +29,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Stub for unresolved link]]
+  // @tg: verifies:: [[openspec:graph-model#Stub nodes for unresolved links#Link to missing note]]
   it('creates a stub node for an unresolved target', () => {
     const { graph, put } = vault();
     put({ path: 'Alice.md', text: 'knows:: [[Nobody]]' });
@@ -37,6 +39,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Stub promoted when note created]]
+  // @tg: verifies:: [[openspec:graph-model#Stub nodes for unresolved links#Stub becomes real]]
   it('replaces the stub with the real node when the note appears', () => {
     const { graph, put } = vault();
     put({ path: 'Alice.md', text: 'knows:: [[Nobody]]' });
@@ -50,6 +53,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Labels from frontmatter type]]
+  // @tg: verifies:: [[openspec:graph-model#Node labels from frontmatter#Multiple types]]
   it('derives labels from a string or list type', () => {
     const { graph, put } = vault();
     put({ path: 'Ann.md', text: '', frontmatter: { type: ['Person', 'Employee'] } });
@@ -61,6 +65,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Frontmatter path and title properties]]
+  // @tg: verifies:: [[openspec:graph-model#Node properties#Frontmatter property]]
   it('exposes frontmatter, path and title as node properties', () => {
     const { graph, put } = vault();
     put({ path: 'People/Ann.md', text: '', frontmatter: { age: 31 } });
@@ -68,6 +73,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Derived edge ids with ordinals]]
+  // @tg: verifies:: [[openspec:graph-model#Derived edge IDs#Duplicate edges]]
   it('gives duplicate edges ids that differ only in the ordinal', () => {
     const { graph, put } = vault();
     put({ path: 'Bob.md', text: '' });
@@ -79,6 +85,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Pinned edge id]]
+  // @tg: verifies:: [[openspec:graph-model#Derived edge IDs#Pinned ID]]
   it('uses a pinned id when present and reports duplicate pinned ids', () => {
     const { graph, put } = vault();
     put({ path: 'Alice.md', text: 'knows:: [[Bob]] {id: "met-2020"}\nlikes:: [[Bob]] {id: "met-2020"}' });
@@ -88,6 +95,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Incremental edit]]
+  // @tg: verifies:: [[openspec:graph-model#Incremental updates#Note edited]]
   it('replaces only the edited note edges', () => {
     const { graph, put } = vault();
     put({ path: 'Bob.md', text: 'knows:: [[Carol]]' });
@@ -99,6 +107,7 @@ describe('graph model', () => {
   });
 
   // @lat: [[tests/graph-store#Deleted target becomes stub]]
+  // @tg: verifies:: [[openspec:graph-model#Incremental updates#Note deleted]]
   it('turns edges to a deleted note into edges to a stub', () => {
     const { graph, put, del } = vault();
     put({ path: 'Bob.md', text: '' });

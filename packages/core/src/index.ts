@@ -6,7 +6,7 @@ export { Graph, labelsOf, titleOf } from './graph/graph.js';
 export type { GraphNode, GraphEdge, NoteInput, LinkResolver, SubpathResolver } from './graph/graph.js';
 export { BuiltinEngine } from './cypher/engine.js';
 export type { QueryEngine } from './cypher/engine.js';
-export { containsAgg, FUNCTIONS, parseQuery } from './cypher/parser.js';
+export { AGGREGATE_FUNCTIONS, BINARY_OPERATORS, CLAUSES, containsAgg, FUNCTIONS, parseQuery, PATTERN_FEATURES, queryConstructs, UNARY_OPERATORS } from './cypher/parser.js';
 export type { AggName, BinOp, Clause, Direction, Expr, NodePattern, Pattern, Projection, Query, RelPattern, ReturnItem, SortItem } from './cypher/ast.js';
 export { CypherError, lex } from './cypher/lexer.js';
 export type { Token, TokenKind } from './cypher/lexer.js';
@@ -85,3 +85,4 @@ export type { Chunk, ChunkInput, EdgeSentence, ScoreMode } from './embed/chunk.j
 export * from './latmd.js';
 export * from './code.js';
 export * from './okf.js';
+export * from './openspec.js';

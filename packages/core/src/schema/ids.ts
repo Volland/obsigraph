@@ -150,6 +150,7 @@ export interface IdContext {
 }
 
 /** Generate one id of `kind`; a Luhmann id without a parent is the next top-level number. */
+// @tg: implements:: [[openspec:typed-note-creation#Generated ids]]
 export function generateId(kind: IdKind, ctx: IdContext): string {
   const taken = ctx.existing;
   switch (kind) {

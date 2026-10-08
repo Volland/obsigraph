@@ -55,6 +55,13 @@ const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
  * links share the type and props. Lines in fenced code or frontmatter are skipped.
  */
 // @lat: [[edge-syntax#Inline edge form]]
+// @tg: implements:: [[openspec:edge-parsing#Inline edge form]]
+// @tg: implements:: [[openspec:edge-parsing#Malformed property blocks]]
+// @tg: implements:: [[openspec:edge-parsing#Markdown link targets]]
+// @tg: implements:: [[openspec:edge-parsing#Non-edge text is ignored]]
+// @tg: implements:: [[openspec:edge-parsing#Sign prefix]]
+// @tg: implements:: [[openspec:edge-parsing#Source heading is recorded]]
+// @tg: implements:: [[openspec:edge-parsing#Weight is independent of sign]]
 export function parseEdges(text: string, path: string | null = null, options: ParseOptions = {}): ParseResult {
   const edges: ParsedEdge[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -163,6 +170,7 @@ function scanLinks(value: string, path: string | null): {
  * with a scheme, pure anchors and links to files that are not notes.
  */
 // @lat: [[edge-syntax#Markdown link targets]]
+// @tg: implements:: [[openspec:edge-parsing#Markdown link targets]]
 export function markdownTarget(dest: string, sourcePath: string | null): { target: string; subpath: string | null } | null {
   let raw = dest.trim();
   if (raw.startsWith('<') && raw.endsWith('>')) raw = raw.slice(1, -1).trim();
@@ -202,6 +210,7 @@ export function markdownTarget(dest: string, sourcePath: string | null): { targe
 
 /** Plain wikilinks and markdown links to notes in a prose line, as untyped edges; images and code spans are skipped. */
 // @lat: [[graph-model#Plain link edges]]
+// @tg: implements:: [[openspec:graph-model#Plain link edges]]
 function proseLinks(line: string, path: string | null, n: number, heading: string | null): ParsedEdge[] {
   const text = line.replace(INLINE_CODE, (c) => ' '.repeat(c.length));
   const out: ParsedEdge[] = [];

@@ -6,8 +6,10 @@ import ontologyGuide from '../../templates/ontology/code-ontology.md';
 import ontologySchema from '../../templates/ontology/code-types.md';
 import { EXIT_ERROR, EXIT_OK, register, type Command } from '../cli.mjs';
 
+// @tg: implements:: [[openspec:tg-agent-integration#Bundled skills]]
 export const TEMPLATES = { agents, cursor, docsSkill, graphSkill, ontologyGuide, ontologySchema };
 
+// @tg: implements:: [[openspec:tg-agent-integration#Instruction generation]]
 const TARGETS: Record<string, string> = {
   'agents.md': agents,
   'claude.md': agents,
@@ -18,6 +20,7 @@ const TARGETS: Record<string, string> = {
   'ontology-schema.md': ontologySchema,
 };
 
+// @tg: implements:: [[openspec:tg-agent-integration#Instruction generation]]
 export const gen: Command = {
   name: 'gen',
   summary: 'Print agent instructions: agents.md, claude.md, cursor-rules.md, skill.md, graph-skill.md, ontology.md, ontology-schema.md',

@@ -21,6 +21,7 @@ const rows = (g: Graph, q: string) => new BuiltinEngine(g).run(q).rows;
 
 describe('code layer', () => {
   // @lat: [[tests/code-layer#Derived code nodes#Annotated symbol]]
+  // @tg: verifies:: [[openspec:code-layer#Derived code nodes#Annotated symbol]]
   it('builds a CodeSymbol with its typed edge to the section node', () => {
     const { graph: g } = graph('annotated');
     const sym = g.node('src/auth.ts#login')!;
@@ -32,6 +33,7 @@ describe('code layer', () => {
   });
 
   // @lat: [[tests/code-layer#Code mode setting#Off]]
+  // @tg: verifies:: [[openspec:code-layer#Code mode setting#Off]]
   it('creates no code nodes or annotation edges when off', () => {
     const { graph: g } = graph('off');
     expect([...g.nodes()].some((n) => n.labels.some((l) => l.startsWith('Code')))).toBe(false);
@@ -39,6 +41,7 @@ describe('code layer', () => {
   });
 
   // @lat: [[tests/code-layer#Code mode setting#Annotated only]]
+  // @tg: verifies:: [[openspec:code-layer#Code mode setting#Annotated only]]
   it('keeps only annotated symbols and their file in annotated mode, and everything in all mode', () => {
     const { graph: g } = graph('annotated');
     const symbols = [...g.nodes()].filter((n) => n.labels.includes('CodeSymbol')).map((n) => n.id).sort();
@@ -52,6 +55,7 @@ describe('code layer', () => {
   });
 
   // @lat: [[tests/code-layer#Queryable code nodes#Match code symbols]]
+  // @tg: verifies:: [[openspec:code-layer#Queryable code nodes#Match code symbols]]
   it('matches code symbols and their relationships in Cypher', () => {
     const { graph: g } = graph('annotated');
     const r = rows(g, 'MATCH (c:CodeSymbol)-[r:implements]->(s) RETURN c.path, s.title');
@@ -62,6 +66,7 @@ describe('code layer', () => {
   });
 
   // @lat: [[tests/code-layer#Link and node identity agree#Link from a note]]
+  // @tg: verifies:: [[openspec:code-layer#Link and node identity agree#Link from a note]]
   it('links a note to the code node instead of making a stub', () => {
     const { graph: g } = graph('annotated');
     const link = g.outEdges('lat.md/auth#Auth#Login').find((e) => e.type === 'references')!;
@@ -78,6 +83,7 @@ describe('code layer', () => {
   });
 
   // @lat: [[tests/code-layer#Visible on demand#Toggle on]]
+  // @tg: verifies:: [[openspec:code-layer#Visible on demand#Toggle on]]
   it('gives code nodes distinct built-in styles', () => {
     const file = resolveNodeStyle(['CodeFile'], []);
     const sym = resolveNodeStyle(['CodeSymbol'], []);

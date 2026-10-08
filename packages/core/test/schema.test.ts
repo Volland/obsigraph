@@ -37,6 +37,7 @@ const person = (schema: Record<string, unknown>): NoteInput => ({ path: 'Types/P
 
 describe('schema notes', () => {
   // @lat: [[tests/schema-notes#Schema found by location]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema notes are discovered by location#Schema found for a type]]
   it('finds the schema for a type by note title in the schema folder', () => {
     const graph = vault([person({ properties: { status: 'text' } }), { path: 'Alice.md', text: '', frontmatter: { type: 'Person' } }]);
     const set = schemasFromGraph(graph, 'Types');
@@ -48,6 +49,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#No schemas no effect]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema notes are discovered by location#No schemas present]]
   it('raises nothing when no schema notes exist', () => {
     const graph = vault([{ path: 'Alice.md', text: 'owns:: [[Car]]', frontmatter: { type: 'Person' } }]);
     const set = schemasFromGraph(graph, 'Types/');
@@ -57,6 +59,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Property declarations read]]
+  // @tg: verifies:: [[openspec:schema-notes#Property declarations#Declared property with default]]
   it('reads properties in map, shorthand and list form with kinds, defaults and required', () => {
     const map = readSchema('Types/Person.md', { schema: { properties: { status: { kind: 'text', default: 'active' }, born: { kind: 'date', required: true }, age: 'number' } } });
     expect(map.diagnostics).toEqual([]);
@@ -71,6 +74,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Unknown kind becomes text]]
+  // @tg: verifies:: [[openspec:schema-notes#Property declarations#Unknown kind]]
   it('treats an unknown kind as text and reports it', () => {
     const r = readSchema('Types/Person.md', { schema: { properties: { mood: { kind: 'emotion' } } } });
     expect(r.schema.properties[0]!.kind).toBe('text');
@@ -78,6 +82,8 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Disallowed edge reported]]
+  // @tg: verifies:: [[openspec:schema-notes#Allowed edge types#Disallowed edge type reported]]
+  // @tg: verifies:: [[openspec:schema-notes#Allowed edge types#No list means unrestricted]]
   it('reports an edge type not allowed for the source type, and allows anything without a list', () => {
     const graph = vault([
       person({ edges: ['knows', 'worksAt'] }),
@@ -92,6 +98,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Missing required property reported]]
+  // @tg: verifies:: [[openspec:schema-notes#Required property validation#Missing required property]]
   it('reports a missing required property but keeps the node', () => {
     const graph = vault([person({ properties: { born: { kind: 'date', required: true } } }), { path: 'Alice.md', text: '', frontmatter: { type: 'Person' } }]);
     const diags = validateSchemas(graph, schemasFromGraph(graph, 'Types/'));
@@ -112,6 +119,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Template applied]]
+  // @tg: verifies:: [[openspec:schema-notes#Create a note from a type#Template applied]]
   it('renders a new note with type, defaults and the template body', () => {
     const { schema } = readSchema('Types/Person.md', { schema: { properties: { status: { default: 'active' }, tags: { default: ['a', 'b'] }, born: 'date' } } });
     const text = renderNoteFromType(schema, '## Notes\n');
@@ -121,6 +129,7 @@ describe('schema notes', () => {
   });
 
   // @lat: [[tests/schema-notes#Schema changes apply live]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema changes take effect live#Required flag added]]
   it('picks up a schema edit on the next validation', () => {
     const alice: NoteInput = { path: 'Alice.md', text: '', frontmatter: { type: 'Person' } };
     const graph = vault([person({ properties: { born: 'date' } }), alice]);
@@ -143,6 +152,9 @@ const note = (path: string, frontmatter: Record<string, unknown>, text = ''): No
 
 describe('typed graph schema (TGS) declarations', () => {
   // @lat: [[tests/schema-notes#Multi-type notes]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema notes are discovered by location#Both forms in one note]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema notes are discovered by location#Notes outside the folder are ignored]]
+  // @tg: verifies:: [[openspec:schema-notes#Schema notes are discovered by location#Several types in one note]]
   it('reads several types from one note, alongside the title type, and ignores notes outside the folder', () => {
     const graph = vault([
       note('Types/People and Orgs.md', { schemas: { Person: { properties: { name: 'text' } }, Company: { properties: { founded: 'date' } } } }),
@@ -158,6 +170,7 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#Property attributes read]]
+  // @tg: verifies:: [[openspec:schema-notes#Property declarations#Enum and list attributes read]]
   it('reads many, values, uri and the datetime and list kinds', () => {
     const r = readSchemaNote('Types/Person.md', {
       schema: { properties: { status: { kind: 'text', values: ['active', 'alumni'], many: true }, seen: 'datetime', aliases: 'list', email: { uri: 'schema:email' } } },
@@ -171,6 +184,7 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#Edge map form]]
+  // @tg: verifies:: [[openspec:schema-notes#Allowed edge types#Map form with target]]
   it('reads the map form of edges with targets, many and required', () => {
     const r = readSchemaNote('Types/Person.md', { schema: { edges: { worksAt: 'Company', knows: { target: 'Person', many: true }, mentor: { target: ['Person', 'Team'], many: false, required: true }, likes: null } } });
     expect(r.diagnostics).toEqual([]);
@@ -184,6 +198,7 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#Edge types read]]
+  // @tg: verifies:: [[openspec:schema-notes#Edge type declarations#Edge type with properties]]
   it('reads edge types with endpoints, properties, uri and visualization', () => {
     const r = readSchemaNote('Types/Org.md', {
       edgeTypes: { worksAt: { from: 'Person', to: ['Company'], properties: { since: 'date', role: { kind: 'text', required: true } }, uri: 'schema:worksFor', visualization: { color: 'green' } } },
@@ -195,6 +210,7 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#Duplicate types reported]]
+  // @tg: verifies:: [[openspec:schema-notes#Duplicate type declarations#Type declared twice]]
   it('keeps the first declaration by path and names both notes', () => {
     const graph = vault([
       note('Types/B.md', { schemas: { Person: { properties: { b: 'text' } } } }),
@@ -206,6 +222,8 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#Identifiers expanded]]
+  // @tg: verifies:: [[openspec:schema-notes#Identifiers#CURIE expanded]]
+  // @tg: verifies:: [[openspec:schema-notes#Identifiers#Unknown prefix]]
   it('expands CURIEs with built-in and declared prefixes and reports unknown ones', () => {
     expect(expandIri('schema:Organization', { schema: 'https://schema.org/' })).toEqual({ iri: 'https://schema.org/Organization' });
     expect(expandIri('https://x.org/a', {})).toEqual({ iri: 'https://x.org/a' });
@@ -219,6 +237,8 @@ describe('typed graph schema (TGS) declarations', () => {
   });
 
   // @lat: [[tests/schema-notes#TGS version handling]]
+  // @tg: verifies:: [[openspec:tgs-spec#Versioning#Different major version]]
+  // @tg: verifies:: [[openspec:tgs-spec#Versioning#Newer minor version]]
   it('reads newer minor versions reporting unknown keys and ignores other major versions', () => {
     const minor = readSchemaNote('Types/Person.md', { tgs: '0.3', schema: { properties: { a: 'text' }, inherits: 'Agent' } });
     expect(minor.types[0]!.properties.map((p) => p.name)).toEqual(['a']);
@@ -240,6 +260,8 @@ describe('TGS validation', () => {
   });
 
   // @lat: [[tests/schema-notes#Value and cardinality validation]]
+  // @tg: verifies:: [[openspec:schema-notes#Value and cardinality validation#Required edge missing]]
+  // @tg: verifies:: [[openspec:schema-notes#Value and cardinality validation#Value outside enum]]
   it('reports enum violations, unexpected lists, missing required edges and repeated single edges', () => {
     const graph = vault([
       org,
@@ -258,6 +280,8 @@ describe('TGS validation', () => {
   });
 
   // @lat: [[tests/schema-notes#Edge property validation]]
+  // @tg: verifies:: [[openspec:schema-notes#Edge property validation#Extra edge property accepted]]
+  // @tg: verifies:: [[openspec:schema-notes#Edge property validation#Missing required edge property]]
   it('reports missing required and enum-violating edge properties at the edge line, accepting extra ones', () => {
     const graph = vault([
       org,
@@ -274,6 +298,8 @@ describe('TGS validation', () => {
   });
 
   // @lat: [[tests/schema-notes#Edge endpoint validation]]
+  // @tg: verifies:: [[openspec:schema-notes#Edge endpoint validation#Stub target not reported]]
+  // @tg: verifies:: [[openspec:schema-notes#Edge endpoint validation#Wrong target type]]
   it('reports wrong target and source types but not stubs or untyped notes', () => {
     const graph = vault([
       org,
@@ -292,6 +318,8 @@ describe('TGS validation', () => {
 
 describe('templates', () => {
   // @lat: [[tests/schema-notes#Template note used]]
+  // @tg: verifies:: [[openspec:schema-notes#Create a note from a type#Template note used]]
+  // @tg: verifies:: [[openspec:tgs-spec#Host independence#Markdown link template]]
   it('resolves template links and prefers the linked note over the schema body', () => {
     const resolve = (l: string) => (l === 'Templates/Person' || l === 'Person' ? 'Templates/Person.md' : null);
     expect(templatePath('[[Templates/Person]]', 'Types/Person.md', resolve)).toBe('Templates/Person.md');
@@ -305,6 +333,7 @@ describe('templates', () => {
   });
 
   // @lat: [[tests/schema-notes#Template generated]]
+  // @tg: verifies:: [[openspec:schema-notes#Create a note from a type#Template generated from schema]]
   it('generates a template with property placeholders and edge lines that create no edges', () => {
     const set = schemaSetFromGraph([note('Types/Org.md', { schemas: { Company: { properties: { name: 'text', founded: 'date', tags: 'list', size: { default: 'small' } }, edges: { employs: 'Person' } } } }, '# Org docs')]);
     const company = set.schemas.get('Company')!;
@@ -321,6 +350,7 @@ describe('templates', () => {
 
 describe('edge type styling', () => {
   // @lat: [[tests/visualization-config#Edge type entry styles edges]]
+  // @tg: verifies:: [[openspec:visualization-config#Edge type styling#Edge type entry styles edges]]
   it('styles edges from an edgeTypes entry, winning over visualization.edges per attribute', () => {
     const set = schemaSetFromGraph([
       note('Types/Org.md', { edgeTypes: { worksAt: { visualization: { color: 'green' } } } }),

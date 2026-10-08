@@ -1,3 +1,6 @@
+---
+openspec: [graph-query-block, graph-ui, graph-view, visualization-config]
+---
 # Visualization
 
 Graph rendering is done by the plugin itself with Cytoscape.js, because the core graph view cannot show edge labels, signs or typed shapes.

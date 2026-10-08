@@ -27,6 +27,8 @@ const ENDPOINTS = /^(.+?)\s+-([+-]?)([\p{L}_][\p{L}\p{N}_-]*)->\s+(.+)$/u;
  * each with an optional ` . property` suffix.
  */
 // @lat: [[edge-syntax#Property embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Embed by endpoints]]
+// @tg: implements:: [[openspec:edge-embeds#Embed by pinned ID]]
 export function parseEmbed(inner: string): EdgeEmbed | string {
   let body = inner.trim();
   let prop: string | null = null;
@@ -78,6 +80,10 @@ export type EmbedResolution =
 
 /** One lookup for both forms: pinned id, or endpoints + type + optional sign. */
 // @lat: [[edge-syntax#Property embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Ambiguous endpoint embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Embed by endpoints]]
+// @tg: implements:: [[openspec:edge-embeds#Embed by pinned ID]]
+// @tg: implements:: [[openspec:edge-embeds#Missing property and unresolved embeds]]
 export function resolveEmbed(graph: Graph, embed: EdgeEmbed, fromPath: string): EmbedResolution {
   if (embed.kind === 'id') {
     const edge = graph.edge(embed.id);
@@ -102,6 +108,8 @@ export type EmbedView =
   | { kind: 'unresolved'; text: string };
 
 /** What an embed shows: one value, the property table, an empty state or an unresolved marker. */
+// @tg: implements:: [[openspec:edge-embeds#Missing property and unresolved embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Whole property block as table]]
 export function viewEmbed(embed: EdgeEmbed, res: EmbedResolution): EmbedView {
   if (res.status === 'unresolved') return { kind: 'unresolved', text: res.reason };
   const props = Object.entries(res.edge.props);
@@ -137,6 +145,8 @@ export class EmbedIndex {
    * suggested id), ambiguous endpoint embeds, and malformed embeds. Pinned-id
    * references and unreferenced edges never warn.
    */
+  // @tg: implements:: [[openspec:edge-embeds#Ambiguous endpoint embeds]]
+  // @tg: implements:: [[openspec:edge-embeds#Pinned-ID warnings]]
   warnings(graph: Graph): Diagnostic[] {
     const out: Diagnostic[] = [];
     for (const [path, list] of this.byPath) {
@@ -165,6 +175,7 @@ export class EmbedIndex {
 }
 
 /** Copy-ready id suggestion such as `alice-knows-bob`. */
+// @tg: implements:: [[openspec:edge-embeds#Pinned-ID warnings]]
 export function suggestId(e: GraphEdge): string {
   return [titleOf(e.source), e.type, titleOf(e.target)]
     .join('-')

@@ -32,11 +32,13 @@ const fail = (q: string): CypherError => {
 
 describe('cypher extensions', () => {
   // @lat: [[tests/cypher-extensions#Filter on aggregate]]
+  // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Filter on aggregate]]
   it('stages with WITH and filters on an aggregate', () => {
     expect(plain(run('MATCH (a)-[:knows]->(b) WITH a, count(b) AS n WHERE n > 2 RETURN a, n'))).toEqual([['Alice', 3]]);
   });
 
   // @lat: [[tests/cypher-extensions#Out-of-scope variable]]
+  // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Out-of-scope variable]]
   it('hides variables not carried by WITH', () => {
     const e = fail('MATCH (a)-->(b) WITH a RETURN b');
     expect(e.kind).toBe('syntax');
@@ -45,24 +47,28 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Order and limit inside WITH]]
+  // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Ordering and limit inside WITH]]
   it('orders and limits inside WITH before further matching', () => {
     const r = run('MATCH (a:Person) WITH a ORDER BY a.title DESC LIMIT 2 MATCH (a)-[:knows]->(b) RETURN a.title, b.title');
     expect(r.rows).toEqual([['Carol', 'Alice']]);
   });
 
   // @lat: [[tests/cypher-extensions#Optional match yields null]]
+  // @tg: verifies:: [[openspec:cypher-extensions#OPTIONAL MATCH#Missing relationship yields null]]
   it('keeps rows without an optional match, binding null', () => {
     const r = run('MATCH (p:Person) OPTIONAL MATCH (p)-[:worksAt]->(c) RETURN p.title, c.title ORDER BY p.title');
     expect(r.rows).toEqual([['Alice', null], ['Bob', 'Acme'], ['Carol', null], ['Dave', null]]);
   });
 
   // @lat: [[tests/cypher-extensions#Optional where keeps row]]
+  // @tg: verifies:: [[openspec:cypher-extensions#OPTIONAL MATCH#Optional WHERE applies to the optional part]]
   it('applies WHERE to the optional part only', () => {
     const r = run("MATCH (p:Person) OPTIONAL MATCH (p)-[:knows]->(f) WHERE f.title = 'Zed' RETURN p.title, f ORDER BY p.title");
     expect(r.rows).toEqual([['Alice', null], ['Bob', null], ['Carol', null], ['Dave', null]]);
   });
 
   // @lat: [[tests/cypher-extensions#Bounded reachability]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Bounded reachability]]
   it('finds nodes reachable within a bounded number of hops', () => {
     const r = run('MATCH (a {title: "Alice"})-[:knows*1..3]->(b) RETURN DISTINCT b.title AS t ORDER BY t');
     expect(r.rows).toEqual([['Alice'], ['Bob'], ['Carol'], ['Dave']]);
@@ -71,6 +77,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Cycles terminate]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Cycles terminate]]
   it('terminates on cycles and never repeats a relationship in a path', () => {
     const r = run('MATCH (a {title: "Alice"})-[rs:knows*]->(b) RETURN rs');
     expect(r.rows.length).toBeGreaterThan(0);
@@ -82,6 +89,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Unbounded depth is capped]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Unbounded depth is capped]]
   it('stops unbounded expansion at the cap and says so', () => {
     const r = run('MATCH (a {title: "Alice"})-[:knows*]->(b) RETURN DISTINCT b.title', 1);
     expect(plain(r).flat().sort()).toEqual(['Bob', 'Carol', 'Dave']);
@@ -90,6 +98,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Path result]]
+  // @tg: verifies:: [[openspec:cypher-query#Result shape#Path column]]
   it('binds path variables and reports a path column', () => {
     const r = run('MATCH p = (a {title: "Alice"})-[:knows*1..2]->(b) RETURN p, length(p) AS len ORDER BY len');
     expect(r.columns).toEqual([{ name: 'p', kind: 'path' }, { name: 'len', kind: 'scalar' }]);
@@ -107,6 +116,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Count per group]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Count per group]]
   it('groups by non-aggregate items and counts', () => {
     const r = run('MATCH (a)-[r:knows]->() RETURN a.title, count(r) AS n ORDER BY n DESC, a.title');
     expect(r.rows).toEqual([['Alice', 3], ['Bob', 1], ['Carol', 1]]);
@@ -114,11 +124,13 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Numeric aggregates]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Numeric aggregates on edge property]]
   it('computes avg, min, max and sum over an edge property', () => {
     expect(run('MATCH ()-[r:rated]->() RETURN avg(r.score), min(r.score), max(r.score), sum(r.score)').rows).toEqual([[3, 2, 4, 9]]);
   });
 
   // @lat: [[tests/cypher-extensions#Collect values]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Collect values]]
   it('collects values per group', () => {
     const r = run("MATCH (a)-[:knows]->(b) WHERE a.title = 'Alice' RETURN a.title, collect(b.title) AS friends");
     expect(r.rows.length).toBe(1);
@@ -126,6 +138,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Empty input aggregates]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Empty input]]
   it('returns openCypher empty-input values without grouping keys', () => {
     const r = run('MATCH (a:Nobody) RETURN count(a), count(*), sum(a.x), avg(a.x), min(a.x), max(a.x), collect(a.x)');
     expect(r.rows).toEqual([[0, 0, 0, null, null, null, []]]);
@@ -133,6 +146,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Non-numeric sum]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Aggregation type errors#Non-numeric sum]]
   it('fails sum and avg on non-numeric values, naming the function', () => {
     const e = fail('MATCH (a:Person) RETURN sum(a.title)');
     expect(e.kind).toBe('runtime');
@@ -148,6 +162,7 @@ describe('cypher extensions', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Still unsupported or read-only]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly#Writes remain rejected]]
   it('keeps rejecting unsupported functions and writes after WITH', () => {
     expect(fail('MATCH (n) RETURN percentileCont(n.age, 0.5)').kind).toBe('unsupported');
     const w = fail('MATCH (n) WITH n SET n.x = 1 RETURN n');

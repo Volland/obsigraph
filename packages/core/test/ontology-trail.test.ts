@@ -6,6 +6,7 @@ import { STEPS } from '../../../site/src/trail-steps';
 const EXAMPLES = join(__dirname, '../../../ontologies/zettelkasten/Examples');
 
 // @lat: [[tests/ontology-gallery#Zettelkasten trail steps exist]]
+// @tg: verifies:: [[openspec:ontology-gallery#Zettelkasten ontology#Walkthrough notes exist]]
 it('names only example notes that exist, each in one step, in a growing trail', () => {
   const titles = new Set(readdirSync(EXAMPLES).map((f) => f.replace(/\.md$/, '')));
   const named = STEPS.flatMap((s) => s.nodes);

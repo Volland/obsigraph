@@ -21,6 +21,7 @@ const ids = (xs: { id: string }[]) => xs.map((x) => x.id).sort();
 
 describe('graph view', () => {
   // @lat: [[tests/graph-view#Neighborhood of active note]]
+  // @tg: verifies:: [[openspec:graph-view#Graph view leaf#Default content]]
   it('shows a node with its incident edges and direct neighbors in both directions', () => {
     const g = neighborhood(fixture(), 'Bob.md');
     expect(ids(g.nodes)).toEqual(['Alice.md', 'Bob.md', 'Carol.md']);
@@ -29,6 +30,7 @@ describe('graph view', () => {
   });
 
   // @lat: [[tests/graph-view#Expansion keeps existing elements]]
+  // @tg: verifies:: [[openspec:graph-view#Click to expand#Expand neighbors]]
   it('merges an expanded neighborhood without dropping existing elements', () => {
     const graph = fixture();
     const base = neighborhood(graph, 'Alice.md');
@@ -39,6 +41,7 @@ describe('graph view', () => {
   });
 
   // @lat: [[tests/graph-view#Edge selection details]]
+  // @tg: verifies:: [[openspec:graph-view#Selection details#Select an edge]]
   it('describes a selected edge with type, sign, id, heading and properties', () => {
     const graph = fixture();
     const d = edgeDetails(graph.edge('Alice.md#knows#Bob.md#0')!, graph);
@@ -64,6 +67,7 @@ describe('graph view', () => {
   });
 
   // @lat: [[tests/graph-view#Same element same style]]
+  // @tg: verifies:: [[openspec:graph-view#Shared renderer#Consistent styling]]
   it('produces identical element data and classes for a node in a block and in the view', () => {
     const graph = fixture();
     const fromBlock = toElements(new BuiltinEngine(graph).run('MATCH (n {title: "Bob"}) RETURN n'), (id) => graph.node(id));

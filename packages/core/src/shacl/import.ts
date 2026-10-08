@@ -48,6 +48,11 @@ const PROP_KNOWN = new Set([`${RDF}type`, `${SH}path`, `${SH}name`, `${SH}dataty
  * `sh:hasValue` become edge types; everything else is reported as dropped.
  */
 // @lat: [[shacl#Import]]
+// @tg: implements:: [[openspec:shacl-interop#Drop report]]
+// @tg: implements:: [[openspec:shacl-interop#Import SHACL into schema notes]]
+// @tg: implements:: [[openspec:shacl-interop#Lossless round trip]]
+// @tg: implements:: [[openspec:shacl-interop#Reverse mapping]]
+// @tg: implements:: [[openspec:shacl-interop#Typed Graph annotations]]
 export function importShacl(turtle: string, opts: ShaclImportOptions = {}): ShaclImport {
   const base = opts.base ?? DEFAULT_BASE_IRI;
   const declared: Record<string, string> = {};

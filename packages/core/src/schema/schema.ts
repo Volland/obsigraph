@@ -4,6 +4,7 @@ import { toYaml } from './frontmatter.js';
 import { ID_KINDS, type IdKind, type IdRule } from './ids.js';
 
 export type PropertyKind = 'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'link' | 'list';
+// @tg: implements:: [[openspec:schema-notes#Property declarations]]
 export const PROPERTY_KINDS: readonly PropertyKind[] = ['text', 'number', 'boolean', 'date', 'datetime', 'link', 'list'];
 
 export interface PropertySchema {
@@ -77,9 +78,12 @@ export interface SchemaSet {
 
 export const DEFAULT_SCHEMA_FOLDER = 'Types/';
 /** The Typed Graph Schema version this reader implements. */
+// @tg: implements:: [[openspec:tgs-spec#Versioning]]
 export const TGS_VERSION = '0.2';
+// @tg: implements:: [[openspec:tgs-spec#Namespace IRI]]
 export const TGS_NAMESPACE = 'https://volland.github.io/obsigraph/ns/tgs#';
 export const DEFAULT_BASE_IRI = 'urn:tgs:';
+// @tg: implements:: [[openspec:schema-notes#Identifiers]]
 export const BUILTIN_PREFIXES: Readonly<Record<string, string>> = {
   rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
   rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
@@ -94,12 +98,14 @@ const IRI_SCHEMES = new Set(['http', 'https', 'urn', 'mailto', 'tag', 'did', 'fi
 const TYPE_KEYS = new Set(['properties', 'edges', 'visualization', 'style', 'uri', 'template', 'id']);
 const EDGE_TYPE_KEYS = new Set(['from', 'to', 'properties', 'uri', 'visualization', 'style']);
 
+// @tg: implements:: [[openspec:tgs-spec#Host independence]]
 export function normalizeFolder(folder: string): string {
   const f = folder.trim().replace(/^\/+/, '');
   return f === '' ? '' : f.endsWith('/') ? f : `${f}/`;
 }
 
 /** True when `path` is a markdown note directly inside the schema folder. */
+// @tg: implements:: [[openspec:schema-notes#Schema notes are discovered by location]]
 export function isSchemaPath(path: string, folder: string): boolean {
   const f = normalizeFolder(folder);
   if (!f || !path.startsWith(f) || !path.endsWith('.md')) return false;
@@ -114,6 +120,8 @@ type Diag = (message: string) => void;
  * prefixes. A note with none of these keys declares an empty title type.
  */
 // @lat: [[graph-model#Schema notes]]
+// @tg: implements:: [[openspec:schema-notes#Schema notes are discovered by location]]
+// @tg: implements:: [[openspec:tgs-spec#Versioning]]
 export function readSchemaNote(path: string, frontmatter: Record<string, unknown> | null | undefined): SchemaNote {
   const fm = frontmatter ?? {};
   const out: SchemaNote = { path, types: [], edgeTypes: [], prefixes: {}, diagnostics: [] };
@@ -200,6 +208,7 @@ function readTypeBlock(type: string, path: string, decl: Record<string, unknown>
 }
 
 /** Read the `id` key: a kind, a mapping, or a list of mappings that each name their property. */
+// @tg: implements:: [[openspec:typed-note-creation#Id rules]]
 function readIds(raw: unknown, diag: Diag): IdRule[] {
   if (raw === undefined || raw === null) return [];
   const list = Array.isArray(raw) ? raw : [raw];
@@ -226,6 +235,7 @@ function readIds(raw: unknown, diag: Diag): IdRule[] {
   return rules;
 }
 
+// @tg: implements:: [[openspec:schema-notes#Edge type declarations]]
 function readEdgeTypeBlock(type: string, path: string, decl: Record<string, unknown>, diag: Diag, strict: boolean): EdgeTypeSchema {
   if (strict) for (const k of Object.keys(decl)) if (!EDGE_TYPE_KEYS.has(k)) diag(`Unknown key '${k}' (newer TGS version?)`);
   const vis = decl.visualization ?? decl.style;
@@ -241,6 +251,7 @@ function readEdgeTypeBlock(type: string, path: string, decl: Record<string, unkn
   };
 }
 
+// @tg: implements:: [[openspec:schema-notes#Property declarations]]
 function readProperties(props: unknown, diag: Diag): PropertySchema[] {
   const properties: PropertySchema[] = [];
   const add = (name: string, spec: unknown) => {
@@ -278,6 +289,7 @@ function readProperties(props: unknown, diag: Diag): PropertySchema[] {
   return properties;
 }
 
+// @tg: implements:: [[openspec:schema-notes#Allowed edge types]]
 function readEdges(raw: unknown, diag: Diag): EdgeRule[] | null {
   if (raw === undefined || raw === null) return null;
   if (Array.isArray(raw)) return raw.map((t) => ({ type: String(t), targets: null, many: true, required: false }));
@@ -292,6 +304,7 @@ function readEdges(raw: unknown, diag: Diag): EdgeRule[] | null {
   });
 }
 
+// @tg: implements:: [[openspec:schema-notes#Edge type declarations]]
 function readNames(raw: unknown, what: string, diag: Diag): string[] | null {
   if (raw === undefined || raw === null) return null;
   if (typeof raw === 'string') return [raw];
@@ -311,6 +324,7 @@ function readString(raw: unknown, what: string, diag: Diag): string | null {
  * Expand an IRI or CURIE. A known prefix wins over an IRI scheme of the same
  * name; `scheme://` and well-known schemes such as `urn:` are kept as written.
  */
+// @tg: implements:: [[openspec:schema-notes#Identifiers]]
 export function expandIri(value: string, prefixes: Record<string, string>): { iri: string } | { error: string } {
   const m = /^([A-Za-z][\w.-]*):(.*)$/s.exec(value);
   if (!m) return { error: `'${value}' is not an IRI or CURIE` };
@@ -341,6 +355,7 @@ export function schemasFromGraph(graph: Graph, folder: string): SchemaSet {
 }
 
 /** Merge schema notes into one set, reporting duplicates and bad identifiers. */
+// @tg: implements:: [[openspec:schema-notes#Duplicate type declarations]]
 export function schemaSetFromNotes(notes: SchemaNote[]): SchemaSet {
   const set: SchemaSet = { schemas: new Map(), edgeTypes: new Map(), prefixes: { ...BUILTIN_PREFIXES }, diagnostics: [] };
   const userPrefix = new Map<string, string>();
@@ -428,6 +443,11 @@ const show = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
  * removes anything from the graph.
  */
 // @lat: [[graph-model#Schema notes]]
+// @tg: implements:: [[openspec:schema-notes#Allowed edge types]]
+// @tg: implements:: [[openspec:schema-notes#Edge endpoint validation]]
+// @tg: implements:: [[openspec:schema-notes#Edge property validation]]
+// @tg: implements:: [[openspec:schema-notes#Required property validation]]
+// @tg: implements:: [[openspec:schema-notes#Value and cardinality validation]]
 export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
   const out: Diagnostic[] = [];
   if (set.schemas.size === 0 && set.edgeTypes.size === 0) return out;
@@ -489,6 +509,7 @@ export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
  * Resolve a `template` link to a vault path: a wikilink through `resolve`, a
  * markdown link relative to the schema note, otherwise a vault-relative path.
  */
+// @tg: implements:: [[openspec:tgs-spec#Host independence]]
 export function templatePath(link: string, fromPath: string, resolve: (link: string, from: string) => string | null): string | null {
   const s = link.trim();
   const wiki = /^\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]$/.exec(s);
@@ -534,6 +555,7 @@ export function renderNoteFromType(schema: TypeSchema, templateBody: string, opt
 }
 
 /** Scaffold for a new schema note. */
+// @tg: implements:: [[openspec:tgs-spec#Machine-readable schema]]
 export function scaffoldSchemaNote(): string {
   return [
     '---',

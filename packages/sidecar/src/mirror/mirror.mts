@@ -5,6 +5,7 @@ import { applyToState, diffMirror, graphRows, isEmptyDiff, type MirrorState } fr
 import type { MirrorStore } from './store.mjs';
 
 /** Bump when the storage layout changes; a mismatch triggers a rebuild. */
+// @tg: implements:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt]]
 export const MIRROR_FORMAT = 2;
 const MANIFEST = 'ladybug/manifest.json';
 
@@ -30,6 +31,7 @@ export interface MirrorStatus {
  * so incremental sync always equals a rebuild. Never touches notes.
  */
 // @lat: [[ladybug-mirror#One-way mirror]]
+// @tg: implements:: [[openspec:ladybug-mirror#One-way sync from vault to database]]
 export class LadybugMirror implements Processor {
   readonly name = 'ladybug-mirror';
   private graph: Graph | null = null;
@@ -47,11 +49,14 @@ export class LadybugMirror implements Processor {
     private readonly data: DataDir,
   ) {}
 
+  // @tg: implements:: [[openspec:ladybug-mirror#Sync does not block queries]]
   status(): MirrorStatus {
     return { ...this.st };
   }
 
   /** Load mirrored state, rebuilding when the manifest is missing, stale or interrupted. */
+  // @tg: implements:: [[openspec:ladybug-mirror#Mirror is a disposable cache]]
+  // @tg: implements:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt]]
   async open(): Promise<void> {
     const m = await this.data.readJson<Manifest>(MANIFEST);
     if (!m || m.format !== MIRROR_FORMAT || m.state !== 'complete') {
@@ -78,6 +83,7 @@ export class LadybugMirror implements Processor {
   }
 
   /** Drop the mirror and rebuild it from the graph. */
+  // @tg: implements:: [[openspec:ladybug-mirror#Mirror is a disposable cache]]
   async rebuild(): Promise<void> {
     await this.idle();
     await this.data.writeJson(MANIFEST, { format: MIRROR_FORMAT, state: 'in-progress' } satisfies Manifest);
@@ -89,10 +95,12 @@ export class LadybugMirror implements Processor {
   }
 
   /** Resolve when no sync is running or queued. */
+  // @tg: implements:: [[openspec:ladybug-backend#Freshness before reads]]
   async idle(): Promise<void> {
     while (this.running) await this.running;
   }
 
+  // @tg: implements:: [[openspec:ladybug-mirror#Sync does not block queries]]
   private schedule(): void {
     if (!this.graph || !this.state) return;
     if (this.running) {
@@ -115,6 +123,7 @@ export class LadybugMirror implements Processor {
     } while (this.dirty && this.st.state !== 'failed');
   }
 
+  // @tg: implements:: [[openspec:ladybug-mirror#Incremental sync per changed file]]
   private async syncOnce(): Promise<void> {
     const graph = this.graph!;
     const state = this.state!;

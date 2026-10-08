@@ -24,7 +24,7 @@ The built-in results match the expectations recorded in the corpus, also when La
 
 ## Corpus covers the subset
 
-Every supported clause, operator, function and aggregate appears in at least one corpus query.
+Every clause, pattern feature, operator, function and aggregate in the parser's exported tables appears as a parsed construct (not a substring) in at least one corpus query.
 
 ## Fixture coverage
 
@@ -49,3 +49,15 @@ An undocumented divergence is reported with both results; documented ones classi
 ## Registry entries checked
 
 A documented difference without a query, one that no longer diverges, and a citation of an unknown difference are each reported.
+
+## Report printed with counts
+
+`runCorpus` prints a report with one line per query, both results for each divergence, and the counts per outcome.
+
+## Write clauses in the corpus
+
+The corpus holds `CREATE`, `MERGE`, `SET`, `DELETE` and `REMOVE` queries, each recorded and observed as `readonly` on both engines.
+
+## Expected difference must match its nature
+
+A cited difference excuses a divergence only when each engine produced the outcome the registry documents for it; other divergences and unknown citations fail.

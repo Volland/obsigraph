@@ -25,6 +25,7 @@ const graphOf = (notes: OkfNote[], linkEdges = false): Graph => {
 
 describe('reading OKF links', () => {
   // @lat: [[tests/okf-compat#Reading#Bundle-absolute link target]]
+  // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#Bundle-absolute link]]
   it('accepts a bundle-absolute markdown link as an edge target', () => {
     const { edges } = parseEdges('knows:: [Bob](/people/bob.md) {since: 2020}\ncites:: [Paper](/papers/Typed%20Links.md#intro)', 'people/alice.md');
     expect(edges[0]).toMatchObject({ type: 'knows', target: 'people/bob.md', alias: 'Bob', props: { since: 2020 } });
@@ -32,6 +33,7 @@ describe('reading OKF links', () => {
   });
 
   // @lat: [[tests/okf-compat#Reading#Relative link target]]
+  // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#Relative link]]
   it('resolves relative links against the source folder and mixes link forms', () => {
     const { edges } = parseEdges('works_at:: [Acme](../orgs/acme.md), [[Initech]], [Peer](./carol.md)', 'people/alice.md');
     expect(edges.map((e) => e.target)).toEqual(['orgs/acme.md', 'Initech', 'people/carol.md']);
@@ -39,6 +41,7 @@ describe('reading OKF links', () => {
   });
 
   // @lat: [[tests/okf-compat#Reading#External URL ignored]]
+  // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#External URL]]
   it('ignores URLs, anchors and non-note files in edge lines', () => {
     expect(parseEdges('cites:: [paper](https://example.com/paper)', 'a.md').edges).toEqual([]);
     expect(parseEdges('see:: [x](#heading)', 'a.md').edges).toEqual([]);
@@ -47,6 +50,7 @@ describe('reading OKF links', () => {
   });
 
   // @lat: [[tests/okf-compat#Reading#Link edges from prose]]
+  // @tg: verifies:: [[openspec:graph-model#Plain link edges#OKF prose link]]
   it('turns prose links into links_to edges when link edges are on', () => {
     const g = graphOf(
       [
@@ -66,18 +70,21 @@ describe('reading OKF links', () => {
   });
 
   // @lat: [[tests/okf-compat#Reading#Link edges off by default]]
+  // @tg: verifies:: [[openspec:graph-model#Plain link edges#Option off]]
   it('produces no prose edges without the option', () => {
     const g = graphOf([note('a.md', 'See [b](/b.md) and [[b]].\n'), note('b.md', '# B\n')]);
     expect(g.size.edges).toBe(0);
   });
 
   // @lat: [[tests/okf-compat#Reading#Images are not edges]]
+  // @tg: verifies:: [[openspec:graph-model#Plain link edges#Images ignored]]
   it('never turns images or code spans into edges', () => {
     const { edges } = parseEdges('![a](/img/a.md) ![[a.png]] `[x](/x.md)` and `[[y]]`\n```\n[z](/z.md)\n```\n', 'n.md', { linkEdges: true });
     expect(edges).toEqual([]);
   });
 
   // @lat: [[tests/okf-compat#Reading#Frontmatter title kept]]
+  // @tg: verifies:: [[openspec:graph-model#Frontmatter title#OKF title]]
   it('uses a frontmatter title as the node title', () => {
     const g = graphOf([note('tables/events_.md', '---\ntype: BigQuery Table\ntitle: GA4 Events Export\n---\n'), note('b.md', '# B\n')]);
     expect(g.node('tables/events_.md')?.props.title).toBe('GA4 Events Export');
@@ -85,6 +92,7 @@ describe('reading OKF links', () => {
   });
 
   // @lat: [[tests/okf-compat#Reading#Types list adds labels]]
+  // @tg: verifies:: [[openspec:graph-model#Frontmatter title#Types list]]
   it('merges a types list into the labels', () => {
     expect(labelsOf({ type: 'Person', types: ['Person', 'Engineer'] })).toEqual(['Person', 'Engineer']);
   });
@@ -102,6 +110,7 @@ const byPath = (files: { path: string; text: string }[], p: string): string => f
 
 describe('OKF export', () => {
   // @lat: [[tests/okf-compat#Export#Typed edge kept as prose]]
+  // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Typed edge kept as prose]]
   it('keeps typed edges as prose with markdown links', () => {
     const { files } = exportOkf(vault());
     const alice = byPath(files, 'People/Alice.md');
@@ -110,6 +119,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#Round trip]]
+  // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Round trip]]
   it('reads back into the same typed graph', () => {
     const before = graphOf(vault());
     const { files } = exportOkf(vault());
@@ -121,6 +131,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#Unresolved link kept]]
+  // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Unresolved link]]
   it('keeps unresolved links as links to not-yet-written concepts', () => {
     const { files, report } = exportOkf(vault());
     expect(byPath(files, 'People/Alice.md')).toContain('[Missing Note](/Missing%20Note.md)');
@@ -128,6 +139,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#Missing type defaulted]]
+  // @tg: verifies:: [[openspec:okf-compat#Concept frontmatter#Missing type]]
   it('adds type, title and description without touching other keys', () => {
     const { files } = exportOkf(vault(), { defaultType: 'Concept' });
     expect(byPath(files, 'People/Eve Doe.md').startsWith('---\ntype: Concept\ntitle: Eve Doe\ndescription: Eve is an outsider.\n---\n\nEve is an outsider.')).toBe(true);
@@ -136,6 +148,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#List type split]]
+  // @tg: verifies:: [[openspec:okf-compat#Concept frontmatter#List type]]
   it('splits a list type into type and types', () => {
     const bob = byPath(exportOkf(vault()).files, 'People/Bob.md');
     const fm = parseYaml(splitFrontmatter(bob).yaml!) as Record<string, unknown>;
@@ -145,6 +158,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#Reserved note renamed]]
+  // @tg: verifies:: [[openspec:okf-compat#Reserved filenames and index files#Reserved note renamed]]
   it('renames reserved notes and rewrites links to them', () => {
     const { files } = exportOkf(vault());
     expect(byPath(files, 'Projects/index-note.md')).toContain('type: Note');
@@ -152,6 +166,7 @@ describe('OKF export', () => {
   });
 
   // @lat: [[tests/okf-compat#Export#Index files generated]]
+  // @tg: verifies:: [[openspec:okf-compat#Reserved filenames and index files#Index generated]]
   it('generates an index.md per directory, frontmatter only at the root', () => {
     const { files } = exportOkf(vault(), { title: 'Lab' });
     const root = byPath(files, 'index.md');

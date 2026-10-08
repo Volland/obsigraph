@@ -33,7 +33,7 @@ An edge says how two things relate. Write code-to-intent edges as `@tg:` comment
 // @tg: -contradicts:: [[decisions#Stateless sessions]] {until: "2026-Q4", ticket: "PLAT-481"}
 ```
 
-- `implements`: code realizes a requirement or decision. `verifies`: a test proves a requirement or scenario.
+- `implements`: code realizes a requirement or decision. `verifies`: a test proves a requirement or scenario. When requirements live in OpenSpec, target them as `[[openspec:<capability>#<Requirement>]]` and `[[openspec:<capability>#<Requirement>#<Scenario>]]`; they appear as `Requirement` and `Scenario` nodes and `tg trace` reports coverage.
 - `contradicts`: written with a minus sign, this disagrees with that, and we know it. It is how technical debt names what it is debt against.
 - `supersedes`: a decision replaces an older one. `motivated_by`: the reason behind a decision.
 - `constrains`: a constraint binds a requirement or code. `refines`: a more specific version of a requirement.

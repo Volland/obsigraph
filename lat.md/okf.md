@@ -1,3 +1,6 @@
+---
+openspec: [okf-compat]
+---
 # OKF
 
 Compatibility with Google Cloud's Open Knowledge Format (OKF v0.2): reading bundles into the typed graph, exporting a vault as a conformant bundle, and checking conformance.

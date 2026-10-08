@@ -30,6 +30,14 @@ A refused connection fails with an error naming the endpoint.
 
 A missing model fails naming the model and the install command, and nothing is pulled; malformed responses fail as such.
 
+## Empty and uneven vectors rejected
+
+A response with empty vectors or vectors of different lengths fails as `bad-response` naming the endpoint, so nothing is stored.
+
+## Unresponsive endpoint times out
+
+A request the endpoint never answers fails as `unreachable` after the configured timeout (`OBSIGRAPH_EMBED_TIMEOUT_MS`), naming the endpoint.
+
 ## Identity reported
 
 The provider reports its kind, model and vector dimension.

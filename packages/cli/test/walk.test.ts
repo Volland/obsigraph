@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { walkProject } from '../src/walk.mjs';
 
+// @tg: verifies:: [[openspec:symbol-provider#Source walker#Ignored folder]]
 it('skips ignored, dependency and dot folders and honors nested gitignore', () => {
   const root = mkdtempSync(join(tmpdir(), 'tg-walk-'));
   const put = (p: string, t = 'x') => {

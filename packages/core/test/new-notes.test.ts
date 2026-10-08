@@ -52,6 +52,7 @@ function schemaOf(notes: NoteInput[], type: string): { schema: TypeSchema; graph
 
 describe('generated ids', () => {
   // @lat: [[tests/new-notes#Generated ids#UUID versions]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#UUID versions]]
   it('makes version 4 and version 7 UUIDs with the clock in the first 48 bits', () => {
     const a = uuid4(rng(1));
     expect(a).toMatch(UUID);
@@ -64,12 +65,14 @@ describe('generated ids', () => {
   });
 
   // @lat: [[tests/new-notes#Generated ids#Time-ordered ids sort]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Time-ordered ids sort]]
   it('sorts version 7 ids by creation time as plain strings', () => {
     const ids = [0, 1, 1000, 86_400_000, 31_536_000_000].map((d, i) => uuid7(new Date(1_790_000_000_000 + d), rng(i)));
     expect([...ids].sort()).toEqual(ids);
   });
 
   // @lat: [[tests/new-notes#Generated ids#Timestamp id skips taken minutes]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Timestamp id skips taken minutes]]
   it('writes a local YYYYMMDDHHmm and moves on while it is taken', () => {
     const now = new Date(2026, 0, 12, 15, 30, 45);
     expect(timestampId(now, set())).toBe('202601121530');
@@ -77,6 +80,7 @@ describe('generated ids', () => {
   });
 
   // @lat: [[tests/new-notes#Generated ids#Luhmann siblings]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann siblings]]
   it('finds the next free Luhmann sibling', () => {
     expect(luhmannSibling('1a', set())).toBe('1b');
     expect(luhmannSibling('1z', set())).toBe('1aa');
@@ -86,6 +90,7 @@ describe('generated ids', () => {
   });
 
   // @lat: [[tests/new-notes#Generated ids#Luhmann children]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann children]]
   it('finds the next free Luhmann child', () => {
     expect(luhmannChild('1', set())).toBe('1a');
     expect(luhmannChild('1a', set())).toBe('1a1');
@@ -95,6 +100,7 @@ describe('generated ids', () => {
   });
 
   // @lat: [[tests/new-notes#Generated ids#Luhmann roots and order]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann roots and order]]
   it('numbers roots after the largest and orders ids as a slip box shelves them', () => {
     expect(luhmannRoot(set())).toBe('1');
     expect(luhmannRoot(set('1', '1a', '9', '10b'))).toBe('11');
@@ -106,6 +112,7 @@ describe('the id key', () => {
   const read = (id: unknown) => readSchemaNote('Types/T.md', { schema: { id } });
 
   // @lat: [[tests/new-notes#The id key#Id key forms]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Id key forms]]
   it('reads a bare kind, a mapping and a list', () => {
     expect(read('uuid7').types[0]!.ids).toEqual([{ kind: 'uuid7', property: 'id', auto: true, filename: false }]);
     expect(read({ kind: 'luhmann', property: 'path' }).types[0]!.ids).toEqual([{ kind: 'luhmann', property: 'path', auto: false, filename: false }]);
@@ -114,12 +121,14 @@ describe('the id key', () => {
   });
 
   // @lat: [[tests/new-notes#The id key#Id property is implied]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Id property is implied]]
   it('declares an undeclared id property as text', () => {
     const t = read({ kind: 'uuid', property: 'uid' }).types[0]!;
     expect(t.properties.find((p) => p.name === 'uid')).toMatchObject({ kind: 'text', required: false });
   });
 
   // @lat: [[tests/new-notes#The id key#Invalid id declarations]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Invalid id declarations]]
   it('reports and ignores invalid id declarations', () => {
     expect(read('snowflake').diagnostics.map((d) => d.message).join('|')).toMatch(/kind 'snowflake'/);
     expect(read({ kind: 'uuid', color: 'red' }).diagnostics.map((d) => d.message).join('|')).toMatch(/Unknown key 'color'/);
@@ -137,6 +146,7 @@ describe('planning a note', () => {
   const base = [TYPES, note('Ideas/Root.md', { type: 'Idea', luhmann: '1', uid: 'x' }), note('Ideas/Leaf.md', { type: 'Idea', luhmann: '1a' })];
 
   // @lat: [[tests/new-notes#Planning a note#Ids and tokens]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Template tokens#Ids and tokens]]
   it('puts automatic ids in the frontmatter and the template, and leaves other braces alone', () => {
     const { schema, graph } = schemaOf(base, 'Idea');
     const plan = planNewNote({ schema, title: 'Fresh', linkedBody: 'Id {{uid}} / {{id}} on {{date}} for {{title}}\n{{edge: A -b-> C . d}} {{luhmann}}', schemaBody: '', graph, now, random: rng(3) });
@@ -149,6 +159,7 @@ describe('planning a note', () => {
   });
 
   // @lat: [[tests/new-notes#Planning a note#Luhmann placement]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Luhmann placement#Child of the active note]]
   it('gives a child or sibling the next free Luhmann id and fills the parent tokens', () => {
     const { schema, graph } = schemaOf(base, 'Idea');
     const set2 = schemasFromGraph(graph, 'Types/');
@@ -164,6 +175,7 @@ describe('planning a note', () => {
   });
 
   // @lat: [[tests/new-notes#Planning a note#Lines without a parent are dropped]]
+  // @tg: verifies:: [[openspec:typed-note-creation#Template tokens#Lines without a parent are dropped]]
   it('drops template lines that mention the parent when there is none', () => {
     expect(expandTokens('keep\nfollows:: {{parent-link}}\nalso {{parent}} here\nend', { title: 'T' })).toBe('keep\nend');
     expect(expandTokens('a {{title}}', { title: 'T' })).toBe('a T');
@@ -174,6 +186,7 @@ describe('planning a note', () => {
   });
 
   // @lat: [[tests/new-notes#Planning a note#File name carries the id]]
+  // @tg: verifies:: [[openspec:typed-note-creation#File name carries the id#Prefixed file name]]
   it('prefixes the file name with an id when the rule says so', () => {
     const { schema, graph } = schemaOf([TYPES], 'Stamped');
     const plan = planNewNote({ schema, title: 'Thought', linkedBody: null, schemaBody: '', graph, now });

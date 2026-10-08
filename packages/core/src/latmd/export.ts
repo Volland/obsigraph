@@ -32,6 +32,7 @@ export interface ExportResult {
 }
 
 /** What each kind means in the printed report. */
+// @tg: implements:: [[openspec:lat-vault-integration#Loss report]]
 export const LOSS_DESCRIPTIONS: Record<LossKind, string> = {
   'typed-edge': 'typed edge lines flattened to "type: [[link]]" text',
   'edge-properties': 'edge property blocks dropped',
@@ -50,6 +51,7 @@ const WIKI = /(!?)\[\[([^\]|\r\n]+)(?:\|([^\]\r\n]+))?\]\]/g;
 const INLINE_CODE = /(`+[^`\n]*`+)/;
 
 /** Counts per kind with up to three example places; shared by the lat.md and OKF exports. */
+// @tg: implements:: [[openspec:lat-vault-integration#Loss report]]
 export class Report<K extends string = LossKind> {
   private readonly map = new Map<K, { kind: K; count: number; examples: string[] }>();
   add(kind: K, where: string): void {
@@ -222,6 +224,7 @@ function addIndexes(files: ExportFile[], report: Report): ExportFile[] {
  * caller verifies the result with the normal checks.
  */
 // @lat: [[cli#Vault integration]]
+// @tg: implements:: [[openspec:lat-vault-integration#Export projection]]
 export function exportLattice(notes: ExportNote[]): ExportResult {
   const report = new Report();
   const paths = notes.map((n) => n.path);

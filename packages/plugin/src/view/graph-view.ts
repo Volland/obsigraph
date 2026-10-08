@@ -16,6 +16,8 @@ export const VIEW_TYPE_GRAPH = 'obsigraph-graph-view';
  * neighborhood; right-click or long-press expands a node in place.
  */
 // @lat: [[visualization#Surfaces]]
+// @tg: implements:: [[openspec:code-layer#Visible on demand]]
+// @tg: implements:: [[openspec:graph-view#Graph view leaf]]
 export class GraphView extends ItemView {
   private renderer: GraphRenderer | null = null;
   private input!: HTMLTextAreaElement;
@@ -143,6 +145,7 @@ export class GraphView extends ItemView {
     renderer.setElements(elements);
   }
 
+  // @tg: implements:: [[openspec:graph-view#Click to expand]]
   private ensureRenderer(): GraphRenderer {
     if (this.renderer) return this.renderer;
     this.body.empty();

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -8,6 +8,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { EmbeddingError, type EmbeddingIdentity, type EmbeddingProvider } from '../src/vectors/provider.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startSidecar, type Sidecar } from '../src/main.mjs';
+import { retrieve } from '../src/rag/retrieve.mjs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
@@ -43,6 +44,8 @@ const NOTES: Record<string, string> = {
   'Hub.md': `---\ntype: Club\n---\nThe chess club hub.\n${HUB_FRIENDS.map((f) => `member:: [[${f}]]`).join('\n')}`,
   ...Object.fromEntries(HUB_FRIENDS.map((f, i) => [`Club/${f}.md`, `member number ${i} plays chess ${'openings '.repeat(i)}`])),
 };
+
+const PKG_VERSION = (JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8')) as { version: string }).version;
 
 let sc: Sidecar;
 let root: string;
@@ -85,6 +88,8 @@ afterAll(async () => {
 
 describe('MCP server', () => {
   // @lat: [[tests/mcp-graphrag#Three read-only tools listed]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP server with three tools#Tool listing]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Read-only tools#Tool surface]]
   it('lists cypher_query, vector_search and graphrag_retrieve as read-only tools with schemas', async () => {
     const c = await client();
     const { tools } = await c.listTools();
@@ -98,6 +103,8 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Token required for MCP]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP authentication#No token]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP authentication#Valid token]]
   it('rejects MCP requests without a token and accepts the configured one', async () => {
     const init = { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'x', version: '1' } } };
     const res = await fetch(url(), { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: JSON.stringify(init) });
@@ -108,6 +115,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Cypher tool reads]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Cypher query tool#Read query]]
   it('answers read Cypher with columns and rows', async () => {
     const r = await call('cypher_query', { query: 'MATCH (n:Person) RETURN n.name ORDER BY n.name LIMIT 3' });
     expect(r.isError).toBeFalsy();
@@ -116,6 +124,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Cypher tool rejects writes]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Cypher query tool#Write query]]
   it('rejects writes naming the clause and changes nothing', async () => {
     const before = sc.sync.graph.size;
     const r = await call('cypher_query', { query: 'MATCH (n) DETACH DELETE n' });
@@ -125,6 +134,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Vector search tool]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Vector search tool#Node search]]
   it('returns at most k node hits with name, score, path, heading and text', async () => {
     const r = await call('vector_search', { query: 'search project ranking', k: 3 });
     const results = r.structuredContent.results as Json[];
@@ -133,6 +143,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Retrieve expands one hop]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Retrieve with expansion]]
   it('retrieves hit chunks plus neighbors one edge away and lists connecting edges', async () => {
     const r = (await call('graphrag_retrieve', { question: 'Who works with Alice on the search project?', depth: 1, k: 2 })).structuredContent;
     const nodes = new Set((r.chunks as Json[]).map((c) => c.node));
@@ -143,6 +154,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Edge hit seeds both endpoints]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Edge hit contributes both endpoints]]
   it('seeds both endpoints of an edge hit at distance zero', async () => {
     const r = (await call('graphrag_retrieve', { question: 'works with project search', depth: 0, k: 1 })).structuredContent;
     expect((r.edges as Json[])[0]).toMatchObject({ id: 'People/Bob.md#works_with#People/Alice.md#0', role: 'hit' });
@@ -151,12 +163,15 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Depth zero returns hits only]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Depth zero]]
   it('returns only hit chunks at depth 0', async () => {
     const r = (await call('graphrag_retrieve', { question: 'bread cakes', depth: 0, k: 1 })).structuredContent;
     expect((r.chunks as Json[]).every((c) => c.role === 'hit' && c.distance === 0)).toBe(true);
   });
 
   // @lat: [[tests/mcp-graphrag#Citations with and without heading]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Citations on every chunk#Chunk with heading]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Citations on every chunk#Chunk without heading]]
   it('cites path and heading, or path and no heading before the first heading', async () => {
     const r = (await call('graphrag_retrieve', { question: 'Alice leads search project ranking', depth: 0, k: 1 })).structuredContent;
     const alice = (r.chunks as Json[]).filter((c) => c.path === 'People/Alice.md');
@@ -169,6 +184,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Hits before neighbors]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Relevance ordering and provenance of hits#Mixed results]]
   it('orders hit chunks before neighbor chunks and reports neighbor distances', async () => {
     const r = (await call('graphrag_retrieve', { question: 'ranking experiments review', depth: 2, k: 1 })).structuredContent;
     const chunks = r.chunks as Json[];
@@ -179,6 +195,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Hub expansion capped]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Bounded output#Hub node]]
   it('expands only the capped number of neighbors of a hub and says it truncated', async () => {
     const r = (await call('graphrag_retrieve', { question: 'chess club hub', depth: 1, k: 1, neighbor_cap: 4 })).structuredContent;
     const neighbors = new Set((r.chunks as Json[]).filter((c) => c.role === 'neighbor').map((c) => c.node));
@@ -186,7 +203,45 @@ describe('MCP server', () => {
     expect(r.truncated).toBe(true);
   });
 
+  // @lat: [[tests/mcp-graphrag#Retrieve text budget]]
+  it('drops chunks past the total text budget, keeping order, and says it truncated', async () => {
+    const question = 'Who works with Alice on the search project?';
+    const opts = { k: 2, depth: 1, neighborCap: 50, chunkCap: 100 };
+    const full = await retrieve(sc.vectors!, sc.sync.graph, question, opts);
+    expect(full.truncated).toBe(false);
+    expect(full.chunks.length).toBeGreaterThan(2);
+    const budget = full.chunks[0]!.text.length + full.chunks[1]!.text.length;
+    const capped = await retrieve(sc.vectors!, sc.sync.graph, question, { ...opts, textCap: budget });
+    expect(capped.chunks).toEqual(full.chunks.slice(0, 2));
+    expect(capped.chunks.reduce((n, c) => n + c.text.length, 0)).toBeLessThanOrEqual(budget);
+    expect(capped.truncated).toBe(true);
+  });
+
+  // @lat: [[tests/mcp-graphrag#Vector search then Cypher]]
+  // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Vector hits then traversal]]
+  it('runs the then query over $hits from the MCP vector_search tool', async () => {
+    const r = await call('vector_search', {
+      query: 'indexing code',
+      k: 1,
+      types: ['Person'],
+      mode: 'pooled',
+      then: 'MATCH (p)-[:works_with]->(q) WHERE id(p) IN $hits RETURN q.name AS colleague',
+    });
+    expect(r.isError).toBeFalsy();
+    expect(r.structuredContent.results.map((x: Json) => x.id)).toEqual(['People/Bob.md']);
+    expect(r.structuredContent.then.rows).toEqual([['Alice Liddell']]);
+  });
+
+  // @lat: [[tests/mcp-graphrag#Server version reported]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Server identity#Version reported]]
+  it('identifies as typed-graph with the sidecar package version', async () => {
+    const c = await client();
+    expect(c.getServerVersion()).toMatchObject({ name: 'typed-graph', version: PKG_VERSION });
+    await c.close();
+  });
+
   // @lat: [[tests/mcp-graphrag#REST retrieve parity]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#REST parity for hybrid retrieve#REST retrieve]]
   it('gives the same retrieve result over REST as over MCP', async () => {
     const args = { question: 'Who works with Alice on the search project?', depth: 1, k: 2 };
     const viaMcp = (await call('graphrag_retrieve', args)).structuredContent;
@@ -195,6 +250,7 @@ describe('MCP server', () => {
   });
 
   // @lat: [[tests/mcp-graphrag#Retrieve degrades without embeddings]]
+  // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Provider down]]
   it('reports unavailable embeddings for retrieve while Cypher keeps working', async () => {
     embedder.down = true;
     try {
@@ -224,6 +280,7 @@ describe('MCP server', () => {
     );
     try {
       expect((await c.listTools()).tools).toHaveLength(3);
+      expect(c.getServerVersion()?.version).toBe(PKG_VERSION);
       const r = (await c.callTool({ name: 'cypher_query', arguments: { query: 'MATCH (n:Club) RETURN n.title' } })) as { structuredContent: Json };
       expect(r.structuredContent.rows).toEqual([['Hub']]);
     } finally {

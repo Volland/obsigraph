@@ -34,6 +34,7 @@ describe('SHACL export', () => {
   const ttl = exportShacl(set, { body: (p) => (p === 'Types/Team.md' ? '## Members\n' : null) });
 
   // @lat: [[tests/shacl-interop#Export writes valid Turtle]]
+  // @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Deterministic output]]
   it('writes one node shape per type that parses as Turtle, deterministically', () => {
     const quads = new Parser().parse(ttl);
     const shapes = quads.filter((q) => q.predicate.value.endsWith('#type') && q.object.value.endsWith('shacl#NodeShape')).map((q) => q.subject.value);
@@ -45,6 +46,8 @@ describe('SHACL export', () => {
   });
 
   // @lat: [[tests/shacl-interop#Node type mapping]]
+  // @tg: verifies:: [[openspec:shacl-interop#Node type mapping#Declared URI used]]
+  // @tg: verifies:: [[openspec:shacl-interop#Node type mapping#Property shape exported]]
   it('maps types, kinds, cardinality, defaults, enums and declared URIs', () => {
     expect(ttl).toContain(':PersonShape\n    a sh:NodeShape ;\n    sh:targetClass schema:Person ;');
     expect(ttl).toContain('sh:targetClass schema:Organization ;');
@@ -57,6 +60,7 @@ describe('SHACL export', () => {
   });
 
   // @lat: [[tests/shacl-interop#Edge mapping]]
+  // @tg: verifies:: [[openspec:shacl-interop#Edge mapping#Edge with target exported]]
   it('maps per-type edges to property shapes with classes and marks closed edge lists', () => {
     expect(ttl).toContain('sh:path schema:worksFor ;\n        sh:name "worksAt" ;\n        sh:class schema:Organization ;\n        sh:order 4');
     expect(ttl).toContain('sh:or ( [ sh:class schema:Person ] [ sh:class schema:Organization ] ) ;\n        sh:maxCount 1 ;');
@@ -65,6 +69,7 @@ describe('SHACL export', () => {
   });
 
   // @lat: [[tests/shacl-interop#Edge type shapes]]
+  // @tg: verifies:: [[openspec:shacl-interop#Edge type shapes#Edge properties exported]]
   it('exports edge types as reification shapes with endpoint and property constraints', () => {
     expect(ttl).toContain(
       ':worksAtEdgeShape\n    a sh:NodeShape ;\n    sh:name "worksAt" ;\n    tgs:note "Types/Org.md" ;\n    tgs:visualization "{\\"color\\":\\"green\\"}" ;\n' +
@@ -76,6 +81,7 @@ describe('SHACL export', () => {
   });
 
   // @lat: [[tests/shacl-interop#Annotations preserved]]
+  // @tg: verifies:: [[openspec:shacl-interop#Typed Graph annotations#Visualization preserved]]
   it('keeps note, template and visualization as tgs annotations', () => {
     expect(ttl).toContain('tgs:visualization "{\\"color\\":\\"#3b82f6\\",\\"edges\\":{\\"knows\\":{\\"color\\":\\"red\\"}}}" ;');
     expect(ttl).toContain('tgs:note "Types/Team.md" ;\n    tgs:template "[[Templates/Team]]" ;\n    tgs:templateBody "## Members" .');
@@ -86,6 +92,8 @@ describe('SHACL import', () => {
   const ttl = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } }, 'Types/Company.md': { schema: {} } }));
 
   // @lat: [[tests/shacl-interop#Import layouts]]
+  // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#One note per type]]
+  // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#Single note layout]]
   it('creates one note per type by default, or a single note', () => {
     const per = planImport(importShacl(ttl), [], { layout: 'per-type' });
     expect(per.writes.map((w) => [w.path, w.text])).toEqual([
@@ -97,6 +105,7 @@ describe('SHACL import', () => {
   });
 
   // @lat: [[tests/shacl-interop#Single layout warns about templates]]
+  // @tg: verifies:: [[openspec:shacl-interop#Layouts that cannot keep a template are reported#Single layout drops a template body]]
   it('warns that a single-note layout cannot keep template bodies', () => {
     const withBody = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } } }), { body: () => '## Notes' });
     const plan = planImport(importShacl(withBody), [], { layout: 'single', into: 'Org' });
@@ -104,7 +113,19 @@ describe('SHACL import', () => {
     expect(planImport(importShacl(withBody), [], { layout: 'per-type' }).warnings).toEqual([]);
   });
 
+  // @lat: [[tests/shacl-interop#Existing note warns about templates]]
+  it('warns when a template body cannot be written because the type note already exists', () => {
+    const withBody = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } } }), { body: () => '## Notes' });
+    const existing: ExistingNote = { path: 'Types/Person.md', text: '---\nschema:\n  properties:\n    name: text\n---\n\nOld body.\n', frontmatter: null };
+    existing.frontmatter = parseYaml(splitFrontmatter(existing.text).yaml!);
+    const plan = planImport(importShacl(withBody), [existing], {});
+    expect(plan.warnings).toEqual(['Person: template body not kept, because Types/Person.md already exists and its body is left unchanged (import with --layout per-type to keep it, after moving the existing note aside)']);
+    const same = { ...existing, text: existing.text.replace('Old body.', '## Notes') };
+    expect(planImport(importShacl(withBody), [same], {}).warnings).toEqual([]);
+  });
+
   // @lat: [[tests/shacl-interop#Existing body kept]]
+  // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#Existing body kept]]
   it('replaces only the schema keys of an existing note', () => {
     const existing: ExistingNote = { path: 'Types/Person.md', text: '---\ntags: [ontology]\nschema:\n  properties:\n    old: number\ncssclasses: wide\n---\n\n# Person\n\nHand-written notes.\n', frontmatter: null };
     existing.frontmatter = parseYaml(splitFrontmatter(existing.text).yaml!);
@@ -115,6 +136,7 @@ describe('SHACL import', () => {
   });
 
   // @lat: [[tests/shacl-interop#Mixed note protected]]
+  // @tg: verifies:: [[openspec:shacl-interop#Imports never clobber silently#Mixed note protected]]
   it('refuses to rewrite a note that declares types missing from the import unless forced', () => {
     const text = '---\nschemas:\n  Person: {}\n  Team: {}\n---\nDocs\n';
     const existing: ExistingNote = { path: 'Types/Org.md', text, frontmatter: parseYaml(splitFrontmatter(text).yaml!) };
@@ -126,6 +148,7 @@ describe('SHACL import', () => {
   });
 
   // @lat: [[tests/shacl-interop#External shapes imported]]
+  // @tg: verifies:: [[openspec:shacl-interop#Reverse mapping#External shape imported]]
   it('reads foreign SHACL with schema.org IRIs, sh:node edges and reification shapes', () => {
     const foreign = `
       @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -157,6 +180,7 @@ describe('SHACL import', () => {
   });
 
   // @lat: [[tests/shacl-interop#Unsupported constructs reported]]
+  // @tg: verifies:: [[openspec:shacl-interop#Drop report#Unsupported construct reported]]
   it('reports constructs outside the subset and imports the rest of the shape', () => {
     const foreign = `
       @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -183,6 +207,7 @@ describe('SHACL import', () => {
   });
 
   // @lat: [[tests/shacl-interop#Round trip is lossless]]
+  // @tg: verifies:: [[openspec:shacl-interop#Lossless round trip#Export import export]]
   it('reproduces the same Turtle after export, import into an empty vault and export', () => {
     const body = (texts: Map<string, string>) => (p: string) => (texts.has(p) ? splitFrontmatter(texts.get(p)!).body : null);
     const original = new Map([

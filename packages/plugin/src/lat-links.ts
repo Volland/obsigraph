@@ -15,6 +15,7 @@ export function inLatFolder(path: string): boolean {
  * handling stays in charge.
  */
 // @lat: [[cli#Vault integration]]
+// @tg: implements:: [[openspec:lat-vault-integration#Read in place]]
 export function latLinkTarget(index: LatIndex, href: string): LatLinkTarget {
   if (!href.includes('#')) return null;
   const r = index.resolve(href.trim());
@@ -25,6 +26,7 @@ export function latLinkTarget(index: LatIndex, href: string): LatLinkTarget {
 }
 
 /** Link and leading-paragraph findings of the lat.md folder as plugin diagnostics (index files and source checks need a project on disk, so they are left to the CLI). */
+// @tg: implements:: [[openspec:lat-vault-integration#Read in place]]
 export function latDiagnostics(index: LatIndex): Diagnostic[] {
   if (index.sections().length === 0) return [];
   return checkLattice(

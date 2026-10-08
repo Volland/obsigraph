@@ -122,6 +122,7 @@ function chmodRecursive(dir: string, mode: number) {
 
 describe('sidecar service', () => {
   // @lat: [[tests/sidecar-service#Read-only vault]]
+  // @tg: verifies:: [[openspec:sidecar-service#Read-only vault access#Vault mounted read-only]]
   it('indexes a read-only vault and writes only into the data directory', async () => {
     const f = fixture();
     for (const p of ['Alice.md', 'Carol.md', 'Eve.md', 'People/Bob.md', '.obsidian/workspace.md']) chmodSync(join(f.vault, ...p.split('/')), 0o444);
@@ -137,6 +138,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Data directory required]]
+  // @tg: verifies:: [[openspec:sidecar-service#Read-only vault access#Data directory missing]]
   it('refuses to start without a writable data directory, naming it', () => {
     const f = fixture();
     const missing = join(f.root, 'nope');
@@ -145,6 +147,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Same results as plugin engine]]
+  // @tg: verifies:: [[openspec:sidecar-service#Same semantics as the plugin#Conformance with plugin]]
   it('returns the same columns and rows as the plugin engine on the same vault', async () => {
     const f = fixture();
     const sc = await start(env(f));
@@ -169,6 +172,8 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#First start indexes everything]]
+  // @tg: verifies:: [[openspec:sidecar-service#Initial sync#First start]]
+  // @tg: verifies:: [[openspec:sidecar-service#REST API#Status]]
   it('indexes every note on first start and reports ready', async () => {
     const f = fixture();
     const rec = recorder();
@@ -180,6 +185,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Restart reprocesses only changes]]
+  // @tg: verifies:: [[openspec:sidecar-service#Initial sync#Restart after edits]]
   it('hands only notes changed while stopped to processors after a restart', async () => {
     const f = fixture();
     await (await start(env(f))).stop();
@@ -195,6 +201,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Live edit becomes queryable]]
+  // @tg: verifies:: [[openspec:sidecar-service#Live watching#Note edited]]
   it('makes a new edge queryable after an edit', async () => {
     const f = fixture();
     const sc = await start(env(f));
@@ -208,6 +215,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Burst of saves coalesced]]
+  // @tg: verifies:: [[openspec:sidecar-service#Live watching#Burst of saves]]
   it('processes a burst of saves to one file once', async () => {
     const f = fixture();
     const rec = recorder();
@@ -221,6 +229,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Polling fallback]]
+  // @tg: verifies:: [[openspec:sidecar-service#Live watching#Watching without native events]]
   it('detects changes by polling when native events are missing', async () => {
     const f = fixture();
     const rec = recorder();
@@ -235,6 +244,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Writes rejected over REST]]
+  // @tg: verifies:: [[openspec:sidecar-service#Read-only query surface#Write attempt]]
   it('rejects write Cypher with a client error naming the clause', async () => {
     const f = fixture();
     const sc = await start(env(f));
@@ -245,6 +255,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Health and status]]
+  // @tg: verifies:: [[openspec:sidecar-service#REST API#Health]]
   it('serves health without a token and status with one', async () => {
     const f = fixture();
     const sc = await start(env(f));
@@ -259,6 +270,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Query contract over REST]]
+  // @tg: verifies:: [[openspec:sidecar-service#REST API#Cypher over REST]]
   it('returns the {columns, rows} contract with tagged graph values', async () => {
     const f = fixture();
     const sc = await start(env(f));
@@ -270,6 +282,8 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Token required]]
+  // @tg: verifies:: [[openspec:sidecar-service#Token authentication#Missing token]]
+  // @tg: verifies:: [[openspec:sidecar-service#Token authentication#Wrong token]]
   it('rejects missing or wrong tokens with 401 and never logs the token', async () => {
     const f = fixture();
     const logs: string[] = [];
@@ -283,6 +297,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#No token refuses to start]]
+  // @tg: verifies:: [[openspec:sidecar-service#Token authentication#No token configured]]
   it('refuses to start without a token unless explicitly overridden on loopback', () => {
     const f = fixture();
     const e = env(f, { OBSIGRAPH_TOKEN: '' });
@@ -295,6 +310,8 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Loopback by default]]
+  // @tg: verifies:: [[openspec:sidecar-service#Safe default network binding#Default bind]]
+  // @tg: verifies:: [[openspec:sidecar-service#Safe default network binding#Explicit wide bind]]
   it('binds loopback by default and warns on an explicit wide bind', async () => {
     const f = fixture();
     expect(loadConfig(env(f)).host).toBe('127.0.0.1');
@@ -305,6 +322,7 @@ describe('sidecar service', () => {
   });
 
   // @lat: [[tests/sidecar-service#Bounded requests]]
+  // @tg: verifies:: [[openspec:sidecar-service#Bounded request handling#Slow query]]
   it('limits body size and times out slow queries without stack traces', async () => {
     const f = fixture(Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`N${i}.md`, Array.from({ length: 30 }, (_, j) => `link:: [[N${j}]]`).join('\n')])));
     const sc = await start(env(f, { OBSIGRAPH_MAX_BODY_BYTES: '200', OBSIGRAPH_QUERY_TIMEOUT_MS: '50' }));

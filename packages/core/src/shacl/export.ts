@@ -17,6 +17,12 @@ type Entry = [predicate: string, object: Obj];
  * deterministic: shapes are ordered by name, property shapes by `sh:order`.
  */
 // @lat: [[shacl#Export]]
+// @tg: implements:: [[openspec:shacl-interop#Edge mapping]]
+// @tg: implements:: [[openspec:shacl-interop#Edge type shapes]]
+// @tg: implements:: [[openspec:shacl-interop#Export schemas as SHACL]]
+// @tg: implements:: [[openspec:shacl-interop#Lossless round trip]]
+// @tg: implements:: [[openspec:shacl-interop#Node type mapping]]
+// @tg: implements:: [[openspec:shacl-interop#Typed Graph annotations]]
 export function exportShacl(set: SchemaSet, opts: ShaclExportOptions = {}): string {
   const base = opts.base ?? DEFAULT_BASE_IRI;
   const prefixes = set.prefixes;

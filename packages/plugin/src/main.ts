@@ -18,6 +18,7 @@ export default class ObsigraphPlugin extends Plugin {
   private readonly iconUris = new Map<string, string | null>();
   private readonly editors = new Set<EditorView>();
 
+  // @tg: implements:: [[openspec:graph-query-block#Block structure]]
   async onload(): Promise<void> {
     await this.loadSettings();
     this.index = new VaultIndex(
@@ -95,6 +96,7 @@ export default class ObsigraphPlugin extends Plugin {
     this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<ObsigraphSettings> | null) };
   }
 
+  // @tg: implements:: [[openspec:visualization-config#Live style updates]]
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
     this.index.invalidate();
@@ -137,6 +139,7 @@ export default class ObsigraphPlugin extends Plugin {
     return () => this.styleListeners.delete(fn);
   }
 
+  // @tg: implements:: [[openspec:graph-view#Graph view leaf]]
   async openGraphView(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_GRAPH)[0];
     const leaf = existing ?? this.app.workspace.getLeaf('tab');

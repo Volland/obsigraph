@@ -17,6 +17,8 @@ export interface StyleRule {
  * every block and the Graph view. Negative edges always get a tee arrow.
  */
 // @lat: [[visualization#Styling]]
+// @tg: implements:: [[openspec:graph-ui#Host-independent rendering]]
+// @tg: implements:: [[openspec:graph-view#Edge presentation]]
 export function buildStylesheet(theme: Theme): StyleRule[] {
   return [
     {

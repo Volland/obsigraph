@@ -1,3 +1,6 @@
+---
+openspec: [node-vault-loader]
+---
 # Architecture
 
 A standalone Obsidian plugin that turns a vault into a typed, labeled, signed property graph with openCypher queries, plus an optional sidecar that serves the same graph as RAG storage.

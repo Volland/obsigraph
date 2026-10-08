@@ -50,6 +50,10 @@ Hit chunks come first, followed by neighbor chunks ordered by distance, each rep
 
 A hub with more neighbors than the cap expands only up to the cap and the result is marked truncated.
 
+## Retrieve text budget
+
+Chunks past the total returned-text budget are dropped in order, the kept text stays within the budget and the result says it was truncated.
+
 ## REST retrieve parity
 
 `POST /retrieve` with the same arguments returns exactly the MCP tool's result.
@@ -57,6 +61,18 @@ A hub with more neighbors than the cap expands only up to the cap and the result
 ## Retrieve degrades without embeddings
 
 With the provider down, retrieve is a tool error saying embeddings are unavailable while Cypher still works.
+
+## Retrieve flags a stale index
+
+With a changed model of equal dimension, retrieve still answers from the old index with `stale: true` and a notice naming both models.
+
+## Vector search then Cypher
+
+The MCP `vector_search` tool takes `types`, `mode` and a `then` Cypher query that runs over the hit ids as `$hits`, like REST.
+
+## Server version reported
+
+The MCP server identifies as `typed-graph` with the sidecar package version, both from source and from the built bundle over stdio.
 
 ## Stdio mode
 

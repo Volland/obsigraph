@@ -18,6 +18,10 @@ Status reports the provider, model and dimension the index was built with, and t
 
 With a different model active, edits are not embedded, searches answer from the stale index with a notice, and an explicit rebuild re-embeds with the new model.
 
+## Dimension change refuses queries
+
+When the stored vectors have 768 dimensions and the active model 1024, node search, edge search and retrieve answer 503 asking for a rebuild.
+
 ## Only edited chunk re-embedded
 
 Editing one section of a five-section note embeds exactly that one chunk.

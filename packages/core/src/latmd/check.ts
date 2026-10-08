@@ -1,4 +1,5 @@
 import type { Annotation } from '../code/annotations.js';
+import { isSpecTarget, type SpecIndex } from '../openspec/index.js';
 import type { LatIndex } from './index.js';
 import { isSourceTarget, splitTarget, SOURCE_EXTENSIONS } from './links.js';
 import { leadingParagraphIssue, MAX_LEADING_LENGTH, flattenSections } from './markdown.js';
@@ -26,6 +27,11 @@ export interface CheckInput {
   readLatFile(rel: string): string | null;
   /** Verify a source link on disk: an error message, or null when file and symbol exist (or cannot be judged). */
   checkSourceLink(file: string, symbol: string | null): string | null;
+  /**
+   * OpenSpec requirements for `openspec:` targets and frontmatter; null when the
+   * project has no `openspec/`. Left out, OpenSpec references are not checked.
+   */
+  specs?: SpecIndex | null;
 }
 
 function filePart(id: string): string {
@@ -78,12 +84,19 @@ function checkLinks(input: CheckInput): Finding[] {
 }
 
 /** Code references: every `@lat:` and `@tg:` target must resolve, and every `require-code-mention` leaf must be mentioned. */
+// @tg: implements:: [[openspec:tg-annotations#Annotation validation]]
 function checkCodeRefs(input: CheckInput): Finding[] {
   const out: Finding[] = [];
   const { index } = input;
   const mentioned = new Set<string>();
   for (const a of input.annotations) {
     for (const e of a.edges) {
+      if (a.kind === 'tg' && isSpecTarget(e.target)) {
+        if (input.specs === undefined) continue;
+        const err = specTargetError(input.specs, e.target);
+        if (err) out.push({ kind: 'annotation', file: a.file, line: a.line, target: e.target, message: `@tg: [[${e.target}]] — ${err}` });
+        continue;
+      }
       const r = index.resolveRef(e.target);
       mentioned.add(r.resolved.toLowerCase());
       if (r.ambiguous) {
@@ -106,6 +119,32 @@ function checkCodeRefs(input: CheckInput): Finding[] {
       if (s.children.length === 0 && !mentioned.has(s.id.toLowerCase())) {
         out.push({ kind: 'code-ref', file: path, line: s.startLine, target: s.id, message: `section "${s.id}" requires a code mention but none found` });
       }
+    }
+  }
+  return out;
+}
+
+function specTargetError(specs: SpecIndex | null, target: string): string | null {
+  if (!specs) return 'no openspec/ folder in this project';
+  const r = specs.resolve(target);
+  return r.kind === 'missing' ? `${r.message}${r.suggestion ? ` — did you mean '[[${r.suggestion}]]'?` : ''}` : null;
+}
+
+/** `openspec:` frontmatter in lattice files: every entry must name a capability or `capability#requirement`. */
+// @lat: [[cli#Requirement trace]]
+// @tg: implements:: [[openspec:tg-check#Check]]
+function checkSpecFrontmatter(input: CheckInput): Finding[] {
+  const out: Finding[] = [];
+  if (input.specs === undefined) return out;
+  const specs = input.specs;
+  for (const [path, parsed] of input.index.files) {
+    const entries = parsed.frontmatter.openspec;
+    if (!entries) continue;
+    const text = input.readLatFile(path.replace(/^[^/]+\//, '')) ?? '';
+    const line = text.split(/\r?\n/).findIndex((l) => l.startsWith('openspec:')) + 1;
+    for (const entry of entries) {
+      const err = entry.includes('#') || !specs?.hasCapability(entry) ? specTargetError(specs, entry) : null;
+      if (err) out.push({ kind: 'link', file: path, line, target: entry, message: `openspec: "${entry}" — ${err}` });
     }
   }
   return out;
@@ -193,9 +232,11 @@ function checkSections(input: CheckInput): Finding[] {
 export type CheckScope = 'md' | 'code-refs' | 'index' | 'sections';
 
 /** Run every check, in lat.md's order: links, code references, index files, section structure. */
+// @tg: implements:: [[openspec:tg-check#Check]]
+// @tg: implements:: [[openspec:tg-check#Parity with lat.md]]
 export function checkLattice(input: CheckInput, scopes: CheckScope[] = ['md', 'code-refs', 'index', 'sections']): Finding[] {
   const out: Finding[] = [];
-  if (scopes.includes('md')) out.push(...checkLinks(input));
+  if (scopes.includes('md')) out.push(...checkLinks(input), ...checkSpecFrontmatter(input));
   if (scopes.includes('code-refs')) out.push(...checkCodeRefs(input));
   if (scopes.includes('index')) out.push(...checkIndex(input));
   if (scopes.includes('sections')) out.push(...checkSections(input));

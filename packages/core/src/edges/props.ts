@@ -1,6 +1,7 @@
 export type PropValue = string | number | boolean | null | PropValue[];
 export type Props = Record<string, PropValue>;
 
+// @tg: implements:: [[openspec:edge-parsing#Malformed property blocks]]
 export class PropsSyntaxError extends Error {
   constructor(
     message: string,
@@ -15,6 +16,8 @@ export class PropsSyntaxError extends Error {
  * `{since: 2020, label: "met at conf", tags: [a, b],}`.
  * Returns the props and the offset just past the closing brace.
  */
+// @tg: implements:: [[openspec:edge-parsing#Inline edge form]]
+// @tg: implements:: [[openspec:edge-parsing#Weight is independent of sign]]
 export function parseProps(src: string, start = 0): { props: Props; end: number } {
   let i = start;
 

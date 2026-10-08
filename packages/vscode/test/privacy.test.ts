@@ -5,6 +5,7 @@ import { expect, it } from 'vitest';
 const SRC = join(import.meta.dirname, '..', 'src');
 
 // @lat: [[tests/vscode-extension#Privacy#No telemetry]]
+// @tg: verifies:: [[openspec:vscode-extension#No telemetry#Offline operation]]
 it('imports no networking module and calls no fetch', () => {
   const offenders = readdirSync(SRC, { recursive: true })
     .map(String)

@@ -12,6 +12,7 @@ function isDir(p: string): boolean {
 }
 
 /** Nearest ancestor of `start` (inclusive) holding `lat.md/` or `.tg/`, or null. */
+// @tg: implements:: [[openspec:tg-cli#Project root discovery]]
 export function findRoot(start: string): string | null {
   let dir = resolve(start);
   for (;;) {
@@ -22,6 +23,7 @@ export function findRoot(start: string): string | null {
   }
 }
 
+// @tg: implements:: [[openspec:tg-cli#Project root discovery]]
 export function hasProject(dir: string): boolean {
   return existsSync(dir) && MARKERS.some((m) => isDir(join(dir, m)));
 }

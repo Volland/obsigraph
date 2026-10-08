@@ -34,6 +34,10 @@ A command that reports findings exits 1, distinct from exit 2 for usage and inte
 
 `--json` makes stdout a single JSON document and nothing else.
 
+### No match
+
+Under `--json`, `section`, `refs`, `locate`, `expand`, `search` and `edges` print exactly one JSON document when nothing matches or a ref fails, and still exit 1.
+
 ## Single bundled package
 
 The package ships as one npm package.

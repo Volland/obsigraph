@@ -351,6 +351,7 @@ function newLuhmannNote(plugin: ObsigraphPlugin, placement: 'child' | 'sibling',
 }
 
 // @lat: [[graph-model#Schema notes]]
+// @tg: implements:: [[openspec:schema-notes#Create a note from a type]]
 async function createFromType(
   plugin: ObsigraphPlugin,
   schema: TypeSchema,

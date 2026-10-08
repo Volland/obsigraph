@@ -4,6 +4,7 @@ import { checkOkf } from '@obsigraph/core';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command } from '../cli.mjs';
 import { readOkfNotes } from '../okf.mjs';
 
+// @tg: implements:: [[openspec:okf-compat#OKF conformance check]]
 export const okf: Command = {
   name: 'okf',
   summary: 'Check a folder against Open Knowledge Format v0.2 conformance',

@@ -4,6 +4,7 @@ import { sameElementSet } from '../src/render/elements';
 
 describe('block header styles', () => {
   // @lat: [[tests/visualization-config#Header style scoped to block]]
+  // @tg: verifies:: [[openspec:visualization-config#Block header style entries#Header style scoped to one block]]
   it('parses node.<Type> and edge.<type> entries scoped to the block', () => {
     const b = parseBlock('node.Project: shape=diamond, color=rgb(1, 2, 3)\nedge.knows: color=orange; line=dotted\n\nMATCH (n) RETURN n');
     expect(b.errors).toEqual([]);

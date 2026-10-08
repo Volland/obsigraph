@@ -4,6 +4,7 @@ import { expandEmbeds, mapProse, outsideCode, Report } from '../latmd/export.js'
 import { splitFrontmatter, toYaml } from '../schema/frontmatter.js';
 
 /** OKF version the export targets and declares in the root `index.md`. */
+// @tg: implements:: [[openspec:okf-compat#Reserved filenames and index files]]
 export const OKF_VERSION = '0.2';
 
 export interface OkfNote {
@@ -60,6 +61,7 @@ export interface OkfExportResult {
 }
 
 /** What each kind means in the printed report. */
+// @tg: implements:: [[openspec:okf-compat#OKF change report]]
 export const OKF_CHANGE_DESCRIPTIONS: Record<OkfChangeKind, string> = {
   'default-type': 'notes without a type given the default type',
   'multi-type': 'list types reduced to their first entry as "type", the full list kept as "types"',
@@ -85,6 +87,7 @@ const dirName = (p: string): string => (p.includes('/') ? p.slice(0, p.lastIndex
 const stem = (p: string): string => baseName(p).replace(/\.md$/i, '');
 
 /** Percent-encode only what breaks a markdown link destination, keeping paths readable. */
+// @tg: implements:: [[openspec:okf-compat#OKF export projection]]
 export function encodePath(path: string): string {
   return path.replace(/[%\s()<>#?[\]]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`);
 }
@@ -303,6 +306,9 @@ function indexFiles(metas: Map<string, Meta>, title: string): OkfFile[] {
  * the caller verifies the result with `checkOkf`.
  */
 // @lat: [[okf#Export]]
+// @tg: implements:: [[openspec:okf-compat#Concept frontmatter]]
+// @tg: implements:: [[openspec:okf-compat#OKF export projection]]
+// @tg: implements:: [[openspec:okf-compat#Reserved filenames and index files]]
 export function exportOkf(notes: OkfNote[], options: OkfExportOptions = {}): OkfExportResult {
   const report = new Report<OkfChangeKind>();
   const defaultType = options.defaultType?.trim() || 'Note';

@@ -126,6 +126,8 @@ function json(x: unknown): string {
 
 /** Rows for every node and edge in the graph, each with a content signature. */
 // @lat: [[ladybug-mirror#Storage layout]]
+// @tg: implements:: [[openspec:ladybug-backend#Sign, id and stub properties]]
+// @tg: implements:: [[openspec:ladybug-mirror#Fidelity of labels and properties]]
 export function graphRows(graph: Graph): { nodes: Map<string, NodeRow>; edges: Map<string, EdgeRow> } {
   const nodes = new Map<string, NodeRow>();
   for (const n of graph.nodes()) {
@@ -154,6 +156,8 @@ export function graphRows(graph: Graph): { nodes: Map<string, NodeRow>; edges: M
  * edge's endpoints present.
  */
 // @lat: [[ladybug-mirror#One-way mirror]]
+// @tg: implements:: [[openspec:ladybug-mirror#Incremental sync per changed file]]
+// @tg: implements:: [[openspec:ladybug-mirror#One-way sync from vault to database]]
 export function diffMirror(state: MirrorState, rows: ReturnType<typeof graphRows>): MirrorDiff {
   const diff: MirrorDiff = { deleteEdges: [], deleteNodes: [], upsertNodes: [], existingNodes: new Set(), insertEdges: [] };
   for (const [id, cur] of state.edges) {

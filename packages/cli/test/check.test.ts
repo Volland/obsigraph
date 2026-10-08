@@ -17,6 +17,7 @@ async function tg(cwd: string, ...args: string[]): Promise<{ code: number; out: 
 }
 
 // @lat: [[tests/tg-check#Locate and section#Fuzzy locate]]
+// @tg: verifies:: [[openspec:tg-check#Locate and section#Fuzzy locate]]
 it('locates a section by fuzzy name', async () => {
   const r = await tg(SEEDED, 'locate', 'Rejects expird');
   expect(r.code).toBe(0);
@@ -27,6 +28,7 @@ it('locates a section by fuzzy name', async () => {
 });
 
 // @lat: [[tests/tg-check#Locate and section#Incoming references]]
+// @tg: verifies:: [[openspec:tg-check#Locate and section#Incoming references]]
 it('lists incoming references and the referencing code under a section', async () => {
   const r = await tg(SEEDED, 'section', 'login#Login#Checks token');
   expect(r.code).toBe(0);
@@ -37,6 +39,7 @@ it('lists incoming references and the referencing code under a section', async (
 });
 
 // @lat: [[tests/tg-check#Refs and expand#Code reference listed]]
+// @tg: verifies:: [[openspec:tg-check#Refs and expand#Code reference listed]]
 it('refs lists code that references a section', async () => {
   const r = await tg(SEEDED, 'refs', 'login#Login#Checks token');
   expect(r.out).toContain('## Code references:');
@@ -46,6 +49,7 @@ it('refs lists code that references a section', async () => {
 });
 
 // @lat: [[tests/tg-check#Refs and expand#Expand text]]
+// @tg: verifies:: [[openspec:tg-check#Refs and expand#Expand text]]
 it('expand replaces refs with full ids and locations', async () => {
   const r = await tg(SEEDED, 'expand', 'see [[login#Checks token]] now');
   expect(r.out).toContain('see [[lat.md/tests/login#Login#Checks token]] now');
@@ -56,7 +60,35 @@ it('expand replaces refs with full ids and locations', async () => {
   expect(bad.out).toContain('Ask the user to correct the reference.');
 });
 
+// @lat: [[tests/cli-core#Output and exit codes#No match]]
+// @tg: verifies:: [[openspec:tg-cli#Output and exit codes#No match]]
+it('prints exactly one JSON document and exits 1 when nothing matches under --json', async () => {
+  const cases = [
+    ['section', 'no-such#Section'],
+    ['refs', 'zzzqqq'],
+    ['locate', 'zzzqqq'],
+    ['expand', 'see [[zzzqqq]] and [[login#Checks token]]'],
+    ['search', 'zzzqqq'],
+    ['edges', '--type', 'no-such-edge'],
+  ];
+  for (const args of cases) {
+    const r = await tg(SEEDED, ...args, '--json');
+    expect(r.code, args.join(' ')).toBe(1);
+    expect(() => JSON.parse(r.out), args.join(' ')).not.toThrow();
+    expect(r.out.trim().split('\n'), args.join(' ')).toHaveLength(1);
+  }
+  const section = JSON.parse((await tg(SEEDED, 'section', 'no-such#Section', '--json')).out);
+  expect(section).toMatchObject({ query: 'no-such#Section', found: false });
+  const expand = JSON.parse((await tg(SEEDED, 'expand', 'see [[zzzqqq]] and [[login#Checks token]]', '--json')).out);
+  expect(expand.unresolved).toEqual(['zzzqqq']);
+  expect(expand.refs[0].id).toBe('lat.md/tests/login#Login#Checks token');
+  const plain = await tg(SEEDED, 'expand', 'no refs here', '--json');
+  expect(plain.code).toBe(0);
+  expect(JSON.parse(plain.out)).toEqual({ text: 'no refs here', refs: [], unresolved: [] });
+});
+
 // @lat: [[tests/tg-check#Check#Uncovered test spec]]
+// @tg: verifies:: [[openspec:tg-check#Check#Uncovered test spec]]
 it('check reports an uncovered require-code-mention section and exits 1', async () => {
   const r = await tg(SEEDED, 'check');
   expect(r.code).toBe(1);
@@ -65,6 +97,7 @@ it('check reports an uncovered require-code-mention section and exits 1', async 
 });
 
 // @lat: [[tests/tg-check#Check#Clean project]]
+// @tg: verifies:: [[openspec:tg-check#Check#Clean project]]
 it('check passes a clean project', async () => {
   const r = await tg(REPO, 'check');
   expect(r.out).toContain('All checks passed');
@@ -108,6 +141,7 @@ function latFindings(dir: string): string[] {
 
 describe.skipIf(!hasLat)('parity with lat check', () => {
   // @lat: [[tests/tg-check#Parity with lat.md#This repository]]
+  // @tg: verifies:: [[openspec:tg-check#Parity with lat.md#This repository]]
   it('agrees on this repository', async () => {
     const mine = findings((await tg(REPO, 'check')).out);
     expect(latFindings(REPO)).toEqual(mine);
@@ -115,6 +149,7 @@ describe.skipIf(!hasLat)('parity with lat check', () => {
   });
 
   // @lat: [[tests/tg-check#Parity with lat.md#Seeded breakage]]
+  // @tg: verifies:: [[openspec:tg-check#Parity with lat.md#Seeded breakage]]
   it('reports the same findings on a seeded project', async () => {
     const lat = latFindings(SEEDED);
     expect(lat.length).toBeGreaterThanOrEqual(7);
@@ -130,6 +165,7 @@ describe.skipIf(!hasLat)('parity with lat check', () => {
 });
 
 // @lat: [[tests/code-layer#Derived code nodes#Vault untouched]]
+// @tg: verifies:: [[openspec:code-layer#Derived code nodes#Vault untouched]]
 it('tg cypher --code all reads the project without creating or changing any file', async () => {
   const { cpSync, mkdtempSync, readdirSync, statSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');

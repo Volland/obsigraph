@@ -12,6 +12,7 @@ export class DataDir {
     private readonly vaultDir: string,
   ) {}
 
+  // @tg: implements:: [[openspec:sidecar-service#Read-only vault access]]
   path(name: string): string {
     const full = resolve(this.root, name);
     const vault = resolve(this.vaultDir);

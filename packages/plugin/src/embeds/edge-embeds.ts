@@ -5,6 +5,7 @@ import { editorInfoField, editorLivePreviewField, MarkdownRenderChild, type Mark
 import type ObsigraphPlugin from '../main';
 
 /** Render an embed view into `el`: a value, a small table, an empty state or an unresolved marker. */
+// @tg: implements:: [[openspec:edge-embeds#Whole property block as table]]
 export function renderEmbedView(el: HTMLElement, view: EmbedView, raw: string): void {
   el.empty();
   el.className = `obsigraph-embed obsigraph-embed-${view.kind}`;
@@ -58,6 +59,7 @@ class EmbedChild extends MarkdownRenderChild {
 
 /** Reading view: replace `{{edge: ...}}` in text nodes outside code. */
 // @lat: [[edge-syntax#Property embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Live refresh]]
 export function edgeEmbedPostProcessor(plugin: ObsigraphPlugin) {
   return (el: HTMLElement, ctx: MarkdownPostProcessorContext): void => {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
@@ -113,6 +115,7 @@ export const refreshEmbeds = StateEffect.define<null>();
  * touches them, so the raw text stays editable.
  */
 // @lat: [[edge-syntax#Property embeds]]
+// @tg: implements:: [[openspec:edge-embeds#Live refresh]]
 export function edgeEmbedEditorExtension(plugin: ObsigraphPlugin, views: Set<EditorView>): Extension {
   return ViewPlugin.fromClass(
     class {

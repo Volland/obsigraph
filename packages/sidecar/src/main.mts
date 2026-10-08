@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import type { Server } from 'node:http';
 import { providerFromEnv, type EmbeddingProvider } from './vectors/provider.mjs';
 import { ConfigError, isLoopback, loadConfig, type Config } from './config.mjs';
@@ -41,6 +42,8 @@ export interface StartOptions {
 
 /** Start sync and the HTTP API; resolves once the initial sync finished and the server listens. */
 // @lat: [[sidecar]]
+// @tg: implements:: [[openspec:ladybug-mirror#Mirror is optional]]
+// @tg: implements:: [[openspec:sidecar-service#Safe default network binding]]
 export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: StartOptions | Processor[] = {}, legacyLog?: Logger): Promise<Sidecar> {
   const o: StartOptions = Array.isArray(opts) ? { processors: opts, log: legacyLog } : opts;
   const processors = [...(o.processors ?? [])];
@@ -53,20 +56,10 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   let mirror: LadybugMirror | null = null;
   let mirrorUnavailable: string | null = config.ladybug ? null : 'disabled by OBSIGRAPH_LADYBUG=0';
   if (config.ladybug) {
-    let store: MirrorStore | null = null;
-    if (o.mirrorStore) store = await o.mirrorStore(data);
+    const opened = await openMirror(o, data, log);
+    if (typeof opened === 'string') mirrorUnavailable = opened;
     else {
-      const loaded = await (o.loadLadybug ?? loadLadybug)();
-      if ('error' in loaded) mirrorUnavailable = `LadybugDB unavailable: ${loaded.error}`;
-      else {
-        const s = new LadybugStore(loaded.lbug, data);
-        await s.open();
-        store = s;
-      }
-    }
-    if (store) {
-      mirror = new LadybugMirror(store, data);
-      await mirror.open();
+      mirror = opened;
       processors.push(mirror);
     }
   }
@@ -135,6 +128,57 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
       await mirror?.store.close();
     },
   };
+}
+
+const firstLine = (e: unknown) => (e instanceof Error ? e.message : String(e)).split('\n')[0]!;
+
+/**
+ * Open the mirror store and the mirror. A database that fails to open is
+ * discarded and rebuilt once; when that fails too, or the store cannot be
+ * created at all, the reason is returned and the sidecar runs without the mirror.
+ */
+// @lat: [[ladybug-mirror#Hosted by the sidecar]]
+// @tg: implements:: [[openspec:ladybug-mirror#Mirror is optional]]
+// @tg: implements:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt]]
+async function openMirror(o: StartOptions, data: DataDir, log: Logger): Promise<LadybugMirror | string> {
+  let store: MirrorStore;
+  try {
+    if (o.mirrorStore) store = await o.mirrorStore(data);
+    else {
+      const loaded = await (o.loadLadybug ?? loadLadybug)();
+      if ('error' in loaded) return `LadybugDB unavailable: ${loaded.error}`;
+      store = new LadybugStore(loaded.lbug, data);
+    }
+  } catch (e) {
+    log(`The Ladybug mirror store could not be created: ${firstLine(e)}`);
+    return `The Ladybug mirror could not be opened: ${firstLine(e)}`;
+  }
+  try {
+    if (store instanceof LadybugStore) await store.open();
+    const mirror = new LadybugMirror(store, data);
+    await mirror.open();
+    return mirror;
+  } catch (e) {
+    log(`The Ladybug mirror could not be opened (${firstLine(e)}); discarding and rebuilding it.`);
+  }
+  try {
+    if (store instanceof LadybugStore) {
+      // The failed handle cannot even close cleanly: drop it with the files.
+      await store.close().catch(() => {});
+      await rm(store.path, { recursive: true, force: true });
+      await rm(`${store.path}.wal`, { force: true });
+      const fresh = new LadybugStore(store.lbug, data);
+      await fresh.open();
+      store = fresh;
+    }
+    const mirror = new LadybugMirror(store, data);
+    await mirror.rebuild();
+    return mirror;
+  } catch (e) {
+    await store.close().catch(() => {});
+    log(`The Ladybug mirror could not be rebuilt: ${firstLine(e)}`);
+    return `The Ladybug mirror could not be opened: ${firstLine(e)}`;
+  }
 }
 
 const isEntry = process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href;

@@ -3,6 +3,7 @@ import { nodeElement, type EdgeElement, type GraphElements } from './elements';
 
 /** A node, its incident edges in both directions, and its direct neighbors. */
 // @lat: [[visualization#Surfaces]]
+// @tg: implements:: [[openspec:graph-ui#Neighborhood view-state]]
 export function neighborhood(graph: Graph, id: string): GraphElements {
   const center = graph.node(id);
   if (!center) return { nodes: [], edges: [] };
@@ -19,6 +20,7 @@ export function neighborhood(graph: Graph, id: string): GraphElements {
 }
 
 /** Union of element sets; the first occurrence of an id wins. */
+// @tg: implements:: [[openspec:graph-ui#Neighborhood view-state]]
 export function mergeElements(...sets: GraphElements[]): GraphElements {
   const nodes = new Map<string, GraphElements['nodes'][number]>();
   const edges = new Map<string, EdgeElement>();
@@ -43,6 +45,7 @@ export function styleRows(style: ResolvedNodeStyle | ResolvedEdgeStyle): [string
   });
 }
 
+// @tg: implements:: [[openspec:graph-view#Selection details]]
 export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle): Details {
   const rows: [string, string][] = [
     ['labels', n.labels.join(', ') || '—'],
@@ -53,6 +56,7 @@ export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle): Details {
   return { title: String(n.props.title ?? n.id), rows };
 }
 
+// @tg: implements:: [[openspec:graph-view#Selection details]]
 export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyle): Details {
   const title = (id: string) => String(graph.node(id)?.props.title ?? id);
   const rows: [string, string][] = [

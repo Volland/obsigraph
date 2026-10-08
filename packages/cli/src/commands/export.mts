@@ -32,6 +32,7 @@ const USAGE = 'export <outDir> [--format lat|okf] [--vault dir] [--folder sub] [
 
 /** Write an OKF v0.2 bundle into `out`, copy embedded attachments, then verify it with the OKF check. */
 // @lat: [[okf#Export]]
+// @tg: implements:: [[openspec:okf-compat#OKF change report]]
 function exportOkfBundle(ctx: Ctx, base: string, out: string, flags: Map<string, string | true>): number {
   const { notes, others } = readOkfNotes(base);
   if (!notes.length) {
@@ -66,6 +67,8 @@ function exportOkfBundle(ctx: Ctx, base: string, out: string, flags: Map<string,
   return errors.length ? EXIT_FINDINGS : EXIT_OK;
 }
 
+// @tg: implements:: [[openspec:lat-vault-integration#Export projection]]
+// @tg: implements:: [[openspec:lat-vault-integration#Safe export target]]
 export const exportCmd: Command = {
   name: 'export',
   summary: 'Project vault notes into a lat.md folder (lossy) or an OKF bundle, with a report',
@@ -130,6 +133,7 @@ export const exportCmd: Command = {
   },
 };
 
+// @tg: implements:: [[openspec:lat-vault-integration#Import]]
 export const importCmd: Command = {
   name: 'import',
   summary: 'Adopt an existing lat.md/ folder into the current vault or project, by copy or mount',

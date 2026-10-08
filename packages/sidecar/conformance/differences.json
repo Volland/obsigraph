@@ -3,24 +3,40 @@
     "id": "unwind",
     "construct": "UNWIND",
     "builtin": "Rejected as unsupported by the built-in engine.",
-    "ladybug": "Runs untranslated on LadybugDB."
+    "ladybug": "Runs untranslated on LadybugDB.",
+    "outcomes": {
+      "builtin": "unsupported",
+      "ladybug": "ok"
+    }
   },
   {
     "id": "case",
     "construct": "CASE expressions",
     "builtin": "Rejected as unsupported by the built-in engine.",
-    "ladybug": "Runs untranslated on LadybugDB."
+    "ladybug": "Runs untranslated on LadybugDB.",
+    "outcomes": {
+      "builtin": "unsupported",
+      "ladybug": "ok"
+    }
   },
   {
     "id": "node-of-relationship",
     "construct": "startNode(), endNode()",
     "builtin": "Returns the endpoint node.",
-    "ladybug": "Rejected as unsupported: the mirror stores endpoint ids (src, dst), not node references."
+    "ladybug": "Rejected as unsupported: the mirror stores endpoint ids (src, dst), not node references.",
+    "outcomes": {
+      "builtin": "ok",
+      "ladybug": "unsupported"
+    }
   },
   {
     "id": "property-maps",
     "construct": "keys(), properties()",
     "builtin": "Returns property names or the property map.",
-    "ladybug": "Rejected as unsupported: properties live in typed columns."
+    "ladybug": "Rejected as unsupported: properties live in typed columns.",
+    "outcomes": {
+      "builtin": "ok",
+      "ladybug": "unsupported"
+    }
   }
 ]

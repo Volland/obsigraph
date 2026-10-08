@@ -70,6 +70,7 @@ export class VaultIndex {
 
   /** Type schemas from the schema folder, cached until the next vault change. */
   // @lat: [[graph-model#Schema notes]]
+  // @tg: implements:: [[openspec:schema-notes#Schema changes take effect live]]
   schemas(): SchemaSet {
     return (this.schemaCache ??= schemasFromGraph(this.graph, this.schemaFolder()));
   }
@@ -110,6 +111,7 @@ export class VaultIndex {
   }
 
   /** Drop cached schemas and styles, e.g. after settings change. */
+  // @tg: implements:: [[openspec:schema-notes#Schema changes take effect live]]
   invalidate(): void {
     this.schemaCache = null;
     this.diagnosticCache = null;
@@ -162,6 +164,7 @@ export class VaultIndex {
   }
 
   /** Subscribe to debounced change notifications; returns an unsubscribe function. */
+  // @tg: implements:: [[openspec:graph-query-block#Live refresh]]
   onChange(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);

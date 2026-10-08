@@ -33,12 +33,16 @@ interface BatchOptions {
   batchSize?: number;
   concurrency?: number;
   fetch?: Fetch;
+  /** Per-request timeout; an endpoint that does not answer in time counts as unreachable. */
+  timeoutMs?: number;
 }
 
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 export const DEFAULT_EMBED_MODEL = 'nomic-embed-text';
+export const DEFAULT_EMBED_TIMEOUT_MS = 30_000;
 
 /** Split into batches and run a bounded number at a time, keeping input order. */
+// @tg: implements:: [[openspec:embedding-provider#Batch embedding]]
 async function batched(texts: string[], size: number, concurrency: number, run: (batch: string[]) => Promise<number[][]>): Promise<number[][]> {
   const batches: string[][] = [];
   for (let i = 0; i < texts.length; i += size) batches.push(texts.slice(i, i + size));
@@ -54,15 +58,24 @@ async function batched(texts: string[], size: number, concurrency: number, run: 
   return out.flat();
 }
 
-async function post(f: Fetch, url: string, body: unknown, headers: Record<string, string> = {}): Promise<{ status: number; json: unknown; text: string }> {
-  let res: Response;
-  try {
-    res = await f(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
-  } catch (e) {
+// @tg: implements:: [[openspec:embedding-provider#Provider failure reporting]]
+// @tg: implements:: [[openspec:tg-search#Hybrid ranking]]
+async function post(f: Fetch, url: string, body: unknown, headers: Record<string, string> = {}, timeoutMs = DEFAULT_EMBED_TIMEOUT_MS): Promise<{ status: number; json: unknown; text: string }> {
+  const signal = AbortSignal.timeout(timeoutMs);
+  const failed = (e: unknown): EmbeddingError => {
+    if (signal.aborted) return new EmbeddingError('unreachable', `The embedding endpoint ${url} did not answer within ${timeoutMs} ms`);
     const cause = (e as { cause?: { code?: string } }).cause?.code ?? (e as Error).message;
-    throw new EmbeddingError('unreachable', `Cannot reach the embedding endpoint ${url} (${cause}). Is the server running?`);
+    return new EmbeddingError('unreachable', `Cannot reach the embedding endpoint ${url} (${cause}). Is the server running?`);
+  };
+  let res: Response;
+  let text: string;
+  try {
+    res = await f(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), signal });
+    // The body can stall too, so the timeout covers reading it.
+    text = await res.text();
+  } catch (e) {
+    throw failed(e);
   }
-  const text = await res.text();
   let json: unknown = null;
   try {
     json = JSON.parse(text);
@@ -72,10 +85,15 @@ async function post(f: Fetch, url: string, body: unknown, headers: Record<string
   return { status: res.status, json, text };
 }
 
+// @tg: implements:: [[openspec:embedding-provider#Provider failure reporting]]
 function checkVectors(vectors: unknown, count: number, endpoint: string): number[][] {
   if (!Array.isArray(vectors) || vectors.length !== count || !vectors.every((v) => Array.isArray(v) && v.every((x) => typeof x === 'number'))) {
     throw new EmbeddingError('bad-response', `The embedding endpoint ${endpoint} returned an unexpected response`);
   }
+  // Empty or ragged vectors cannot be compared; refuse them rather than store them.
+  const dim = (vectors[0] as number[] | undefined)?.length ?? 0;
+  if (count > 0 && dim === 0) throw new EmbeddingError('bad-response', `The embedding endpoint ${endpoint} returned an empty vector`);
+  if (vectors.some((v) => v.length !== dim)) throw new EmbeddingError('bad-response', `The embedding endpoint ${endpoint} returned vectors of different lengths`);
   return vectors;
 }
 
@@ -88,11 +106,14 @@ abstract class BaseProvider implements EmbeddingProvider {
     protected readonly opts: BatchOptions,
   ) {}
 
+  // @tg: implements:: [[openspec:embedding-provider#Model identity is recorded]]
+  // @tg: implements:: [[openspec:vector-index#Index records model identity]]
   async identity(): Promise<EmbeddingIdentity> {
     if (this.dim === null) this.dim = (await this.embed(['dimension probe']))[0]!.length;
     return { provider: this.kind, model: this.model, dimension: this.dim };
   }
 
+  // @tg: implements:: [[openspec:embedding-provider#Batch embedding]]
   async embed(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
     const vectors = await batched(texts, this.opts.batchSize ?? 32, this.opts.concurrency ?? 2, (b) => this.request(b));
@@ -109,13 +130,14 @@ abstract class BaseProvider implements EmbeddingProvider {
 
 /** Local Ollama via `/api/embed`; the default, never a hosted service. */
 // @lat: [[vector-search#Embedding provider]]
+// @tg: implements:: [[openspec:embedding-provider#Local default provider]]
 export class OllamaProvider extends BaseProvider {
   constructor(opts: BatchOptions & { url?: string; model?: string } = {}) {
     super((opts.url ?? DEFAULT_OLLAMA_URL).replace(/\/+$/, ''), opts.model ?? DEFAULT_EMBED_MODEL, 'ollama', opts);
   }
   protected async request(batch: string[]): Promise<number[][]> {
     const url = `${this.endpoint}/api/embed`;
-    const r = await post(this.fetch, url, { model: this.model, input: batch });
+    const r = await post(this.fetch, url, { model: this.model, input: batch }, {}, this.opts.timeoutMs);
     const err = (r.json as { error?: string } | null)?.error;
     if (r.status === 404 || (err && /not found|pull/i.test(err))) {
       throw new EmbeddingError('model-missing', `Model '${this.model}' is not available at ${this.endpoint}. Install it with \`ollama pull ${this.model}\`; nothing is pulled automatically.`);
@@ -126,13 +148,15 @@ export class OllamaProvider extends BaseProvider {
 }
 
 /** Any OpenAI-compatible `/embeddings` endpoint (base URL, model, optional key). */
+// @tg: implements:: [[openspec:embedding-provider#OpenAI-compatible endpoints]]
 export class OpenAIProvider extends BaseProvider {
   constructor(private readonly o: BatchOptions & { baseUrl: string; model: string; apiKey?: string | null }) {
     super(o.baseUrl.replace(/\/+$/, ''), o.model, 'openai', o);
   }
+  // @tg: implements:: [[openspec:embedding-provider#Secrets stay out of the vault]]
   protected async request(batch: string[]): Promise<number[][]> {
     const url = `${this.endpoint}/embeddings`;
-    const r = await post(this.fetch, url, { model: this.model, input: batch }, this.o.apiKey ? { authorization: `Bearer ${this.o.apiKey}` } : {});
+    const r = await post(this.fetch, url, { model: this.model, input: batch }, this.o.apiKey ? { authorization: `Bearer ${this.o.apiKey}` } : {}, this.opts.timeoutMs);
     const message = (r.json as { error?: { message?: string } } | null)?.error?.message;
     if (r.status === 404 || (message && /model/i.test(message) && /not|exist|found/i.test(message))) {
       throw new EmbeddingError('model-missing', `Model '${this.model}' is not available at ${this.endpoint}${message ? `: ${message}` : ''}`);
@@ -146,9 +170,15 @@ export class OpenAIProvider extends BaseProvider {
 }
 
 /** Provider from `OBSIGRAPH_EMBED_*` settings; defaults to local Ollama. Keys come from env or a file, never notes. */
+// @tg: implements:: [[openspec:embedding-provider#Local default provider]]
+// @tg: implements:: [[openspec:embedding-provider#OpenAI-compatible endpoints]]
+// @tg: implements:: [[openspec:embedding-provider#Secrets stay out of the vault]]
+// @tg: implements:: [[openspec:sidecar-service#Embedding provider configuration]]
 export function providerFromEnv(env: Record<string, string | undefined>, readFile?: (path: string) => string, opts: BatchOptions = {}): EmbeddingProvider {
   const kind = (env.OBSIGRAPH_EMBED_PROVIDER ?? 'ollama').toLowerCase();
   const batchSize = env.OBSIGRAPH_EMBED_BATCH ? Number(env.OBSIGRAPH_EMBED_BATCH) : opts.batchSize;
+  const timeoutMs = env.OBSIGRAPH_EMBED_TIMEOUT_MS ? Number(env.OBSIGRAPH_EMBED_TIMEOUT_MS) : opts.timeoutMs;
+  opts = { ...opts, timeoutMs };
   if (kind === 'openai') {
     if (!env.OBSIGRAPH_EMBED_URL) throw new EmbeddingError('http', 'OBSIGRAPH_EMBED_URL is required for an OpenAI-compatible provider');
     let apiKey = env.OBSIGRAPH_EMBED_KEY ?? null;
@@ -161,6 +191,7 @@ export function providerFromEnv(env: Record<string, string | undefined>, readFil
 
 /** A reason when vectors from `active` must not be written into an index built with `stored`. */
 // @lat: [[vector-search#Embedding provider]]
+// @tg: implements:: [[openspec:embedding-provider#Mismatch never mixes vectors]]
 export function identityMismatch(stored: EmbeddingIdentity | null, active: EmbeddingIdentity): string | null {
   if (!stored) return null;
   if (stored.model === active.model && stored.dimension === active.dimension && stored.provider === active.provider) return null;

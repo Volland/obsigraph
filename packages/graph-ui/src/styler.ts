@@ -28,6 +28,7 @@ export interface Styler {
  * @param iconUri maps an icon name to an image URI, or null when unavailable
  */
 // @lat: [[visualization#Styling]]
+// @tg: implements:: [[openspec:graph-view#Node type styling]]
 export function makeStyler(sources: StyleSource[], iconUri: (name: string) => string | null = () => null): Styler {
   return {
     sources,

@@ -63,6 +63,7 @@ const sync = async (m: LadybugMirror, graph: Graph) => {
 
 describe('ladybug mirror', () => {
   // @lat: [[tests/mirror-sync#External edits never reach notes]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#One-way sync from vault to database#Database edited externally]]
   it('never writes notes and a rebuild restores an externally edited mirror', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]', 'Bob.md': '' });
     const { mirror, store } = await mirrored(v.graph);
@@ -75,6 +76,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Delete and rebuild]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is a disposable cache#Delete and rebuild]]
   it('rebuilds from markdown alone after the mirror is deleted', async () => {
     const v = vault({ 'Alice.md': ['knows:: [[Bob]] {since: 2020}', { type: 'Person' }], 'Bob.md': 'likes:: [[Ghost]]' });
     const { mirror, store } = await mirrored(v.graph);
@@ -85,6 +87,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Incremental equals rebuild]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is a disposable cache#Incremental equals rebuild]]
   it('matches a fresh rebuild after random edit sequences', async () => {
     let seed = 7;
     const rnd = (n: number) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) % n);
@@ -109,6 +112,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Edge removed from note]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Incremental sync per changed file#Edge removed from a note]]
   it('drops an edge removed from a note', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]\nlikes:: [[Bob]]', 'Bob.md': '' });
     const { mirror, store } = await mirrored(v.graph);
@@ -132,6 +136,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Deleted note becomes stub]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Incremental sync per changed file#Note deleted with incoming edges]]
   it('re-points incoming edges of a deleted note to a stub', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]', 'Bob.md': '' });
     const { mirror, store } = await mirrored(v.graph);
@@ -143,6 +148,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Signed edge with properties]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Signed edge with properties]]
   it('keeps type, sign, id, heading and properties of signed edges', async () => {
     const v = vault({ 'Alice.md': '## Trust\n-distrusts:: [[Eve]] {id: "a-e", since: 2019, why: "phishing"}', 'Eve.md': '' });
     const { store } = await mirrored(v.graph);
@@ -151,6 +157,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Multiple labels kept]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Multiple labels]]
   it('stores every label of a multi-label node', async () => {
     const v = vault({ 'Bob.md': ['', { type: ['Person', 'Employee'], age: 40 }] });
     const { store } = await mirrored(v.graph);
@@ -160,6 +167,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Parallel edges kept]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Parallel edges]]
   it('keeps parallel edges between the same nodes as separate rows', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]] {since: 2020}\nknows:: [[Bob]] {since: 2023}', 'Bob.md': '' });
     const { store } = await mirrored(v.graph);
@@ -167,6 +175,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Format change rebuilds]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt#Format version changed]]
   it('rebuilds when the stored format version differs', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]', 'Bob.md': '' });
     const store = new MemoryStore();
@@ -182,6 +191,8 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Interrupted sync rebuilds]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt#Interrupted sync]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Sync does not block queries#Sync failure]]
   it('rebuilds after an interrupted or failed sync', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]', 'Bob.md': '' });
     const store = new MemoryStore();
@@ -200,6 +211,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Disabled by configuration]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is optional#Disabled by configuration]]
   it('creates no mirror when disabled and keeps queries working', async () => {
     const t = tmp();
     writeFileSync(join(t.vault, 'Alice.md'), 'knows:: [[Bob]]');
@@ -213,6 +225,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Not installed reported]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is optional#Not installed]]
   it('reports the mirror as unavailable with the reason when the store cannot load', async () => {
     const t = tmp();
     writeFileSync(join(t.vault, 'Alice.md'), 'knows:: [[Bob]]');
@@ -229,6 +242,7 @@ describe('ladybug mirror', () => {
   });
 
   // @lat: [[tests/mirror-sync#Large build does not block queries]]
+  // @tg: verifies:: [[openspec:ladybug-mirror#Sync does not block queries#Large initial build]]
   it('syncs in the background so queries answer during a slow build', async () => {
     const notes = Object.fromEntries(Array.from({ length: 200 }, (_, i) => [`N${i}.md`, `link:: [[N${(i + 1) % 200}]]`]));
     const v = vault(notes);

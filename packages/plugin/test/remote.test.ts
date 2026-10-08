@@ -18,6 +18,7 @@ const cfg = { url: 'http://sidecar:8765/', token: 't' };
 
 describe('ladybug backend in the plugin', () => {
   // @lat: [[tests/ladybug-backend#Backend selection]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Backend selection#Unknown value]]
   it('picks the backend from the header, else the default, and rejects unknown values', () => {
     expect(parseBlock('backend: ladybug\n\nMATCH (n) RETURN n').options.backend).toBe('ladybug');
     expect(parseBlock('MATCH (n) RETURN n').options.backend).toBeNull();
@@ -26,6 +27,7 @@ describe('ladybug backend in the plugin', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Sidecar not configured or unreachable]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Sidecar not configured]]
   it('explains a missing or unreachable sidecar and a rejected token', async () => {
     expect(await runRemote(fake(200, {}), { url: '', token: '' }, 'MATCH (n) RETURN n')).toMatchObject({ kind: 'error', message: expect.stringMatching(/Set the sidecar URL and token/) });
     const down: Fetcher = async () => {
@@ -36,12 +38,14 @@ describe('ladybug backend in the plugin', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Ladybug unavailable on sidecar]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Ladybug unavailable on the sidecar]]
   it('says how to enable Ladybug when the sidecar reports it unavailable', async () => {
     const r = await runRemote(fake(503, { error: { kind: 'unavailable', message: "LadybugDB unavailable: Cannot find module '@ladybugdb/core'" } }), cfg, 'q');
     expect(r).toMatchObject({ kind: 'error', message: expect.stringMatching(/not available on the sidecar: .*Install @ladybugdb\/core/) });
   });
 
   // @lat: [[tests/ladybug-backend#Mirror rebuilding retries]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Mirror rebuilding]]
   it('asks to retry while the mirror is still building', async () => {
     const r = await runRemote(fake(503, { error: { kind: 'not_ready', message: 'The Ladybug mirror is still building; try again shortly.' } }), cfg, 'q');
     expect(r).toEqual({ kind: 'retry', message: 'The Ladybug mirror is still building; try again shortly.', afterMs: 3000 });
@@ -54,6 +58,7 @@ describe('ladybug backend in the plugin', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Renderer unchanged]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Same interface and result contract#Renderer unchanged]]
   it('renders a Ladybug result from a real sidecar exactly like a built-in one', async () => {
     if (!('lbug' in (await loadLadybug()))) return;
     const root = mkdtempSync(join(tmpdir(), 'obsigraph-remote-'));

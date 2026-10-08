@@ -50,6 +50,10 @@ The prompt hook emits the search-first reminder, expands `[[refs]]` in the user'
 
 Outside a project, or with unreadable input, a hook exits 0 and never blocks the agent.
 
+### Cursor init
+
+`tg init --agent cursor --write` writes `.cursor/rules/tg.mdc` and no Cursor hook configuration; `tg hook cursor stop` is for manual hook setup.
+
 ## MCP server
 
 The stdio server wraps the CLI.

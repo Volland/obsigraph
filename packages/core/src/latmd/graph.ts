@@ -1,11 +1,14 @@
 import type { ParsedEdge } from '../edges/parse.js';
 import { buildCodeLayer, upsertCodeNode, type CodeLayer, type CodeMode, type CodeSource } from '../code/layer.js';
 import { Graph } from '../graph/graph.js';
+import { isSpecTarget, type SpecIndex } from '../openspec/index.js';
 import type { LatIndex } from './index.js';
 
 export interface LatGraphOptions {
   /** Code to bring into the graph; default `off`. */
   code?: { mode: CodeMode; files: CodeSource[] };
+  /** OpenSpec requirements to add as `Requirement` and `Scenario` nodes. */
+  specs?: SpecIndex | null;
 }
 
 function edge(type: string, target: string, line: number): ParsedEdge {
@@ -19,16 +22,32 @@ function edge(type: string, target: string, line: number): ParsedEdge {
  * child section and `references` edges for every wiki link that resolves to a
  * section or, when the code layer is on, to a code node. With code enabled,
  * `CodeFile` and `CodeSymbol` nodes and the `@lat:` and `@tg:` edges join in.
+ * With specs, `Requirement` and `Scenario` nodes join too: `@tg:` edges to
+ * `openspec:` ids end at them, and a file's `openspec:` frontmatter becomes
+ * `references` edges from its root section.
  */
 // @lat: [[cli#Agent integration]]
+// @tg: implements:: [[openspec:code-layer#Link and node identity agree]]
+// @tg: implements:: [[openspec:tg-trace#Requirement nodes]]
+// @tg: implements:: [[openspec:tg-trace#Docs frontmatter]]
 export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): { graph: Graph; code: CodeLayer } {
   const known = new Set<string>(index.sections().map((s) => s.id));
+  const specs = options.specs ?? null;
+  const resolveSpec = (target: string): string | null => {
+    const r = specs?.resolve(target);
+    return r?.kind === 'requirement' ? r.requirement.id : r?.kind === 'scenario' ? r.scenario.id : null;
+  };
   const resolveSection = (target: string): string | null => {
+    if (isSpecTarget(target)) return resolveSpec(target);
     const r = index.resolve(target);
     return r.kind === 'section' ? r.id : null;
   };
   const code = options.code ? buildCodeLayer(options.code.files, options.code.mode, resolveSection) : { nodes: [], unresolved: [] };
   for (const n of code.nodes) known.add(n.path);
+  for (const r of specs?.requirements() ?? []) {
+    known.add(r.id);
+    for (const sc of r.scenarios) known.add(sc.id);
+  }
 
   const graph = new Graph(
     (link) => (known.has(link) ? link : null),
@@ -51,6 +70,13 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
 
   for (const s of index.sections()) {
     const edges: ParsedEdge[] = s.children.map((c) => edge('contains', c.id, c.startLine));
+    const fm = index.files.get(s.filePath)?.frontmatter;
+    if (specs && s.depth === 1 && fm?.openspec) {
+      for (const entry of fm.openspec) {
+        const reqs = entry.includes('#') ? [resolveSpec(entry)].filter((x): x is string => x !== null) : specs.ofCapability(entry).map((r) => r.id);
+        for (const id of reqs) edges.push(edge('references', id, s.startLine));
+      }
+    }
     for (const [target, line] of linksBySection.get(s.id) ?? []) if (target !== s.id) edges.push(edge('references', target, line));
     graph.upsertNote({
       path: s.id,
@@ -60,6 +86,20 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
     });
     // Node titles default to the last path segment, which for a section id is not the heading.
     graph.node(s.id)!.props.title = s.heading;
+  }
+
+  for (const r of specs?.requirements() ?? []) {
+    graph.upsertNote({
+      path: r.id,
+      text: '',
+      edges: r.scenarios.map((sc) => edge('contains', sc.id, sc.line)),
+      frontmatter: { type: 'Requirement', requirement: r.id, capability: r.capability, name: r.name, text: r.text, file: r.file, line: r.line, status: r.status, change: r.change, removedBy: r.removedBy },
+    });
+    graph.node(r.id)!.props.title = r.name;
+    for (const sc of r.scenarios) {
+      graph.upsertNote({ path: sc.id, text: '', edges: [], frontmatter: { type: 'Scenario', scenario: sc.id, requirement: r.id, name: sc.name, file: sc.file, line: sc.line } });
+      graph.node(sc.id)!.props.title = sc.name;
+    }
   }
 
   for (const n of code.nodes) upsertCodeNode(graph, n);

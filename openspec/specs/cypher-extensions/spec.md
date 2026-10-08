@@ -84,12 +84,19 @@ The system SHALL give aggregate and list results as scalars so that they render 
 - **THEN** the block renders a table
 
 ### Requirement: Remaining unsupported syntax still fails clearly
-The system SHALL continue to report clauses and functions outside the supported subset as unsupported, naming the clause or function and pointing at the Ladybug backend.
+The system SHALL continue to report clauses and functions outside the supported subset with error kind `unsupported` and a message naming the clause or function, and SHALL keep rejecting write clauses anywhere in a query as read-only.
 
 #### Scenario: Unsupported function
-- **WHEN** a query calls a function that is not supported
-- **THEN** the error names the function as unsupported in this version
+- **WHEN** a query calls a function that is not supported, such as `percentileCont`
+- **THEN** the error kind is `unsupported` and the message names the function
 
 #### Scenario: Writes remain rejected
 - **WHEN** a query uses `CREATE` or `SET` after a `WITH`
 - **THEN** the query is rejected as read-only
+
+### Requirement: Zero-length paths
+A variable-length pattern with lower bound 0 SHALL include the start node itself as a match with an empty relationship list.
+
+#### Scenario: Start node included
+- **WHEN** `MATCH (a {title: "Alice"})-[:knows*0..1]->(b) RETURN b` runs and Alice knows Bob
+- **THEN** the rows contain both Alice and Bob

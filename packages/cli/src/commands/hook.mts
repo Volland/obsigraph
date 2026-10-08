@@ -23,6 +23,7 @@ function capture(io: Io): { io: Io; text: () => string } {
   return { io: { ...io, out: (t) => (out += t), err: () => undefined }, text: () => out };
 }
 
+// @tg: implements:: [[openspec:tg-agent-integration#Agent hooks]]
 async function promptSubmit(ctx: Ctx, root: string | null): Promise<string> {
   const parts = [...REMINDER];
   let prompt = '';
@@ -79,6 +80,7 @@ function stopReason(root: string): { reason: string | null; errors: number } {
     latDirName: 'lat.md',
     readLatFile: (rel) => project.text(`lat.md/${rel}`),
     checkSourceLink: (f, s) => project.checkSourceLink(f, s),
+    specs: project.specIndex(),
   });
   const { code, latmd } = diffLines(root);
   const needsSync = code >= DIFF_THRESHOLD && latmd < LATMD_UPPER && latmd < code * LATMD_RATIO;
@@ -91,6 +93,7 @@ function stopReason(root: string): { reason: string | null; errors: number } {
   return { reason, errors: findings.length };
 }
 
+// @tg: implements:: [[openspec:tg-agent-integration#Agent hooks]]
 export const hook: Command = {
   name: 'hook',
   summary: 'Handle agent hook events (called by agent hooks, not directly)',

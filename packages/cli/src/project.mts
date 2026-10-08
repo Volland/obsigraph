@@ -1,6 +1,6 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { LatIndex, lookupSymbol, scanAnnotations, type Annotation, type Diagnostic } from '@obsigraph/core';
+import { LatIndex, lookupSymbol, scanAnnotations, SpecIndex, type Annotation, type Diagnostic } from '@obsigraph/core';
 import { walkProject } from './walk.mjs';
 
 const MAX_SOURCE_BYTES = 1_500_000;
@@ -19,6 +19,7 @@ export class Project {
   private indexCache: LatIndex | null = null;
   private sourceCache: string[] | null = null;
   private annCache: { annotations: Annotation[]; diagnostics: Diagnostic[] } | null = null;
+  private specCache: SpecIndex | null | undefined;
 
   constructor(readonly root: string) {
     this.latDir = join(root, 'lat.md');
@@ -53,6 +54,30 @@ export class Project {
       this.indexCache = new LatIndex(this.mdFiles().map((path) => ({ path, text: this.text(path) ?? '' })));
     }
     return this.indexCache;
+  }
+
+  /** OpenSpec requirements from `openspec/specs/` and active changes; null when there is no `openspec/` folder. */
+  specIndex(): SpecIndex | null {
+    if (this.specCache === undefined) {
+      const dir = join(this.root, 'openspec');
+      if (!existsSync(dir)) return (this.specCache = null);
+      const subdirs = (rel: string): string[] => {
+        try {
+          return readdirSync(join(this.root, rel), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+        } catch {
+          return [];
+        }
+      };
+      const paths = subdirs('openspec/specs').map((c) => `openspec/specs/${c}/spec.md`);
+      for (const ch of subdirs('openspec/changes')) {
+        if (ch !== 'archive') paths.push(...subdirs(`openspec/changes/${ch}/specs`).map((c) => `openspec/changes/${ch}/specs/${c}/spec.md`));
+      }
+      this.specCache = new SpecIndex(paths.flatMap((path) => {
+        const text = this.text(path);
+        return text === null ? [] : [{ path, text }];
+      }));
+    }
+    return this.specCache;
   }
 
   /** Source files outside lat.md/: no markdown, no `.claude/`, no nested projects that have their own lat.md. */

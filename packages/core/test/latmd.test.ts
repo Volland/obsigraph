@@ -6,6 +6,7 @@ import { LatIndex, leadingParagraphIssue, parseMarkdown } from '../src/latmd.js'
 const idx = (files: Record<string, string>) => new LatIndex(Object.entries(files).map(([path, text]) => ({ path, text })));
 
 // @lat: [[tests/lat-resolver#Section tree#Nested headings]]
+// @tg: verifies:: [[openspec:lat-resolver#Section tree#Nested headings]]
 it('nests sections by heading level', () => {
   const p = parseMarkdown('lat.md/a.md', '# A\n\nIntro.\n\n## B\n\nBody.\n\n### C\n\nDeep.\n');
   const c = p.flat.find((s) => s.heading === 'C')!;
@@ -15,6 +16,7 @@ it('nests sections by heading level', () => {
 });
 
 // @lat: [[tests/lat-resolver#Section tree#Heading in code fence]]
+// @tg: verifies:: [[openspec:lat-resolver#Section tree#Heading in code fence]]
 it('ignores headings and links inside fenced code', () => {
   const p = parseMarkdown('lat.md/a.md', '# A\n\nText.\n\n```md\n## Not a section\n[[nope]]\n```\n\nSee `[[inline]]` and [[real]].\n');
   expect(p.flat.map((s) => s.heading)).toEqual(['A']);
@@ -22,6 +24,7 @@ it('ignores headings and links inside fenced code', () => {
 });
 
 // @lat: [[tests/lat-resolver#Section ids#Short id]]
+// @tg: verifies:: [[openspec:lat-resolver#Section ids#Short id]]
 it('resolves a short id when the file name is unique', () => {
   const i = idx({ 'lat.md/tests/search.md': '# Search\n\nx.\n\n## Indexing\n\nHow.\n' });
   const r = i.resolve('search#Indexing');
@@ -31,6 +34,7 @@ it('resolves a short id when the file name is unique', () => {
 });
 
 // @lat: [[tests/lat-resolver#Section ids#Ambiguous short id]]
+// @tg: verifies:: [[openspec:lat-resolver#Section ids#Ambiguous short id]]
 it('reports ambiguity instead of guessing', () => {
   const i = idx({
     'lat.md/a/search.md': '# Search\n\nx.\n\n## Indexing\n\ny.\n',
@@ -45,6 +49,7 @@ it('reports ambiguity instead of guessing', () => {
 });
 
 // @lat: [[tests/lat-resolver#Link resolution#Code target]]
+// @tg: verifies:: [[openspec:lat-resolver#Link resolution#Code target]]
 it('resolves source links to code targets', () => {
   const i = idx({ 'lat.md/a.md': '# A\n\nSee [[src/config.ts#getConfigDir]] and [[src/x.mts#Foo#bar]].\n' });
   expect(i.resolve('src/config.ts#getConfigDir')).toEqual({ kind: 'code', file: 'src/config.ts', symbol: 'getConfigDir' });
@@ -52,6 +57,7 @@ it('resolves source links to code targets', () => {
 });
 
 // @lat: [[tests/lat-resolver#Link resolution#Missing section]]
+// @tg: verifies:: [[openspec:lat-resolver#Link resolution#Missing section]]
 it('reports a missing section with the closest suggestion', () => {
   const i = idx({ 'lat.md/a.md': '# A\n\nx.\n\n## Source of truth\n\ny.\n' });
   const r = i.resolve('a#Source of trut');
@@ -60,6 +66,7 @@ it('reports a missing section with the closest suggestion', () => {
 });
 
 // @lat: [[tests/lat-resolver#Leading paragraph rule#Missing leading paragraph]]
+// @tg: verifies:: [[openspec:lat-resolver#Leading paragraph rule#Missing leading paragraph]]
 it('flags a heading followed directly by a child heading', () => {
   const p = parseMarkdown('lat.md/a.md', '# A\n\n## B\n\nBody.\n');
   expect(leadingParagraphIssue(p.flat[0]!)).toEqual({ kind: 'missing' });
@@ -67,6 +74,7 @@ it('flags a heading followed directly by a child heading', () => {
 });
 
 // @lat: [[tests/lat-resolver#Leading paragraph rule#Wiki links not counted]]
+// @tg: verifies:: [[openspec:lat-resolver#Leading paragraph rule#Wiki links not counted]]
 it('does not count wiki link content toward the 250 limit', () => {
   const long = `[[${'x'.repeat(100)}]]`;
   const text = `# A\n\n${'a'.repeat(240)} ${long}\n`;

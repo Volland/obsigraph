@@ -39,6 +39,7 @@ function globToRegex(glob: string): string {
   return re;
 }
 
+// @tg: implements:: [[openspec:symbol-provider#Source walker]]
 export function compileIgnore(text: string): IgnoreRules {
   interface Rule {
     re: RegExp;

@@ -32,7 +32,7 @@ The system SHALL read color, shape, icon and label property for a node type from
 - **THEN** the node is labeled `Alice` instead of the note title
 
 ### Requirement: Edge type styling
-The system SHALL allow color and line style per edge type from schema notes and settings, and SHALL render negative-sign edges visibly distinct from positive ones unless a style explicitly overrides it. In schema notes an edge type MAY be styled by the `visualization` of its `edgeTypes` entry or by a node type's `visualization.edges` map; both are at the schema-note level, and the `edgeTypes` entry wins per attribute when both set it.
+The system SHALL allow color and line style per edge type from schema notes and settings, and SHALL render negative-sign edges visibly distinct from positive ones: a negative edge SHALL always have a tee arrow and a minus-prefixed label, and SHALL be dashed unless a style source sets its line. In schema notes an edge type MAY be styled by the `visualization` of its `edgeTypes` entry or by a node type's `visualization.edges` map; both are at the schema-note level, and the `edgeTypes` entry wins per attribute when both set it.
 
 #### Scenario: Edge type color
 - **WHEN** a schema declares color `orange` for edge type `knows`
@@ -45,6 +45,10 @@ The system SHALL allow color and line style per edge type from schema notes and 
 #### Scenario: Sign rendering default
 - **WHEN** an edge with sign -1 has no explicit style for its type
 - **THEN** it renders with the distinct negative style
+
+#### Scenario: Line override keeps the negative marks
+- **WHEN** edge type `knows` is styled `line: solid` and an edge `-knows:: [[Bob]]` is drawn
+- **THEN** the edge is solid and still has a tee arrow and a minus-prefixed label
 
 ### Requirement: Block header style entries
 The system SHALL accept style entries in a `graph-query` block header scoped to a node type or an edge type, and SHALL apply them only to that block.
@@ -68,8 +72,15 @@ The system SHALL style a node with several labels using the first label, in labe
 - **THEN** the node uses the `Employee` shape and the `Person` color if one is defined
 
 ### Requirement: Live style updates
-The system SHALL re-style rendered graphs when a schema note or setting changes, without losing layout positions.
+The system SHALL re-style rendered graphs when a schema note or setting changes, in the same vault index update that processes the change, without losing layout positions.
 
 #### Scenario: Color edit refreshes open graphs
 - **WHEN** the user changes the color in `Types/Person.md`
-- **THEN** open blocks and the Graph view show the new color shortly after, with nodes in the same positions
+- **THEN** after the index processes that change, open blocks and the Graph view show the new color with nodes in the same positions
+
+### Requirement: Built-in style defaults
+Without any configured style, the system SHALL give a node a stable color derived from its first type label and the ellipse shape, SHALL draw unlabeled nodes grey, and SHALL draw stub nodes faded and dashed.
+
+#### Scenario: Stable color per type
+- **WHEN** two vaults with no style configuration both contain `Person` notes
+- **THEN** Person nodes get the same color in both

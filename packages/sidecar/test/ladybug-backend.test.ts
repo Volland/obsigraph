@@ -46,6 +46,7 @@ afterAll(async () => {
 
 describe.skipIf(!available)('ladybug backend', () => {
   // @lat: [[tests/ladybug-backend#Same columns and values]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Same interface and result contract#Mixed columns]]
   it('returns the same columns, kinds and tagged values as the built-in engine', async () => {
     for (const q of [
       'MATCH (a {title: "Alice"})-[r:knows]->(b) RETURN a, r.since ORDER BY r.since',
@@ -65,6 +66,7 @@ describe.skipIf(!available)('ladybug backend', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Full Cypher for reads]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Full Cypher for reads#Clause unsupported in-plugin]]
   it('runs read syntax the built-in engine does not support', async () => {
     expect((await post('UNWIND [1, 2, 3] AS x RETURN sum(x) AS s', 'builtin')).status).toBe(400);
     const l = await post('UNWIND [1, 2, 3] AS x RETURN sum(x) AS s', 'ladybug');
@@ -73,7 +75,28 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(l.body.notices[0]).toMatch(/untranslated/);
   });
 
+  // @lat: [[tests/ladybug-backend#Constructs outside the subset pass through]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Full Cypher for reads#Clause unsupported in-plugin]]
+  it('passes subqueries and text the built-in parser cannot read to Ladybug untranslated', async () => {
+    const count = 'MATCH (n:Node) WHERE n.title = "Alice" RETURN COUNT { MATCH (n)-[:knows]->() } AS c';
+    const b = await post(count, 'builtin');
+    expect(b.status).toBe(400);
+    expect(b.body.error).toMatchObject({ kind: 'unsupported', message: expect.stringMatching(/COUNT \{\} subqueries/) });
+    const l = await post(count, 'ladybug');
+    expect(l.status).toBe(200);
+    expect(l.body.rows).toEqual([[2]]);
+    expect(l.body.notices[0]).toMatch(/untranslated/);
+    // List slicing with ':' is not openCypher the built-in parser reads; Ladybug runs it.
+    expect((await post('RETURN [1, 2, 3][1:2] AS s', 'builtin')).body.error.kind).toBe('syntax');
+    const sliced = await post('RETURN [1, 2, 3][1:2] AS s', 'ladybug');
+    expect(sliced.status).toBe(200);
+    expect(sliced.body.rows).toEqual([[[1, 2]]]);
+  });
+
   // @lat: [[tests/ladybug-backend#Writes rejected]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Schema statement]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Write attempt]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Write hidden in later clause]]
   it('rejects writes, hidden writes, multiple statements and schema statements', async () => {
     for (const q of [
       "MATCH (n) SET n.title = 'x'",
@@ -93,6 +116,7 @@ describe.skipIf(!available)('ladybug backend', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Keywords in strings allowed]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Keyword inside a string]]
   it('does not reject keywords inside strings, comments, properties or labels', async () => {
     expect(() => assertReadOnly("MATCH (n) WHERE n.title = 'DELETE me' RETURN n // DROP everything")).not.toThrow();
     expect(() => assertReadOnly('MATCH (n:Create) WHERE n.set = 1 RETURN n /* SET */')).not.toThrow();
@@ -102,6 +126,7 @@ describe.skipIf(!available)('ladybug backend', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Negative edges filter]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Sign, id and stub properties#Filter negative edges]]
   it('filters negative edges by r.sign like the built-in engine', async () => {
     const [b, l] = await both('MATCH (a)-[r]->(b) WHERE r.sign = -1 RETURN a.title, b.title, r.id');
     expect(l.body.rows).toEqual([['Alice', 'Eve', 'Alice.md#distrusts#Eve.md#0']]);
@@ -132,7 +157,18 @@ describe.skipIf(!available)('ladybug backend', () => {
     await expect(backend.run('MATCH (n) RETURN n')).rejects.toMatchObject({ kind: 'not_ready' });
   });
 
+  // @lat: [[tests/ladybug-backend#Failed sync is reported]]
+  it('reports a failed sync instead of serving the old snapshot or retrying forever', async () => {
+    for (const ready of [true, false]) {
+      const failed = { ...sc.mirror!, ready, status: () => ({ state: 'failed', message: 'disk full' }), idle: async () => {} } as never;
+      const backend = new LadybugBackend(sc.mirror!.store as never, failed, sc.sync, { maxPathDepth: 10, timeoutMs: 1000 });
+      await expect(backend.run('MATCH (n) RETURN n'), `ready=${ready}`).rejects.toMatchObject({ kind: 'unavailable', message: expect.stringMatching(/failed to sync: disk full/) });
+      backend.close();
+    }
+  });
+
   // @lat: [[tests/ladybug-backend#Edit then query]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Freshness before reads#Edit then query]]
   it('includes an edge as soon as the built-in engine sees it', async () => {
     writeFileSync(join(vault, 'Eve.md'), '---\ntype: Person\n---\nknows:: [[Acme]] {since: 1999}');
     const end = Date.now() + 5000;
@@ -146,6 +182,7 @@ describe.skipIf(!available)('ladybug backend', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Stale results flagged]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Freshness before reads#Sync pending]]
   it('answers with a staleness notice when a sync does not settle in time', async () => {
     const busy = { ...sc.sync, graph: sc.sync.graph, idle: () => new Promise<void>(() => {}) } as never;
     const backend = new LadybugBackend(sc.mirror!.store as never, sc.mirror!, busy, { maxPathDepth: 10, timeoutMs: 1000, freshnessWaitMs: 20 });
@@ -156,6 +193,7 @@ describe.skipIf(!available)('ladybug backend', () => {
   });
 
   // @lat: [[tests/ladybug-backend#Errors with position]]
+  // @tg: verifies:: [[openspec:ladybug-backend#Errors reported with position#Syntax error]]
   it('reports syntax errors with a position', async () => {
     const r = await post('MATCH (a RETURN a', 'ladybug');
     expect(r.status).toBe(400);

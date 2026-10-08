@@ -30,9 +30,11 @@ export interface AnnotationScan {
 }
 
 /** How far after a comment run a declaration may start and still be annotated. */
+// @tg: implements:: [[openspec:tg-annotations#Edge source]]
 export const ATTACH_WINDOW = 3;
 
 // Identical to lat.md's pattern so both tools see the same `@lat:` references.
+// @tg: implements:: [[openspec:tg-annotations#lat annotations]]
 const LAT_REF = /(?:\/\/|#)\s*@lat:\s*\[\[([^\]]+)\]\]/g;
 const TG_REF = /(?:\/\/+|#+|--|\/\*+|\*+|<!--|;+)\s*@tg:\s*(.*)$/;
 const COMMENT_LINE = /^\s*(?:\/\/|#|\*|\/\*|\*\/|--|<!--)/;
@@ -56,6 +58,7 @@ function splitSegments(payload: string): string[] {
   return out.map((s) => s.trim()).filter(Boolean);
 }
 
+// @tg: implements:: [[openspec:tg-annotations#tg annotations]]
 function parsePayload(payload: string, path: string, line: number): { edges: AnnotationEdge[]; diagnostics: Diagnostic[] } {
   const edges: AnnotationEdge[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -78,6 +81,7 @@ function commentRunEnd(lines: string[], idx: number): number {
   return end;
 }
 
+// @tg: implements:: [[openspec:tg-annotations#Edge source]]
 function attach(symbols: CodeSymbol[] | null, runEnd1: number): AnnotationSource {
   if (!symbols) return { kind: 'file' };
   let best: CodeSymbol | null = null;
@@ -88,12 +92,31 @@ function attach(symbols: CodeSymbol[] | null, runEnd1: number): AnnotationSource
   return { kind: 'symbol', name: best.name, parent: best.parent, symbolPath: best.parent ? `${best.parent}#${best.name}` : best.name, line: best.startLine };
 }
 
+const TEST_CALL = /^\s*(?:it|test|describe)(?:\.(?:each|skip|only|todo|concurrent|fails)\b)*\s*\(\s*(?:(['"`])((?:\\.|(?!\1).)*)\1)?/;
+
+/**
+ * A test call (`it`, `test`, `describe`) starting on the first non-blank line
+ * after a comment run, within the attach window: its name, or '' when the
+ * name is not a plain string literal. Null when no test call follows.
+ */
+// @tg: implements:: [[openspec:tg-annotations#Edge source]]
+function testCallAfter(lines: string[], runEnd1: number): string | null {
+  for (let j = runEnd1; j < Math.min(lines.length, runEnd1 + ATTACH_WINDOW); j++) {
+    if (!lines[j]!.trim()) continue;
+    const m = TEST_CALL.exec(lines[j]!);
+    return m ? (m[2] ?? '') : null;
+  }
+  return null;
+}
+
 /**
  * Find `@lat:` and `@tg:` annotations in one source file. `path` is
  * project-relative. Annotations attach to the declaration that follows the
  * comment within {@link ATTACH_WINDOW} lines, else to the file with a warning.
  */
 // @lat: [[cli#Annotations]]
+// @tg: implements:: [[openspec:tg-annotations#lat annotations]]
+// @tg: implements:: [[openspec:tg-annotations#tg annotations]]
 export function scanAnnotations(path: string, text: string): AnnotationScan {
   const annotations: Annotation[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -115,6 +138,12 @@ export function scanAnnotations(path: string, text: string): AnnotationScan {
       const { edges, diagnostics: d } = parsePayload(tg[1]!, path, i + 1);
       diagnostics.push(...d);
       if (edges.length) {
+        const testName = testCallAfter(lines, runEnd1);
+        if (testName !== null) {
+          if (testName) for (const e of edges) e.props = { ...e.props, test: testName };
+          annotations.push({ kind: 'tg', file: path, line: i + 1, edges, source: { kind: 'file' } });
+          continue;
+        }
         const source = attach(symbolsOf(), runEnd1);
         if (source.kind === 'file') diagnostics.push({ path, line: i + 1, column: 0, message: `@tg: annotation is not followed by a declaration within ${ATTACH_WINDOW} lines; attached to the file` });
         annotations.push({ kind: 'tg', file: path, line: i + 1, edges, source });

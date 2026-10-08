@@ -5,6 +5,7 @@ import { join } from 'node:path';
 export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', 'lat.md/code-ontology.md', 'ontology/code-types.md'] as const;
 
 /** True when the workspace lacks `lat.md/` or any tg-managed instruction block. */
+// @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
 export function needsSetup(workspace: string): boolean {
   if (!existsSync(join(workspace, 'lat.md'))) return true;
   for (const doc of ['CLAUDE.md', 'AGENTS.md']) {
@@ -31,6 +32,7 @@ export interface SetupDeps {
 
 /** Ask first, then run in a visible terminal; declining runs nothing. Returns whether a command was started. */
 // @lat: [[vscode#Set up TypeGraph]]
+// @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
 export async function runSetup(deps: SetupDeps): Promise<boolean> {
   const command = setupCommand(deps.hasGlobalTg());
   if (!(await deps.confirm(SETUP_FILES, command))) return false;

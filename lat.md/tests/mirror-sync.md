@@ -65,3 +65,11 @@ While a slow initial build runs, status shows syncing and built-in queries still
 ## Real LadybugDB round trip
 
 The real store mirrors the graph (including a reserved `node` edge type), answers Cypher with label-list checks, applies edits incrementally and reopens without a rebuild.
+
+## Corrupt database rebuilt
+
+A mirror database file that LadybugDB cannot open is discarded and rebuilt at startup, and Ladybug queries work afterwards.
+
+## Unopenable mirror leaves sidecar serving
+
+When the mirror store cannot be created or rebuilt, the sidecar starts anyway, reports the mirror `unavailable` with the reason and answers built-in queries.

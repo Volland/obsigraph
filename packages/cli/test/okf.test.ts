@@ -22,6 +22,8 @@ async function tg(cwd: string, ...args: string[]) {
 }
 
 // @lat: [[tests/okf-compat#Check#Check command exit codes]]
+// @tg: verifies:: [[openspec:okf-compat#OKF conformance check#Conformant bundle]]
+// @tg: verifies:: [[openspec:okf-compat#OKF conformance check#Missing type]]
 it('exits 0 on a conformant bundle and 1 on conformance errors', async () => {
   const good = folder({
     'index.md': '---\nokf_version: "0.2"\n---\n# Bundle\n\n* [Orders](tables/orders.md) - Orders.\n',
@@ -42,6 +44,7 @@ it('exits 0 on a conformant bundle and 1 on conformance errors', async () => {
 });
 
 // @lat: [[tests/okf-compat#Check#Export command verifies]]
+// @tg: verifies:: [[openspec:okf-compat#OKF change report#Report shown]]
 it('exports a vault as a verified OKF bundle with a change report', async () => {
   const v = folder({
     'People/Alice.md': '---\ntype: Person\n---\nAlice is a researcher.\n\nknows:: [[Bob]] {since: 2020}\n\n![[diagram.png]]\n',

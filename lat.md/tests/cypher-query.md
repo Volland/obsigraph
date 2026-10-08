@@ -26,6 +26,14 @@ Test specifications for the built-in openCypher subset described in [[query-engi
 
 Valid openCypher outside the subset (`UNWIND`, `UNION`, `CALL`, `CASE`, `=~`, list slicing, `shortestPath`, unsupported aggregates and unknown functions) fails naming the construct.
 
+## Unsupported expression constructs named
+
+List and pattern comprehensions, map projections, pattern predicates and `COUNT {}` or `EXISTS {}` subqueries fail as `unsupported` naming the construct, not as syntax errors.
+
+## Variable-length relationship is a list column
+
+A variable-length relationship variable such as `rs` in `-[rs:knows*1..2]->` is reported as a scalar column whose values are lists of relationships.
+
 ## Syntax errors have positions
 
 Malformed queries and undefined variables fail as syntax errors carrying line and column.

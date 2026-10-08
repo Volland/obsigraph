@@ -57,6 +57,7 @@ export class MemoryStore implements MirrorStore {
 type Lbug = typeof import('@ladybugdb/core');
 
 /** Load the native module; the reason is reported in status when it fails. */
+// @tg: implements:: [[openspec:ladybug-mirror#Mirror is optional]]
 export async function loadLadybug(): Promise<{ lbug: Lbug } | { error: string }> {
   try {
     const m = (await import('@ladybugdb/core')) as Lbug & { default?: Lbug };
@@ -89,6 +90,7 @@ async function rowsOf(conn: Conn, statement: string): Promise<Record<string, unk
  * `obsigraph_none` relationship table keeps impossible patterns valid.
  */
 // @lat: [[ladybug-mirror#Storage layout]]
+// @tg: implements:: [[openspec:ladybug-mirror#Fidelity of labels and properties]]
 export class LadybugStore implements MirrorStore {
   private db: InstanceType<Lbug['Database']> | null = null;
   private conn: Conn | null = null;
@@ -117,6 +119,7 @@ export class LadybugStore implements MirrorStore {
   }
 
   /** A read-only snapshot of the database as of now, for queries. */
+  // @tg: implements:: [[openspec:ladybug-backend#Read-only enforcement]]
   openReadOnly(): { db: InstanceType<Lbug['Database']>; conn: Conn } {
     const db = new this.lbug.Database(this.path, 0, true, true);
     return { db, conn: new this.lbug.Connection(db) };

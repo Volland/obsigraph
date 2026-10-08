@@ -49,6 +49,7 @@ describe('example vault', () => {
   const engine = new BuiltinEngine(graph);
 
   // @lat: [[tests/example-vault#Every guide query runs]]
+  // @tg: verifies:: [[openspec:example-vault#Every guide query runs#Guide queries checked]]
   it.each(blocks.filter((b) => b.path !== PLAYGROUND).map((b) => [`${b.path}:${b.line}`, b] as const))('%s runs and returns rows', (_, b) => {
     const block = parseBlock(b.source);
     expect(block.errors).toEqual([]);
@@ -60,6 +61,7 @@ describe('example vault', () => {
   });
 
   // @lat: [[tests/example-vault#Playground queries fail clearly]]
+  // @tg: verifies:: [[openspec:example-vault#Playground queries fail clearly#Write query in the playground]]
   it('reports the playground queries as positioned or read-only errors', () => {
     const broken = blocks.filter((b) => b.path === PLAYGROUND);
     expect(broken).toHaveLength(2);
@@ -76,6 +78,7 @@ describe('example vault', () => {
   });
 
   // @lat: [[tests/example-vault#Embeds resolve]]
+  // @tg: verifies:: [[openspec:example-vault#Embeds resolve#Only the deliberate miss]]
   it('resolves every embed outside the playground, and leaves the playground miss unresolved', () => {
     for (const n of notes) {
       for (const occ of findEmbeds(n.text)) {
@@ -88,6 +91,7 @@ describe('example vault', () => {
   });
 
   // @lat: [[tests/example-vault#Deliberate diagnostics only]]
+  // @tg: verifies:: [[openspec:example-vault#Deliberate diagnostics only#Diagnostics listed]]
   it('reports exactly the deliberate schema and syntax problems', () => {
     const issues = validateSchemas(graph, schemasFromGraph(graph, 'Types'));
     const where = issues.map((d) => d.path).sort();

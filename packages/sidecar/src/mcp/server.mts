@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { BackendUnavailable } from '../ladybug/backend.mjs';
 import { InputError, type Ops } from '../ops.mjs';
 import { UNTRUSTED_NOTICE } from '../rag/retrieve.mjs';
+import { VERSION } from '../version.mjs';
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 
@@ -25,8 +26,13 @@ async function answer(fn: () => Promise<unknown>) {
  * built per HTTP request (stateless) or once for stdio.
  */
 // @lat: [[sidecar#Interfaces]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#Cypher query tool]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#MCP server with three tools]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#Read-only tools]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#Server identity]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#Vector search tool]]
 export function createMcpServer(ops: Ops): McpServer {
-  const server = new McpServer({ name: 'typed-graph', version: '0.4.1' });
+  const server = new McpServer({ name: 'typed-graph', version: VERSION });
 
   server.registerTool(
     'cypher_query',
@@ -50,12 +56,15 @@ export function createMcpServer(ops: Ops): McpServer {
     'vector_search',
     {
       title: 'Semantic search over notes or relationships',
-      description: `Find notes (target "nodes") or relationships (target "edges") by meaning. Node results cite the best matching chunk with path and heading. ${UNTRUSTED_NOTICE}`,
+      description: `Find notes (target "nodes") or relationships (target "edges") by meaning. Node results cite the best matching chunk with path and heading. An optional "then" Cypher query runs over the hits as $hits and its result comes back with them. ${UNTRUSTED_NOTICE}`,
       inputSchema: {
         query: z.string(),
         target: z.enum(['nodes', 'edges']).optional(),
         k: z.number().int().min(1).max(100).optional(),
         types: z.array(z.string()).optional().describe('Only nodes with one of these types'),
+        mode: z.enum(['best', 'pooled']).optional().describe('Node score: best chunk (default) or pooled chunk vector'),
+        then: z.string().optional().describe('Follow-up read-only Cypher query run after the search with the hit ids bound to $hits'),
+        backend: z.enum(['builtin', 'ladybug']).optional().describe('Backend for the `then` query'),
       },
       annotations: READ_ONLY,
     },

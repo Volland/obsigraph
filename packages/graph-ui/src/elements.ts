@@ -22,6 +22,7 @@ export interface GraphElements {
   edges: EdgeElement[];
 }
 
+// @tg: implements:: [[openspec:graph-view#Shared renderer]]
 export function nodeElement(n: GraphNode): NodeElement {
   const title = n.props.title;
   return {
@@ -73,6 +74,7 @@ export function sameElementSet(shown: { has(id: string): boolean; size: number }
   return ids.length === shown.size && ids.every((id) => shown.has(id));
 }
 
+// @tg: implements:: [[openspec:graph-query-block#Large results are bounded]]
 export function elementCount(g: GraphElements): number {
   return g.nodes.length + g.edges.length;
 }

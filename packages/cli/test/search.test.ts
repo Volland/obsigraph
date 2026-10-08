@@ -43,6 +43,7 @@ async function tg(cwd: string, env: Record<string, string>, f: typeof fetch | un
 }
 
 // @lat: [[tests/tg-search#Lexical default#No configuration]]
+// @tg: verifies:: [[openspec:tg-search#Lexical default#No configuration]]
 it('searches lexically with no configuration and no network', async () => {
   const dir = project();
   const forbidden = (async () => {
@@ -55,6 +56,7 @@ it('searches lexically with no configuration and no network', async () => {
 });
 
 // @lat: [[tests/tg-search#Lexical default#Title outranks body]]
+// @tg: verifies:: [[openspec:tg-search#Lexical default#Title outranks body]]
 it('ranks the section titled with the query above one that only mentions it', async () => {
   const r = await tg(project(), {}, undefined, 'search', 'edge syntax', '--json');
   const ids = (JSON.parse(r.out) as { hits: { id: string }[] }).hits.map((h) => h.id);
@@ -63,6 +65,7 @@ it('ranks the section titled with the query above one that only mentions it', as
 });
 
 // @lat: [[tests/tg-search#Hybrid ranking#Provider configured]]
+// @tg: verifies:: [[openspec:tg-search#Hybrid ranking#Provider configured]]
 it('fuses lexical and vector ranks when a provider is configured', async () => {
   const dir = project();
   const f = fakeFetch();
@@ -76,6 +79,7 @@ it('fuses lexical and vector ranks when a provider is configured', async () => {
 });
 
 // @lat: [[tests/tg-search#Hybrid ranking#Provider down]]
+// @tg: verifies:: [[openspec:tg-search#Hybrid ranking#Provider down]]
 it('falls back to lexical results with a notice when the provider fails', async () => {
   const f = fakeFetch({ fail: true });
   const r = await tg(project(), { TG_EMBED_PROVIDER: 'ollama' }, f.impl, 'search', 'typed edges');
@@ -85,6 +89,7 @@ it('falls back to lexical results with a notice when the provider fails', async 
 });
 
 // @lat: [[tests/tg-search#Key variable aliases#Alias honored]]
+// @tg: verifies:: [[openspec:tg-search#Key variable aliases#Alias honored]]
 it('uses LAT_LLM_KEY as the provider key', async () => {
   const f = fakeFetch();
   const r = await tg(project(), { LAT_LLM_KEY: 'sk-test-123' }, f.impl, 'search', 'login', '--json');
@@ -93,7 +98,19 @@ it('uses LAT_LLM_KEY as the provider key', async () => {
   expect(f.calls[0]!.headers.authorization).toBe('Bearer sk-test-123');
 });
 
+// @lat: [[tests/tg-search#Key variable aliases#TG variables win over aliases]]
+it('prefers TG_EMBED_KEY_FILE over LAT_LLM_KEY', async () => {
+  const dir = project();
+  const keyFile = join(dir, 'key.txt');
+  writeFileSync(keyFile, 'sk-from-file\n');
+  const f = fakeFetch();
+  const r = await tg(dir, { TG_EMBED_KEY_FILE: keyFile, LAT_LLM_KEY: 'sk-from-alias' }, f.impl, 'search', 'login', '--json');
+  expect(r.code).toBe(0);
+  expect(f.calls[0]!.headers.authorization).toBe('Bearer sk-from-file');
+});
+
 // @lat: [[tests/tg-search#Key variable aliases#Not written to disk]]
+// @tg: verifies:: [[openspec:tg-search#Key variable aliases#Not written to disk]]
 it('never persists a key', async () => {
   const dir = project();
   await tg(dir, { LAT_LLM_KEY: 'sk-secret-xyz' }, fakeFetch().impl, 'search', 'login');
@@ -103,6 +120,7 @@ it('never persists a key', async () => {
 });
 
 // @lat: [[tests/tg-search#Derived cache#Cache deleted]]
+// @tg: verifies:: [[openspec:tg-search#Derived cache#Cache deleted]]
 it('recreates a deleted cache and reuses unchanged vectors on reindex', async () => {
   const dir = project();
   const env = { TG_EMBED_PROVIDER: 'ollama' };

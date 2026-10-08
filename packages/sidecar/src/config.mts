@@ -48,6 +48,8 @@ function int(env: NodeJS.ProcessEnv, name: string, fallback: number, min = 0): n
  * the vault must be readable, the data directory must exist and be writable.
  */
 // @lat: [[sidecar#Security]]
+// @tg: implements:: [[openspec:sidecar-service#Read-only vault access]]
+// @tg: implements:: [[openspec:sidecar-service#Safe default network binding]]
 export function loadConfig(env: NodeJS.ProcessEnv = process.env, opts: { requireToken?: boolean } = {}): Config {
   const vaultDir = resolve(env.OBSIGRAPH_VAULT ?? '/vault');
   const dataDir = resolve(env.OBSIGRAPH_DATA ?? '/data');

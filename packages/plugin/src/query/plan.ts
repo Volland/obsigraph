@@ -12,6 +12,9 @@ export type RenderPlan =
  * `view` option, with a table fallback when the graph exceeds the element cap.
  */
 // @lat: [[query-engine#Query block]]
+// @tg: implements:: [[openspec:code-layer#Visible on demand]]
+// @tg: implements:: [[openspec:graph-query-block#Large results are bounded]]
+// @tg: implements:: [[openspec:graph-query-block#Renderer chosen by result shape]]
 export function planRender(
   result: QueryResult,
   options: BlockOptions,

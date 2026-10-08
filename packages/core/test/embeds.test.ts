@@ -24,6 +24,7 @@ const show = (graph: Graph, raw: string, from = 'Notes.md') => {
 
 describe('edge embeds', () => {
   // @lat: [[tests/edge-embeds#Value by endpoints]]
+  // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Value rendered]]
   it('renders a property value found by source, type and target', () => {
     const graph = people('knows:: [[Bob]] {since: 2020}');
     expect(show(graph, 'Alice -knows-> Bob . since')).toEqual({ kind: 'value', text: '2020' });
@@ -31,6 +32,7 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Signed type]]
+  // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Signed type]]
   it('matches negative edges with an explicit or omitted sign', () => {
     const graph = people('-distrusts:: [[Eve]] {since: 2019}');
     expect(show(graph, 'Alice --distrusts-> Eve . since')).toEqual({ kind: 'value', text: '2019' });
@@ -38,6 +40,7 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Sign mismatch unresolved]]
+  // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Sign mismatch]]
   it('does not resolve when the embed sign differs from the edge sign', () => {
     const graph = people('knows:: [[Bob]] {since: 2020}');
     expect(show(graph, 'Alice --knows-> Bob . since')).toEqual({ kind: 'unresolved', text: 'edge not found: Alice --knows-> Bob' });
@@ -45,6 +48,8 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Value by pinned id]]
+  // @tg: verifies:: [[openspec:edge-embeds#Embed by pinned ID#Resolve by ID]]
+  // @tg: verifies:: [[openspec:edge-embeds#Embed by pinned ID#Unknown ID]]
   it('resolves by pinned id and names unknown ids', () => {
     const graph = people('knows:: [[Bob]] {id: "met-2020", since: 2020}');
     expect(show(graph, 'met-2020 . since')).toEqual({ kind: 'value', text: '2020' });
@@ -52,6 +57,8 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Whole block as table]]
+  // @tg: verifies:: [[openspec:edge-embeds#Whole property block as table#Edge without properties]]
+  // @tg: verifies:: [[openspec:edge-embeds#Whole property block as table#Table rendered]]
   it('renders the whole property block as a table, or an empty state', () => {
     const graph = people('knows:: [[Bob]] {id: "met-2020", since: 2020, label: "met at conf"}\nlikes:: [[Eve]]');
     expect(show(graph, 'met-2020')).toEqual({ kind: 'table', rows: [['id', 'met-2020'], ['since', '2020'], ['label', 'met at conf']] });
@@ -59,6 +66,8 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Missing property or edge]]
+  // @tg: verifies:: [[openspec:edge-embeds#Missing property and unresolved embeds#Edge not found]]
+  // @tg: verifies:: [[openspec:edge-embeds#Missing property and unresolved embeds#Property absent]]
   it('marks a missing property or edge as unresolved without throwing', () => {
     const graph = people('knows:: [[Bob]]');
     expect(show(graph, 'Alice -knows-> Bob . since')).toEqual({ kind: 'unresolved', text: "edge has no property 'since'" });
@@ -68,6 +77,7 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Ambiguous endpoints]]
+  // @tg: verifies:: [[openspec:edge-embeds#Ambiguous endpoint embeds#Duplicate edges]]
   it('renders the first of duplicate edges and warns about ambiguity', () => {
     const graph = people('knows:: [[Bob]] {since: 2020}\nknows:: [[Bob]] {since: 2023}');
     expect(show(graph, 'Alice -knows-> Bob . since')).toEqual({ kind: 'value', text: '2020' });
@@ -77,6 +87,9 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Pinned id warnings]]
+  // @tg: verifies:: [[openspec:edge-embeds#Pinned-ID warnings#No warning when pinned]]
+  // @tg: verifies:: [[openspec:edge-embeds#Pinned-ID warnings#Unreferenced unpinned edge]]
+  // @tg: verifies:: [[openspec:edge-embeds#Pinned-ID warnings#Warning for unpinned reference]]
   it('warns only for unpinned edges referenced by endpoints, suggesting an id', () => {
     const graph = people('knows:: [[Bob]] {since: 2020}\nlikes:: [[Eve]] {id: "a-likes-e"}\ntrusts:: [[Eve]]');
     const idx = new EmbedIndex();
@@ -93,6 +106,7 @@ describe('edge embeds', () => {
   });
 
   // @lat: [[tests/edge-embeds#Live value refresh]]
+  // @tg: verifies:: [[openspec:edge-embeds#Live refresh#Value edited]]
   it('shows the new value after the edge is edited', () => {
     const graph = people('knows:: [[Bob]] {since: 2020}');
     expect(show(graph, 'Alice -knows-> Bob . since')).toEqual({ kind: 'value', text: '2020' });

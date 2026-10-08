@@ -18,7 +18,7 @@ export interface FindMatch {
   reason: string;
 }
 
-function levenshtein(a: string, b: string): number {
+export function levenshtein(a: string, b: string): number {
   const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
   for (let i = 0; i <= a.length; i++) dp[i]![0] = i;
   for (let j = 0; j <= b.length; j++) dp[0]![j] = j;
@@ -98,6 +98,7 @@ export class LatIndex {
     return this.flatCache;
   }
 
+  // @tg: implements:: [[openspec:lat-resolver#Section ids]]
   section(id: string): Section | undefined {
     return this.byId.get(id.toLowerCase());
   }
@@ -108,6 +109,7 @@ export class LatIndex {
   }
 
   /** Expand a possibly short section ref to its canonical form; reports ambiguity instead of guessing. */
+  // @tg: implements:: [[openspec:lat-resolver#Section ids]]
   resolveRef(rawTarget: string): { resolved: string; ambiguous: string[] | null; suggested: string | null } {
     const target = normalizeRefFilePath(rawTarget);
     if (this.ids.has(target.toLowerCase())) return { resolved: target, ambiguous: null, suggested: null };
@@ -140,6 +142,7 @@ export class LatIndex {
   }
 
   /** Resolve one wiki-link target to a section, a code target, or a failure kind. */
+  // @tg: implements:: [[openspec:lat-resolver#Link resolution]]
   resolve(target: string): LinkResult {
     const r = this.resolveRef(target);
     if (r.ambiguous) return { kind: 'ambiguous', candidates: r.ambiguous, suggested: r.suggested };

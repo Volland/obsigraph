@@ -38,6 +38,8 @@ function str(s: string): string {
  * the plugin's semantics and column names.
  */
 // @lat: [[ladybug-mirror#Storage layout]]
+// @tg: implements:: [[openspec:ladybug-backend#Same interface and result contract]]
+// @tg: implements:: [[openspec:ladybug-backend#Sign, id and stub properties]]
 export function transpile(q: Query, ctx: TranspileContext): Transpiled {
   return new Transpiler(ctx).run(q);
 }

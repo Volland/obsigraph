@@ -6,6 +6,7 @@ afterEach(() => resetProviders());
 const names = (path: string, text: string) => scanFile(path, text)!.symbols.map((s) => (s.parent ? `${s.parent}#${s.name}` : s.name));
 
 // @lat: [[tests/symbol-provider#Symbol discovery#Class method]]
+// @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Class method]]
 it('finds TypeScript classes with their methods and top-level declarations', () => {
   const ts = `
 export class App {
@@ -28,6 +29,7 @@ export interface Opts { a: number }
 });
 
 // @lat: [[tests/symbol-provider#Symbol discovery#Python function]]
+// @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Python function]]
 it('finds Python functions, classes and methods', () => {
   const py = `import os\n\nCONST = 3\n\ndef parse_args():\n    """doc with def fake():"""\n    return 1\n\nclass Greeter:\n    def greet(self):\n        def inner(): pass\n    async def wave(self): ...\n\nasync def go(): pass\n`;
   expect(names('a.py', py)).toEqual(['CONST', 'parse_args', 'Greeter', 'Greeter#greet', 'Greeter#wave', 'go']);
@@ -51,6 +53,7 @@ it('finds Go, Rust and C symbols', () => {
 });
 
 // @lat: [[tests/symbol-provider#Symbol discovery#Node ES-module sources]]
+// @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Node ES-module sources]]
 it('treats .mts and .cts as TypeScript and .mjs as JavaScript', () => {
   expect(langOfFile('src/main.mts')).toBe('typescript');
   expect(langOfFile('x.cts')).toBe('typescript');
@@ -59,6 +62,7 @@ it('treats .mts and .cts as TypeScript and .mjs as JavaScript', () => {
 });
 
 // @lat: [[tests/symbol-provider#Honest lookup#Absent symbol]]
+// @tg: verifies:: [[openspec:symbol-provider#Honest lookup#Absent symbol]]
 it('reports absent for a symbol missing from a cleanly scanned file', () => {
   expect(lookupSymbol('a.ts', 'export function here() {}\n', 'gone')).toEqual({ status: 'absent' });
   expect(lookupSymbol('a.ts', 'export function here() {}\n', 'here').status).toBe('found');
@@ -68,6 +72,7 @@ it('reports absent for a symbol missing from a cleanly scanned file', () => {
 });
 
 // @lat: [[tests/symbol-provider#Honest lookup#Unsupported language]]
+// @tg: verifies:: [[openspec:symbol-provider#Honest lookup#Unsupported language]]
 it('reports unresolvable for an unsupported language or unreadable file', () => {
   expect(lookupSymbol('a.rb', 'def x; end', 'x')).toEqual({ status: 'unresolvable', reason: 'unsupported-language' });
   expect(lookupSymbol('a.ts', null, 'x')).toEqual({ status: 'unresolvable', reason: 'unreadable' });
@@ -86,6 +91,7 @@ it('honors gitignore patterns', () => {
 });
 
 // @lat: [[tests/symbol-provider#Replaceable provider#Registered provider]]
+// @tg: verifies:: [[openspec:symbol-provider#Replaceable provider#Registered provider]]
 it('uses a registered provider instead of the built-in finder', () => {
   const custom: SymbolProvider = { scan: () => ({ symbols: [{ name: 'fromCustom', kind: 'function', parent: null, startLine: 1, endLine: 1, signature: '' }], reliable: true }) };
   registerProvider('typescript', custom);

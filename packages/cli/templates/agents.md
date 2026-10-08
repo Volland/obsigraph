@@ -37,6 +37,7 @@ Run `tg --help` when in doubt about available commands or options.
 - **Wiki links**: `[[target]]` or `[[target|alias]]` — cross-references between sections. Can also reference source code: `[[src/foo.ts#myFunction]]`, `[[src/server.ts#App#listen]]` (class method).
 - **Code refs**: `// @lat: [[section-id]]` (JS/TS/Rust/Go/C) or `# @lat: [[section-id]]` (Python) — a plain link from code to a concept.
 - **Typed code edges**: `// @tg: implements:: [[auth#Login]] {since: 2}` — a labeled edge from the next declaration to a section; `-contradicts::` makes it negative; a bare `// @tg: [[x]]` equals `@lat:`.
+- **OpenSpec requirements**: if the project has `openspec/`, point code at the requirement it realizes with `// @tg: implements:: [[openspec:<capability>#<Requirement>]]` and tests at the scenario they prove with `// @tg: verifies:: [[openspec:<capability>#<Requirement>#<Scenario>]]` directly above the `it(`. List the capabilities a lat.md file explains as `openspec: [capability]` in its frontmatter. `tg trace --gaps` shows what is unimplemented or unverified.
 
 - **Ontology**: if `lat.md/code-ontology.md` exists, use its edge names (`implements`, `verifies`, `-contradicts`, ...) instead of inventing synonyms, and give a file of decisions or requirements a `type:` in its frontmatter so `tg cypher` can label it.
 

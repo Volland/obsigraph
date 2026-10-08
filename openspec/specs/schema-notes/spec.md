@@ -85,11 +85,11 @@ The system SHALL provide a command that asks for a type and a title and creates 
 - **THEN** the command reports the conflict and leaves the existing note unchanged
 
 ### Requirement: Schema changes take effect live
-The system SHALL re-read a schema when its note changes, and SHALL update diagnostics for affected notes without a restart.
+The system SHALL re-read a schema when its note changes, and SHALL update diagnostics for affected notes in the same vault index update that processes the change, without reopening the vault or restarting the plugin.
 
 #### Scenario: Required flag added
 - **WHEN** the user marks `born` as required in `Types/Person.md`
-- **THEN** Person notes without `born` gain a diagnostic shortly after the edit
+- **THEN** after the index processes that change, Person notes without `born` have a diagnostic, with no restart
 
 ### Requirement: Duplicate type declarations
 The system SHALL report a diagnostic naming both notes when the same type or edge type is declared in more than one place, and SHALL use the declaration from the note whose path sorts first.
@@ -148,3 +148,21 @@ The system SHALL accept an optional `uri` on types, properties and edge types as
 #### Scenario: Unknown prefix
 - **WHEN** a type declares `uri: ex:Thing` and no schema note defines prefix `ex`
 - **THEN** a diagnostic names the type and the prefix
+
+### Requirement: Multi-label validation
+The system SHALL validate a note with several types against the merge of their schemas: the first declaration of a property wins, allowed edge types are the union of all types' edges, the targets of an edge type are the union of its targets, any-target wins over a target list, and `many` and `required` hold when any type sets them.
+
+#### Scenario: Edges from both types allowed
+- **WHEN** a note has `type: [Person, Employee]`, `Person` allows only `knows` and `Employee` allows only `works_at`
+- **THEN** the note's `knows` and `works_at` edges produce no diagnostic
+
+#### Scenario: Required from one type
+- **WHEN** `Employee` requires `employer` and a note typed `[Person, Employee]` lacks it
+- **THEN** the note is reported as missing `employer`
+
+### Requirement: Malformed declarations reported
+The system SHALL report a malformed declaration (a `schema` that is not a mapping, `edges` that is neither a list nor a mapping, invalid `from` or `to`, a non-string `uri` or `template`, an invalid prefix IRI) as a diagnostic naming the schema note and the key, and SHALL ignore only the malformed part.
+
+#### Scenario: Bad edges value
+- **WHEN** `Types/Person.md` declares `edges: 5` and a valid `properties` block
+- **THEN** a diagnostic names `Types/Person.md` and `edges`, and the declared properties still validate Person notes

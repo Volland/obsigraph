@@ -1,3 +1,6 @@
+---
+openspec: [vscode-extension]
+---
 # VS Code Extension
 
 A VS Code extension that shows typed backlinks and the graph for a workspace's markdown and annotated code without Obsidian, and leads users to set up the `tg` CLI.
@@ -14,13 +17,13 @@ The extension builds the typed graph in process from the configured roots and ke
 
 The Backlinks view lists, for the active file, what points at it, grouped by edge type with sign and properties; click opens the source at the line.
 
-[[packages/vscode/src/backlinks.ts#backlinksFor]] is pure over the index. For a note it groups incoming note edges by type and adds a `referenced from code` group built from annotations, because the code layer's graph edges would lose the heading written in the comment. For a source file it lists the notes its `@lat` and `@tg` annotations point at, with the link as written. It works at whole-file granularity; tracking the cursor's symbol is a later step. Files outside the roots or without edges give an empty result and the view shows a short message.
+[[packages/vscode/src/backlinks.ts#backlinksFor]] is pure over the index. For a note it groups incoming note edges by type and adds a `referenced from code` group built from annotations, because the code layer's graph edges would lose the heading written in the comment. For a source file it lists the notes its `@lat` and `@tg` annotations point at, with the link as written. It works at whole-file granularity; tracking the cursor's symbol is a later step. Files outside the roots or without edges give an empty result. [[packages/vscode/src/backlinks.ts#panelRows]] turns that into the view's rows: a file outside `typegraph.roots` (or outside the workspace folder) gets its own message, distinct from "No typed edges". While setup is needed, the view returns no rows when no file is active, because VS Code shows the viewsWelcome "Set up TypeGraph" content only for an empty tree, and otherwise appends a "Set up TypeGraph" row after the backlinks so the offer never blocks them.
 
 ## Graph webview
 
 A webview renders the active file's neighborhood with the shared renderer, using VS Code theme colors.
 
-The extension host owns the graph and posts plain element data; the webview bundle runs `graph-ui`, because Cytoscape needs a DOM. [[packages/vscode/src/graph-session.ts#GraphSession]] merges the active file's neighborhood with the neighborhoods of expanded nodes, so expansions survive refreshes and vanish when their nodes do. Expand is right-click or long-press, open is double-click, the same as the Obsidian leaf.
+The extension host owns the graph and posts plain element data; the webview bundle runs `graph-ui`, because Cytoscape needs a DOM. [[packages/vscode/src/graph-session.ts#GraphSession]] merges the active file's neighborhood with the neighborhoods of expanded nodes, so expansions survive refreshes of the same file and vanish when their nodes do. Switching the active file clears them, as Obsidian does; when no text editor is active, for example while the webview has focus, the session keeps the last file and its expansions. Nodes use the built-in type styles only: the webview passes no schema-note or settings styles to the styler. Expand is right-click or long-press, open is double-click, the same as the Obsidian leaf.
 
 ## Set up TypeGraph
 

@@ -20,6 +20,12 @@ const loc = (s: Section): string => `${s.filePath}:${s.startLine}-${s.endLine}`;
 const quote = (s: string): string => s.split('\n').map((l) => (l ? `  > ${l}` : '  >')).join('\n');
 const trunc = (s: string, n = 80): string => (s.length > n ? `${s.slice(0, n - 3)}...` : s);
 
+/** No section matched: one JSON document under --json, else the text message; exit 1 either way. */
+function noMatch(ctx: Ctx, query: string, message: string): number {
+  ctx.out(ctx.json ? `${JSON.stringify({ query, found: false, message })}\n` : `${message}\n`);
+  return EXIT_FINDINGS;
+}
+
 function preview(m: FindMatch, label?: string): string {
   const s = m.section;
   return [`* Section: [[${s.id}]] (${label ?? m.reason})`, `  Defined in ${loc(s)}`, '', s.firstParagraph ? quote(s.firstParagraph) : '  > (no leading paragraph)', ''].join('\n');
@@ -46,6 +52,7 @@ function around(project: Project, file: string, line: number): string[] {
   return lines.slice(Math.max(0, line - 3), line + 3).map((l) => `  | ${l}`);
 }
 
+// @tg: implements:: [[openspec:tg-check#Locate and section]]
 export const locate: Command = {
   name: 'locate',
   summary: 'Find sections by id, short id or fuzzy name',
@@ -76,6 +83,7 @@ function refsOfSection(index: LatIndex, s: Section) {
   return index.refs().filter((r) => r.fromSection === s.id);
 }
 
+// @tg: implements:: [[openspec:tg-check#Locate and section]]
 export const section: Command = {
   name: 'section',
   summary: 'Show a section with its content, outgoing references and incoming references',
@@ -86,10 +94,7 @@ export const section: Command = {
     const query = strip(args.join(' '));
     const index = project.index();
     const match = index.find(query)[0];
-    if (!match) {
-      ctx.out(`No sections matching "${query}"\n`);
-      return EXIT_FINDINGS;
-    }
+    if (!match) return noMatch(ctx, query, `No sections matching "${query}"`);
     const s = match.section;
     const out: Section[] = [];
     const outgoing: string[] = [];
@@ -134,6 +139,7 @@ export const section: Command = {
   },
 };
 
+// @tg: implements:: [[openspec:tg-check#Refs and expand]]
 export const refs: Command = {
   name: 'refs',
   summary: 'Find sections and code that reference a section',
@@ -150,10 +156,7 @@ export const refs: Command = {
     const query = strip(args.join(' '));
     const index = project.index();
     const match = index.find(query)[0];
-    if (!match) {
-      ctx.out(`No section matching "${query}"\n`);
-      return EXIT_FINDINGS;
-    }
+    if (!match) return noMatch(ctx, query, `No section matching "${query}"`);
     const s = match.section;
     const mdFrom: Section[] = [];
     if (scope !== 'code') {
@@ -177,6 +180,7 @@ export const refs: Command = {
   },
 };
 
+// @tg: implements:: [[openspec:tg-check#Refs and expand]]
 export const expand: Command = {
   name: 'expand',
   summary: 'Expand [[refs]] in text to section locations',
@@ -188,26 +192,27 @@ export const expand: Command = {
     const text = flags.has('stdin') ? readFileSync(0, 'utf8') : args.join(' ');
     const index = project.index();
     const found: { raw: string; section: Section }[] = [];
-    let failed: string | null = null;
+    const failed: string[] = [];
     const replaced = text.replace(/\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, (whole, raw: string) => {
       const m = index.find(raw.trim())[0];
       if (!m) {
-        failed ??= raw;
+        failed.push(raw);
         return whole;
       }
       found.push({ raw, section: m.section });
       return `[[${m.section.id}]]`;
     });
-    if (failed !== null) {
-      ctx.out(`No section found for [[${failed}]] (no exact, substring, or fuzzy matches).\nAsk the user to correct the reference.\n`);
+    if (ctx.json) {
+      // One document in every case: unresolved refs are listed and still exit 1.
+      ctx.out(`${JSON.stringify({ text: replaced, refs: found.map((f) => ({ ref: f.raw, id: f.section.id, location: loc(f.section), summary: f.section.firstParagraph })), unresolved: failed })}\n`);
+      return failed.length ? EXIT_FINDINGS : EXIT_OK;
+    }
+    if (failed.length) {
+      ctx.out(`No section found for [[${failed[0]}]] (no exact, substring, or fuzzy matches).\nAsk the user to correct the reference.\n`);
       return EXIT_FINDINGS;
     }
     if (!found.length) {
       ctx.out(text);
-      return EXIT_OK;
-    }
-    if (ctx.json) {
-      ctx.out(`${JSON.stringify({ text: replaced, refs: found.map((f) => ({ ref: f.raw, id: f.section.id, location: loc(f.section), summary: f.section.firstParagraph })) })}\n`);
       return EXIT_OK;
     }
     const ctxLines = ['<lat-context>'];

@@ -1,7 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { posix } from 'node:path';
 import * as vscode from 'vscode';
-import { backlinksFor, type BacklinkGroup, type BacklinkItem } from './backlinks';
+import { panelRows, type ActiveFile, type BacklinkGroup, type BacklinkItem } from './backlinks';
 import { GraphSession } from './graph-session';
 import { BAD_TITLE, luhmannParentOf, planWorkspaceNote, typesIn } from './new-note';
 import { needsSetup, runSetup } from './setup';
@@ -9,9 +8,15 @@ import { WorkspaceIndex } from './workspace-index';
 
 const SOURCE_GLOB = '**/*.{md,ts,tsx,js,jsx,py,rs,go,c,h,mts,cts,mjs,cjs}';
 
-type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: BacklinkItem; folder: string } | { kind: 'empty'; text: string };
+type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: BacklinkItem; folder: string } | { kind: 'message'; text: string } | { kind: 'setup' };
 
 /** Thin VS Code adapter: everything it shows is computed by the pure modules next to it. */
+// @tg: implements:: [[openspec:vscode-extension#Empty and unsupported states]]
+// @tg: implements:: [[openspec:vscode-extension#Graph webview]]
+// @tg: implements:: [[openspec:vscode-extension#Index the workspace in process]]
+// @tg: implements:: [[openspec:vscode-extension#No telemetry]]
+// @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
+// @tg: implements:: [[openspec:vscode-extension#Typed backlinks for notes]]
 export function activate(context: vscode.ExtensionContext): void {
   const folder = vscode.workspace.workspaceFolders?.[0];
   const changed = new vscode.EventEmitter<void>();
@@ -31,6 +36,14 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!doc || !folder || doc.uri.scheme !== 'file') return null;
     const rel = vscode.workspace.asRelativePath(doc.uri, false);
     return rel.startsWith('..') ? null : rel.split('\\').join('/');
+  };
+
+  /** The active file, flagged when it lies outside the workspace folder. */
+  const activeFile = (): ActiveFile | null => {
+    const doc = vscode.window.activeTextEditor?.document;
+    if (!doc || !folder || doc.uri.scheme !== 'file') return null;
+    const path = activePath();
+    return path ? { path, inWorkspace: true } : { path: doc.uri.fsPath, inWorkspace: false };
   };
 
   const refreshContext = () => {
@@ -70,7 +83,13 @@ export function activate(context: vscode.ExtensionContext): void {
   const tree: vscode.TreeDataProvider<Node> = {
     onDidChangeTreeData: changed.event,
     getTreeItem(n) {
-      if (n.kind === 'empty') return new vscode.TreeItem(n.text);
+      if (n.kind === 'message') return new vscode.TreeItem(n.text);
+      if (n.kind === 'setup') {
+        const t = new vscode.TreeItem('Set up TypeGraph');
+        t.iconPath = new vscode.ThemeIcon('tools');
+        t.command = { command: 'typegraph.setup', title: 'Set up TypeGraph' };
+        return t;
+      }
       if (n.kind === 'group') {
         const t = new vscode.TreeItem(`${n.group.title} (${n.group.items.length})`, vscode.TreeItemCollapsibleState.Expanded);
         t.iconPath = new vscode.ThemeIcon('symbol-event');
@@ -86,15 +105,12 @@ export function activate(context: vscode.ExtensionContext): void {
       return t;
     },
     async getChildren(n) {
-      if (!folder) return [{ kind: 'empty', text: 'Open a folder to see backlinks.' }];
+      if (!folder) return [{ kind: 'message', text: 'Open a folder to see backlinks.' }];
       await ensureLoaded();
       if (n?.kind === 'group') return n.group.items.map((item) => ({ kind: 'item', item, folder: folder.uri.fsPath }));
       if (n) return [];
-      const path = activePath();
-      if (!path || !index) return [{ kind: 'empty', text: 'Open a markdown or source file.' }];
-      const r = backlinksFor(index, path);
-      if (r.kind === 'empty') return [{ kind: 'empty', text: `No typed edges for ${posix.basename(path)}.` }];
-      return r.groups.map((group) => ({ kind: 'group', group }));
+      if (!index) return [];
+      return panelRows(index, activeFile(), needsSetup(folder.uri.fsPath));
     },
   };
 

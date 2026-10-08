@@ -77,6 +77,7 @@ describe('Plugin install', () => {
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
   // @lat: [[tests/plugin-install#Plugin Install Tests#Manifest is installable]]
+  // @tg: verifies:: [[openspec:plugin-install#Manifest is installable#Versions in step]]
   it('ships a manifest Obsidian accepts, the same everywhere it is read', () => {
     expect(manifestProblems(rootManifest)).toEqual([]);
     expect(readJson(join(PLUGIN, 'manifest.json'))).toEqual(rootManifest);
@@ -85,6 +86,7 @@ describe('Plugin install', () => {
   });
 
   // @lat: [[tests/plugin-install#Plugin Install Tests#Release attaches the installer assets]]
+  // @tg: verifies:: [[openspec:plugin-install#Release attaches the installer assets#Release workflow assets]]
   it('attaches every asset the installer downloads to the release', () => {
     const workflow = readFileSync(join(REPO_ROOT, '.github/workflows/release.yml'), 'utf8');
     const create = workflow.slice(workflow.indexOf('gh release create'));
@@ -92,6 +94,7 @@ describe('Plugin install', () => {
   });
 
   // @lat: [[tests/plugin-install#Plugin Install Tests#Bundle loads in Obsidian]]
+  // @tg: verifies:: [[openspec:plugin-install#Bundle loads in Obsidian#Load and unload]]
   it('loads the installed main.js and runs onload and onunload', async () => {
     const { exported: PluginClass, required } = loadBundle(readFileSync(join(pluginDir, 'main.js'), 'utf8'));
     expect(required.filter((id) => !HOST_MODULES.test(id))).toEqual([]);
@@ -103,6 +106,7 @@ describe('Plugin install', () => {
   });
 
   // @lat: [[tests/plugin-install#Plugin Install Tests#Missing release is reported]]
+  // @tg: verifies:: [[openspec:plugin-install#Missing release is reported#Version without a release]], verifies:: [[openspec:plugin-install#Missing release is reported#Complete release]]
   it('reports a manifest on main whose release was never published', async () => {
     const served = (urls: Record<string, string>) => async (url: string) =>
       url in urls ? new Response(urls[url]) : new Response('Not Found', { status: 404 });

@@ -45,6 +45,7 @@ interface FileState {
  * links, typed edges with derived or pinned IDs. Updates are per file.
  */
 // @lat: [[graph-model]]
+// @tg: implements:: [[openspec:graph-model#Plain link edges]]
 export class Graph {
   private readonly nodeMap = new Map<string, GraphNode>();
   private readonly edgeMap = new Map<string, GraphEdge>();
@@ -109,6 +110,10 @@ export class Graph {
 
   /** Add or replace a note and its outgoing edges. */
   // @lat: [[graph-model#Nodes]]
+  // @tg: implements:: [[openspec:graph-model#Frontmatter title]]
+  // @tg: implements:: [[openspec:graph-model#Incremental updates]]
+  // @tg: implements:: [[openspec:graph-model#Node properties]]
+  // @tg: implements:: [[openspec:graph-model#One note is one node]]
   upsertNote(note: NoteInput): void {
     const isNew = !this.files.has(note.path);
     this.dropEdges(note.path);
@@ -130,6 +135,7 @@ export class Graph {
     this.emit(touched);
   }
 
+  // @tg: implements:: [[openspec:graph-model#Incremental updates]]
   removeNote(path: string): void {
     if (!this.files.has(path)) return;
     this.dropEdges(path);
@@ -164,6 +170,8 @@ export class Graph {
   }
 
   // @lat: [[edge-syntax#Edge identity]]
+  // @tg: implements:: [[openspec:edge-parsing#Source heading is recorded]]
+  // @tg: implements:: [[openspec:graph-model#Derived edge IDs]]
   private addEdges(path: string): void {
     const file = this.files.get(path)!;
     const ordinals = new Map<string, number>();
@@ -217,6 +225,7 @@ export class Graph {
   }
 
   // @lat: [[graph-model#Nodes]]
+  // @tg: implements:: [[openspec:graph-model#Stub nodes for unresolved links]]
   private ensureStub(link: string): string {
     const id = link.replace(/\.md$/, '');
     this.stubRefs.set(id, (this.stubRefs.get(id) ?? 0) + 1);
@@ -226,6 +235,7 @@ export class Graph {
     return id;
   }
 
+  // @tg: implements:: [[openspec:graph-model#Stub nodes for unresolved links]]
   private releaseStub(id: string): void {
     const n = (this.stubRefs.get(id) ?? 0) - 1;
     if (n > 0) {
@@ -243,6 +253,8 @@ export class Graph {
 }
 
 // @lat: [[graph-model#Node types]]
+// @tg: implements:: [[openspec:graph-model#Frontmatter title]]
+// @tg: implements:: [[openspec:graph-model#Node labels from frontmatter]]
 export function labelsOf(frontmatter: Record<string, unknown> | null | undefined): string[] {
   const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : v == null ? [] : [v]);
   // `types` is where an OKF export keeps the full list, since OKF's `type` is a single string.

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 export const DEFAULT_VSIX = 'packages/vscode/typegraph.vsix';
 
 /** Commands that publish `vsix` to both registries; throws before anything runs if a token is missing. */
+// @tg: implements:: [[openspec:vscode-extension#Dual-registry publishing]]
 export function plan(env, vsix) {
   const missing = ['VSCE_PAT', 'OVSX_PAT'].filter((k) => !env[k]);
   if (missing.length) throw new Error(`missing ${missing.join(' and ')}; nothing was published to either registry`);
@@ -18,6 +19,7 @@ export function plan(env, vsix) {
 }
 
 /** Publish to both registries with `run`; with `dryRun` only report what would run. */
+// @tg: implements:: [[openspec:vscode-extension#Dual-registry publishing]]
 export function release({ env, vsix = DEFAULT_VSIX, dryRun = false, run, log = () => {} }) {
   const steps = plan(env, vsix);
   for (const s of steps) {

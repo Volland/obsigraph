@@ -37,6 +37,11 @@ const varExpr = (name: string): Expr => ({ k: 'var', name, line: 0, column: 0 })
 
 /** Execute a parsed query as a pipeline of clauses. Never mutates the graph. */
 // @lat: [[query-engine#Two backends]]
+// @tg: implements:: [[openspec:cypher-extensions#WITH stages a query]]
+// @tg: implements:: [[openspec:cypher-query#Deterministic stub handling]]
+// @tg: implements:: [[openspec:cypher-query#Read-only]]
+// @tg: implements:: [[openspec:cypher-query#Result shape]]
+// @tg: implements:: [[openspec:cypher-query#Supported clauses]]
 export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecOptions = {}): QueryResult {
   const ctx = new Ctx(graph, params, opts.maxPathDepth ?? DEFAULT_MAX_PATH_DEPTH, opts.timeoutMs ? Date.now() + opts.timeoutMs : Infinity);
   const columns = analyze(q);
@@ -69,11 +74,13 @@ export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecO
 // ---- static analysis --------------------------------------------------------
 
 /** RETURN columns and their kinds, from the query alone (shared with other backends). */
+// @tg: implements:: [[openspec:cypher-query#Result shape]]
 export function queryColumns(q: Query): Column[] {
   return analyze(q);
 }
 
 /** Check variable scoping through every clause and return the RETURN columns. */
+// @tg: implements:: [[openspec:cypher-extensions#WITH stages a query]]
 function analyze(q: Query): Column[] {
   let scope: Scope = new Map();
   for (const clause of q.clauses) {
@@ -109,7 +116,8 @@ function declarePatterns(scope: Scope, patterns: Pattern[]): Scope {
   };
   for (const p of patterns) {
     for (const n of p.nodes) declare(n.var, 'node');
-    for (const r of p.rels) declare(r.var, 'relationship');
+    // A variable-length relationship variable binds a list of relationships, not one.
+    for (const r of p.rels) declare(r.var, r.length ? 'scalar' : 'relationship');
     if (p.pathVar) declare(p.pathVar, 'path');
   }
   return next;
@@ -123,6 +131,7 @@ function projectionItems(proj: Projection, scope: Scope): ReturnItem[] {
   return items;
 }
 
+// @tg: implements:: [[openspec:cypher-extensions#Result shapes]]
 function kindOf(e: Expr, scope: Scope): ColumnKind {
   return e.k === 'var' ? (scope.get(e.name) ?? 'scalar') : 'scalar';
 }
@@ -200,6 +209,7 @@ function collectAggs(e: Expr, out: Expr[]): void {
  * are grouping keys; without grouping keys, zero rows still yield one row.
  */
 // @lat: [[query-engine#Supported subset]]
+// @tg: implements:: [[openspec:cypher-extensions#Aggregation functions]]
 function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): { values: Value[]; env: Env }[] {
   const aggs: Expr[] = [];
   for (const it of items) collectAggs(it.expr, aggs);
@@ -265,6 +275,7 @@ function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): 
  * MATCH keeps rows with at least one match; OPTIONAL MATCH keeps rows without
  * one, binding the pattern's new variables to null.
  */
+// @tg: implements:: [[openspec:cypher-extensions#OPTIONAL MATCH]]
 function runMatch(ctx: Ctx, rows: Env[], patterns: Pattern[], where: Expr | null, optional: boolean): Env[] {
   const out: Env[] = [];
   const introduced = new Set<string>();
@@ -348,6 +359,7 @@ function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Se
  * unbounded ranges capped at the configured depth (reported as a notice).
  */
 // @lat: [[query-engine#Supported subset]]
+// @tg: implements:: [[openspec:cypher-extensions#Variable-length paths]]
 function expand(ctx: Ctx, env: Env, p: Pattern, ri: number, start: NodeRef, used: Set<string>, trail: Trail, done: () => void): void {
   const rp = p.rels[ri]!;
   const np = p.nodes[ri + 1]!;
@@ -451,6 +463,8 @@ class Ctx {
   }
 
   /** openCypher aggregation over a group; nulls ignored except by count(*). */
+  // @tg: implements:: [[openspec:cypher-extensions#Aggregation functions]]
+  // @tg: implements:: [[openspec:cypher-extensions#Aggregation type errors]]
   aggregate(e: Extract<Expr, { k: 'agg' }>, group: Env[]): Value {
     if (e.arg === null) return group.length;
     let values = group.map((env) => this.evaluate(e.arg!, env)).filter((v) => v !== null);
@@ -763,6 +777,8 @@ class Ctx {
 }
 
 /** Property access with built-ins: `n.stub`, `r.id`, `r.sign`. */
+// @tg: implements:: [[openspec:cypher-query#Deterministic stub handling]]
+// @tg: implements:: [[openspec:cypher-query#Edge sign and id are queryable]]
 function property(target: NodeRef | RelRef, key: string): Value {
   if (target instanceof NodeRef) {
     if (key === 'stub') return target.node.stub;

@@ -1,7 +1,8 @@
-import { BuiltinEngine, buildLatGraph, CypherError, resultToJson, type CodeMode, type QueryResult, type Value } from '@obsigraph/core';
+import { BuiltinEngine, buildLatGraph, CypherError, isSpecTarget, resultToJson, type CodeMode, type QueryResult, type Value } from '@obsigraph/core';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command } from '../cli.mjs';
 import { NoLatDir, Project } from '../project.mjs';
 
+// @tg: implements:: [[openspec:code-layer#Code mode setting]]
 function codeMode(flag: string | true | undefined, env: string | undefined): CodeMode {
   const v = typeof flag === 'string' ? flag : env;
   if (v === 'off' || v === 'all' || v === 'annotated') return v;
@@ -13,7 +14,7 @@ function cell(v: Value): string {
   if (v === null || v === undefined) return 'null';
   if (typeof v === 'object' && 'props' in (v as object)) {
     const n = v as { id?: string; props?: Record<string, unknown> };
-    return String(n.props?.section ?? n.props?.title ?? n.id ?? '?');
+    return String(n.props?.section ?? n.props?.requirement ?? n.props?.scenario ?? n.props?.title ?? n.id ?? '?');
   }
   return typeof v === 'string' ? v : JSON.stringify(v);
 }
@@ -43,7 +44,7 @@ export const cypher: Command = {
     try {
       const mode = codeMode(flags.get('code'), ctx.env.TG_CODE);
       const files = mode === 'off' ? [] : project.codeSources();
-      result = new BuiltinEngine(buildLatGraph(project.index(), { code: { mode, files } }).graph, () => ({ timeoutMs: 10_000 })).run(query);
+      result = new BuiltinEngine(buildLatGraph(project.index(), { code: { mode, files }, specs: project.specIndex() }).graph, () => ({ timeoutMs: 10_000 })).run(query);
     } catch (e) {
       if (e instanceof CypherError) {
         ctx.err(`${e.message}${e.line > 0 ? ` (line ${e.line}, column ${e.column})` : ''}\n`);
@@ -66,7 +67,7 @@ export const cypher: Command = {
 
 export const edges: Command = {
   name: 'edges',
-  summary: 'List @lat and @tg annotation edges (code to section) with type, sign and properties',
+  summary: 'List @lat and @tg annotation edges (code to section or requirement) with type, sign and properties',
   usage: 'edges [--type t] [--to section] [--file path]',
   flags: { type: 'string', to: 'string', file: 'string' },
   run(ctx, _args, flags) {
@@ -81,6 +82,12 @@ export const edges: Command = {
       throw e;
     }
     const index = project.index();
+    const specs = project.specIndex();
+    const resolveTarget = (t: string): string => {
+      if (!isSpecTarget(t)) return index.resolveRef(t).resolved;
+      const r = specs?.resolve(t);
+      return r?.kind === 'requirement' ? r.requirement.id : r?.kind === 'scenario' ? r.scenario.id : t;
+    };
     const type = flags.get('type');
     const to = flags.get('to');
     const file = flags.get('file');
@@ -90,7 +97,7 @@ export const edges: Command = {
         sign: e.sign,
         source: `${a.file}${a.source.kind === 'symbol' ? `#${a.source.symbolPath}` : ''}`,
         line: a.line,
-        target: index.resolveRef(e.target).resolved,
+        target: resolveTarget(e.target),
         props: e.props,
         kind: a.kind,
       })),

@@ -46,6 +46,14 @@ An active note lists the source files that annotate it, separately from its type
 
 A file with no edges, a file outside the roots and an unknown path all yield an empty result instead of an error.
 
+### Outside the roots
+
+A file outside `typegraph.roots` or the workspace folder gets its own message, distinct from the message for a file without edges.
+
+### Setup offer
+
+While setup is needed the view has no rows without an active file, so the welcome content shows, and otherwise appends the offer after the backlinks.
+
 ## Graph session
 
 The graph webview's state outside the webview.
@@ -53,6 +61,10 @@ The graph webview's state outside the webview.
 ### Expanded nodes survive refresh
 
 Expanding a node adds its neighborhood to the active file's, and a later refresh after a graph change keeps it while dropping nodes that no longer exist.
+
+### Expansions reset on file switch
+
+Switching the active file clears the expanded nodes, while losing the active editor keeps the last file and its expansions.
 
 ## Set up TypeGraph
 

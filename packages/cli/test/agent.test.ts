@@ -27,6 +27,7 @@ async function tg(cwd: string, args: string[], stdin = '') {
 const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 
 // @lat: [[tests/tg-agent#Safe init#Dry run]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Dry run]]
 it('prints a diff and changes nothing without --write', async () => {
   const dir = project();
   const r = await tg(dir, ['init']);
@@ -39,6 +40,7 @@ it('prints a diff and changes nothing without --write', async () => {
 });
 
 // @lat: [[tests/tg-agent#Safe init#Idempotent write]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Idempotent write]]
 it('writes once and then has nothing left to change', async () => {
   const dir = project();
   await tg(dir, ['init', '--write']);
@@ -51,6 +53,7 @@ it('writes once and then has nothing left to change', async () => {
 });
 
 // @lat: [[tests/tg-agent#Migration from lat#Existing block detected]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Migration from lat#Existing block detected]]
 it('reports an existing lat block and leaves it alone without --migrate', async () => {
   const dir = project();
   writeFileSync(join(dir, 'CLAUDE.md'), '# Mine\n\nKeep me.\n\n%% lat:begin %%\nRun `lat search`.\n%% lat:end %%\n');
@@ -60,6 +63,7 @@ it('reports an existing lat block and leaves it alone without --migrate', async 
 });
 
 // @lat: [[tests/tg-agent#Migration from lat#Migration applied]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Migration from lat#Migration applied]]
 it('replaces the lat block, hooks and MCP entry with --write --migrate', async () => {
   const dir = project();
   writeFileSync(join(dir, 'CLAUDE.md'), '# Mine\n\nKeep me.\n\n%% lat:begin %%\nRun `lat search`.\n%% lat:end %%\n\nAfter.\n');
@@ -80,6 +84,7 @@ it('replaces the lat block, hooks and MCP entry with --write --migrate', async (
 });
 
 // @lat: [[tests/tg-agent#Instruction generation#Generate]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Instruction generation#Generate]]
 it('generates instructions that tell the agent to search first and check last', async () => {
   const r = await tg(mkdtempSync(join(tmpdir(), 'tg-gen-')), ['gen', 'claude.md']);
   expect(r.code).toBe(0);
@@ -89,6 +94,7 @@ it('generates instructions that tell the agent to search first and check last', 
 });
 
 // @lat: [[tests/tg-agent#Agent hooks#Prompt hook]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Prompt hook]]
 it('the prompt hook reminds, expands refs and adds search hits', async () => {
   const dir = project();
   const r = await tg(dir, ['hook', 'claude', 'UserPromptSubmit'], JSON.stringify({ prompt: 'fix [[auth#Login]] and the token expiry' }));
@@ -101,6 +107,7 @@ it('the prompt hook reminds, expands refs and adds search hits', async () => {
 });
 
 // @lat: [[tests/tg-agent#Agent hooks#Internal failure]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Internal failure]]
 it('a hook outside any project exits 0 without blocking', async () => {
   const empty = mkdtempSync(join(tmpdir(), 'tg-nohook-'));
   const stop = await tg(empty, ['hook', 'claude', 'Stop'], '{}');
@@ -111,7 +118,21 @@ it('a hook outside any project exits 0 without blocking', async () => {
   expect(bad.out).toContain('run `tg search`');
 });
 
+// @lat: [[tests/tg-agent#Agent hooks#Cursor init]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Cursor init]]
+it('writes Cursor rules and no Cursor hook configuration', async () => {
+  const dir = project();
+  const r = await tg(dir, ['init', '--agent', 'cursor', '--write', '--json']);
+  expect(r.code).toBe(0);
+  const paths = (JSON.parse(r.out) as { changes: { path: string }[] }).changes.map((c) => c.path);
+  expect(paths).toContain('.cursor/rules/tg.mdc');
+  expect(paths.filter((p) => p.startsWith('.cursor/'))).toEqual(['.cursor/rules/tg.mdc']);
+  expect(existsSync(join(dir, '.cursor', 'hooks.json'))).toBe(false);
+  expect(existsSync(join(dir, '.claude'))).toBe(false);
+});
+
 // @lat: [[tests/tg-agent#MCP server#Cypher over docs and code]]
+// @tg: verifies:: [[openspec:tg-agent-integration#MCP server#Cypher over docs and code]]
 it('serves the tools over MCP and tg_cypher returns the tagged result contract', async () => {
   const dir = project();
   const server = createTgMcpServer(dir, { cwd: dir, out: () => undefined, err: () => undefined, env: {} });
@@ -119,7 +140,7 @@ it('serves the tools over MCP and tg_cypher returns the tagged result contract',
   const client = new Client({ name: 't', version: '0' });
   await Promise.all([server.connect(a), client.connect(b)]);
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  expect(tools).toEqual(['tg_check', 'tg_cypher', 'tg_edges', 'tg_expand', 'tg_locate', 'tg_refs', 'tg_search', 'tg_section']);
+  expect(tools).toEqual(['tg_check', 'tg_cypher', 'tg_edges', 'tg_expand', 'tg_locate', 'tg_refs', 'tg_search', 'tg_section', 'tg_trace']);
   const res = (await client.callTool({ name: 'tg_cypher', arguments: { query: 'MATCH (a:Section {title: \"Login\"})-[:references]->(b:Section) RETURN a, b.title' } })) as { content: { text: string }[] };
   const json = JSON.parse(res.content[0]!.text) as { columns: unknown[]; rows: Record<string, unknown>[][] };
   expect(json.rows).toHaveLength(1);
@@ -130,6 +151,7 @@ it('serves the tools over MCP and tg_cypher returns the tagged result contract',
 });
 
 // @lat: [[tests/tg-agent#Bundled skills#Skills installed]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Bundled skills#Skills installed]]
 it('installs both skills for Claude Code', async () => {
   const dir = project();
   await tg(dir, ['init', '--write']);

@@ -34,6 +34,10 @@ Import creates one note per type by default and a single note with `--layout sin
 
 Importing into a single note reports each template body it cannot keep and names the per-type layout that does.
 
+## Existing note warns about templates
+
+Importing a template body for a type whose note already exists reports that the body was not kept, unless the note's body already matches it.
+
 ## Existing body kept
 
 Importing into an existing schema note replaces only its schema keys and leaves other frontmatter and the body unchanged.

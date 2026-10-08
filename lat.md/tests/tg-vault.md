@@ -18,6 +18,10 @@ A link like `[[architecture#Monorepo layout#core]]` or a short id resolves throu
 
 A link like `[[src/config.ts#getConfigDir]]` resolves to a code target, which the plugin reports instead of opening a nonexistent note.
 
+### Indexing leaves files untouched
+
+Building the plugin's vault index over a vault with a root and a nested lat.md folder reads their sections and leaves every file byte-identical, with any vault write failing the test.
+
 ## Export projection
 
 What `tg export` produces.

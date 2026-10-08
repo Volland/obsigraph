@@ -16,6 +16,10 @@ const fail = (msg: string, t: Token, kind: 'readonly' | 'syntax' = 'readonly') =
  * The database is also opened read-only, so this is the first of two walls.
  */
 // @lat: [[ladybug-mirror#One-way mirror]]
+// @tg: implements:: [[openspec:engine-conformance#Write rejection conformance]]
+// @tg: implements:: [[openspec:ladybug-backend#Full Cypher for reads]]
+// @tg: implements:: [[openspec:ladybug-backend#Read-only enforcement]]
+// @tg: implements:: [[openspec:sidecar-service#Read-only query surface]]
 export function assertReadOnly(query: string): void {
   let toks: Token[];
   try {

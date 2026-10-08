@@ -24,6 +24,7 @@ function between(text: string, begin: string, end: string): { start: number; sto
 }
 
 /** Put the managed block into an instruction file, replacing a previous tg block and, with `migrate`, a lat block. */
+// @tg: implements:: [[openspec:tg-agent-integration#Migration from lat]]
 export function withBlock(existing: string | null, migrate: boolean): { text: string; hadLat: boolean } {
   const text = existing ?? '';
   const mine = between(text, BEGIN, END);
@@ -40,6 +41,7 @@ interface HookEntry {
 }
 
 /** Merge tg hooks into a Claude Code settings object without disturbing other entries. */
+// @tg: implements:: [[openspec:tg-agent-integration#Migration from lat]]
 export function withHooks(settings: Record<string, unknown>, migrate: boolean): Record<string, unknown> {
   const out = JSON.parse(JSON.stringify(settings)) as { hooks?: Record<string, HookEntry[]> };
   out.hooks ??= {};
@@ -90,6 +92,8 @@ function read(path: string): string | null {
   }
 }
 
+// @tg: implements:: [[openspec:tg-agent-integration#Bundled skills]]
+// @tg: implements:: [[openspec:tg-agent-integration#Safe init]]
 export function planInit(root: string, agent: string, migrate: boolean, ontology = true): { changes: Change[]; notes: string[] } {
   const changes: Change[] = [];
   const notes: string[] = [];
@@ -127,6 +131,7 @@ export function planInit(root: string, agent: string, migrate: boolean, ontology
   return { changes, notes };
 }
 
+// @tg: implements:: [[openspec:tg-agent-integration#Safe init]]
 export const init: Command = {
   name: 'init',
   summary: 'Set up lat.md/, the code ontology, agent instructions, hooks, MCP and skills (dry run unless --write)',

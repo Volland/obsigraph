@@ -54,6 +54,7 @@ export class QueryBlock extends MarkdownRenderChild {
     this.renderer = null;
   }
 
+  // @tg: implements:: [[openspec:graph-query-block#Live refresh]]
   private refresh(): void {
     if (!this.visible) {
       this.dirty = true;
@@ -63,6 +64,8 @@ export class QueryBlock extends MarkdownRenderChild {
     this.render();
   }
 
+  // @tg: implements:: [[openspec:graph-query-block#Errors shown in place]]
+  // @tg: implements:: [[openspec:ladybug-backend#Backend selection]]
   private render(): void {
     const el = this.containerEl;
     if (!this.plugin.index.ready) {
@@ -155,6 +158,7 @@ export class QueryBlock extends MarkdownRenderChild {
     el.replaceChildren(...Array.from(frag.childNodes));
   }
 
+  // @tg: implements:: [[openspec:graph-query-block#Errors shown in place]]
   private showErrors(messages: string[]): void {
     this.renderer?.destroy();
     this.renderer = null;

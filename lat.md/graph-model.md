@@ -1,3 +1,6 @@
+---
+openspec: [graph-model, schema-notes, typed-note-creation]
+---
 # Graph Model
 
 The in-memory property graph built from the vault: notes become labeled nodes, parsed lines become typed edges with properties.

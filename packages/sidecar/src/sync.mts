@@ -42,6 +42,7 @@ const STATE_FILE = 'sync-state.json';
  * hand-off to processors. Never writes to the vault.
  */
 // @lat: [[sidecar#Shared core]]
+// @tg: implements:: [[openspec:sidecar-service#Same semantics as the plugin]]
 export class VaultSync {
   readonly graph: Graph;
   private readonly known = new Set<string>();
@@ -75,6 +76,7 @@ export class VaultSync {
     return (await readNote(this.vaultDir, path)).note.text;
   }
 
+  // @tg: implements:: [[openspec:sidecar-service#REST API]]
   status(): SyncStatus {
     const { nodes, edges } = this.graph.size;
     const stubs = [...this.graph.nodes()].filter((n) => n.stub).length;
@@ -92,6 +94,8 @@ export class VaultSync {
    * Build the graph from every note, then hand only new or changed files
    * (by content hash against stored state) and deleted files to processors.
    */
+  // @tg: implements:: [[openspec:node-vault-loader#Sidecar behavior preserved]]
+  // @tg: implements:: [[openspec:sidecar-service#Initial sync]]
   async start(): Promise<void> {
     this.state = 'syncing';
     const stored = (await this.data.readJson<StoredState>(STATE_FILE))?.files ?? {};
@@ -118,6 +122,7 @@ export class VaultSync {
   }
 
   /** Watch for changes; uses native events and, when configured, polling. */
+  // @tg: implements:: [[openspec:sidecar-service#Live watching]]
   watch(): void {
     try {
       this.watcher = watch(this.vaultDir, { recursive: true }, (_event, filename) => {
@@ -156,6 +161,7 @@ export class VaultSync {
   }
 
   /** Coalesce bursts: one processing run per file after the debounce interval. */
+  // @tg: implements:: [[openspec:sidecar-service#Live watching]]
   private schedule(path: string): void {
     const prev = this.timers.get(path);
     if (prev) clearTimeout(prev);

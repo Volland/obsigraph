@@ -47,6 +47,9 @@ const SCHEMA_KEYS = ['prefixes', 'schema', 'schemas', 'edgeTypes'] as const;
  * one that declares types missing from the import is left alone unless forced.
  */
 // @lat: [[shacl#Import]]
+// @tg: implements:: [[openspec:shacl-interop#Import SHACL into schema notes]]
+// @tg: implements:: [[openspec:shacl-interop#Imports never clobber silently]]
+// @tg: implements:: [[openspec:shacl-interop#Layouts that cannot keep a template are reported]]
 export function planImport(imp: ShaclImport, existing: ExistingNote[], opts: ImportPlanOptions = {}): ImportPlan {
   const folder = normalizeFolder(opts.folder ?? 'Types/');
   const layout = opts.layout ?? 'auto';
@@ -104,8 +107,13 @@ export function planImport(imp: ShaclImport, existing: ExistingNote[], opts: Imp
       }
     }
     const title = titleOf(path);
+    // Only a new note named after its type receives the body; an existing note keeps its own.
+    const oldBody = old ? splitFrontmatter(old.text).body.trim() : null;
     for (const t of g.types) {
-      if (t.templateBody?.trim() && t.type !== title && !old) plan.warnings.push(`${t.type}: template body not kept, because ${path} declares several types and its body is documentation (import with --layout per-type to keep it)`);
+      const body = t.templateBody?.trim();
+      if (!body || (t.type === title && (oldBody === null || oldBody === body))) continue;
+      const why = t.type !== title ? `${path} declares several types and its body is documentation` : `${path} already exists and its body is left unchanged`;
+      plan.warnings.push(`${t.type}: template body not kept, because ${why} (import with --layout per-type to keep it${old ? ', after moving the existing note aside' : ''})`);
     }
     const fm = old?.frontmatter ?? {};
     const decl: Record<string, unknown> = {};

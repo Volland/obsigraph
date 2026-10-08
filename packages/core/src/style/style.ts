@@ -91,6 +91,8 @@ function bad(ctx: ReadCtx, attr: string, value: unknown, expected: string): void
 }
 
 /** Validate a raw node style; invalid attributes are dropped with a diagnostic. */
+// @tg: implements:: [[openspec:visualization-config#Invalid style values are ignored visibly]]
+// @tg: implements:: [[openspec:visualization-config#Schema visualization block]]
 export function readNodeStyle(raw: unknown, ctx: ReadCtx): NodeStyle {
   const out: NodeStyle = {};
   if (!isRecord(raw)) {
@@ -118,6 +120,7 @@ export function readNodeStyle(raw: unknown, ctx: ReadCtx): NodeStyle {
 }
 
 /** Validate a raw edge style; invalid attributes are dropped with a diagnostic. */
+// @tg: implements:: [[openspec:visualization-config#Invalid style values are ignored visibly]]
 export function readEdgeStyle(raw: unknown, ctx: ReadCtx): EdgeStyle {
   const out: EdgeStyle = {};
   if (!isRecord(raw)) {
@@ -162,6 +165,8 @@ export function styleSource(
  * declared under `edgeTypes` come first, so their own `visualization` wins
  * per attribute within the schema level.
  */
+// @tg: implements:: [[openspec:visualization-config#Edge type styling]]
+// @tg: implements:: [[openspec:visualization-config#Schema visualization block]]
 export function styleSourcesFromSchemas(
   schemas: Map<string, TypeSchema>,
   iconExists?: IconCheck,
@@ -226,6 +231,9 @@ export interface ResolvedEdgeStyle {
  * within a level the node's labels in label order; first value wins.
  */
 // @lat: [[visualization#Styling]]
+// @tg: implements:: [[openspec:graph-view#Node type styling]]
+// @tg: implements:: [[openspec:visualization-config#Multi-label nodes]]
+// @tg: implements:: [[openspec:visualization-config#Precedence of style sources]]
 export function resolveNodeStyle(labels: string[], sources: StyleSource[]): ResolvedNodeStyle {
   const pick = <K extends keyof NodeStyle>(attr: K): [NodeStyle[K], string] | null => {
     for (const level of levels(sources)) {
@@ -258,6 +266,8 @@ export function resolveNodeStyle(labels: string[], sources: StyleSource[]): Reso
 
 /** Negative edges default to a dashed red line unless a source sets the attribute. */
 // @lat: [[visualization#Styling]]
+// @tg: implements:: [[openspec:visualization-config#Edge type styling]]
+// @tg: implements:: [[openspec:visualization-config#Precedence of style sources]]
 export function resolveEdgeStyle(type: string, sign: Sign, sources: StyleSource[]): ResolvedEdgeStyle {
   const pick = <K extends keyof EdgeStyle>(attr: K): [EdgeStyle[K], string] | null => {
     for (const s of sources) {

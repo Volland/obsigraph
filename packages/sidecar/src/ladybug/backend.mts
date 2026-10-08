@@ -41,6 +41,10 @@ export class LadybugBackend {
     private readonly opts: LadybugBackendOptions,
   ) {}
 
+  // @tg: implements:: [[openspec:ladybug-backend#Clear error when unavailable]]
+  // @tg: implements:: [[openspec:ladybug-backend#Freshness before reads]]
+  // @tg: implements:: [[openspec:ladybug-backend#Full Cypher for reads]]
+  // @tg: implements:: [[openspec:ladybug-backend#Same interface and result contract]]
   async run(query: string, params: Record<string, unknown> = {}): Promise<JsonQueryResult> {
     assertReadOnly(query);
     const notices: string[] = [];
@@ -55,16 +59,22 @@ export class LadybugBackend {
       new Promise<false>((r) => setTimeout(() => r(false), this.opts.freshnessWaitMs ?? 3000)),
     ]);
     const st = this.mirror.status();
-    if (!this.mirror.ready) {
-      throw new BackendUnavailable('not_ready', st.state === 'failed' ? `The Ladybug mirror failed to sync: ${st.message}` : 'The Ladybug mirror is still building; try again shortly.');
+    // A failed sync is terminal until a later sync succeeds: never serve the
+    // last good snapshot silently, and never report a failed first build as
+    // "not ready", which clients retry forever.
+    if (st.state === 'failed') {
+      throw new BackendUnavailable('unavailable', `The Ladybug mirror failed to sync: ${st.message ?? 'unknown error'}. It is retried on the next note change; restart the sidecar to rebuild it.`);
     }
+    if (!this.mirror.ready) throw new BackendUnavailable('not_ready', 'The Ladybug mirror is still building; try again shortly.');
     if (!settled) notices.push('The Ladybug mirror is syncing; results may be stale.');
 
     let parsed: Query | null = null;
+    let parseError: CypherError | null = null;
     try {
       parsed = parseQuery(query);
     } catch (e) {
-      if (!(e instanceof CypherError) || e.kind !== 'unsupported') throw e;
+      if (!(e instanceof CypherError) || (e.kind !== 'unsupported' && e.kind !== 'syntax')) throw e;
+      if (e.kind === 'syntax') parseError = e;
       notices.push('This query uses syntax outside the built-in subset and runs on Ladybug untranslated: use the mirror layout (Node table, label lists, p_<name>_<kind> columns).');
     }
 
@@ -84,7 +94,14 @@ export class LadybugBackend {
       return out;
     }
 
-    const res = await this.raw(conn, query, params);
+    let res: { rows: Record<string, unknown>[]; names: string[] };
+    try {
+      res = await this.raw(conn, query, params);
+    } catch (e) {
+      // Malformed for both parsers: the built-in error carries the better position.
+      if (parseError && e instanceof CypherError && e.kind === 'syntax') throw parseError;
+      throw e;
+    }
     const names = res.names;
     const rows = res.rows.map((r) => names.map((n) => fromLadybug(r[n])));
     const out: JsonQueryResult = {
@@ -115,6 +132,7 @@ export class LadybugBackend {
     return (await this.raw(conn, text, params)).rows;
   }
 
+  // @tg: implements:: [[openspec:ladybug-backend#Errors reported with position]]
   private async raw(conn: ReturnType<LadybugStore['openReadOnly']>['conn'], text: string, params: Record<string, unknown>) {
     try {
       const prepared = await conn.prepare(text);

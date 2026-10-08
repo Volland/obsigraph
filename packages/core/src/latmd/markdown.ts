@@ -31,6 +31,8 @@ export interface Frontmatter {
   requireCodeMention?: boolean;
   /** Labels from `type: Decision` or `type: [A, B]`; they label the file's sections below the title. */
   types?: string[];
+  /** OpenSpec capabilities or `capability#requirement` ids this file explains, from `openspec:`. */
+  openspec?: string[];
 }
 
 export interface ParsedMarkdown {
@@ -40,23 +42,26 @@ export interface ParsedMarkdown {
   frontmatter: Frontmatter;
 }
 
+// @tg: implements:: [[openspec:tg-trace#Docs frontmatter]]
 export function parseFrontmatter(content: string): Frontmatter {
   const m = /^---\n([\s\S]*?)\n---/.exec(content);
   if (!m) return {};
   const out: Frontmatter = {};
   if (/require-code-mention:\s*true/i.test(m[1]!)) out.requireCodeMention = true;
-  const types = fileTypes(m[1]!);
+  const types = listKey(m[1]!, 'type');
   if (types.length) out.types = types;
+  const specs = listKey(m[1]!, 'openspec');
+  if (specs.length) out.openspec = specs;
   return out;
 }
 
-/** The top-level `type:` key as a list of names: a scalar, an inline list or a block list. */
-function fileTypes(yaml: string): string[] {
+/** A top-level key as a list of names: a scalar, an inline list or a block list. */
+function listKey(yaml: string, key: string): string[] {
   const lines = yaml.split('\n');
-  const at = lines.findIndex((l) => /^type:/.test(l));
+  const at = lines.findIndex((l) => l.startsWith(`${key}:`));
   if (at === -1) return [];
   const clean = (v: string) => v.trim().replace(/^["']|["']$/g, '').trim();
-  const rest = lines[at]!.slice(5).replace(/\s+#.*$/, '').trim();
+  const rest = lines[at]!.slice(key.length + 1).replace(/\s+#.*$/, '').trim();
   let raw: string[];
   if (rest.startsWith('[')) raw = rest.replace(/^\[|\]$/g, '').split(',');
   else if (rest) raw = [rest];
@@ -114,6 +119,7 @@ function paragraphText(lines: string[]): string {
  * setext headings, fenced and indented code, lists, quotes, html), matching
  * lat.md's CommonMark parse on authored docs; not a general markdown parser.
  */
+// @tg: implements:: [[openspec:lat-resolver#Section tree]]
 export function parseMarkdown(filePath: string, text: string): ParsedMarkdown {
   const posix = toPosix(filePath);
   const file = posix.replace(/\.md$/, '');
@@ -291,16 +297,19 @@ export function parseMarkdown(filePath: string, text: string): ParsedMarkdown {
   return { roots, flat, refs, frontmatter };
 }
 
+// @tg: implements:: [[openspec:lat-resolver#Section tree]]
 export function flattenSections(sections: Section[]): Section[] {
   return sections.flatMap((s) => [s, ...flattenSections(s.children)]);
 }
 
 /** Max characters of a section's leading paragraph, excluding `[[wiki link]]` content. */
+// @tg: implements:: [[openspec:lat-resolver#Leading paragraph rule]]
 export const MAX_LEADING_LENGTH = 250;
 
 export type LeadingIssue = { kind: 'missing' } | { kind: 'too-long'; length: number };
 
 /** Apply lat.md's leading-paragraph rule to one section. */
+// @tg: implements:: [[openspec:lat-resolver#Leading paragraph rule]]
 export function leadingParagraphIssue(section: Section): LeadingIssue | null {
   if (!section.firstParagraph) return { kind: 'missing' };
   const length = section.firstParagraph.replace(/\[\[[^\]]*\]\]/g, '').length;

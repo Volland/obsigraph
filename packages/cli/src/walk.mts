@@ -24,6 +24,7 @@ function ignored(rel: string, isDir: boolean, scopes: Scope[]): boolean {
  * `.gitignore` files; skips `.git`, `node_modules` and top-level dot entries,
  * as lat.md's walker does for dotfiles.
  */
+// @tg: implements:: [[openspec:symbol-provider#Source walker]]
 export function walkProject(root: string): string[] {
   const out: string[] = [];
   const visit = (dir: string, rel: string, scopes: Scope[]): void => {

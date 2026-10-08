@@ -38,6 +38,10 @@ lat.md key variables keep working.
 
 With only `LAT_LLM_KEY` set, an OpenAI-compatible provider is used with that key as a bearer token.
 
+### TG variables win over aliases
+
+With `TG_EMBED_KEY_FILE` and `LAT_LLM_KEY` both set, the key from the file is used, because every `TG_EMBED_KEY*` variable is checked before any alias.
+
 ### Not written to disk
 
 A key present during a search appears in no file under `.tg/`.

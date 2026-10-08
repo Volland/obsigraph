@@ -1,5 +1,6 @@
 export type ErrorKind = 'syntax' | 'unsupported' | 'readonly' | 'runtime' | 'timeout';
 
+// @tg: implements:: [[openspec:cypher-query#Unsupported syntax fails clearly]]
 export class CypherError extends Error {
   constructor(
     readonly kind: ErrorKind,

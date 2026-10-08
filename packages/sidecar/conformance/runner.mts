@@ -4,12 +4,14 @@ import { join } from 'node:path';
 import { BuiltinEngine, CypherError, resultToJson, type JsonQueryResult } from '@obsigraph/core';
 import { startSidecar, type Sidecar } from '../src/main.mjs';
 import { loadLadybug } from '../src/mirror/store.mjs';
-import { classify, type CorpusEntry, type Difference, type EngineOutcome, type Outcome } from './compare.mjs';
+import { classify, formatReport, type CorpusEntry, type Difference, type EngineOutcome, type Outcome } from './compare.mjs';
 
+// @tg: implements:: [[openspec:engine-conformance#Shared corpus on a fixed fixture]]
 export const FIXTURE = join(import.meta.dirname, 'fixture');
 export const CORPUS_FILE = join(import.meta.dirname, 'corpus.json');
 
 export const loadCorpus = (): CorpusEntry[] => JSON.parse(readFileSync(CORPUS_FILE, 'utf8')) as CorpusEntry[];
+// @tg: implements:: [[openspec:engine-conformance#Documented intentional differences]]
 export const loadDifferences = (): Difference[] => JSON.parse(readFileSync(join(import.meta.dirname, 'differences.json'), 'utf8')) as Difference[];
 
 export interface RunReport {
@@ -18,11 +20,15 @@ export interface RunReport {
   ladybug: Map<string, EngineOutcome> | null;
   skipReason: string | null;
   outcomes: Map<string, Outcome>;
+  /** The printed report (see `formatReport`). */
+  text: string;
 }
 
-/** Run every corpus query on both engines over the fixture vault. */
+/** Run every corpus query on both engines over the fixture vault and print the report. */
 // @lat: [[query-engine#Two backends]]
-export async function runCorpus(entries = loadCorpus(), opts: { ladybug?: boolean } = {}): Promise<RunReport> {
+// @tg: implements:: [[openspec:engine-conformance#Graceful skip when Ladybug is unavailable]]
+// @tg: implements:: [[openspec:engine-conformance#Shared corpus on a fixed fixture]]
+export async function runCorpus(entries = loadCorpus(), opts: { ladybug?: boolean; print?: (text: string) => void } = {}): Promise<RunReport> {
   const data = mkdtempSync(join(tmpdir(), 'obsigraph-conformance-'));
   const hasLadybug = opts.ladybug !== false && 'lbug' in (await loadLadybug());
   let sc: Sidecar | null = null;
@@ -56,8 +62,11 @@ export async function runCorpus(entries = loadCorpus(), opts: { ladybug?: boolea
       }
     }
     const skipReason = hasLadybug ? null : opts.ladybug === false ? 'Ladybug comparison disabled' : 'LadybugDB is not installed';
-    const outcomes = new Map(entries.map((e) => [e.id, classify(e, builtin.get(e.id)!, ladybug?.get(e.id) ?? null, skipReason ?? undefined)]));
-    return { entries, builtin, ladybug, skipReason, outcomes };
+    const differences = loadDifferences();
+    const outcomes = new Map(entries.map((e) => [e.id, classify(e, builtin.get(e.id)!, ladybug?.get(e.id) ?? null, skipReason ?? undefined, differences)]));
+    const text = formatReport(entries, outcomes);
+    (opts.print ?? ((t: string) => console.log(t)))(text);
+    return { entries, builtin, ladybug, skipReason, outcomes, text };
   } finally {
     await sc?.stop();
     rmSync(data, { recursive: true, force: true });

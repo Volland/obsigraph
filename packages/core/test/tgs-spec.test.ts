@@ -115,6 +115,7 @@ describe('TGS conformance examples', () => {
 
 describe('TGS JSON Schema', () => {
   // @lat: [[tests/tgs-spec#Spec examples validate]]
+  // @tg: verifies:: [[openspec:tgs-spec#Machine-readable schema#Examples validate]]
   it('accepts every YAML example in the specification and the scaffold', () => {
     const spec = readFileSync(join(SPEC, 'SPEC.md'), 'utf8');
     const blocks = [...spec.matchAll(/```yaml\n([\s\S]*?)```/g)].map((m) => m[1]!);
@@ -130,6 +131,7 @@ describe('TGS JSON Schema', () => {
   });
 
   // @lat: [[tests/tgs-spec#Invalid notes rejected]]
+  // @tg: verifies:: [[openspec:tgs-spec#Machine-readable schema#Invalid note rejected]]
   it('rejects malformed declarations', () => {
     for (const bad of [{ schema: { edges: 5 } }, { schema: { properties: { a: { kind: 'emotion' } } } }, { schemas: { A: { inherits: 'B' } } }, { tgs: '1.0' }, { edgeTypes: { e: { from: 3 } } }]) {
       expect(validateJson(bad), JSON.stringify(bad)).toBe(false);
@@ -137,6 +139,7 @@ describe('TGS JSON Schema', () => {
   });
 
   // @lat: [[tests/tgs-spec#Namespace terms documented]]
+  // @tg: verifies:: [[openspec:tgs-spec#Namespace IRI#Namespace documented]]
   it('documents every tgs: term the SHACL export uses', () => {
     const ns = JSON.parse(readFileSync(join(SPEC, 'namespace.json'), 'utf8')) as { namespace: string; terms: { term: string }[] };
     const used = new Set<string>();

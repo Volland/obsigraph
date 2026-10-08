@@ -27,6 +27,7 @@ export interface CodeLayer {
 }
 
 /** Node key of a symbol: `path#Class#method`, the same text a `[[path#symbol]]` link carries. */
+// @tg: implements:: [[openspec:code-layer#Link and node identity agree]]
 export function symbolKey(file: string, symbolPath: string): string {
   return `${file}#${symbolPath}`;
 }
@@ -43,6 +44,9 @@ function edge(type: string, sign: 1 | -1, target: string, props: ParsedEdge['pro
  * target (e.g. `auth#Login`) to the node key it should point at, or null.
  */
 // @lat: [[cli#Code layer]]
+// @tg: implements:: [[openspec:code-layer#Code mode setting]]
+// @tg: implements:: [[openspec:code-layer#Derived code nodes]]
+// @tg: implements:: [[openspec:code-layer#Queryable code nodes]]
 export function buildCodeLayer(files: CodeSource[], mode: CodeMode, resolveTarget: (target: string, sourceFile: string) => string | null): CodeLayer {
   if (mode === 'off') return { nodes: [], unresolved: [] };
   interface Scanned {
@@ -133,6 +137,8 @@ export function buildCodeLayer(files: CodeSource[], mode: CodeMode, resolveTarge
 }
 
 /** Add one derived node to a graph; node `path` is the code file (the graph key is the node id) and `title` the symbol or file name. */
+// @tg: implements:: [[openspec:code-layer#Derived code nodes]]
+// @tg: implements:: [[openspec:code-layer#Queryable code nodes]]
 export function upsertCodeNode(graph: Graph, n: CodeNode): void {
   graph.upsertNote({ path: n.path, text: '', frontmatter: n.frontmatter, edges: n.edges });
   const node = graph.node(n.path);

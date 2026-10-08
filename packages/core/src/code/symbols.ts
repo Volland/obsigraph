@@ -332,6 +332,7 @@ function scanC(text: string): ScanResult {
 // ---- registry -------------------------------------------------------------
 
 /** The built-in regex provider; fast and dependency-free, with the accuracy limits noted in the design. */
+// @tg: implements:: [[openspec:symbol-provider#Symbol discovery]]
 export const builtinProvider: SymbolProvider = {
   scan(text, lang) {
     try {
@@ -357,6 +358,7 @@ export const builtinProvider: SymbolProvider = {
 const providers = new Map<Lang, SymbolProvider>();
 
 /** Replace the provider for one language, e.g. with a tree-sitter backed one. */
+// @tg: implements:: [[openspec:symbol-provider#Replaceable provider]]
 export function registerProvider(lang: Lang, provider: SymbolProvider): void {
   providers.set(lang, provider);
 }
@@ -365,6 +367,7 @@ export function resetProviders(): void {
   providers.clear();
 }
 
+// @tg: implements:: [[openspec:symbol-provider#Replaceable provider]]
 export function providerFor(lang: Lang): SymbolProvider {
   return providers.get(lang) ?? builtinProvider;
 }
@@ -375,6 +378,8 @@ export type LookupResult =
   | { status: 'unresolvable'; reason: 'unsupported-language' | 'unreadable' | 'uncertain' };
 
 /** Scan a file's text with the registered provider for its language; null text means the file could not be read. */
+// @tg: implements:: [[openspec:symbol-provider#Honest lookup]]
+// @tg: implements:: [[openspec:symbol-provider#Symbol discovery]]
 export function scanFile(path: string, text: string | null): ScanResult | null {
   const lang = langOfFile(path);
   if (!lang || text === null) return null;
@@ -385,6 +390,7 @@ export function scanFile(path: string, text: string | null): ScanResult | null {
  * Look a symbol path up in a file: `name` for a top-level symbol, `Parent#name` for a member.
  * Absence is only reported for a file that scanned cleanly; otherwise the answer is `unresolvable`.
  */
+// @tg: implements:: [[openspec:symbol-provider#Honest lookup]]
 export function lookupSymbol(path: string, text: string | null, symbolPath: string): LookupResult {
   if (!langOfFile(path)) return { status: 'unresolvable', reason: 'unsupported-language' };
   const scan = scanFile(path, text);

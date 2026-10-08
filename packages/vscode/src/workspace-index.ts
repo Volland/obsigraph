@@ -22,6 +22,7 @@ const clean = (p: string): string => posix.normalize(p.replace(/\\/g, '/')).repl
  * ever written into the indexed folders.
  */
 // @lat: [[vscode#Workspace index]]
+// @tg: implements:: [[openspec:vscode-extension#Index the workspace in process]]
 export class WorkspaceIndex {
   readonly graph: Graph;
   private readonly notes = new Set<string>();
@@ -36,12 +37,14 @@ export class WorkspaceIndex {
   }
 
   /** True when a workspace-relative path lies under a root and outside dot and ignored folders. */
+  // @tg: implements:: [[openspec:vscode-extension#Configurable roots]]
   accepts(path: string): boolean {
     const p = clean(path);
     const inRoot = this.roots.some((r) => r === '' || p === r || p.startsWith(`${r}/`));
     return inRoot && !p.split('/').some((seg) => seg.startsWith('.') || this.opts.ignore.includes(seg));
   }
 
+  // @tg: implements:: [[openspec:vscode-extension#Configurable roots]]
   async load(): Promise<void> {
     const seenMd = new Set<string>();
     const seenSrc = new Set<string>();
@@ -87,6 +90,7 @@ export class WorkspaceIndex {
   }
 
   /** Every annotation edge whose link resolves to the given note, with where it was written. */
+  // @tg: implements:: [[openspec:vscode-extension#Backlinks for source files]]
   annotationsTargeting(notePath: string): { file: string; line: number; target: string }[] {
     const out: { file: string; line: number; target: string }[] = [];
     for (const [file, list] of this.annotations) {

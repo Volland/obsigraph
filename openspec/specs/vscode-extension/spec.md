@@ -17,7 +17,7 @@ The extension SHALL build the typed graph from the configured roots inside VS Co
 - **THEN** the panel shows that edge without a reload
 
 ### Requirement: Configurable roots
-The extension SHALL index the folders in `typegraph.roots`, defaulting to the workspace root, SHALL skip dot folders and `node_modules`, and SHALL never write into the indexed folders.
+The extension SHALL index the folders in `typegraph.roots`, resolved against the first workspace folder and defaulting to it (other folders of a multi-root workspace are not indexed), SHALL read markdown notes and, for annotations, source files under them, SHALL skip dot folders and every folder name listed in `typegraph.ignore` (default `["node_modules"]`), and SHALL never write into the indexed folders while indexing; only the explicit note-creation commands write files.
 
 #### Scenario: Nested vault
 - **WHEN** `typegraph.roots` is `["docs/vault"]`
@@ -26,6 +26,10 @@ The extension SHALL index the folders in `typegraph.roots`, defaulting to the wo
 #### Scenario: Monorepo noise
 - **WHEN** the default root contains many `node_modules/**/README.md` files
 - **THEN** none of them appear in the graph
+
+#### Scenario: Custom ignore list
+- **WHEN** `typegraph.ignore` is `["node_modules", "dist"]`
+- **THEN** no file under any `dist/` folder appears in the graph or backlinks
 
 ### Requirement: Typed backlinks for notes
 For an active markdown note the panel SHALL list incoming edges grouped by edge type, showing source note, sign and edge properties, and SHALL open the source at the edge's line on click.
@@ -39,36 +43,48 @@ For an active markdown note the panel SHALL list incoming edges grouped by edge 
 - **THEN** it is shown with a minus sign
 
 ### Requirement: Backlinks for source files
-For an active source file the panel SHALL list the `lat.md` sections that reference the file through `@lat` annotations or links, and for an active `lat.md` section SHALL list the source files that reference it, working at whole-file granularity.
+For an active source file the panel SHALL list the notes that the file's `@lat` and `@tg` annotations point at, showing each link as written and opening the target note file on click; for an active note it SHALL list the source files whose annotations point at it, with the annotation line. Both directions SHALL work at whole-file granularity.
 
 #### Scenario: Code to spec
 - **WHEN** a source file contains `// @lat: [[architecture#Monorepo layout]]` and is active
-- **THEN** the panel lists the section `architecture#Monorepo layout` and opens it on click
+- **THEN** the panel lists `architecture#Monorepo layout` and clicking it opens `lat.md/architecture.md`
 
 #### Scenario: Spec to code
 - **WHEN** a section is active that source files annotate
 - **THEN** the panel lists those files
 
 ### Requirement: Empty and unsupported states
-The panel SHALL show an explanatory empty state when the active file has no edges or is outside the roots, and SHALL NOT error.
+The panel SHALL show an explanatory empty state when the active file has no incoming edges or annotations, and a distinct message saying the file is outside `typegraph.roots` when it is, and SHALL NOT error.
 
 #### Scenario: No edges
-- **WHEN** the active note has no incoming or outgoing edges
+- **WHEN** the active note has no incoming edges
 - **THEN** the panel says so and offers no stale data
 
+#### Scenario: Outside the roots
+- **WHEN** `typegraph.roots` is `["docs"]` and the active file is `src/main.ts`
+- **THEN** the panel says the file is outside the configured roots
+
 ### Requirement: Graph webview
-The extension SHALL provide a graph view that renders the active file's neighborhood with the shared renderer, expands neighbors on click and refreshes on change without losing expanded nodes, using VS Code theme colors.
+The extension SHALL provide a graph view that renders the active file's neighborhood with the shared renderer, expands a node's neighbors on right-click or long-press, opens a node's file on double-click, refreshes on change without losing expanded nodes, clears expanded nodes when the active file changes, styles nodes with the built-in type styles only (schema-note and settings styles are not read), and takes its text, muted and background colors from VS Code theme variables.
 
 #### Scenario: Follows active file
 - **WHEN** the user switches the active editor to another note
-- **THEN** the graph re-centers on that note
+- **THEN** the graph shows that note's neighborhood
 
 #### Scenario: Open from graph
 - **WHEN** the user opens a note node's context action
 - **THEN** that file opens in the editor
 
+#### Scenario: Expand on right-click
+- **WHEN** the user right-clicks a node that has neighbors not yet drawn
+- **THEN** those neighbors and their edges are added and stay after the next refresh
+
+#### Scenario: Expansions reset on file switch
+- **WHEN** the user has expanded nodes and switches the active editor to another note
+- **THEN** the graph shows only the new note's neighborhood
+
 ### Requirement: Set up TypeGraph
-When the workspace has no `lat.md/` folder or no `tg` agent setup, the extension SHALL offer a "Set up TypeGraph" action that shows the files `tg init` will create or change, asks for confirmation, then runs `tg init` in a visible VS Code terminal, preferring a global `tg` and falling back to `npx @typedgraph/cli init`.
+When the workspace has no `lat.md/` folder, or none of `CLAUDE.md` and `AGENTS.md` contains a `%% tg:begin %%` block and `.cursor/rules/tg.mdc` does not exist, the extension SHALL offer a "Set up TypeGraph" action in the TypeGraph sidebar view and the command palette that shows the files `tg init --write` will create or change, asks for confirmation, then runs `tg init --write` in a visible VS Code terminal, preferring a global `tg` and falling back to `npx @typedgraph/cli init --write`.
 
 #### Scenario: Confirmation first
 - **WHEN** the user selects the action
@@ -76,7 +92,7 @@ When the workspace has no `lat.md/` folder or no `tg` agent setup, the extension
 
 #### Scenario: Global tg preferred
 - **WHEN** `tg` is on the PATH
-- **THEN** the terminal runs `tg init`, otherwise `npx @typedgraph/cli init`
+- **THEN** the terminal runs `tg init --write`, otherwise `npx @typedgraph/cli init --write`
 
 #### Scenario: Value first
 - **WHEN** the workspace has no `lat.md/`
@@ -95,3 +111,10 @@ The extension SHALL be packaged as one `.vsix` and the repository SHALL provide 
 #### Scenario: One package, two registries
 - **WHEN** the release script runs with both registry tokens present
 - **THEN** the same `.vsix` is published to both, and with a token missing the script stops before publishing anything
+
+### Requirement: Refresh and reload
+The extension SHALL rebuild its index on the "TypeGraph: Refresh Index" command and whenever a `typegraph.*` setting changes.
+
+#### Scenario: Roots changed
+- **WHEN** the user changes `typegraph.roots` from `["."]` to `["docs"]`
+- **THEN** the index is rebuilt and notes outside `docs` disappear from the graph and backlinks

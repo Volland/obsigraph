@@ -9,3 +9,4 @@ import './mcp.mjs';
 import './export.mjs';
 import './okf.mjs';
 import './schema.mjs';
+import './trace.mjs';

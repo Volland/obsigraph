@@ -66,6 +66,7 @@ renderer.heading = ({ tokens, depth }) => {
 };
 
 /** Copy one version's files from `from` to `to` and render its page. */
+// @tg: implements:: [[openspec:tgs-spec#Published specification]]
 function publish(from, to, version, treeUrl) {
   mkdirSync(to, { recursive: true });
   for (const f of ['SPEC.md', 'tgs.schema.json', 'namespace.json']) cpSync(`${from}/${f}`, `${to}/${f}`);

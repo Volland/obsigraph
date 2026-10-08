@@ -28,6 +28,7 @@ const THEME = { text: '#000', muted: '#999', background: '#fff' };
 
 describe('graph-query block', () => {
   // @lat: [[tests/graph-query-block#Header and query split]]
+  // @tg: verifies:: [[openspec:graph-query-block#Block structure#Header and query]]
   it('splits the header from the query and maps the query start line', () => {
     const b = parseBlock('view: table\ncolumns: a, b\nheight: 500px\n\nMATCH (a)-->(b)\nRETURN a, b');
     expect(b.options).toEqual({ view: 'table', columns: ['a', 'b'], height: 500, backend: null, code: 'show' });
@@ -37,6 +38,7 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Query without header]]
+  // @tg: verifies:: [[openspec:graph-query-block#Block structure#No header]]
   it('uses defaults when there is no header', () => {
     const b = parseBlock('MATCH (n:Person) RETURN n');
     expect(b.options).toEqual({ view: 'auto', columns: null, height: 360, backend: null, code: 'show' });
@@ -53,6 +55,7 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Graph for nodes and edges]]
+  // @tg: verifies:: [[openspec:graph-query-block#Renderer chosen by result shape#Nodes and edges]]
   it('renders a graph when the result holds nodes or relationships, with edge endpoints added', () => {
     const { plan } = fixture();
     const p = plan('MATCH ()-[r]->() RETURN r');
@@ -63,6 +66,7 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/cypher-extensions#Paths render as graphs]]
+  // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Path result]]
   it('draws path results as graphs and summarizes them in tables', () => {
     const { plan, engine } = fixture();
     const p = plan('MATCH p = (a {title: "Alice"})-[:knows*1..2]->(c) RETURN p');
@@ -78,6 +82,7 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Table for scalars]]
+  // @tg: verifies:: [[openspec:graph-query-block#Renderer chosen by result shape#Scalars only]]
   it('renders a table when the result holds only scalars', () => {
     const { plan, engine } = fixture();
     expect(plan('MATCH (a)-[r]->(b) RETURN a.title, r.since').kind).toBe('table');
@@ -95,6 +100,7 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Element cap falls back to table]]
+  // @tg: verifies:: [[openspec:graph-query-block#Large results are bounded#Result exceeds limit]]
   it('falls back to a table with a notice above the element cap', () => {
     const { plan } = fixture();
     const p = plan('MATCH (a)-[r]->(b) RETURN a, r, b', 3);
@@ -103,6 +109,8 @@ describe('graph-query block', () => {
   });
 
   // @lat: [[tests/graph-query-block#Signed and typed styling]]
+  // @tg: verifies:: [[openspec:graph-view#Edge presentation#Signed edges]]
+  // @tg: verifies:: [[openspec:graph-view#Node type styling#Typed and stub nodes]]
   it('styles negative edges distinctly and nodes per type from element data', () => {
     const rules = buildStylesheet(THEME);
     const edge = rules.find((r) => r.selector === 'edge')!.style;

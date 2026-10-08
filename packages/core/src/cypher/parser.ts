@@ -11,9 +11,9 @@ const UNSUPPORTED_CLAUSES: Record<string, string> = {
   USE: 'USE',
 };
 
-const AGGREGATES = new Set<AggName>(['count', 'sum', 'avg', 'min', 'max', 'collect']);
 const UNSUPPORTED_AGGREGATES = new Set(['stdev', 'stdevp', 'percentilecont', 'percentiledisc']);
 
+// @tg: implements:: [[openspec:engine-conformance#Corpus grows with the supported subset]]
 export const FUNCTIONS = new Set([
   'id', 'type', 'labels', 'keys', 'properties', 'startnode', 'endnode',
   'tolower', 'toupper', 'trim', 'ltrim', 'rtrim', 'replace', 'substring', 'split', 'left', 'right',
@@ -24,11 +24,39 @@ export const FUNCTIONS = new Set([
 
 const COMPARISON: Record<string, BinOp> = { '=': '=', '<>': '<>', '<': '<', '>': '>', '<=': '<=', '>=': '>=' };
 
+/** Clauses and clause modifiers of the supported subset, as `queryConstructs` names them. */
+// @tg: implements:: [[openspec:engine-conformance#Corpus grows with the supported subset]]
+export const CLAUSES = ['MATCH', 'OPTIONAL MATCH', 'WHERE', 'WITH', 'RETURN', 'DISTINCT', 'ORDER BY', 'DESC', 'SKIP', 'LIMIT'] as const;
+
+/** Pattern features of the supported subset, as `queryConstructs` names them. */
+export const PATTERN_FEATURES = ['variable-length', 'open-ended variable-length', 'path variable'] as const;
+
+/** Binary operators (by AST op) and unary operators of the supported subset, as `queryConstructs` names them. */
+export const BINARY_OPERATORS: Record<BinOp, string> = {
+  or: 'OR', xor: 'XOR', and: 'AND',
+  '=': '=', '<>': '<>', '<': '<', '>': '>', '<=': '<=', '>=': '>=',
+  '+': '+', '-': '-', '*': '*', '/': '/', '%': '%', '^': '^',
+  in: 'IN', starts: 'STARTS WITH', ends: 'ENDS WITH', contains: 'CONTAINS',
+};
+export const UNARY_OPERATORS = ['NOT', 'unary -', 'IS NULL', 'IS NOT NULL'] as const;
+
+/** Aggregate functions of the supported subset (lower case). */
+export const AGGREGATE_FUNCTIONS: readonly AggName[] = ['count', 'sum', 'avg', 'min', 'max', 'collect'];
+
 const unsupported = (what: string, t: Token) =>
-  new CypherError('unsupported', `${what} is not supported by the built-in engine in this version`, t.line, t.column);
+  new CypherError('unsupported', `${what} is not supported by the built-in engine`, t.line, t.column);
+
+/** Subquery keywords that open a `{ ... }` block in an expression. */
+const SUBQUERIES = new Set(['EXISTS', 'COUNT', 'COLLECT']);
 
 /** Parse a query in the supported read-only openCypher subset. */
 // @lat: [[query-engine#Supported subset]]
+// @tg: implements:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly]]
+// @tg: implements:: [[openspec:cypher-extensions#Variable-length paths]]
+// @tg: implements:: [[openspec:cypher-query#Read-only]]
+// @tg: implements:: [[openspec:cypher-query#Supported clauses]]
+// @tg: implements:: [[openspec:cypher-query#Unsupported syntax fails clearly]]
+// @tg: implements:: [[openspec:engine-conformance#Write rejection conformance]]
 export function parseQuery(src: string): Query {
   return new Parser(src).parse();
 }
@@ -58,6 +86,87 @@ export function containsAgg(e: Expr): boolean {
     default:
       return false;
   }
+}
+
+/**
+ * The clauses, pattern features, operators and functions a parsed query uses,
+ * named as in `CLAUSES`, `PATTERN_FEATURES`, `BINARY_OPERATORS`,
+ * `UNARY_OPERATORS` and (lower-case) `FUNCTIONS` and `AGGREGATE_FUNCTIONS`.
+ */
+// @tg: implements:: [[openspec:engine-conformance#Corpus grows with the supported subset]]
+export function queryConstructs(q: Query): Set<string> {
+  const out = new Set<string>();
+  const expr = (e: Expr | null): void => {
+    if (!e) return;
+    switch (e.k) {
+      case 'prop':
+      case 'labels':
+        return expr(e.obj);
+      case 'index':
+        expr(e.obj);
+        return expr(e.idx);
+      case 'list':
+        return e.items.forEach(expr);
+      case 'map':
+        return e.entries.forEach(([, v]) => expr(v));
+      case 'call':
+        out.add(e.name);
+        return e.args.forEach(expr);
+      case 'agg':
+        out.add(e.name);
+        if (e.distinct) out.add('DISTINCT');
+        return expr(e.arg);
+      case 'not':
+        out.add('NOT');
+        return expr(e.e);
+      case 'neg':
+        out.add('unary -');
+        return expr(e.e);
+      case 'isnull':
+        out.add(e.not ? 'IS NOT NULL' : 'IS NULL');
+        return expr(e.e);
+      case 'bin':
+        out.add(BINARY_OPERATORS[e.op]);
+        expr(e.l);
+        return expr(e.r);
+      default:
+        return;
+    }
+  };
+  const projection = (p: Projection): void => {
+    if (p.distinct) out.add('DISTINCT');
+    p.items.forEach((it) => expr(it.expr));
+    if (p.order.length) out.add('ORDER BY');
+    for (const o of p.order) {
+      if (o.desc) out.add('DESC');
+      expr(o.expr);
+    }
+    if (p.skip) out.add('SKIP');
+    if (p.limit) out.add('LIMIT');
+    if (p.where) out.add('WHERE');
+    expr(p.skip);
+    expr(p.limit);
+    expr(p.where);
+  };
+  for (const c of q.clauses) {
+    if (c.k === 'match') {
+      out.add(c.optional ? 'OPTIONAL MATCH' : 'MATCH');
+      for (const p of c.patterns) {
+        if (p.pathVar) out.add('path variable');
+        p.nodes.forEach((n) => n.props.forEach(([, v]) => expr(v)));
+        for (const r of p.rels) {
+          r.props.forEach(([, v]) => expr(v));
+          if (r.length) out.add(r.length.max === null ? 'open-ended variable-length' : 'variable-length');
+        }
+      }
+      if (c.where) out.add('WHERE');
+      expr(c.where);
+    } else {
+      out.add(c.k === 'with' ? 'WITH' : 'RETURN');
+      projection(c.proj);
+    }
+  }
+  return out;
 }
 
 class Parser {
@@ -90,6 +199,38 @@ class Parser {
     const t = this.peek(o);
     return t.kind === 'punct' && t.value === p;
   }
+  private isVarAt(o: number): boolean {
+    const k = this.peek(o).kind;
+    return k === 'name' || k === 'escaped';
+  }
+
+  /**
+   * True when a node pattern followed by a relationship starts at offset `o`,
+   * as in `(a)-->(b)` or `(a)<-[:t]-(b)`; arithmetic like `(a) - 1` is not one.
+   */
+  private isPatternAt(o: number): boolean {
+    if (!this.isP('(', o)) return false;
+    let i = o + 1;
+    if (this.isVarAt(i)) i++;
+    while (this.isP(':', i) && this.isVarAt(i + 1)) i += 2;
+    if (this.isP('{', i)) {
+      let depth = 0;
+      for (;;) {
+        const t = this.peek(i);
+        if (t.kind === 'eof') return false;
+        if (t.kind === 'punct' && t.value === '{') depth++;
+        if (t.kind === 'punct' && t.value === '}' && --depth === 0) break;
+        i++;
+      }
+      i++;
+    }
+    if (!this.isP(')', i)) return false;
+    i++;
+    if (this.isP('<-', i)) return this.isP('-', i + 1) || this.isP('[', i + 1);
+    if (!this.isP('-', i)) return false;
+    return this.isP('->', i + 1) || this.isP('[', i + 1) || (this.isP('-', i + 1) && this.isP('(', i + 2));
+  }
+
   private describe(t: Token): string {
     return t.kind === 'eof' ? 'end of query' : `'${t.kind === 'string' ? JSON.stringify(t.value) : t.value}'`;
   }
@@ -491,16 +632,20 @@ class Parser {
         this.next();
         return { k: 'param', name: t.value };
       case 'escaped':
+        if (this.isP('{', 1)) throw unsupported('Map projections', t);
         this.next();
         return { k: 'var', name: t.value, line: t.line, column: t.column };
       case 'punct':
         if (t.value === '(') {
+          if (this.isPatternAt(0)) throw unsupported('Pattern predicates', t);
           this.next();
           const e = this.parseExpr();
           this.expectP(')');
           return e;
         }
         if (t.value === '[') {
+          if (this.isVarAt(1) && this.isKw('IN', 2)) throw unsupported('List comprehensions', t);
+          if (this.isPatternAt(1) || (this.isVarAt(1) && this.isP('=', 2) && this.isPatternAt(3))) throw unsupported('Pattern comprehensions', t);
           this.next();
           const items: Expr[] = [];
           if (!this.isP(']')) {
@@ -524,7 +669,8 @@ class Parser {
           return { k: 'lit', v: null };
         }
         if (up === 'CASE') throw unsupported('CASE expressions', t);
-        if (up === 'EXISTS' && this.isP('{', 1)) throw unsupported('EXISTS subqueries', t);
+        if (SUBQUERIES.has(up) && this.isP('{', 1)) throw unsupported(`${up} {} subqueries`, t);
+        if (this.isP('{', 1)) throw unsupported('Map projections', t);
         if (this.isP('(', 1)) return this.parseCall();
         this.next();
         return { k: 'var', name: t.value, line: t.line, column: t.column };
@@ -538,7 +684,7 @@ class Parser {
   private parseCall(): Expr {
     const t = this.next();
     const name = t.value.toLowerCase();
-    if (AGGREGATES.has(name as AggName)) return this.parseAggregate(name as AggName, t);
+    if (AGGREGATE_FUNCTIONS.includes(name as AggName)) return this.parseAggregate(name as AggName, t);
     if (UNSUPPORTED_AGGREGATES.has(name)) throw unsupported(`Aggregation function ${t.value}()`, t);
     if (!FUNCTIONS.has(name)) throw unsupported(`Function ${t.value}()`, t);
     this.expectP('(');

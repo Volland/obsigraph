@@ -7,6 +7,7 @@ const LAT = '@' + 'lat:';
 const TG = '@' + 'tg:';
 
 // @lat: [[tests/tg-annotations#lat annotations#Test reference]]
+// @tg: verifies:: [[openspec:tg-annotations#lat annotations#Test reference]]
 it('reads a lat annotation as a references edge from the next function', () => {
   const src = `import x from 'y';\n\n// ${LAT} [[tests#Login#Rejects expired tokens]]\nit('rejects expired tokens', () => {});\n`;
   const { annotations } = scanAnnotations('test/login.test.ts', src);
@@ -17,12 +18,14 @@ it('reads a lat annotation as a references edge from the next function', () => {
 });
 
 // @lat: [[tests/tg-annotations#lat annotations#Python comment]]
+// @tg: verifies:: [[openspec:tg-annotations#lat annotations#Python comment]]
 it('reads hash comments in Python', () => {
   const { annotations } = scanAnnotations('t.py', `# ${LAT} [[tests#Login]]\ndef test_login():\n    pass\n`);
   expect(annotations[0]).toMatchObject({ kind: 'lat', source: { kind: 'symbol', name: 'test_login' } });
 });
 
 // @lat: [[tests/tg-annotations#tg annotations#Typed edge with properties]]
+// @tg: verifies:: [[openspec:tg-annotations#tg annotations#Typed edge with properties]]
 it('parses typed edges with properties', () => {
   const { annotations, diagnostics } = scanAnnotations('auth.ts', `// ${TG} implements:: [[auth#Login]] {since: 2}\nexport function login() {}\n`);
   expect(diagnostics).toEqual([]);
@@ -30,12 +33,14 @@ it('parses typed edges with properties', () => {
 });
 
 // @lat: [[tests/tg-annotations#tg annotations#Negative edge]]
+// @tg: verifies:: [[openspec:tg-annotations#tg annotations#Negative edge]]
 it('reads a minus prefix as a negative edge', () => {
   const { annotations } = scanAnnotations('a.ts', `// ${TG} -contradicts:: [[design#Cache]]\nexport const cache = 1;\n`);
   expect(annotations[0]!.edges[0]).toMatchObject({ type: 'contradicts', sign: -1, target: 'design#Cache' });
 });
 
 // @lat: [[tests/tg-annotations#tg annotations#Several edges]]
+// @tg: verifies:: [[openspec:tg-annotations#tg annotations#Several edges]]
 it('produces one edge per comma-separated segment and treats a bare link as references', () => {
   const { annotations } = scanAnnotations('a.ts', `/* ${TG} implements:: [[a#X]] {n: 1, m: 2}, tests:: [[b#Y]] */\nexport class Thing {}\n`);
   expect(annotations[0]!.edges.map((e) => [e.type, e.target])).toEqual([['implements', 'a#X'], ['tests', 'b#Y']]);
@@ -45,6 +50,7 @@ it('produces one edge per comma-separated segment and treats a bare link as refe
 });
 
 // @lat: [[tests/tg-annotations#Edge source#Next declaration]]
+// @tg: verifies:: [[openspec:tg-annotations#Edge source#Next declaration]]
 it('attaches to a member declared within three lines, skipping a comment run', () => {
   const src = `class Api {\n  // ${TG} implements:: [[a#X]]\n  // more notes\n  /** doc */\n  handle() {}\n}\n`;
   const a = scanAnnotations('api.ts', src).annotations[0]!;
@@ -52,6 +58,7 @@ it('attaches to a member declared within three lines, skipping a comment run', (
 });
 
 // @lat: [[tests/tg-annotations#Edge source#File fallback]]
+// @tg: verifies:: [[openspec:tg-annotations#Edge source#File fallback]]
 it('falls back to the file with a warning when no declaration follows', () => {
   const src = `// ${TG} implements:: [[a#X]]\n\n\n\n\nexport function far() {}\n`;
   const { annotations, diagnostics } = scanAnnotations('a.ts', src);
@@ -60,6 +67,7 @@ it('falls back to the file with a warning when no declaration follows', () => {
 });
 
 // @lat: [[tests/tg-annotations#Annotation validation#Broken target]]
+// @tg: verifies:: [[openspec:tg-annotations#Annotation validation#Broken target]]
 it('reports a target whose section was renamed, and advisory schema violations', () => {
   const index = new LatIndex([{ path: 'lat.md/auth.md', text: '# Auth\n\nx.\n\n## Sign in\n\ny.\n' }]);
   const ok = scanAnnotations('a.ts', `// ${LAT} [[auth#Sign in]]\nfunction f() {}\n`).annotations[0]!;

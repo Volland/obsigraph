@@ -31,6 +31,7 @@ const read = (...p: string[]) => readFileSync(join(...p), 'utf8');
 const hasLat = spawnSync('lat', ['--version'], { encoding: 'utf8' }).status === 0;
 
 // @lat: [[tests/tg-vault#Export projection#Typed edge flattened]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Export projection#Typed edge flattened]]
 it('flattens typed edges to plain links and drops property blocks', async () => {
   const v = vault();
   const out = mkdtempSync(join(tmpdir(), 'tg-out-'));
@@ -47,6 +48,7 @@ it('flattens typed edges to plain links and drops property blocks', async () => 
 });
 
 // @lat: [[tests/tg-vault#Export projection#Valid output]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Export projection#Valid output]]
 it('writes a project that tg check and lat check both accept', async () => {
   const v = vault();
   const out = mkdtempSync(join(tmpdir(), 'tg-out-'));
@@ -63,6 +65,7 @@ it('writes a project that tg check and lat check both accept', async () => {
 });
 
 // @lat: [[tests/tg-vault#Loss report#Report shown]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Loss report#Report shown]]
 it('reports each dropped construct by kind', async () => {
   const r = await tg(vault(), 'export', mkdtempSync(join(tmpdir(), 'tg-out-')), '--json');
   const json = JSON.parse(r.out) as { report: { kind: string; count: number }[] };
@@ -79,6 +82,7 @@ it('reports each dropped construct by kind', async () => {
 });
 
 // @lat: [[tests/tg-vault#Safe export target#Non-empty target]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Safe export target#Non-empty target]]
 it('refuses to overwrite a non-empty target unless forced', async () => {
   const v = vault();
   const out = mkdtempSync(join(tmpdir(), 'tg-out-'));
@@ -92,6 +96,7 @@ it('refuses to overwrite a non-empty target unless forced', async () => {
 });
 
 // @lat: [[tests/tg-vault#Import#Copy]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Import#Copy]]
 it('copies an existing lat.md folder into a vault and leaves the source unchanged', async () => {
   const src = mkdtempSync(join(tmpdir(), 'tg-src-'));
   mkdirSync(join(src, 'lat.md'));

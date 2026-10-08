@@ -4,6 +4,8 @@ import { countByExt, NoLatDir, Project } from '../project.mjs';
 
 const SCOPES: Record<string, CheckScope> = { md: 'md', 'code-refs': 'code-refs', index: 'index', sections: 'sections' };
 
+// @tg: implements:: [[openspec:tg-annotations#Annotation validation]]
+// @tg: implements:: [[openspec:tg-check#Check]]
 export const check: Command = {
   name: 'check',
   summary: 'Validate links, code references, index files and section structure',
@@ -36,6 +38,7 @@ export const check: Command = {
         latDirName: 'lat.md',
         readLatFile: (rel) => project.text(`lat.md/${rel}`),
         checkSourceLink: (f, s) => project.checkSourceLink(f, s),
+        specs: project.specIndex(),
       },
       scopes,
     );

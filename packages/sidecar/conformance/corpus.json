@@ -964,7 +964,7 @@
   },
   {
     "id": "comparisons",
-    "query": "MATCH (n:Person) WHERE n.age >= 25 AND n.age <= 40 AND n.age <> 31 RETURN n.title ORDER BY n.title",
+    "query": "MATCH (n:Person) WHERE n.age >= 25 AND n.age <= 40 AND n.age <> 31 AND n.age < 41 RETURN n.title ORDER BY n.title",
     "expected": {
       "ok": true,
       "result": {
@@ -1413,6 +1413,79 @@
     }
   },
   {
+    "id": "power",
+    "query": "RETURN 2 ^ 3 AS p, -(1 + 1) AS n",
+    "expected": {
+      "ok": true,
+      "result": {
+        "columns": [
+          {
+            "name": "p",
+            "kind": "scalar"
+          },
+          {
+            "name": "n",
+            "kind": "scalar"
+          }
+        ],
+        "rows": [
+          [
+            8,
+            -2
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "write-create",
+    "query": "CREATE (n:Person {title: 'Zed'})",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
+    "id": "write-merge",
+    "query": "MERGE (n:Person {title: 'Alice'}) RETURN n",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
+    "id": "write-set",
+    "query": "MATCH (n:Person {title: 'Alice'}) SET n.age = 1 RETURN n",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
+    "id": "write-delete",
+    "query": "MATCH (n:Person {title: 'Eve'}) DETACH DELETE n",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
+    "id": "write-remove",
+    "query": "MATCH (n:Person {title: 'Alice'}) REMOVE n.age RETURN n",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
+    "id": "write-after-with",
+    "query": "MATCH (n:Person) WITH n CREATE (m:Copy {title: n.title}) RETURN m",
+    "expected": {
+      "ok": false,
+      "error": "readonly"
+    }
+  },
+  {
     "id": "unwind",
     "query": "UNWIND [1, 2, 3] AS x RETURN sum(x) AS s",
     "difference": "unwind",
@@ -1423,7 +1496,7 @@
   },
   {
     "id": "case",
-    "query": "MATCH (n:Person) RETURN n.title, CASE WHEN n.age > 30 THEN 'old' ELSE 'young' END AS g ORDER BY n.title",
+    "query": "RETURN CASE WHEN 2 > 1 THEN 'yes' ELSE 'no' END AS g",
     "difference": "case",
     "expected": {
       "ok": false,

@@ -24,6 +24,8 @@ export interface ListFilesOptions extends ListOptions {
 }
 
 /** List files accepted by `accept`, skipping dot folders and any `ignore`d folder name; sorted, `/`-separated paths. */
+// @tg: implements:: [[openspec:node-vault-loader#List markdown files]]
+// @tg: implements:: [[openspec:node-vault-loader#No host dependencies]]
 export async function listFiles(dir: string, options: ListFilesOptions): Promise<FileInfo[]> {
   const ignore = new Set(options.ignore ?? []);
   const out: FileInfo[] = [];
@@ -44,6 +46,7 @@ export async function listFiles(dir: string, options: ListFilesOptions): Promise
 }
 
 /** List markdown files, skipping dot folders such as `.obsidian` and `.trash` and any `ignore`d folder name. */
+// @tg: implements:: [[openspec:node-vault-loader#List markdown files]]
 export function listMarkdown(vaultDir: string, options: ListOptions = {}): Promise<FileInfo[]> {
   return listFiles(vaultDir, { ...options, accept: (name) => name.toLowerCase().endsWith('.md') });
 }
@@ -63,6 +66,8 @@ export interface ReadNote {
 }
 
 /** Read a note (read-only) and parse its YAML frontmatter like Obsidian does. */
+// @tg: implements:: [[openspec:node-vault-loader#No host dependencies]]
+// @tg: implements:: [[openspec:node-vault-loader#Read a note read-only]]
 export async function readNote(vaultDir: string, path: string): Promise<ReadNote> {
   const text = await readFile(join(vaultDir, ...path.split('/')), 'utf8');
   const hash = createHash('sha256').update(text).digest('hex');

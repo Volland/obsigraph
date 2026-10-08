@@ -14,13 +14,17 @@ export interface EmbedConfig {
 type Env = Record<string, string | undefined>;
 
 /** Key from `TG_EMBED_KEY[_FILE|_HELPER]`, falling back to the lat.md `LAT_LLM_KEY*` aliases. Never written to disk. */
-function readKey(env: Env): string | null {
-  const direct = env.TG_EMBED_KEY ?? env.LAT_LLM_KEY;
-  if (direct) return direct.trim();
-  const file = env.TG_EMBED_KEY_FILE ?? env.LAT_LLM_KEY_FILE;
-  if (file) return readFileSync(file, 'utf8').trim();
-  const helper = env.TG_EMBED_KEY_HELPER ?? env.LAT_LLM_KEY_HELPER;
-  if (helper) return execSync(helper, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15_000 }).trim();
+// @tg: implements:: [[openspec:tg-search#Key variable aliases]]
+export function readKey(env: Env): string | null {
+  // Family before kind: every TG_EMBED_KEY* variable wins over any LAT_LLM_KEY* alias.
+  for (const prefix of ['TG_EMBED_KEY', 'LAT_LLM_KEY'] as const) {
+    const direct = env[prefix];
+    if (direct) return direct.trim();
+    const file = env[`${prefix}_FILE`];
+    if (file) return readFileSync(file, 'utf8').trim();
+    const helper = env[`${prefix}_HELPER`];
+    if (helper) return execSync(helper, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15_000 }).trim();
+  }
   return null;
 }
 
@@ -30,6 +34,7 @@ function readKey(env: Env): string | null {
  * or a key is set. A bare key follows lat.md's convention (`sk-` is OpenAI,
  * `vck_` is the Vercel AI Gateway).
  */
+// @tg: implements:: [[openspec:tg-search#Key variable aliases]]
 export function embedConfig(env: Env, fetchImpl?: typeof fetch): EmbedConfig | null {
   const kind = (env.TG_EMBED_PROVIDER ?? '').toLowerCase();
   if (kind === 'none') return null;
@@ -63,6 +68,7 @@ interface Meta {
 }
 
 /** Derived vector cache in `.tg/`: a JSON map of content hash to offset plus a flat float32 file. */
+// @tg: implements:: [[openspec:tg-search#Derived cache]]
 export class VectorCache {
   private readonly meta: string;
   private readonly bin: string;

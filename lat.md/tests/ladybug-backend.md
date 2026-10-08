@@ -69,3 +69,11 @@ Errors from the sidecar keep their line and column so the block can point into i
 ## Renderer unchanged
 
 A Ladybug result from a real sidecar converts back into plugin values that render to the same graph plan as the built-in result.
+
+## Constructs outside the subset pass through
+
+A `COUNT {}` subquery, which the built-in engine names as unsupported, and list slicing it cannot parse both run untranslated on Ladybug with a notice.
+
+## Failed sync is reported
+
+When the mirror's last sync failed, a Ladybug query fails as `unavailable` naming the cause, whether or not an older snapshot exists, instead of `not_ready`.

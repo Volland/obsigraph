@@ -40,6 +40,7 @@ function cyrb53(s: string, seed: number): string {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');
 }
 
+// @tg: implements:: [[openspec:chunking-verbalization#Deterministic chunk identity]]
 export function stableId(s: string): string {
   return cyrb53(s, 1) + cyrb53(s, 2);
 }
@@ -50,6 +51,7 @@ function show(v: unknown, max = 80): string {
 }
 
 /** Context prepended to every chunk: title, type labels, then frontmatter. */
+// @tg: implements:: [[openspec:chunking-verbalization#Context prepended to every chunk]]
 export function chunkContext(title: string, labels: string[], frontmatter: Record<string, unknown> | null | undefined): string {
   const lines = [labels.length ? `${title} (${labels.join(', ')})` : title];
   for (const [k, v] of Object.entries(frontmatter ?? {})) {
@@ -60,6 +62,7 @@ export function chunkContext(title: string, labels: string[], frontmatter: Recor
 }
 
 /** Split text into pieces of at most `max` chars on paragraph, then sentence, then word boundaries. */
+// @tg: implements:: [[openspec:chunking-verbalization#Heading-aware chunking]]
 function pack(text: string, max: number): string[] {
   const out: string[] = [];
   let cur = '';
@@ -88,6 +91,11 @@ function pack(text: string, max: number): string[] {
  * frontmatter to the embedded text and recording path and heading for citations.
  */
 // @lat: [[vector-search#Node chunks]]
+// @tg: implements:: [[openspec:chunking-verbalization#Chunk provenance]]
+// @tg: implements:: [[openspec:chunking-verbalization#Context prepended to every chunk]]
+// @tg: implements:: [[openspec:chunking-verbalization#Deterministic chunk identity]]
+// @tg: implements:: [[openspec:chunking-verbalization#Heading-aware chunking]]
+// @tg: implements:: [[openspec:vector-index#Index covers nodes and edges]]
 export function chunkNote(note: ChunkInput, maxChars = DEFAULT_CHUNK_CHARS): Chunk[] {
   const { body } = splitFrontmatter(note.text);
   const context = chunkContext(titleOf(note.path), note.labels ?? [], note.frontmatter);
@@ -127,6 +135,7 @@ export function chunkNote(note: ChunkInput, maxChars = DEFAULT_CHUNK_CHARS): Chu
 }
 
 /** `worksAt`, `works_at`, `works-at` -> `works at`. */
+// @tg: implements:: [[openspec:chunking-verbalization#Edge verbalization]]
 export function verbOf(type: string): string {
   return type
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -147,6 +156,9 @@ export interface EdgeSentence {
  * `Alice (Person) knows Bob (Person) - since 2020, met at conf`.
  */
 // @lat: [[vector-search#Edge verbalization]]
+// @tg: implements:: [[openspec:chunking-verbalization#Edge sentence provenance]]
+// @tg: implements:: [[openspec:chunking-verbalization#Edge verbalization]]
+// @tg: implements:: [[openspec:chunking-verbalization#Negative edges are verbalized as negative]]
 export function verbalizeEdge(e: GraphEdge, graph: Graph): EdgeSentence {
   const name = (id: string) => {
     const n = graph.node(id);
@@ -161,7 +173,10 @@ export function verbalizeEdge(e: GraphEdge, graph: Graph): EdgeSentence {
   return { edgeId: e.id, path: e.source, heading: e.heading, text };
 }
 
+/** Cosine similarity; vectors of different length come from different models and are an error, never NaN. */
+// @tg: implements:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild]]
 export function cosine(a: number[], b: number[]): number {
+  if (a.length !== b.length) throw new RangeError(`Cannot compare vectors of different dimensions (${a.length} and ${b.length})`);
   let dot = 0;
   let na = 0;
   let nb = 0;
@@ -179,6 +194,7 @@ export function normalize(v: number[]): number[] {
 }
 
 /** Mean of normalized chunk vectors, normalized again. */
+// @tg: implements:: [[openspec:chunking-verbalization#Node score aggregation]]
 export function poolVectors(vectors: number[][]): number[] {
   if (vectors.length === 0) return [];
   const sum = new Array<number>(vectors[0]!.length).fill(0);
@@ -190,6 +206,7 @@ export type ScoreMode = 'best' | 'pooled';
 
 /** Node score from its chunks: best chunk similarity, or similarity of the pooled vector. */
 // @lat: [[vector-search#Node chunks]]
+// @tg: implements:: [[openspec:chunking-verbalization#Node score aggregation]]
 export function nodeScore(query: number[], chunkVectors: number[][], mode: ScoreMode = 'best'): number {
   if (chunkVectors.length === 0) return 0;
   if (mode === 'pooled') return cosine(query, poolVectors(chunkVectors));

@@ -5,6 +5,7 @@ import { release } from '../../../scripts/release-vscode.mjs';
 type Call = [string, string[]];
 
 // @lat: [[tests/vscode-extension#Release#Refuses with a missing token]]
+// @tg: verifies:: [[openspec:vscode-extension#Dual-registry publishing#One package, two registries]]
 it('publishes to neither registry when a token is missing', () => {
   const calls: Call[] = [];
   const run = (c: string, a: string[]) => void calls.push([c, a]);
@@ -15,6 +16,7 @@ it('publishes to neither registry when a token is missing', () => {
 });
 
 // @lat: [[tests/vscode-extension#Release#Same package to both]]
+// @tg: verifies:: [[openspec:vscode-extension#Dual-registry publishing#One package, two registries]]
 it('publishes the same vsix to the Marketplace and Open VSX', () => {
   const calls: Call[] = [];
   const done = release({ env: { VSCE_PAT: 'a', OVSX_PAT: 'b' }, vsix: 'one.vsix', run: (c: string, a: string[]) => void calls.push([c, a]) }) as string[];

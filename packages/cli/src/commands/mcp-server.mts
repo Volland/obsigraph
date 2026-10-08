@@ -5,6 +5,7 @@ import { run, VERSION, EXIT_ERROR, type Io } from '../cli.mjs';
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 
 /** Run one CLI command in-process and return its text; the MCP tools are the CLI commands. */
+// @tg: implements:: [[openspec:tg-agent-integration#MCP server]]
 async function call(root: string, io: Io, args: string[]): Promise<{ text: string; isError: boolean }> {
   let out = '';
   let err = '';
@@ -14,6 +15,7 @@ async function call(root: string, io: Io, args: string[]): Promise<{ text: strin
 
 /** MCP server exposing the lattice and its graph; every tool wraps the matching `tg` command. */
 // @lat: [[cli#Agent integration]]
+// @tg: implements:: [[openspec:tg-agent-integration#MCP server]]
 export function createTgMcpServer(root: string, io: Io): McpServer {
   const server = new McpServer({ name: 'tg', version: VERSION });
   // Arguments are validated by each tool's zod shape before the callback runs.
@@ -30,7 +32,8 @@ export function createTgMcpServer(root: string, io: Io): McpServer {
   tool('tg_expand', 'Expand [[refs]] in text to resolved section locations', { text: z.string().describe('Text containing [[refs]]') }, (a) => ['expand', a.text]);
   tool('tg_check', 'Validate links, code references, annotations, indexes and section structure', { scope: z.enum(['md', 'code-refs', 'index', 'sections']).optional() }, (a) => ['check', ...(a.scope ? [a.scope] : [])]);
   tool('tg_refs', 'Find sections and code that reference a section', { query: z.string(), scope: z.enum(['md', 'code', 'md+code']).optional() }, (a) => ['refs', ...(a.scope ? ['--scope', a.scope] : []), a.query]);
-  tool('tg_cypher', 'Run a read-only openCypher query over the section graph (nodes labeled Section; edges contains and references). Results are JSON.', { query: z.string().describe('openCypher read query') }, (a) => ['cypher', '--json', a.query]);
+  tool('tg_cypher', 'Run a read-only openCypher query over the section graph (nodes labeled Section, Requirement and Scenario, plus CodeFile and CodeSymbol for annotated code; edges contains, references and annotation types such as implements and verifies). Results are JSON.', { query: z.string().describe('openCypher read query') }, (a) => ['cypher', '--json', a.query]);
   tool('tg_edges', 'List @lat and @tg annotation edges from code to sections, with type, sign and properties', { type: z.string().optional(), to: z.string().optional(), file: z.string().optional() }, (a) => ['edges', '--json', ...(a.type ? ['--type', a.type] : []), ...(a.to ? ['--to', a.to] : []), ...(a.file ? ['--file', a.file] : [])]);
+  tool('tg_trace', 'OpenSpec traceability: for each requirement, the code that implements it, the tests that verify its scenarios and the lat.md files that explain it. gaps=true lists only incomplete requirements.', { capabilities: z.array(z.string()).optional(), gaps: z.boolean().optional() }, (a) => ['trace', '--json', ...(a.gaps ? ['--gaps'] : []), ...(a.capabilities ?? [])]);
   return server;
 }

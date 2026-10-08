@@ -15,6 +15,8 @@ function vault(files: Record<string, string>): string {
 }
 
 // @lat: [[tests/node-vault#Skips dot and ignored folders]]
+// @tg: verifies:: [[openspec:node-vault-loader#List markdown files#Dot folders skipped]]
+// @tg: verifies:: [[openspec:node-vault-loader#List markdown files#Ignore list honored]]
 it('lists markdown sorted, skipping dot folders and ignored names', async () => {
   const dir = vault({
     'b.md': '',
@@ -32,6 +34,7 @@ it('lists markdown sorted, skipping dot folders and ignored names', async () => 
 });
 
 // @lat: [[tests/node-vault#Reads frontmatter read-only]]
+// @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#Valid frontmatter]]
 it('reads text, frontmatter and hash without touching the file', async () => {
   const dir = vault({ 'p.md': '---\ntype: Person\n---\nknows:: [[Bob]]\n' });
   const before = statSync(join(dir, 'p.md')).mtimeMs;
@@ -44,6 +47,7 @@ it('reads text, frontmatter and hash without touching the file', async () => {
 });
 
 // @lat: [[tests/node-vault#Reports broken frontmatter]]
+// @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#Broken frontmatter]]
 it('keeps the text and reports a one-line error for invalid YAML', async () => {
   const dir = vault({ 'p.md': '---\ntype: [unclosed\n---\nbody\n' });
   const r = await readNote(dir, 'p.md');

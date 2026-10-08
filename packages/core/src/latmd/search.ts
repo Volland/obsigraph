@@ -35,6 +35,7 @@ export function tokenize(text: string): string[] {
 }
 
 /** One search document per section, with its own body text (not its children's). */
+// @tg: implements:: [[openspec:tg-search#Lexical default]]
 export function buildSearchDocs(index: LatIndex, readText: (filePath: string) => string | null): SearchDoc[] {
   const cache = new Map<string, string[]>();
   const linesOf = (p: string): string[] => {
@@ -76,6 +77,7 @@ function indexField(texts: string[]): FieldIndex {
 
 /** BM25 over title, summary and body with field weights; rebuilt per query batch since docs corpora are small. */
 // @lat: [[cli#Search]]
+// @tg: implements:: [[openspec:tg-search#Lexical default]]
 export class LexicalIndex {
   private readonly fields: Record<keyof typeof FIELD_WEIGHT, FieldIndex>;
 
@@ -119,6 +121,7 @@ export function vectorRank(docs: SearchDoc[], vectors: (number[] | undefined)[],
 }
 
 /** Reciprocal rank fusion of rankings, so lexical and vector scores need no calibration. */
+// @tg: implements:: [[openspec:tg-search#Hybrid ranking]]
 export function fuseRanks(rankings: SearchHit[][], limit = 10, k = 60): (SearchHit & { sources: number })[] {
   const acc = new Map<string, SearchHit & { sources: number }>();
   for (const r of rankings) {

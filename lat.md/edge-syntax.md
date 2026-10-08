@@ -1,3 +1,6 @@
+---
+openspec: [edge-embeds, edge-parsing, graph-model]
+---
 # Edge Syntax
 
 How authors write typed, signed edges with properties inside markdown, and how edges are identified and embedded elsewhere.

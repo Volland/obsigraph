@@ -42,6 +42,7 @@ describe.skipIf(!available)('example vault on LadybugDB', () => {
   });
 
   // @lat: [[tests/example-vault#Ladybug examples run]]
+  // @tg: verifies:: [[openspec:example-vault#Ladybug examples run#Pass-through examples match the mirror]]
   it.each(examples.map((e) => [e.name, e] as const))('%s returns rows on LadybugDB', async (_, e) => {
     const res = await fetch(`http://127.0.0.1:${sc.port}/query`, { method: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify({ query: e.query, backend: 'ladybug' }) });
     const body = (await res.json()) as { rows?: unknown[]; error?: { message: string } };

@@ -22,6 +22,8 @@ class HttpError extends Error {
 }
 
 /** Constant-time token check over fixed-length digests. */
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#MCP authentication]]
+// @tg: implements:: [[openspec:sidecar-service#Token authentication]]
 export function tokenMatches(expected: string, header: string | undefined): boolean {
   const m = /^Bearer\s+(.+)$/i.exec(header ?? '');
   if (!m) return false;
@@ -31,6 +33,7 @@ export function tokenMatches(expected: string, header: string | undefined): bool
 }
 
 /** Replace any occurrence of the token in log output. */
+// @tg: implements:: [[openspec:sidecar-service#Token authentication]]
 export function redactor(token: string | null): (s: string) => string {
   return token ? (s) => s.split(token).join('***') : (s) => s;
 }
@@ -80,6 +83,11 @@ function parse(raw: string, hint: string): Record<string, unknown> {
  * (streamable HTTP, stateless). Everything but health needs the bearer token.
  */
 // @lat: [[sidecar#Interfaces]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#MCP authentication]]
+// @tg: implements:: [[openspec:sidecar-mcp-graphrag#REST parity for hybrid retrieve]]
+// @tg: implements:: [[openspec:sidecar-service#Bounded request handling]]
+// @tg: implements:: [[openspec:sidecar-service#REST API]]
+// @tg: implements:: [[openspec:sidecar-service#Vector search over REST]]
 export function createApi(config: Config, sync: VaultSync, log: Logger = () => {}, extras: ApiExtras = {}, ops?: Ops): Server {
   const redact = redactor(config.token);
   if (!ops) throw new Error('createApi needs the shared operations');

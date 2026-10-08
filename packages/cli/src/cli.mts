@@ -7,6 +7,7 @@ export const VERSION = typeof __TG_VERSION__ === 'string' ? __TG_VERSION__ : 'de
 
 /** Exit codes: findings are not errors in the tool itself. */
 export const EXIT_OK = 0;
+// @tg: implements:: [[openspec:tg-cli#Output and exit codes]]
 export const EXIT_FINDINGS = 1;
 export const EXIT_ERROR = 2;
 
@@ -73,6 +74,7 @@ export function helpText(): string {
 }
 
 /** Run the CLI; returns the exit code and never throws. */
+// @tg: implements:: [[openspec:tg-cli#Output and exit codes]]
 export async function run(argv: string[], io: Io): Promise<number> {
   try {
     const first = argv.findIndex((a) => !a.startsWith('-') && !isFlagValue(argv, a));

@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, wr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { backlinksFor } from '../src/backlinks';
+import { backlinksFor, panelRows } from '../src/backlinks';
 import { GraphSession } from '../src/graph-session';
 import { WorkspaceIndex } from '../src/workspace-index';
 
@@ -37,6 +37,8 @@ async function index(roots = ['.'], files = FILES) {
 }
 
 // @lat: [[tests/vscode-extension#Indexer#Roots and ignores]]
+// @tg: verifies:: [[openspec:vscode-extension#Configurable roots#Monorepo noise]]
+// @tg: verifies:: [[openspec:vscode-extension#Configurable roots#Nested vault]]
 it('indexes only the roots and never dot or ignored folders', async () => {
   const { idx } = await index(['notes', 'lat.md', 'src']);
   expect(idx.isNote('notes/Alice.md')).toBe(true);
@@ -50,6 +52,7 @@ it('indexes only the roots and never dot or ignored folders', async () => {
 });
 
 // @lat: [[tests/vscode-extension#Indexer#Live update]]
+// @tg: verifies:: [[openspec:vscode-extension#Index the workspace in process#Live update]]
 it('reflects a saved edge and a deleted note without reloading', async () => {
   const { dir, idx } = await index();
   expect(backlinksFor(idx, 'notes/Eve.md').groups.map((g) => g.title)).toEqual(['distrusts']);
@@ -82,6 +85,7 @@ it('leaves the workspace byte-identical', async () => {
 });
 
 // @lat: [[tests/vscode-extension#Backlinks#Grouped by type]]
+// @tg: verifies:: [[openspec:vscode-extension#Typed backlinks for notes#Grouped by type]]
 it('groups incoming edges by type with source and line', async () => {
   const { idx } = await index();
   const r = backlinksFor(idx, 'notes/Bob.md');
@@ -94,6 +98,7 @@ it('groups incoming edges by type with source and line', async () => {
 });
 
 // @lat: [[tests/vscode-extension#Backlinks#Negative edge sign]]
+// @tg: verifies:: [[openspec:vscode-extension#Typed backlinks for notes#Negative edge]]
 it('marks a negative incoming edge', async () => {
   const { idx } = await index();
   const g = backlinksFor(idx, 'notes/Eve.md').groups[0]!;
@@ -102,6 +107,7 @@ it('marks a negative incoming edge', async () => {
 });
 
 // @lat: [[tests/vscode-extension#Backlinks#Code to spec]]
+// @tg: verifies:: [[openspec:vscode-extension#Backlinks for source files#Code to spec]]
 it('lists the notes an active source file annotates, with the heading as written', async () => {
   const { idx } = await index();
   const r = backlinksFor(idx, 'src/auth.ts');
@@ -110,6 +116,7 @@ it('lists the notes an active source file annotates, with the heading as written
 });
 
 // @lat: [[tests/vscode-extension#Backlinks#Spec to code]]
+// @tg: verifies:: [[openspec:vscode-extension#Backlinks for source files#Spec to code]]
 it('lists annotating source files for an active note, apart from note edges', async () => {
   const { idx } = await index();
   const r = backlinksFor(idx, 'lat.md/architecture.md');
@@ -118,6 +125,7 @@ it('lists annotating source files for an active note, apart from note edges', as
 });
 
 // @lat: [[tests/vscode-extension#Backlinks#Empty states]]
+// @tg: verifies:: [[openspec:vscode-extension#Empty and unsupported states#No edges]]
 it('returns an empty result for files without edges, outside the roots or unknown', async () => {
   const { idx } = await index(['notes', 'lat.md', 'src']);
   expect(backlinksFor(idx, 'notes/Carol.md')).toEqual({ kind: 'empty', groups: [] });
@@ -127,6 +135,7 @@ it('returns an empty result for files without edges, outside the roots or unknow
 });
 
 // @lat: [[tests/vscode-extension#Graph session#Expanded nodes survive refresh]]
+// @tg: verifies:: [[openspec:graph-ui#Neighborhood view-state#Expanded nodes kept]]
 it('keeps expanded neighborhoods across refreshes and drops removed nodes', async () => {
   const { dir, idx } = await index();
   const session = new GraphSession(() => idx.graph);
@@ -140,4 +149,37 @@ it('keeps expanded neighborhoods across refreshes and drops removed nodes', asyn
   rmSync(join(dir, 'notes/Alice.md'));
   await idx.update('notes/Alice.md');
   expect(ids('notes/Carol.md')).not.toContain('notes/Alice.md');
+});
+
+// @lat: [[tests/vscode-extension#Backlinks#Outside the roots]]
+// @tg: verifies:: [[openspec:vscode-extension#Empty and unsupported states#Outside the roots]]
+it('says a file is outside the configured roots, apart from the no-edges message', async () => {
+  const { idx } = await index(['docs']);
+  expect(panelRows(idx, { path: 'src/main.ts', inWorkspace: true }, false)).toEqual([{ kind: 'message', text: 'main.ts is outside the configured roots (typegraph.roots).' }]);
+  expect(panelRows(idx, { path: '/elsewhere/x.md', inWorkspace: false }, false)).toEqual([{ kind: 'message', text: 'x.md is outside the configured roots (typegraph.roots).' }]);
+  expect(panelRows(idx, { path: 'docs/outside.md', inWorkspace: true }, false)).toEqual([{ kind: 'message', text: 'No typed edges for outside.md.' }]);
+});
+
+// @lat: [[tests/vscode-extension#Backlinks#Setup offer]]
+// @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Value first]]
+it('leaves the view empty for the welcome content and appends the setup offer to backlinks', async () => {
+  const { idx } = await index();
+  expect(panelRows(idx, null, true)).toEqual([]);
+  expect(panelRows(idx, null, false)).toEqual([{ kind: 'message', text: 'Open a markdown or source file.' }]);
+  const rows = panelRows(idx, { path: 'notes/Eve.md', inWorkspace: true }, true);
+  expect(rows.map((r) => r.kind)).toEqual(['group', 'setup']);
+  expect(panelRows(idx, { path: 'notes/Eve.md', inWorkspace: true }, false).map((r) => r.kind)).toEqual(['group']);
+});
+
+// @lat: [[tests/vscode-extension#Graph session#Expansions reset on file switch]]
+// @tg: verifies:: [[openspec:vscode-extension#Graph webview#Expansions reset on file switch]]
+it('clears expanded nodes when the active file changes and keeps the last file without one', async () => {
+  const { idx } = await index();
+  const session = new GraphSession(() => idx.graph);
+  const ids = (a: string | null) => session.elements(a).nodes.map((n) => n.id).sort();
+  expect(ids('notes/Carol.md')).toEqual(['notes/Bob.md', 'notes/Carol.md']);
+  session.expand('notes/Alice.md');
+  expect(ids(null)).toEqual(['notes/Alice.md', 'notes/Bob.md', 'notes/Carol.md', 'notes/Eve.md']);
+  expect(ids('notes/Eve.md')).toEqual(['notes/Alice.md', 'notes/Eve.md']);
+  expect(ids('notes/Carol.md')).toEqual(['notes/Bob.md', 'notes/Carol.md']);
 });

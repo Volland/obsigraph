@@ -40,6 +40,7 @@ const baseName = (p: string): string => p.slice(p.lastIndexOf('/') + 1).toLowerC
  * are warnings, because consumers must tolerate them.
  */
 // @lat: [[okf#Conformance check]]
+// @tg: implements:: [[openspec:okf-compat#OKF conformance check]]
 export function checkOkf(files: OkfNote[]): OkfFinding[] {
   const out: OkfFinding[] = [];
   const known = new Set(files.map((f) => f.path.toLowerCase()));

@@ -22,6 +22,9 @@ export interface RendererOptions {
  * are stored as element data, so restyling never moves nodes.
  */
 // @lat: [[visualization#Surfaces]]
+// @tg: implements:: [[openspec:graph-ui#Host-independent rendering]]
+// @tg: implements:: [[openspec:graph-view#Edge presentation]]
+// @tg: implements:: [[openspec:graph-view#Shared renderer]]
 export class GraphRenderer {
   readonly cy: Core;
   private styler: Styler;
@@ -70,6 +73,7 @@ export class GraphRenderer {
   }
 
   /** Add elements without discarding existing ones. */
+  // @tg: implements:: [[openspec:graph-view#Click to expand]]
   addElements(g: GraphElements): void {
     const fresh = [...g.nodes, ...g.edges].filter((x) => !this.model.has(x.id));
     if (fresh.length === 0) return;
@@ -79,6 +83,7 @@ export class GraphRenderer {
   }
 
   /** Swap the styler and update element data in place, without re-layout. */
+  // @tg: implements:: [[openspec:visualization-config#Live style updates]]
   setStyler(styler: Styler): void {
     this.styler = styler;
     this.restyle();

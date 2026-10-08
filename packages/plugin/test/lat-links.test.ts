@@ -8,6 +8,7 @@ const index = new LatIndex([
 ]);
 
 // @lat: [[tests/tg-vault#Read in place#Nested heading link]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Read in place#Nested heading link]]
 it('resolves nested heading and short ids to the section line', () => {
   const full = latLinkTarget(index, 'architecture#Monorepo layout#core');
   expect(full).toEqual({ kind: 'open', path: 'lat.md/architecture.md', line: 8 });
@@ -19,6 +20,7 @@ it('resolves nested heading and short ids to the section line', () => {
 });
 
 // @lat: [[tests/tg-vault#Read in place#Code link]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Read in place#Code link]]
 it('reports source links instead of opening them, and surfaces broken links as diagnostics', () => {
   expect(latLinkTarget(index, 'src/config.ts#getConfigDir')).toEqual({ kind: 'code', file: 'src/config.ts', symbol: 'getConfigDir' });
   const d = latDiagnostics(index);

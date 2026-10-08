@@ -10,18 +10,21 @@ const one = (text: string) => {
 
 describe('edge parsing', () => {
   // @lat: [[tests/edge-parsing#Plain Graph Link Types line]]
+  // @tg: verifies:: [[openspec:edge-parsing#Inline edge form#Plain Graph Link Types line]]
   it('parses a plain Graph Link Types line', () => {
     const e = one('knows:: [[Bob]]');
     expect(e).toMatchObject({ type: 'knows', target: 'Bob', sign: 1, props: {} });
   });
 
   // @lat: [[tests/edge-parsing#Line with properties]]
+  // @tg: verifies:: [[openspec:edge-parsing#Inline edge form#Line with properties]]
   it('parses a trailing property block with typed values', () => {
     const e = one('knows:: [[Bob]] {since: 2020, label: "met at conf", ok: true, tags: [a, "b c"],}');
     expect(e.props).toEqual({ since: 2020, label: 'met at conf', ok: true, tags: ['a', 'b c'] });
   });
 
   // @lat: [[tests/edge-parsing#Negative sign prefix]]
+  // @tg: verifies:: [[openspec:edge-parsing#Sign prefix#Negative edge]]
   it('treats a - prefix as sign -1 and strips it from the type', () => {
     const e = one('-distrusts:: [[Eve]]');
     expect(e.type).toBe('distrusts');
@@ -29,6 +32,7 @@ describe('edge parsing', () => {
   });
 
   // @lat: [[tests/edge-parsing#Default positive sign]]
+  // @tg: verifies:: [[openspec:edge-parsing#Sign prefix#Unsigned edge]]
   it('defaults sign to +1 and accepts an explicit + prefix', () => {
     expect(one('knows:: [[Bob]]').sign).toBe(1);
     const plus = one('+trusts:: [[Bob]]');
@@ -36,6 +40,7 @@ describe('edge parsing', () => {
   });
 
   // @lat: [[tests/edge-parsing#Weight independent of sign]]
+  // @tg: verifies:: [[openspec:edge-parsing#Weight is independent of sign#Negative weight on positive edge]]
   it('keeps weight as an ordinary property', () => {
     const e = one('knows:: [[Bob]] {weight: -0.8}');
     expect(e.sign).toBe(1);
@@ -43,12 +48,14 @@ describe('edge parsing', () => {
   });
 
   // @lat: [[tests/edge-parsing#Source heading recorded]]
+  // @tg: verifies:: [[openspec:edge-parsing#Source heading is recorded#Edge under a heading]]
   it('records the nearest preceding heading', () => {
     const { edges } = parseEdges('knows:: [[Zed]]\n# People\n## Colleagues\nknows:: [[Bob]]');
     expect(edges.map((e) => e.heading)).toEqual([null, 'Colleagues']);
   });
 
   // @lat: [[tests/edge-parsing#Malformed property block]]
+  // @tg: verifies:: [[openspec:edge-parsing#Malformed property blocks#Unclosed block]]
   it('keeps the edge and reports a diagnostic for a malformed block', () => {
     const { edges, diagnostics } = parseEdges('intro\nknows:: [[Bob]] {since: 2020', 'Alice.md');
     expect(edges).toHaveLength(1);
@@ -59,6 +66,7 @@ describe('edge parsing', () => {
   });
 
   // @lat: [[tests/edge-parsing#Code fences ignored]]
+  // @tg: verifies:: [[openspec:edge-parsing#Non-edge text is ignored#Edge syntax in a code fence]]
   it('ignores fenced code and frontmatter', () => {
     const text = [
       '---',

@@ -43,6 +43,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#Each ontology stands alone]]
+  // @tg: verifies:: [[openspec:ontology-gallery#Each ontology stands alone#Ontology checked alone]]
   it.each(IDS)('%s reads, validates its examples, exports to SHACL and matches the JSON Schema', (id) => {
     const notes = load(id);
     const { set, diagnostics } = check(notes);
@@ -62,6 +63,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#Zettelkasten note types and sources]]
+  // @tg: verifies:: [[openspec:ontology-gallery#Zettelkasten ontology#Literature note without a source]]
   it('covers every Zettelkasten note and source type, and requires sources for literature notes and highlights', () => {
     const notes = load('zettelkasten');
     const used = new Set(notes.flatMap((n) => [n.frontmatter?.type].flat().filter(Boolean) as string[]));
@@ -74,6 +76,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#Ontologies compose]]
+  // @tg: verifies:: [[openspec:ontology-gallery#Ontologies compose#All composed]]
   it('combines into one vault with no clash, and a note can carry labels from two ontologies', () => {
     const merged = ALL.flatMap((id) => load(id).map((n) => ({ ...n, path: n.path.startsWith('Types/') ? n.path : `${id}/${n.path}` })));
     const both: NoteInput = {
@@ -94,6 +97,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#Clash without core]]
+  // @tg: verifies:: [[openspec:ontology-gallery#Ontologies compose#Clash without core]]
   it('reports the duplicate edge type when two ontologies both declare it', () => {
     const dup: NoteInput = {
       path: 'Types/Extra.md',
@@ -105,6 +109,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#Mixin bridges two ontologies]]
+  // @tg: verifies:: [[openspec:ontology-gallery#Mixins bridge ontologies#Edge granted by mixin]]
   it('lets a mixin type grant an edge across ontologies, and rejects it without the mixin', () => {
     const merged = ALL.flatMap((id) => load(id).map((n) => ({ ...n, path: n.path.startsWith('Types/') ? n.path : `${id}/${n.path}` })));
     const bridge: NoteInput = {
@@ -123,6 +128,7 @@ describe('ontology gallery', () => {
   });
 
   // @lat: [[tests/ontology-gallery#OKF ontology exports conformant]]
+  // @tg: verifies:: [[openspec:ontology-gallery#OKF ontology exports conformant#Export and check]]
   it('exports the OKF ontology as a bundle with no conformance errors', () => {
     const notes = load('okf').filter((n) => n.path.startsWith('Examples/'));
     const { files } = exportOkf(notes.map((n) => ({ path: n.path, text: n.text, frontmatter: n.frontmatter ?? null })));
