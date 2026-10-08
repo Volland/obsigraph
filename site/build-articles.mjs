@@ -51,8 +51,16 @@ POSTS.push(
     date: '8 October 2026',
     related: ['blog-composable-ontologies.html', 'Ontologies you can download, and combine'],
   },
+  {
+    src: 'articles/specs-that-know-their-code.md',
+    out: 'site/blog-specs-that-know-their-code.html',
+    title: 'Specs That Know Where Their Code Is',
+    description: 'Tracing OpenSpec requirements to the code that implements them, the tests that prove them and the docs that explain them, and what an honest audit of 212 requirements found on the way.',
+    date: '8 October 2026',
+    related: ['blog-typed-graph-for-coders.html', 'Two graphs in your codebase'],
+  },
 );
-const LINKS = { 'shared-space-for-agents-and-humans.md': 'blog-shared-space.html', 'claude-code-memory-in-five-minutes.md': 'blog-claude-code-memory.html', 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html', 'zettelkasten-thinking-machine.md': 'blog-zettelkasten-thinking-machine.html' };
+const LINKS = { 'shared-space-for-agents-and-humans.md': 'blog-shared-space.html', 'claude-code-memory-in-five-minutes.md': 'blog-claude-code-memory.html', 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html', 'zettelkasten-thinking-machine.md': 'blog-zettelkasten-thinking-machine.html', 'specs-that-know-their-code.md': 'blog-specs-that-know-their-code.html' };
 const DATE = '6 October 2026';
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
