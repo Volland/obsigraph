@@ -43,8 +43,16 @@ POSTS.push(
     date: '7 October 2026',
     related: ['agents.html', 'TypeGraph for agents'],
   },
+  {
+    src: 'articles/zettelkasten-thinking-machine.md',
+    out: 'site/blog-zettelkasten-thinking-machine.html',
+    title: 'A Slip Box That Answers Back',
+    description: 'Build a Zettelkasten as a typed graph, connect it to the books and articles you read, compose it with a library ontology, and ask it questions a folder of notes cannot answer.',
+    date: '8 October 2026',
+    related: ['blog-composable-ontologies.html', 'Ontologies you can download, and combine'],
+  },
 );
-const LINKS = { 'shared-space-for-agents-and-humans.md': 'blog-shared-space.html', 'claude-code-memory-in-five-minutes.md': 'blog-claude-code-memory.html', 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html' };
+const LINKS = { 'shared-space-for-agents-and-humans.md': 'blog-shared-space.html', 'claude-code-memory-in-five-minutes.md': 'blog-claude-code-memory.html', 'typed-graph-for-coders.md': 'blog-typed-graph-for-coders.html', 'code-ontology-in-practice.md': 'blog-code-ontology.html', 'composable-ontologies.md': 'blog-composable-ontologies.html', 'zettelkasten-thinking-machine.md': 'blog-zettelkasten-thinking-machine.html' };
 const DATE = '6 October 2026';
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

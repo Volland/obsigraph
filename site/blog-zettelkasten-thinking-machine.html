@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Slip Box That Answers Back</title>
+  <meta name="description" content="Build a Zettelkasten as a typed graph, connect it to the books and articles you read, compose it with a library ontology, and ask it questions a folder of notes cannot answer.">
+  <meta property="og:title" content="A slip box that answers back">
+  <meta property="og:description" content="Build a Zettelkasten as a typed graph, connect it to the books and articles you read, compose it with a library ontology, and ask it questions a folder of notes cannot answer.">
+  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="agents.html">Agents</a>
+        <a href="obsidian.html">Obsidian</a>
+        <a href="teams.html">Teams</a>
+        <a href="docs.html">Docs</a>
+        <a href="demo.html">Demo</a>
+        <a href="example.html">Example</a>
+        <a href="ontologies.html">Ontologies</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <button class="theme-toggle" aria-label="Toggle theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap post">
+    <div class="meta"><a href="blog.html">Blog</a> · 8 October 2026 · Volodymyr Pavlyshyn</div>
+    <h1>A slip box that answers back</h1>
+    <p class="standfirst">How to build a Zettelkasten as a typed graph, connect it to the books and articles you read, compose it with a library ontology, and ask it questions you could not ask a folder of notes.</p>
+
+<h2>The promise Luhmann made</h2>
+<p>Niklas Luhmann wrote about seventy books and several hundred articles. He credited a wooden cabinet of about ninety thousand index cards for most of it. In 1981 he described the cabinet as a <em>communication partner</em>: a system that, once it held enough linked notes, would answer back with connections he had not planned.</p>
+<p>That essay is the reason people still build slip boxes. It is also the reason most of them are disappointed. Their notes pile up and the links accumulate, but nothing answers back. A folder of Markdown files with <code>[[wikilinks]]</code> is a better index card than paper, but it is still an index card. You can follow a link. You cannot ask the box a question.</p>
+<p>The missing piece is not more notes or more links. It is <strong>what kind</strong> of note each one is and <strong>what kind</strong> of link each one makes. &quot;This idea came from that page&quot; is a different statement from &quot;this idea contradicts that one&quot;, and a slip box that cannot tell them apart can only show you a hairball.</p>
+<p>This article builds a Zettelkasten in which notes and links have types. We will use the Zettelkasten ontology from the <a href="ontologies.html">TypeGraph ontology gallery</a>, and connect it to the books and articles you read. We will then compose it with a second ontology, a library for your reading life, without either one breaking the other. At the end we will ask it a dozen questions, from &quot;what have I not processed?&quot; to &quot;which of my ideas came from fiction?&quot;, and show the real answers it gives.</p>
+<p>Everything here is plain Markdown. Every query and validator message below was run against the real engine on the vault described in this article.</p>
+<h2>A Zettelkasten is already a graph with types</h2>
+<p>The method has types even when the tool does not. As Sönke Ahrens describes it in <em>How to Take Smart Notes</em>, and as Christian Tietze and Sascha Fast extend it on zettelkasten.de, a note moves through stages:</p>
+<ul>
+<li><strong>Fleeting notes</strong> are quick captures. You process them within a day or two or throw them away.</li>
+<li><strong>Literature notes</strong> say what a source says, <em>in your own words</em>, so they make sense without the source.</li>
+<li><strong>Permanent notes</strong> hold one idea each, written to stand alone and linked to other permanent notes.</li>
+<li><strong>Structure notes</strong> are hubs: an ordered entry point into a line of thought.</li>
+<li><strong>Project notes</strong> are where you use the box: a chapter, a talk, a thesis.</li>
+</ul>
+<p>Around them sit the things you read (books and articles), the people who wrote them, the passages you marked, and a few topics that let you find your way in.</p>
+<p>In a folder of files these are conventions. A note is &quot;permanent&quot; because it lives in <code>Permanent/</code> or carries a <code>#permanent</code> tag. Nothing stops a permanent note from citing nothing, a literature note from losing its source, or a fleeting note from sitting in the inbox for a year.</p>
+<p>In a typed graph the conventions become data. A permanent note is a node with the label <code>PermanentNote</code>. &quot;It was derived from this literature note&quot; is an edge with the type <code>derived_from</code>, and &quot;it supports that other idea&quot; is an edge with the type <code>supports</code> and a property saying <em>how</em>. Once the stage of a note and the meaning of a link are data, they can be checked and queried, and the box can start answering.</p>
+<h2>The ontology in one note</h2>
+<p>The whole Zettelkasten ontology is one Markdown file, <code>Types/Zettelkasten.md</code>. Its frontmatter is a schema in the open <a href="spec/tgs/v0.2/">Typed Graph Schema</a> format. Here is the heart of it, trimmed:</p>
+<pre>---
+tgs: &quot;0.2&quot;
+schemas:
+  FleetingNote:
+    id: {kind: uuid7, property: uid}
+    template: &quot;[[Templates/Fleeting Note]]&quot;
+    properties:
+      status: {values: [inbox, processed, discarded], default: inbox}
+      context: text
+    edges:
+      processed_into: [LiteratureNote, PermanentNote]
+  LiteratureNote:
+    edges:
+      cites: {target: [BookSource, ArticleSource], required: true}
+      based_on: Highlight
+  PermanentNote:
+    id:
+      - {kind: uuid7, property: uid}
+      - {kind: luhmann, property: luhmann, auto: false}
+    properties:
+      confidence: {values: [low, medium, high]}
+    edges:
+      derived_from: [FleetingNote, LiteratureNote, Highlight]
+      extends: PermanentNote
+      supports: PermanentNote
+      contradicts: [PermanentNote, FleetingNote]
+      example_of: PermanentNote
+      follows: PermanentNote
+  StructureNote:
+    edges:
+      indexes: [PermanentNote, StructureNote]
+  Highlight:
+    edges:
+      highlighted_in: {target: [BookSource, ArticleSource], required: true}
+edgeTypes:
+  supports: {from: PermanentNote, to: PermanentNote, properties: {how: text}}
+  cites: {from: [LiteratureNote, PermanentNote], to: [BookSource, ArticleSource], properties: {page: text}}
+  indexes: {from: StructureNote, to: [PermanentNote, StructureNote], properties: {order: number}}
+  draws_on: {from: ProjectNote, to: [PermanentNote, LiteratureNote, StructureNote], properties: {chapter: text}}
+---</pre>
+<p>The full file declares ten types and thirteen edge types. Read it as a description of the method rather than a data model:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>What it is</th>
+<th>Its links</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>FleetingNote</code></td>
+<td>a capture, with a status: <code>inbox</code>, <code>processed</code>, <code>discarded</code></td>
+<td><code>processed_into</code> the note it became</td>
+</tr>
+<tr>
+<td><code>LiteratureNote</code></td>
+<td>a source in your own words</td>
+<td><code>cites</code> a book or article (required), <code>based_on</code> a highlight</td>
+</tr>
+<tr>
+<td><code>PermanentNote</code></td>
+<td>one idea that stands alone</td>
+<td><code>derived_from</code>, <code>extends</code>, <code>supports</code>, <code>contradicts</code>, <code>example_of</code>, <code>follows</code></td>
+</tr>
+<tr>
+<td><code>StructureNote</code></td>
+<td>an ordered hub</td>
+<td><code>indexes</code> with an <code>order</code></td>
+</tr>
+<tr>
+<td><code>ProjectNote</code></td>
+<td>a piece of work</td>
+<td><code>draws_on</code> with the <code>chapter</code> it feeds</td>
+</tr>
+<tr>
+<td><code>BookSource</code>, <code>ArticleSource</code></td>
+<td>what you read</td>
+<td><code>authored_by</code> a writer (required)</td>
+</tr>
+<tr>
+<td><code>Highlight</code></td>
+<td>raw text you marked</td>
+<td><code>highlighted_in</code> its source (required)</td>
+</tr>
+<tr>
+<td><code>Writer</code></td>
+<td>a person who wrote a source</td>
+<td></td>
+</tr>
+<tr>
+<td><code>Topic</code></td>
+<td>an entry point</td>
+<td><code>related_to</code> other topics; everything can be <code>about</code> one</td>
+</tr>
+</tbody></table>
+<p>Three design choices in this file do most of the work.</p>
+<p><strong>The type of a note is its stage.</strong> You do not &quot;promote&quot; a fleeting note by editing it into a permanent one. You write a new note and link back with <code>processed_into</code>, <code>based_on</code> or <code>derived_from</code>. The trail from capture to idea stays in the graph, which matters later when you ask where an idea came from.</p>
+<p><strong>Links between ideas say how they relate.</strong> Luhmann&#39;s cards had numbers and arrows, and the arrows carried meaning he kept in his head. Here the meaning is the edge type. <code>extends</code> is &quot;takes this further&quot;, <code>supports</code> is &quot;is evidence for&quot;, <code>example_of</code> is &quot;is an instance of&quot;, and <code>contradicts</code> is &quot;cannot both be true&quot;. The edges carry properties too: a <code>supports</code> edge has a <code>how</code>, a <code>cites</code> edge has a <code>page</code>, and an <code>indexes</code> edge has an <code>order</code>.</p>
+<p><strong>Sources are required where the method requires them.</strong> A literature note that cites nothing is not a literature note, so <code>cites</code> is <code>required: true</code>. A highlight with no source is a quote you can no longer check. The validator turns both into warnings on the note. Validation is advisory: it never blocks you and never deletes anything.</p>
+<h2>Writing it, one note at a time</h2>
+<p>The ontology folder ships with a small worked example: a student who reads Ahrens, Luhmann and the zettelkasten.de introduction while writing a thesis chapter. Here is how its notes are written, in the order you would write them.</p>
+<h3>Capture</h3>
+<p>You have half a thought after a meeting. You write it down without judging it:</p>
+<pre>---
+type: FleetingNote
+created: 2026-01-18
+status: inbox
+context: after the supervisor meeting
+---
+Start the thesis notes in one place and see whether chapters write themselves.
+
+## Links
+
+about:: [[Writing]]</pre>
+<p>In Obsidian you would run <strong>Typed Graph: New typed note</strong> and pick <code>FleetingNote</code>. The plugin writes the frontmatter with the type and its defaults (<code>status: inbox</code>), fills in the template, and gives the note a time-ordered <code>uid</code> (a UUIDv7), so the note keeps one identity when you rename the file.</p>
+<h3>Read and mark</h3>
+<p>Reading <em>How to Take Smart Notes</em>, you mark a sentence on page 12. A highlight is raw material, and it must say where it came from:</p>
+<pre>---
+type: Highlight
+page: &quot;12&quot;
+color: yellow
+saved: 2026-01-13
+---
+Writing is not the outcome of thinking; it is the medium in which thinking takes place.
+
+## Links
+
+highlighted_in:: [[How to Take Smart Notes]]
+about:: [[Writing]]</pre>
+<h3>Say it in your own words</h3>
+<p>The literature note is where reading becomes understanding. It cites the source with a page and points at the highlight it interprets:</p>
+<pre>---
+type: LiteratureNote
+created: 2026-01-13
+---
+In my own words: you do not first think and then write. You think by
+writing, so take notes as part of the thinking and not as storage for
+it afterwards.
+
+## Links
+
+cites:: [[How to Take Smart Notes]] {page: &quot;12&quot;}
+based_on:: [[Writing is the medium of thinking (highlight)]]
+about:: [[Writing]]</pre>
+<h3>Make it yours</h3>
+<p>A permanent note is not a summary of a source. It is your claim, and it says which notes it grew out of and where it sits among your other ideas:</p>
+<pre>---
+type: PermanentNote
+created: 2026-01-15
+confidence: high
+luhmann: &quot;2&quot;
+---
+Thinking that stays in your head is vague; writing it down forces you
+to find out what you actually mean.
+
+## Links
+
+derived_from:: [[Ahrens: write to think]]
+derived_from:: [[Luhmann: the slip box answers back]]
+about:: [[Writing]]
+example_of:: [[Notes are only useful when linked]]</pre>
+<p>The <code>luhmann</code> property is a Luhmann id. Luhmann numbered his cards so that a new thought could branch off an existing one: <code>1</code>, then <code>1a</code> as a continuation, <code>1a1</code> as a branch of that, then <code>2</code> for a new line. The plugin has three commands for it: <strong>New child note</strong>, <strong>New sibling note</strong> and <strong>New top-level note</strong>. Each computes the next free id, and the child and sibling commands fill a <code>follows</code> link to the parent through the template:</p>
+<pre>## Idea
+
+One idea, in my own words.
+
+## Links
+
+follows:: {{parent-link}} {luhmann: &quot;{{luhmann}}&quot;}
+- derived_from::
+- extends::
+- supports::
+- contradicts::</pre>
+<p>The empty edge lines in the template are prompts. They remind you, at the moment of writing, to ask &quot;what does this build on, and what does it disagree with?&quot; That is the question the method is built around.</p>
+<h3>Disagree on the record</h3>
+<p>The example&#39;s first fleeting note was a belief the student later dropped: &quot;A folder tree is all the structure a note system needs.&quot; Instead of deleting it, the permanent note that replaced it records the disagreement:</p>
+<pre>derived_from:: [[Folders are enough]] {transform: &quot;rejected: structure from place, not from links&quot;}
+-contradicts:: [[Folders are enough]] {why: &quot;structure from place, not from links&quot;}</pre>
+<p>The leading <code>-</code> makes the edge negative, and the <code>why</code> says what the disagreement is. Most note systems lose the ideas you changed your mind about. Here they stay, marked as contradicted, with the reason attached.</p>
+<h3>Give it a way in, and put it to work</h3>
+<p>A structure note orders a line of thought. The <code>order</code> on each edge is the reading order:</p>
+<pre>indexes:: [[Notes are only useful when linked]] {order: 1}
+indexes:: [[Write for your future self]] {order: 2}
+indexes:: [[One idea per note]] {order: 3}
+indexes:: [[Writing is how thinking happens]] {order: 4}</pre>
+<p>A project note says which notes feed which part of the work:</p>
+<pre>draws_on:: [[Note-taking index]] {chapter: &quot;2&quot;}
+draws_on:: [[Writing is how thinking happens]] {chapter: &quot;2&quot;}
+draws_on:: [[Tietze and Fast: note types]] {chapter: &quot;3&quot;}</pre>
+<p>Nothing here is exotic. Each note is a page of prose with a few typed lines at the bottom. The discipline the method asks for is the same as on paper. The difference is that the discipline is now visible to a machine.</p>
+<h2>Your books and articles are part of the graph</h2>
+<p>Most note systems treat sources as attachments: a citation at the bottom of a note, or a PDF in a folder. In this ontology a book is a node like any other, with the edges <code>authored_by</code>, <code>about</code>, and incoming <code>cites</code> and <code>highlighted_in</code>.</p>
+<p>That turns the whole provenance of an idea into a path you can walk. Take a permanent note and follow <code>derived_from</code>, <code>based_on</code> and <code>highlighted_in</code> outward:</p>
+<pre>MATCH path = (p:PermanentNote {title: 'Naming a fear widens attention'})
+             -[:derived_from|based_on|highlighted_in*1..3]-&gt;(src)
+RETURN nodes(path) AS trail, length(path) AS hops ORDER BY hops</pre>
+<p>The longest result is the full chain:</p>
+<pre>Naming a fear widens attention   (PermanentNote)
+  ← Herbert: fear narrows the mind (LiteratureNote)
+    ← Fear is the mind-killer        (Highlight)
+      ← Dune                          (Book, BookSource)</pre>
+<p>That idea came from a novel, which brings us to the second ontology.</p>
+<h2>Two ontologies, one life</h2>
+<p>You read for more reasons than your Zettelkasten. You keep a reading list with what you want to read, what you are reading and what you gave up on. You rate books, track series, and keep quotes you love but will never turn into an idea. That is a different ontology with different concerns, and the gallery has one: <strong>Library</strong>, with <code>Book</code>, <code>Author</code>, <code>Series</code>, <code>Genre</code> and <code>Quote</code>.</p>
+<pre>schemas:
+  Book:
+    properties:
+      status: {values: [wishlist, to-read, reading, finished, abandoned], default: to-read}
+      format: {values: [paper, ebook, audio]}
+      rating: number
+      started: date
+      finished: date
+    edges:
+      written_by: {target: Author, required: true}
+      in_series: Series
+      has_genre: Genre
+      sequel_of: Book
+edgeTypes:
+  in_series: {from: Book, to: Series, properties: {volume: number}}</pre>
+<p>You could merge the two ontologies into one big schema, and you would regret it. The Zettelkasten would grow fields about shelves and formats it does not care about. The library would learn about literature notes it does not need. Every update to either would become a manual merge.</p>
+<p>Instead, keep both as they are and compose them. Composition in TypeGraph is deliberately simple: put the schema notes in the same schema folder. Three notes make up the vault in this article:</p>
+<pre>Types/
+  Core.md           edge types shared by several ontologies
+  Zettelkasten.md
+  Library.md</pre>
+<h3>Why the names do not collide</h3>
+<p>Look at the Zettelkasten&#39;s source types: <code>BookSource</code> and <code>Writer</code>, not <code>Book</code> and <code>Author</code>. That is on purpose. The two ontologies were designed to meet, so the Zettelkasten avoids the library&#39;s names. Its README says: <em>&quot;Writers are <code>Writer</code> here so the ontology composes with the library&#39;s <code>Author</code>.&quot;</em></p>
+<p>The shared words live in <code>Core.md</code>. <code>contradicts</code> and <code>derived_from</code> are used by more than one ontology in the gallery, so they are declared once there, without restricting their ends. Each ontology then says which of its own types may use them. (The <a href="blog-composable-ontologies.html">composable ontologies</a> article tells the story of how that rule was found: by putting five ontologies in one folder and reading the clashes.)</p>
+<h3>One book, two roles</h3>
+<p class="note"><em>Dune</em> is a book on your shelf and a source for your slip box. Do not make two notes. Give one note both labels:</p>
+<pre>---
+type: [Book, BookSource]
+status: finished
+format: paper
+rating: 5
+pages: 612
+year: 1965
+started: 2026-02-01
+finished: 2026-02-20
+---
+The desert planet, spice and a young duke's son.
+
+## Links
+
+written_by:: [[Frank Herbert]] {role: &quot;author&quot;}
+authored_by:: [[Frank Herbert]] {role: &quot;author&quot;}
+in_series:: [[Dune Chronicles]] {volume: 1}
+has_genre:: [[Science fiction]]</pre>
+<p>The note now has the properties and edges of both types. Your reading log sees a finished five-star paperback in a series, and your literature notes can <code>cite</code> it, because it is a <code>BookSource</code>.</p>
+<p>The same move works for the author (<code>type: [Author, Writer]</code>) and for the quote you saved, which is also the highlight your literature note is based on:</p>
+<pre>---
+type: [Quote, Highlight]
+page: 8
+saved: 2026-02-03
+---
+I must not fear. Fear is the mind-killer.
+
+## Links
+
+quoted_from:: [[Dune]]
+highlighted_in:: [[Dune]]
+about:: [[Attention]]</pre>
+<p>You may notice that the author is linked twice, with <code>written_by</code> for the library and <code>authored_by</code> for the Zettelkasten. Each ontology requires its own edge, so a note with both labels carries both. This is the honest cost of composing two ontologies you did not write together: a line of duplication instead of a merged schema. If it starts to bother you, move one author edge into <code>Core.md</code> and have both types allow it. That is exactly the rule for shared words.</p>
+<h3>The composed vault checks clean</h3>
+<p>The vault for this article has the Zettelkasten and Library examples, plus a few notes connecting them: <em>Dune</em>, <em>Frank Herbert</em> and <em>How to Take Smart Notes</em> with two labels each, the quote as a highlight, a literature note on the litany against fear, a permanent note that grew out of it, and an <code>Attention</code> topic. With all three schema notes loaded:</p>
+<pre>notes=37 schemas=15 edgeTypes=22 diagnostics=0</pre>
+<p>That is 34 data notes and 3 schema notes, 15 types and 22 edge types across two ontologies and the core, and no clashes.</p>
+<p>To see that the checks are real, add two mistakes. A literature note that cites <em>Dune Messiah</em>, which is only labeled <code>Book</code>, and a highlight with no source:</p>
+<pre>Zettelkasten/Herbert: power and prophecy.md:8  Edge 'cites' expects target type BookSource or ArticleSource, found Book
+Zettelkasten/The spice must flow.md:0          Missing required edge 'highlighted_in' for type Highlight</pre>
+<p>The first message is the useful one. It is not a typo check. It is the composition telling you that a book from your reading list has not become a source in your slip box yet. Adding <code>BookSource</code> to its labels is the fix, and also a small decision: <em>this book is now something I think with.</em></p>
+<h2>Asking the box questions</h2>
+<p>This is where the slip box starts to answer back. Every query below is openCypher, which the Obsidian plugin runs live inside a <code>graph-query</code> code block:</p>
+<pre>```graph-query
+view: table
+
+MATCH (f:FleetingNote {status: 'inbox'})
+RETURN f.title, f.created, f.context ORDER BY f.created
+```</pre>
+<p>The block re-runs when your notes change. Put a handful of them on a dashboard note and you have a cockpit for your thinking. Here are the questions, with the answers from the composed vault.</p>
+<h3>What have I not processed yet?</h3>
+<pre>MATCH (f:FleetingNote {status: 'inbox'})
+RETURN f.title, f.created, f.context ORDER BY f.created</pre>
+<pre>Try a slip box for the thesis      2026-01-18  after the supervisor meeting
+Do novels belong in the slip box   2026-02-23  after finishing Dune</pre>
+<p>The method says fleeting notes live for a day or two. The first one has been in the inbox since January.</p>
+<h3>Which ideas have no home?</h3>
+<p>A permanent note that no structure note indexes can only be found by accident. Ask for permanent notes with no incoming <code>indexes</code>:</p>
+<pre>MATCH (p:PermanentNote)
+OPTIONAL MATCH (s:StructureNote)-[:indexes]-&gt;(p)
+WITH p, s WHERE s IS NULL
+RETURN p.title AS unindexed</pre>
+<pre>Naming a fear widens attention</pre>
+<p>That is the idea from <em>Dune</em>. It was written after the structure note, and nobody went back to place it.</p>
+<h3>Which ideas are barely connected?</h3>
+<p>An idea that nothing else builds on is either new or forgotten. Count incoming links from other permanent notes:</p>
+<pre>MATCH (p:PermanentNote)
+OPTIONAL MATCH (p)&lt;-[r]-(:PermanentNote)
+WITH p, count(r) AS incoming
+RETURN p.title, p.confidence, incoming ORDER BY incoming</pre>
+<pre>Naming a fear widens attention     medium  0
+One idea per note                  medium  0
+Write for your future self         medium  1
+Writing is how thinking happens    high    2
+Notes are only useful when linked  high    4</pre>
+<p>The two ideas held with <code>high</code> confidence are also the two most built upon. Whether that is because they are right or because you wrote them first is a question worth asking yourself.</p>
+<h3>How do my ideas hang together?</h3>
+<pre>MATCH (a:PermanentNote)-[r:supports|extends|example_of|follows]-&gt;(b:PermanentNote)
+RETURN a.title, type(r), b.title</pre>
+<pre>Naming a fear widens attention     follows     Writing is how thinking happens
+Naming a fear widens attention     extends     Writing is how thinking happens
+Notes are only useful when linked  supports    Write for your future self
+One idea per note                  supports    Notes are only useful when linked
+Write for your future self         extends     Notes are only useful when linked
+Write for your future self         follows     Notes are only useful when linked
+Writing is how thinking happens    example_of  Notes are only useful when linked</pre>
+<p>This is the argument structure of your slip box, not just its link structure. Return the nodes and edges instead of their titles (<code>RETURN a, r, b</code>) and the block draws them as a graph, styled by the schema: permanent notes in amber, <code>follows</code> dotted, <code>contradicts</code> dashed red.</p>
+<h3>Where did I change my mind?</h3>
+<pre>MATCH (a)-[r:contradicts]-&gt;(b)
+RETURN a.title, r.sign, r.why, b.title</pre>
+<pre>Notes are only useful when linked  -1  structure from place, not from links  Folders are enough</pre>
+<p>In a large box this list is the most interesting page you own. It is the record of what you used to believe, and why you stopped.</p>
+<h3>Read the Luhmann sequence</h3>
+<pre>MATCH (p:PermanentNote) RETURN p.luhmann, p.title ORDER BY p.luhmann</pre>
+<pre>1   Notes are only useful when linked
+1a  Write for your future self
+2   Writing is how thinking happens
+2a  Naming a fear widens attention
+3   One idea per note</pre>
+<p>This is Luhmann&#39;s reading order: a line of thought, its continuations, then the next line. <code>2a</code> is the idea from <em>Dune</em>, filed as a continuation of &quot;writing is how thinking happens&quot;, which is exactly where it belongs.</p>
+<h3>Which books actually changed my thinking?</h3>
+<p>Here the two ontologies start to pay off. A book changed your thinking if a permanent note derives from a literature note that cites it:</p>
+<pre>MATCH (b:Book)&lt;-[:cites]-(l:LiteratureNote)&lt;-[:derived_from]-(p:PermanentNote)
+RETURN b.title AS book, count(DISTINCT p) AS ideas ORDER BY ideas DESC</pre>
+<pre>How to Take Smart Notes  2
+Dune                     1</pre>
+<p>Set that against your reading log. Every finished book, its rating, and how many literature notes it produced:</p>
+<pre>MATCH (b:Book {status: 'finished'})
+OPTIONAL MATCH (l:LiteratureNote)-[:cites]-&gt;(b)
+WITH b, count(l) AS notes
+RETURN b.title, b.rating, notes ORDER BY notes</pre>
+<pre>Dune                     5  1
+How to Take Smart Notes  5  1</pre>
+<p>In a real library this list is long, and its top rows, the finished books with zero notes, are the books you enjoyed and did not digest. The rating comes from the library ontology and the notes from the Zettelkasten. Neither ontology could answer this alone.</p>
+<h3>Which of my ideas came from fiction?</h3>
+<pre>MATCH (p:PermanentNote)-[:derived_from]-&gt;(:LiteratureNote)-[:cites]-&gt;(b:Book)-[:has_genre]-&gt;(g:Genre)
+RETURN p.title AS idea, b.title AS book, g.title AS genre</pre>
+<pre>Naming a fear widens attention   Dune                     Science fiction
+Write for your future self       How to Take Smart Notes  Non-fiction
+Writing is how thinking happens  How to Take Smart Notes  Non-fiction</pre>
+<p>Genre is a library concept and &quot;idea&quot; is a Zettelkasten concept. The query walks from one ontology into the other across the book that has both labels. This is the kind of question that makes composition worth the effort: it was never designed into either schema, and it still has a precise answer.</p>
+<h3>What should I re-read before I continue?</h3>
+<p>You are halfway through <em>Dune Messiah</em>. What did you think about the book before it?</p>
+<pre>MATCH (b:Book {status: 'reading'})
+MATCH (b)-[:sequel_of]-&gt;(prev)&lt;-[:cites]-(l:LiteratureNote)
+RETURN b.title AS reading, prev.title AS previous, collect(l.title) AS my_notes</pre>
+<pre>Dune Messiah  Dune  [&quot;Herbert: fear narrows the mind&quot;]</pre>
+<p><code>sequel_of</code> comes from the library and <code>cites</code> from the Zettelkasten. The answer is your own notes, served when they are relevant.</p>
+<h3>Who do I actually think with?</h3>
+<pre>MATCH (w:Writer)&lt;-[:authored_by]-(s)&lt;-[:cites]-(n)
+RETURN w.title, collect(DISTINCT s.title) AS sources, count(n) AS citations
+ORDER BY citations DESC</pre>
+<pre>Sönke Ahrens      [&quot;How to Take Smart Notes&quot;]                 3
+Frank Herbert     [&quot;Dune&quot;]                                    1
+Christian Tietze  [&quot;Introduction to the Zettelkasten Method&quot;] 1
+Niklas Luhmann    [&quot;Communicating with Slip Boxes&quot;]           1
+Sascha Fast       [&quot;Introduction to the Zettelkasten Method&quot;] 1</pre>
+<h3>Where could two ideas meet?</h3>
+<p>This is the question Luhmann meant when he said the box would surprise him. Find pairs of permanent notes about related topics that do not link to each other yet:</p>
+<pre>MATCH (a:PermanentNote)-[:about]-&gt;(t1:Topic)-[:related_to]-(t2:Topic)&lt;-[:about]-(b:PermanentNote)
+WHERE t1 &lt;&gt; t2 AND id(a) &lt; id(b)
+OPTIONAL MATCH (a)-[x]-(b)
+WITH a, b, t1, t2, x WHERE x IS NULL
+RETURN DISTINCT a.title, b.title</pre>
+<pre>One idea per note           Write for your future self
+Write for your future self  Writing is how thinking happens</pre>
+<p>The query does not decide whether the pairs belong together. It proposes. Is &quot;one idea per note&quot; a way of &quot;writing for your future self&quot;? Probably: a small note is easier to understand six months later. If so, you now have a new <code>supports</code> edge to write, and a sentence explaining <em>how</em>. The machine found the gap, and you supply the judgment.</p>
+<p>That division of labor is the whole design. The ontology makes your judgments explicit (this extends that, this contradicts that), and queries look for the places where a judgment is missing.</p>
+<h2>Letting an agent think with you</h2>
+<p>Queries are questions you know how to ask. Sometimes you want to ask in plain language: <em>what do I think about attention, and where did it come from?</em></p>
+<p>The TypeGraph sidecar is a small headless service that reads the same vault. It exposes it to agents over MCP with three read-only tools:</p>
+<ul>
+<li><strong><code>cypher_query</code></strong> runs the same openCypher as the queries above.</li>
+<li><strong><code>vector_search</code></strong> finds notes, and edges, by meaning.</li>
+<li><strong><code>graphrag_retrieve</code></strong> combines the two: it finds the closest notes and edges, expands their graph neighborhood a hop or two, and returns the best passages, each cited with the note path and heading.</li>
+</ul>
+<p>Edges are searchable by meaning because each one is turned into a sentence before it is embedded, built from its two ends, their types and its properties. <code>contradicts</code> with a <code>why</code> becomes a sentence about the contradiction and the reason for it, so a question like &quot;what did I stop believing about folders?&quot; can land on the edge itself, not only on the notes at either end.</p>
+<p>Connect it to Claude Code or any MCP client:</p>
+<pre>claude mcp add obsigraph -e OBSIGRAPH_VAULT=/path/to/vault -e OBSIGRAPH_DATA=/path/to/data -- node server.mjs --stdio</pre>
+<p>Then the questions get looser. &quot;Which ideas in my box came from novels, and do any of them disagree with what I took from non-fiction?&quot; An agent can translate that into the genre query above, follow the <code>contradicts</code> edges, and answer with citations to your own notes.</p>
+<p>Keep the roles straight, though. An agent is good at finding: paths, gaps, neighbors and passages you forgot. It is a poor author of permanent notes, because a permanent note is a claim <em>you</em> hold, in <em>your</em> words. Let it propose <code>supports</code> edges and draft literature notes for you to rewrite. Do not let it write your ideas. A slip box full of an agent&#39;s opinions answers back in someone else&#39;s voice.</p>
+<h2>What it does not do</h2>
+<ul>
+<li><strong>It does not think for you.</strong> Every answer above is a consequence of links you wrote. A box with sloppy links gives sloppy answers. The types make sloppiness visible, but they do not prevent it.</li>
+<li><strong>Validation is advisory.</strong> A literature note without a source is a warning, not an error. You can ignore the warnings, and your box will slowly become a folder again.</li>
+<li><strong>The query engine is a subset of openCypher.</strong> It has matching, optional matches, variable-length paths and aggregation. It does not have pattern predicates in <code>WHERE</code>, so &quot;has no such edge&quot; is written as <code>OPTIONAL MATCH … WITH … WHERE x IS NULL</code>, as in the queries above. Anything unsupported fails by name, with a line and column.</li>
+<li><strong>Composition has rules, and they are yours to apply.</strong> A type or edge type is declared once. If two ontologies you add need the same word, move it into the core. A note with two labels carries the required edges of both.</li>
+<li><strong>The ontologies are starting points.</strong> You will rename things. You may decide <code>confidence</code> should be a number, or that you want a <code>Question</code> type for open problems. The schema is a note, so changing it is an edit.</li>
+</ul>
+<h2>Build your own</h2>
+<ol>
+<li>Download <a href="ontologies/zettelkasten.zip">zettelkasten.zip</a> and <a href="ontologies/library.zip">library.zip</a> from the <a href="ontologies.html">ontology gallery</a>, or <a href="ontologies/all.zip">all.zip</a> for every ontology composed. Each one includes the shared <code>Core.md</code>.</li>
+<li>Put the <code>Types/</code> notes in one schema folder of your vault (the plugin&#39;s default is <code>Types/</code>), and install the Typed Graph plugin in Obsidian.</li>
+<li>For every book you think with, add <code>BookSource</code> to its labels and <code>authored_by</code> next to <code>written_by</code>. Do the same for its author with <code>Writer</code>.</li>
+<li>Write one literature note in your own words, then one permanent note that <code>derived_from</code> it.</li>
+<li>Make a dashboard note with the inbox, unindexed and &quot;where could two ideas meet&quot; queries in <code>graph-query</code> blocks, and open it every morning.</li>
+</ol>
+<p>Luhmann&#39;s cabinet took him decades to fill before it started answering back. Yours will start answering as soon as two of your ideas are linked by an edge that says what the link means, and it will tell you, in plain queries, where the next link should go.</p>
+<p><em>Typed Graph, the <code>tg</code> CLI and the sidecar are open source (MIT). The ontologies are plain Markdown in the <a href="ontologies.html">ontology gallery</a>, and the Typed Graph Schema is an open specification. Docs and other articles are at <a href="https://volland.github.io/obsigraph/">volland.github.io/obsigraph</a>.</em></p>
+
+    <div class="next">Related: <a href="blog-composable-ontologies.html">Ontologies you can download, and combine →</a></div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+    </div>
+  </footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
