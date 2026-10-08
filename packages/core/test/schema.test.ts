@@ -220,7 +220,7 @@ describe('typed graph schema (TGS) declarations', () => {
 
   // @lat: [[tests/schema-notes#TGS version handling]]
   it('reads newer minor versions reporting unknown keys and ignores other major versions', () => {
-    const minor = readSchemaNote('Types/Person.md', { tgs: '0.2', schema: { properties: { a: 'text' }, inherits: 'Agent' } });
+    const minor = readSchemaNote('Types/Person.md', { tgs: '0.3', schema: { properties: { a: 'text' }, inherits: 'Agent' } });
     expect(minor.types[0]!.properties.map((p) => p.name)).toEqual(['a']);
     expect(minor.diagnostics.map((d) => d.message)).toEqual(["Unknown key 'inherits' (newer TGS version?)"]);
     const major = readSchemaNote('Types/Person.md', { tgs: '1.0', schema: { properties: { a: 'text' } } });

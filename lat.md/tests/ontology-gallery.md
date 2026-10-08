@@ -10,6 +10,14 @@ Test specifications for the downloadable ontologies in `ontologies/` and the rul
 
 Every ontology in the gallery reads without diagnostics, validates its own example notes, passes the TGS JSON Schema and exports to SHACL, and `core` declares only the shared edge types.
 
+## Zettelkasten note types and sources
+
+The Zettelkasten examples use every note, source and highlight type; a literature note or a highlight without a source is reported as a missing required edge.
+
+## Zettelkasten trail steps exist
+
+Every note the website's Zettelkasten walkthrough names is an example note of the ontology, appears in one step only, and each step has text to show.
+
 ## Ontologies compose
 
 All ontologies placed in one schema folder, with a note labelled by two ontologies at once, produce no diagnostics and the combined type count is the sum of the parts.

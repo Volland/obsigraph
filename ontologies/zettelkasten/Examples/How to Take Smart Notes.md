@@ -1,7 +1,13 @@
 ---
-type: Source
-author: Sönke Ahrens
+type: BookSource
 year: 2017
-kind: book
+pages: 170
+status: finished
 ---
-The book that popularised the Zettelkasten method for a general audience.
+A book that explains the slip-box method for students, academics and writers.
+
+## Links
+
+authored_by:: [[Sönke Ahrens]] {role: "author"}
+about:: [[Note-taking]]
+about:: [[Writing]]

@@ -42,14 +42,47 @@
       <a class="btn" href="https://github.com/Volland/obsigraph/tree/main/ontologies">Browse on GitHub</a>
     </div>
 
+    <h2 id="how-it-works">See how a Zettelkasten works</h2>
+    <p class="section-lead">An ontology is a set of note types and the links allowed between them. Step through one real Zettelkasten, drawn from the example notes you can download below, from a quick capture to a chapter of writing.</p>
+    <div class="trail">
+      <div class="trail-canvas" id="trail-canvas" role="img" aria-label="A graph that builds up step by step: a fleeting note, a book with a writer and a highlight, a literature note, permanent notes, a structure note and a project note"></div>
+      <div class="trail-side">
+        <p class="trail-count" id="trail-count">Step 1 of 7</p>
+        <h3 id="trail-title">Capture</h3>
+        <p id="trail-text" aria-live="polite">A thought arrives. You write it down as a fleeting note.</p>
+        <p class="chips" id="trail-chips"></p>
+        <div class="buttons">
+          <button class="btn" id="trail-prev" type="button">← Back</button>
+          <button class="btn primary" id="trail-next" type="button">Next →</button>
+          <button class="btn" id="trail-play" type="button">▶ Play</button>
+        </div>
+        <div class="trail-dots" id="trail-dots"></div>
+      </div>
+    </div>
+    <noscript><p>The steps are: capture a fleeting note, read a source and mark highlights, rewrite them as a literature note, distil permanent notes, connect them with typed links, index them in a structure note, and draw on them in a project note.</p></noscript>
+
+    <h2 id="schema-maps">Look inside an ontology</h2>
+    <p class="section-lead">Every ontology as a map: each shape is a type, each arrow a link its notes may have, with the colors and shapes written in the schema notes. Faint arrows are <code>about</code> links to topics.</p>
+    <div class="map-tabs" role="tablist" aria-label="Ontologies">
+      <button type="button" role="tab" data-onto="zettelkasten" aria-selected="true">Zettelkasten</button>
+      <button type="button" role="tab" data-onto="library" aria-selected="false">Book management</button>
+      <button type="button" role="tab" data-onto="requirements" aria-selected="false">Requirements</button>
+      <button type="button" role="tab" data-onto="agents" aria-selected="false">Prompts and agents</button>
+      <button type="button" role="tab" data-onto="okf" aria-selected="false">OKF</button>
+    </div>
+    <div class="map-canvas" id="map-canvas" role="img" aria-label="Map of the types of the selected ontology and the links allowed between them"></div>
+    <p class="map-note" id="map-note"></p>
+
     <h2>Pick one</h2>
     <div class="grid onto-grid">
       <div class="card onto" id="zettelkasten">
         <h3>Zettelkasten</h3>
-        <p>Atomic notes that cite sources and live under topics, linked by how one idea relates to another. A <code>stage</code> carries the fleeting, literature and permanent workflow.</p>
-        <p class="chips"><strong>3 types</strong> <span class="tag">Zettel</span> <span class="tag">Source</span> <span class="tag">Topic</span></p>
-        <p class="chips"><strong>8 edge types</strong> <span class="tag">extends</span> <span class="tag">supports</span> <span class="tag">example_of</span> <span class="tag">follows</span> <span class="tag">cites</span> <span class="tag">about</span> <span class="tag">related_to</span> <span class="tag">contradicts</span></p>
-        <p class="asks"><em>It answers:</em> Which permanent notes cite nothing? Which zettels contradict another?</p>
+        <p>The note types of the method (fleeting, literature, permanent, structure and project notes), books and articles with their writers, highlights and topics. Moving a note forward leaves a link back, so the trail from capture to idea stays in the graph.</p>
+        <p class="chips"><strong>10 types</strong> <span class="tag">FleetingNote</span> <span class="tag">LiteratureNote</span> <span class="tag">PermanentNote</span> <span class="tag">StructureNote</span> <span class="tag">ProjectNote</span> <span class="tag">BookSource</span> <span class="tag">ArticleSource</span> <span class="tag">Highlight</span> <span class="tag">Writer</span> <span class="tag">Topic</span></p>
+        <p class="chips"><strong>15 edge types</strong> <span class="tag">cites</span> <span class="tag">based_on</span> <span class="tag">processed_into</span> <span class="tag">highlighted_in</span> <span class="tag">authored_by</span> <span class="tag">about</span> <span class="tag">indexes</span> <span class="tag">draws_on</span> <span class="tag">extends</span> <span class="tag">supports</span> <span class="tag">example_of</span> <span class="tag">follows</span> <span class="tag">related_to</span> <span class="tag">contradicts</span> <span class="tag">derived_from</span></p>
+        <p>Every note gets a time-ordered <code>uid</code>, permanent notes can take Luhmann ids (<code>1</code>, <code>1a</code>, <code>1a1</code>) through child and sibling commands, and each note type has a template. Needs the plugin or the VS Code extension with TGS 0.2.</p>
+        <p class="asks"><em>It answers:</em> Which fleeting notes are still in the inbox? Which highlights have no literature note? Which permanent notes come from which book?</p>
+        <p><a href="#map-zettelkasten" data-map="zettelkasten">See its map ↑</a></p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/zettelkasten.zip" download>Download vault (.zip)</a>
           <a class="btn" href="ontologies/zettelkasten/Zettelkasten.md" download>Schema note (.md)</a>
@@ -62,6 +95,7 @@
         <p class="chips"><strong>5 types</strong> <span class="tag">Book</span> <span class="tag">Author</span> <span class="tag">Series</span> <span class="tag">Genre</span> <span class="tag">Quote</span></p>
         <p class="chips"><strong>6 edge types</strong> <span class="tag">written_by</span> <span class="tag">in_series</span> <span class="tag">has_genre</span> <span class="tag">sequel_of</span> <span class="tag">inspired_by</span> <span class="tag">influenced</span> <span class="tag">quoted_from</span></p>
         <p class="asks"><em>It answers:</em> What am I reading? Which series have I started and not finished?</p>
+        <p><a href="#map-library" data-map="library">See its map ↑</a></p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/library.zip" download>Download vault (.zip)</a>
           <a class="btn" href="ontologies/library/Library.md" download>Schema note (.md)</a>
@@ -72,8 +106,9 @@
         <h3>Coding and requirements</h3>
         <p>Requirements, scenarios, decisions, constraints and concepts, grown with stakeholders, releases and risks. The code ontology that <code>tg init</code> installs, extended for product work.</p>
         <p class="chips"><strong>9 types</strong> <span class="tag">Requirement</span> <span class="tag">Scenario</span> <span class="tag">Decision</span> <span class="tag">Constraint</span> <span class="tag">Concept</span> <span class="tag">Change</span> <span class="tag">Stakeholder</span> <span class="tag">Release</span> <span class="tag">Risk</span></p>
-        <p class="chips"><strong>13 edge types</strong> <span class="tag">refines</span> <span class="tag">depends_on</span> <span class="tag">requested_by</span> <span class="tag">ships_in</span> <span class="tag">supersedes</span> <span class="tag">motivated_by</span> <span class="tag">constrains</span> <span class="tag">defines</span> <span class="tag">threatens</span> <span class="tag">mitigated_by</span> <span class="tag">introduced_by</span> <span class="tag">changed_by</span> <span class="tag">contradicts</span></p>
+        <p class="chips"><strong>15 edge types</strong> <span class="tag">refines</span> <span class="tag">depends_on</span> <span class="tag">requested_by</span> <span class="tag">ships_in</span> <span class="tag">supersedes</span> <span class="tag">motivated_by</span> <span class="tag">constrains</span> <span class="tag">defines</span> <span class="tag">threatens</span> <span class="tag">mitigated_by</span> <span class="tag">introduced_by</span> <span class="tag">changed_by</span> <span class="tag">contradicts</span></p>
         <p class="asks"><em>It answers:</em> Which must-have requirements have no release? Which open risks threaten stable requirements?</p>
+        <p><a href="#map-requirements" data-map="requirements">See its map ↑</a></p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/requirements.zip" download>Download vault (.zip)</a>
           <a class="btn" href="ontologies/requirements/Requirements.md" download>Schema note (.md)</a>
@@ -86,6 +121,7 @@
         <p class="chips"><strong>6 types</strong> <span class="tag">Prompt</span> <span class="tag">Agent</span> <span class="tag">Tool</span> <span class="tag">Skill</span> <span class="tag">Knowledge</span> <span class="tag">Eval</span></p>
         <p class="chips"><strong>8 edge types</strong> <span class="tag">uses_prompt</span> <span class="tag">calls_tool</span> <span class="tag">has_skill</span> <span class="tag">reads</span> <span class="tag">delegates_to</span> <span class="tag">derived_from</span> <span class="tag">composes</span> <span class="tag">evaluated_by</span></p>
         <p class="asks"><em>It answers:</em> Which production prompts have no eval? Which autonomous agents can reach a destructive tool?</p>
+        <p><a href="#map-agents" data-map="agents">See its map ↑</a></p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/agents.zip" download>Download vault (.zip)</a>
           <a class="btn" href="ontologies/agents/Agents.md" download>Schema note (.md)</a>
@@ -98,6 +134,7 @@
         <p class="chips"><strong>6 types</strong> <span class="tag">Table</span> <span class="tag">Metric</span> <span class="tag">Dashboard</span> <span class="tag">Term</span> <span class="tag">Runbook</span> <span class="tag">Person</span></p>
         <p class="chips"><strong>6 edge types</strong> <span class="tag">owned_by</span> <span class="tag">derived_from</span> <span class="tag">computed_from</span> <span class="tag">defined_by</span> <span class="tag">shown_in</span> <span class="tag">covers</span></p>
         <p class="asks"><em>It answers:</em> Which metrics are computed from this table? Who owns the dashboard that shows them? What does the export look like for an agent? See <a href="blog-okf-ready.html">Getting your vault OKF-ready</a>.</p>
+        <p><a href="#map-okf" data-map="okf">See its map ↑</a></p>
         <div class="buttons">
           <a class="btn primary" href="ontologies/okf.zip" download>Download vault (.zip)</a>
           <a class="btn" href="ontologies/okf/OKF.md" download>Schema note (.md)</a>
@@ -119,7 +156,7 @@
     <p>Copy the <code>.md</code> files from the ontology's <code>Types/</code> folder into your vault's schema folder. Nothing else changes: notes with no <code>type:</code> are untouched, and notes whose type matches a schema are validated against it. Validation is advisory, so a missing property or a disallowed edge is a warning on the note and never removes anything from the graph.</p>
 
     <h2>Combine several</h2>
-    <p>Put the schema notes of every ontology you want into the same <code>Types/</code> folder, with <code>Core.md</code>. One note can then carry labels from two ontologies, for example <code>type: [Book, Source]</code> for a book that is also a source in your Zettelkasten. <code>all.zip</code> is exactly that: all five ontologies composed in one vault. Each type and edge type must be declared in one note only; the reader reports a duplicate and uses the first by path.</p>
+    <p>Put the schema notes of every ontology you want into the same <code>Types/</code> folder, with <code>Core.md</code>. One note can then carry labels from two ontologies, for example <code>type: [Book, BookSource]</code> for a book that is also a source in your Zettelkasten. <code>all.zip</code> is exactly that: all five ontologies composed in one vault. Each type and edge type must be declared in one note only; the reader reports a duplicate and uses the first by path.</p>
 
     <h2>Use it from a project or another tool</h2>
 <pre>tg schema export shapes.ttl --vault path/to/vault     # any ontology as W3C SHACL
@@ -137,5 +174,6 @@ tg schema import shapes.ttl --vault path/to/vault     # SHACL shapes back into s
     </div>
   </footer>
   <script src="assets/site.js"></script>
+  <script type="module" src="assets/ontology-map.js"></script>
 </body>
 </html>

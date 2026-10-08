@@ -32,7 +32,7 @@ Read these in order:
 - Run **Typed Graph: Open graph view** (or click the ribbon icon), then open [[Alice]]. The view follows the active note. Right-click a node to expand it; double-click to open it.
 - Open [[Alice]] in reading view to see edge embeds such as `{{edge: alice-knows-bob . since}}` turn into values.
 - Run **Typed Graph: Show diagnostics** to see the warnings for [[Dave]] and [[Mallory]].
-- Run **Typed Graph: Create note from type** and pick `Person` to get a note from the [[Person]] template.
+- Run **Typed Graph: New typed note** and pick `Person` to get a note from the [[Person]] template.
 - Change `since` on Alice's `knows:: [[Bob]]` line and watch every block and embed update.
 
 ## Layout

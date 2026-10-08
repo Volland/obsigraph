@@ -49,8 +49,8 @@
 </thead>
 <tbody><tr>
 <td><strong>Zettelkasten</strong></td>
-<td>Zettel, Source, Topic</td>
-<td>atomic notes that cite sources and live under topics</td>
+<td>FleetingNote, LiteratureNote, PermanentNote, StructureNote, ProjectNote, BookSource, ArticleSource, Highlight, Writer, Topic</td>
+<td>the note types of the method, their sources, highlights and topics</td>
 </tr>
 <tr>
 <td><strong>Book management</strong></td>
@@ -126,14 +126,14 @@ in_series:: [[Dune Chronicles]] {volume: 2}</pre>
 <p>TGS lets you do that by putting several schema notes in the schema folder. Each note declares its own types and edge types, and the reader merges them. The rules are short, and they are written in the specification.</p>
 <ul>
 <li><strong>A type or edge type is declared once.</strong> If two notes declare the same name, the reader uses the one whose path sorts first and reports a duplicate naming both notes.</li>
-<li><strong>A note can have several labels.</strong> <code>type: [Book, Source]</code> gives the note the properties and edges of both. For properties the first declaration wins. For edges the allowed lists are combined.</li>
+<li><strong>A note can have several labels.</strong> <code>type: [Book, BookSource]</code> gives the note the properties and edges of both. For properties the first declaration wins. For edges the allowed lists are combined.</li>
 <li><strong>Edge rules live in two places.</strong> A type says which edges it may have, an edge type says which types its ends may be, and when both name targets the type&#39;s entry wins for sources of that type.</li>
 </ul>
 <h2>What went wrong the first time</h2>
 <p>I put the ontologies in one folder and ran the validator. Two diagnostics:</p>
 <pre>Types/Zettelkasten.md  Edge type 'contradicts' is declared in both Types/Requirements.md and Types/Zettelkasten.md; using Types/Requirements.md
-zettelkasten/Examples/Folders are enough.md  Edge 'contradicts' expects source type Requirement or Decision, found Zettel</pre>
-<p>Both ontologies used the word <code>contradicts</code>, and both declared it. The Zettelkasten wanted it between zettels. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other&#39;s edges became errors.</p>
+zettelkasten/Examples/Notes are only useful when linked.md  Edge 'contradicts' expects source type Requirement or Decision, found PermanentNote</pre>
+<p>Both ontologies used the word <code>contradicts</code>, and both declared it. The Zettelkasten wanted it between permanent notes. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other&#39;s edges became errors.</p>
 <p>It happened again when I added the OKF ontology: <code>derived_from</code> meant &quot;this prompt was based on that prompt&quot; in one and &quot;this table is built from that table&quot; in the other. The validator said so in the same words, and the fix was the same.</p>
 <p>Nothing was wrong with either ontology on its own. The clash only exists when they meet, which is exactly when you cannot see it from inside either one.</p>
 <h2>The shared core</h2>
@@ -147,7 +147,7 @@ edgeTypes:
   derived_from:
     properties: {transform: text}
 ---</pre>
-<p>This is <code>core/Types/Core.md</code>. It says what each edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type&#39;s <code>edges</code> list, and how to draw it. Prompts derive from prompts and tables from tables, because each type&#39;s own <code>edges</code> list says so. Zettelkasten allows <code>contradicts</code> between zettels. Requirements allow it from a requirement or decision to a decision, requirement or constraint.</p>
+<p>This is <code>core/Types/Core.md</code>. It says what each edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type&#39;s <code>edges</code> list, and how to draw it. Prompts derive from prompts and tables from tables, because each type&#39;s own <code>edges</code> list says so. Zettelkasten allows <code>contradicts</code> between permanent notes, and from one to the fleeting note it rejects. Requirements allow it from a requirement or decision to a decision, requirement or constraint.</p>
 <p>Every download already contains <code>Core.md</code>, and <code>all.zip</code> is the five ontologies and the core composed in one vault. With the core in place, the same combined vault validates with no diagnostics.</p>
 <p>The rule of thumb: <strong>the first time a second ontology needs a word the first already declared, move the declaration to the core.</strong> Names that only one ontology uses stay in that ontology.</p>
 <h2>Bridging with a mixin</h2>
@@ -172,16 +172,17 @@ implements:: [[Tokens expire after 15 minutes]]</pre>
 <p>Because allowed edges from several labels are combined, the note may have everything a <code>Prompt</code> may have and also <code>implements</code>. A prompt without the <code>Traceable</code> label that tries the same edge gets a warning that <code>implements</code> is not allowed. I ran both cases against the real validator, and they behave that way.</p>
 <p>This keeps each ontology intact. The agents ontology stays a download you can update. Your bridge note is yours, and it is a few lines.</p>
 <h2>The same trick for shared notes</h2>
-<p>Mixins also solve the case where one real thing belongs in two ontologies. A book you read is a <code>Book</code> in the library and a <code>Source</code> in your Zettelkasten. Do not make two notes. Label one:</p>
+<p>Mixins also solve the case where one real thing belongs in two ontologies. A book you read is a <code>Book</code> in the library and a <code>BookSource</code> in your Zettelkasten. Do not make two notes. Label one:</p>
 <pre>---
-type: [Book, Source]
+type: [Book, BookSource]
 author: Donella Meadows
 status: finished
 ---
 ## Links
 
-written_by:: [[Donella Meadows]]</pre>
-<p>Your zettel <code>cites::</code> it, and your reading log <code>written_by::</code> it. Both ontologies see the same node, with properties from each and no duplication. The test suite does exactly this and expects no diagnostics.</p>
+written_by:: [[Donella Meadows]]
+authored_by:: [[Donella Meadows]]</pre>
+<p>Your literature note <code>cites::</code> it, and your reading log <code>written_by::</code> it; each ontology asks for its own author edge, so the note carries both. Both ontologies see the same node, with properties from each and no duplication. The test suite does exactly this and expects no diagnostics.</p>
 <h2>Design advice for your own ontologies</h2>
 <p>If you build one for the gallery or for your team, these are the habits that kept the five above composable.</p>
 <ul>

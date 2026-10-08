@@ -3,6 +3,7 @@ import { posix } from 'node:path';
 import * as vscode from 'vscode';
 import { backlinksFor, type BacklinkGroup, type BacklinkItem } from './backlinks';
 import { GraphSession } from './graph-session';
+import { BAD_TITLE, luhmannParentOf, planWorkspaceNote, typesIn } from './new-note';
 import { needsSetup, runSetup } from './setup';
 import { WorkspaceIndex } from './workspace-index';
 
@@ -23,6 +24,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const c = vscode.workspace.getConfiguration('typegraph');
     return { roots: c.get<string[]>('roots', ['.']), ignore: c.get<string[]>('ignore', ['node_modules']) };
   };
+  const schemaFolder = () => vscode.workspace.getConfiguration('typegraph').get<string>('schemaFolder', 'Types/');
 
   const activePath = (): string | null => {
     const doc = vscode.window.activeTextEditor?.document;
@@ -139,6 +141,60 @@ export function activate(context: vscode.ExtensionContext): void {
     });
   };
 
+  /** Create a note from a type, refusing to overwrite, and open it. */
+  const createNote = async (opts: { type: string; title: string; folder: string; parent?: Parameters<typeof planWorkspaceNote>[2]['parent']; luhmann?: boolean }) => {
+    if (!folder || !index) return;
+    try {
+      const plan = await planWorkspaceNote(index, folder.uri.fsPath, { schemaFolder: schemaFolder(), ...opts });
+      const uri = vscode.Uri.joinPath(folder.uri, ...plan.path.split('/'));
+      const exists = await vscode.workspace.fs.stat(uri).then(() => true, () => false);
+      if (exists) return void vscode.window.showWarningMessage(`${plan.path} already exists; nothing was changed.`);
+      await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(uri, '..'));
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(plan.content, 'utf8'));
+      await vscode.window.showTextDocument(uri);
+    } catch (e) {
+      void vscode.window.showErrorMessage((e as Error).message);
+    }
+  };
+
+  const askTitle = (prompt: string) =>
+    vscode.window.showInputBox({ prompt, validateInput: (v) => (v.trim() && !BAD_TITLE.test(v) ? null : 'Enter a title without \\ / : * ? " < > | # ^ [ ]') });
+
+  /** The folder to create in: the one given by the Explorer, else the active note's folder. */
+  const targetFolder = async (uri?: vscode.Uri): Promise<string> => {
+    if (!folder) return '';
+    let base: vscode.Uri | null = uri ?? vscode.window.activeTextEditor?.document.uri ?? null;
+    if (base && uri && !(await vscode.workspace.fs.stat(uri).then((s) => s.type === vscode.FileType.Directory, () => false))) base = vscode.Uri.joinPath(uri, '..');
+    else if (base && !uri) base = vscode.Uri.joinPath(base, '..');
+    if (!base || base.scheme !== 'file') return '';
+    const rel = vscode.workspace.asRelativePath(base, false).split('\\').join('/');
+    return rel.startsWith('..') || rel === base.fsPath ? '' : rel;
+  };
+
+  const newNote = async (uri?: vscode.Uri) => {
+    if (!folder) return;
+    await ensureLoaded();
+    const types = typesIn(index!, schemaFolder());
+    if (types.length === 0) return void vscode.window.showInformationMessage(`No schema notes found in ${schemaFolder()}. Set typegraph.schemaFolder or add types.`);
+    const pick = await vscode.window.showQuickPick(
+      types.map((t) => ({ label: t.type, description: t.ids.map((r) => `${r.kind}${r.auto ? '' : ' on request'}`).join(', '), detail: t.properties.map((p) => p.name).join(', '), type: t.type })),
+      { placeHolder: 'Choose a type', matchOnDetail: true },
+    );
+    if (!pick) return;
+    const title = await askTitle(`New ${pick.type}`);
+    if (title) await createNote({ type: pick.type, title: title.trim(), folder: await targetFolder(uri) });
+  };
+
+  const newLuhmann = async (placement: 'child' | 'sibling') => {
+    const path = activePath();
+    if (!folder || !path) return void vscode.window.showInformationMessage('Open a note with a Luhmann id first.');
+    await ensureLoaded();
+    const parent = luhmannParentOf(index!, schemaFolder(), path);
+    if (!parent) return void vscode.window.showInformationMessage('This note has no Luhmann id. Its type needs `id: {kind: luhmann, property: ...}` and a value for it.');
+    const title = await askTitle(`New ${placement} of ${parent.title} (${parent.id})`);
+    if (title) await createNote({ type: parent.type, title: title.trim(), folder: await targetFolder(), parent: { ...parent, placement } });
+  };
+
   const watcher = vscode.workspace.createFileSystemWatcher(SOURCE_GLOB);
   context.subscriptions.push(
     vscode.window.createTreeView('typegraph.backlinks', { treeDataProvider: tree }),
@@ -154,6 +210,9 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('typegraph.openGraph', openGraph),
     vscode.commands.registerCommand('typegraph.setup', setup),
     vscode.commands.registerCommand('typegraph.refresh', reload),
+    vscode.commands.registerCommand('typegraph.newNote', newNote),
+    vscode.commands.registerCommand('typegraph.newChildNote', () => newLuhmann('child')),
+    vscode.commands.registerCommand('typegraph.newSiblingNote', () => newLuhmann('sibling')),
     changed,
   );
   refreshContext();

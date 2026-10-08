@@ -36,3 +36,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[graph-ui]] — shared renderer package behaviors
 - [[vscode-extension]] — VS Code indexer, backlinks, setup funnel, privacy and release behaviors
 - [[ontology-gallery]] — downloadable ontologies read, validate and compose
+- [[new-notes]] — identifier generators, the id key and template planning

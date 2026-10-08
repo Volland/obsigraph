@@ -1,12 +1,14 @@
 // Publish the Typed Graph Schema specification from spec/tgs/ into the site:
 // spec/tgs/v<version>/ (rendered page plus source files), spec/tgs/ (redirect
 // to the latest version) and ns/tgs/ (the namespace page for tgs: terms).
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { marked } from 'marked';
 
-const VERSION = '0.1';
+const VERSION = '0.2';
 const src = 'spec/tgs';
 const out = `site/spec/tgs/v${VERSION}`;
+// Earlier versions are immutable copies kept in spec/tgs/archive/v<version>/.
+const archived = existsSync(`${src}/archive`) ? readdirSync(`${src}/archive`).sort() : [];
 
 const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const slug = (s) => s.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '');
@@ -57,26 +59,32 @@ ${body}
 
 rmSync('site/spec', { recursive: true, force: true });
 rmSync('site/ns', { recursive: true, force: true });
-mkdirSync(out, { recursive: true });
-for (const f of ['SPEC.md', 'tgs.schema.json', 'namespace.json']) cpSync(`${src}/${f}`, `${out}/${f}`);
-cpSync(`${src}/examples`, `${out}/examples`, { recursive: true });
-
 const renderer = new marked.Renderer();
 renderer.heading = ({ tokens, depth }) => {
   const html = marked.parser([{ type: 'paragraph', tokens, raw: '', text: '' }]).replace(/^<p>|<\/p>\n?$/g, '');
   return `<h${depth} id="${slug(html)}">${html}</h${depth}>\n`;
 };
-const spec = marked.parse(readFileSync(`${src}/SPEC.md`, 'utf8'), { renderer, gfm: true });
-const files = `<div class="callout">Files: <a href="SPEC.md">SPEC.md</a> · <a href="tgs.schema.json">tgs.schema.json</a> · <a href="namespace.json">namespace.json</a> · <a href="https://github.com/Volland/obsigraph/tree/main/spec/tgs/examples">conformance examples</a></div>`;
-writeFileSync(
-  `${out}/index.html`,
-  page({
-    title: `Typed Graph Schema (TGS) ${VERSION}`,
-    description: 'An open specification for typing markdown knowledge graphs with YAML schema notes that map to and from W3C SHACL.',
-    depth: 4,
-    body: spec.replace('</h1>\n', `</h1>\n${files}\n`),
-  }),
-);
+
+/** Copy one version's files from `from` to `to` and render its page. */
+function publish(from, to, version, treeUrl) {
+  mkdirSync(to, { recursive: true });
+  for (const f of ['SPEC.md', 'tgs.schema.json', 'namespace.json']) cpSync(`${from}/${f}`, `${to}/${f}`);
+  cpSync(`${from}/examples`, `${to}/examples`, { recursive: true });
+  const spec = marked.parse(readFileSync(`${from}/SPEC.md`, 'utf8'), { renderer, gfm: true });
+  const files = `<div class="callout">Files: <a href="SPEC.md">SPEC.md</a> · <a href="tgs.schema.json">tgs.schema.json</a> · <a href="namespace.json">namespace.json</a> · <a href="${treeUrl}">conformance examples</a></div>`;
+  writeFileSync(
+    `${to}/index.html`,
+    page({
+      title: `Typed Graph Schema (TGS) ${version}`,
+      description: 'An open specification for typing markdown knowledge graphs with YAML schema notes that map to and from W3C SHACL.',
+      depth: 4,
+      body: spec.replace('</h1>\n', `</h1>\n${files}\n`),
+    }),
+  );
+}
+
+publish(src, out, VERSION, 'https://github.com/Volland/obsigraph/tree/main/spec/tgs/examples');
+for (const v of archived) publish(`${src}/archive/${v}`, `site/spec/tgs/${v}`, v.replace(/^v/, ''), `https://github.com/Volland/obsigraph/tree/main/spec/tgs/archive/${v}/examples`);
 
 writeFileSync(
   'site/spec/tgs/index.html',

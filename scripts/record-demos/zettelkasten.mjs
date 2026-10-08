@@ -23,7 +23,7 @@ const q = async (text, wait) => {
 };
 await page.evaluate(() => document.getElementById('run').click());
 await page.waitForTimeout(1200);
-await q('MATCH (z:Zettel)-[r]->(n)\nRETURN z, r, n', 2600);
-await q('MATCH (z:Zettel)-[c:cites]->(s:Source)\nRETURN z.title AS note, s.title AS source, c.page AS page\nORDER BY page', 2200);
+await q('MATCH (h:Highlight)<-[b:based_on]-(l:LiteratureNote)<-[d:derived_from]-(p:PermanentNote)\nRETURN h, b, l, d, p', 3200);
+await q('MATCH (p:PermanentNote)-[:derived_from]->(l:LiteratureNote)-[:cites]->(s:BookSource)-[:authored_by]->(w:Writer)\nRETURN p.title AS note, s.title AS book, w.title AS writer\nORDER BY note', 2600);
 await ctx.close();
 await browser.close();

@@ -681,3 +681,26 @@ footer .wrap {
 .table-scroll .result-table { min-width: 720px; }
 .post, .doc, .card { overflow-wrap: anywhere; }
 .steps li { overflow-wrap: anywhere; }
+
+.trail { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; margin: 18px 0 8px; }
+.trail-canvas, .map-canvas { border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.trail-canvas { height: 440px; }
+.trail-count { margin: 0; font-size: 13px; color: var(--muted); }
+.trail-side h3 { margin: 4px 0 8px; font-size: 22px; }
+.trail-side #trail-text { min-height: 7.5em; }
+.trail-side .buttons { margin-top: 14px; }
+.trail-dots { display: flex; gap: 8px; margin-top: 14px; }
+.trail-dots button { width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 2px solid var(--border); background: transparent; cursor: pointer; }
+.trail-dots button[aria-current="step"] { background: #7c5cff; border-color: #7c5cff; }
+.tag.edge { font-style: italic; }
+.map-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 10px; }
+.map-tabs button { font: inherit; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+.map-tabs button[aria-selected="true"] { background: #7c5cff; border-color: #7c5cff; color: #fff; }
+.map-canvas { height: 520px; }
+.map-note { font-size: 13px; color: var(--muted); }
+@media (max-width: 800px) {
+  .trail { grid-template-columns: minmax(0, 1fr); }
+  .trail-canvas { height: 340px; }
+  .map-canvas { height: 420px; }
+  .trail-side #trail-text { min-height: 0; }
+}

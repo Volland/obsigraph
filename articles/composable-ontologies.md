@@ -10,7 +10,7 @@ The hardest part of a typed graph is not the syntax. It is deciding what the typ
 
 | Ontology | Types | For |
 |---|---|---|
-| **Zettelkasten** | Zettel, Source, Topic | atomic notes that cite sources and live under topics |
+| **Zettelkasten** | FleetingNote, LiteratureNote, PermanentNote, StructureNote, ProjectNote, BookSource, ArticleSource, Highlight, Writer, Topic | the note types of the method, their sources, highlights and topics |
 | **Book management** | Book, Author, Series, Genre, Quote | what you own, are reading, and want to read |
 | **Coding and requirements** | Requirement, Scenario, Decision, Constraint, Concept, Change, Stakeholder, Release, Risk | what the product SHALL do, why, for whom, and what could go wrong |
 | **Prompts and agents** | Prompt, Agent, Tool, Skill, Knowledge, Eval | a catalogue of prompts, agents and what they call and read |
@@ -90,7 +90,7 @@ A single ontology is easy. The interesting case is a person who keeps a Zettelka
 TGS lets you do that by putting several schema notes in the schema folder. Each note declares its own types and edge types, and the reader merges them. The rules are short, and they are written in the specification.
 
 - **A type or edge type is declared once.** If two notes declare the same name, the reader uses the one whose path sorts first and reports a duplicate naming both notes.
-- **A note can have several labels.** `type: [Book, Source]` gives the note the properties and edges of both. For properties the first declaration wins. For edges the allowed lists are combined.
+- **A note can have several labels.** `type: [Book, BookSource]` gives the note the properties and edges of both. For properties the first declaration wins. For edges the allowed lists are combined.
 - **Edge rules live in two places.** A type says which edges it may have, an edge type says which types its ends may be, and when both name targets the type's entry wins for sources of that type.
 
 ## What went wrong the first time
@@ -99,10 +99,10 @@ I put the ontologies in one folder and ran the validator. Two diagnostics:
 
 ```
 Types/Zettelkasten.md  Edge type 'contradicts' is declared in both Types/Requirements.md and Types/Zettelkasten.md; using Types/Requirements.md
-zettelkasten/Examples/Folders are enough.md  Edge 'contradicts' expects source type Requirement or Decision, found Zettel
+zettelkasten/Examples/Notes are only useful when linked.md  Edge 'contradicts' expects source type Requirement or Decision, found PermanentNote
 ```
 
-Both ontologies used the word `contradicts`, and both declared it. The Zettelkasten wanted it between zettels. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other's edges became errors.
+Both ontologies used the word `contradicts`, and both declared it. The Zettelkasten wanted it between permanent notes. The requirements ontology wanted it between requirements and decisions. Whichever note sorted first won, and the other's edges became errors.
 
 It happened again when I added the OKF ontology: `derived_from` meant "this prompt was based on that prompt" in one and "this table is built from that table" in the other. The validator said so in the same words, and the fix was the same.
 
@@ -124,7 +124,7 @@ edgeTypes:
 ---
 ```
 
-This is `core/Types/Core.md`. It says what each edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type's `edges` list, and how to draw it. Prompts derive from prompts and tables from tables, because each type's own `edges` list says so. Zettelkasten allows `contradicts` between zettels. Requirements allow it from a requirement or decision to a decision, requirement or constraint.
+This is `core/Types/Core.md`. It says what each edge is, with no restriction on its ends. Each ontology then says which of its own types may use it, in the type's `edges` list, and how to draw it. Prompts derive from prompts and tables from tables, because each type's own `edges` list says so. Zettelkasten allows `contradicts` between permanent notes, and from one to the fleeting note it rejects. Requirements allow it from a requirement or decision to a decision, requirement or constraint.
 
 Every download already contains `Core.md`, and `all.zip` is the five ontologies and the core composed in one vault. With the core in place, the same combined vault validates with no diagnostics.
 
@@ -165,20 +165,21 @@ This keeps each ontology intact. The agents ontology stays a download you can up
 
 ## The same trick for shared notes
 
-Mixins also solve the case where one real thing belongs in two ontologies. A book you read is a `Book` in the library and a `Source` in your Zettelkasten. Do not make two notes. Label one:
+Mixins also solve the case where one real thing belongs in two ontologies. A book you read is a `Book` in the library and a `BookSource` in your Zettelkasten. Do not make two notes. Label one:
 
 ```markdown
 ---
-type: [Book, Source]
+type: [Book, BookSource]
 author: Donella Meadows
 status: finished
 ---
 ## Links
 
 written_by:: [[Donella Meadows]]
+authored_by:: [[Donella Meadows]]
 ```
 
-Your zettel `cites::` it, and your reading log `written_by::` it. Both ontologies see the same node, with properties from each and no duplication. The test suite does exactly this and expects no diagnostics.
+Your literature note `cites::` it, and your reading log `written_by::` it; each ontology asks for its own author edge, so the note carries both. Both ontologies see the same node, with properties from each and no duplication. The test suite does exactly this and expects no diagnostics.
 
 ## Design advice for your own ontologies
 

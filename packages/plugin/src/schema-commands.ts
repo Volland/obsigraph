@@ -1,6 +1,6 @@
-import { chooseTemplate, isSchemaPath, normalizeFolder, renderNoteFromType, scaffoldSchemaNote, splitFrontmatter, templatePath, type Diagnostic, type TypeSchema } from '@obsigraph/core';
+import { findLuhmannParent, isSchemaPath, luhmannRule, luhmannTypes, normalizeFolder, planNewNote, scaffoldSchemaNote, splitFrontmatter, templatePath, type Diagnostic, type LuhmannParent, type TypeSchema } from '@obsigraph/core';
 import { exportShacl, importShacl, planImport, type ExistingNote, type ImportPlan, type ShaclImport } from '@obsigraph/core/src/shacl.js';
-import { App, Modal, Notice, normalizePath, Setting, SuggestModal, TFile } from 'obsidian';
+import { App, getIcon, Menu, Modal, Notice, normalizePath, Setting, SuggestModal, TFile, TFolder } from 'obsidian';
 import type ObsigraphPlugin from './main';
 
 const BAD_NAME = /[\\/:*?"<>|#^[\]]/;
@@ -59,7 +59,8 @@ class TypeSuggestModal extends SuggestModal<TypeSchema> {
   }
   renderSuggestion(t: TypeSchema, el: HTMLElement): void {
     el.createDiv({ text: t.type });
-    el.createEl('small', { text: t.properties.map((p) => p.name).join(', ') || 'no declared properties', cls: 'obsigraph-muted' });
+    const ids = t.ids.map((r) => `${r.kind}${r.auto ? '' : ' on request'}`).join(', ');
+    el.createEl('small', { text: [t.properties.map((p) => p.name).join(', ') || 'no declared properties', ids && `ids: ${ids}`].filter(Boolean).join(' · '), cls: 'obsigraph-muted' });
   }
   onChooseSuggestion(t: TypeSchema): void {
     this.onPick(t);
@@ -113,18 +114,47 @@ export function registerSchemaCommands(plugin: ObsigraphPlugin): void {
 
   plugin.addCommand({
     id: 'create-note-from-type',
-    name: 'Create note from type',
+    name: 'New typed note',
+    callback: () => askType(plugin),
+  });
+
+  plugin.addCommand({
+    id: 'new-luhmann-child-note',
+    name: 'New child note (Luhmann id)',
+    callback: () => newLuhmannNote(plugin, 'child'),
+  });
+
+  plugin.addCommand({
+    id: 'new-luhmann-sibling-note',
+    name: 'New sibling note (Luhmann id)',
+    callback: () => newLuhmannNote(plugin, 'sibling'),
+  });
+
+  plugin.addCommand({
+    id: 'new-luhmann-root-note',
+    name: 'New top-level note (next Luhmann number)',
     callback: () => {
-      const types = [...plugin.index.schemas().schemas.values()].sort((a, b) => a.type.localeCompare(b.type));
-      if (types.length === 0) {
-        new Notice(`No schema notes found in ${normalizeFolder(plugin.settings.schemaFolder) || 'the schema folder'}.`);
-        return;
-      }
-      new TypeSuggestModal(app, types, (schema) => {
-        new PromptModal(app, `New ${schema.type}`, (title) => void createFromType(plugin, schema, title)).open();
-      }).open();
+      const types = luhmannTypes(plugin.index.schemas());
+      if (types.length === 0) return void new Notice('No type has a Luhmann id rule (`id: {kind: luhmann}`).');
+      const start = (schema: TypeSchema) => new PromptModal(app, `New ${schema.type}`, (title) => void createFromType(plugin, schema, title, { luhmann: true })).open();
+      if (types.length === 1) start(types[0]!);
+      else new TypeSuggestModal(app, types, start).open();
     },
   });
+
+  plugin.addRibbonIcon('file-plus', 'New typed note', (evt) => showNewNoteMenu(plugin, evt));
+
+  // Folders offer a typed note in place; notes with a Luhmann id offer a child and a sibling.
+  plugin.registerEvent(
+    app.workspace.on('file-menu', (menu, file) => {
+      if (file instanceof TFolder) {
+        menu.addItem((i) => i.setTitle('New typed note here').setIcon('file-plus').onClick(() => askType(plugin, file.isRoot() ? '' : `${file.path}/`)));
+      } else if (file instanceof TFile && file.extension === 'md' && findLuhmannParent(plugin.index.graph, plugin.index.schemas(), file.path)) {
+        menu.addItem((i) => i.setTitle('New child note (Luhmann id)').setIcon('corner-down-right').onClick(() => newLuhmannNote(plugin, 'child', file.path)));
+        menu.addItem((i) => i.setTitle('New sibling note (Luhmann id)').setIcon('arrow-down').onClick(() => newLuhmannNote(plugin, 'sibling', file.path)));
+      }
+    }),
+  );
 
   plugin.addCommand({
     id: 'create-schema-note',
@@ -277,8 +307,56 @@ async function bodyOf(app: App, path: string | null): Promise<string | null> {
   return file instanceof TFile ? splitFrontmatter(await app.vault.cachedRead(file)).body : null;
 }
 
+/** Choose a type from every schema note, then ask for a title. */
+function askType(plugin: ObsigraphPlugin, folder?: string): void {
+  const types = typesOf(plugin);
+  if (types.length === 0) return;
+  new TypeSuggestModal(plugin.app, types, (schema) => askTitle(plugin, schema, folder)).open();
+}
+
+function typesOf(plugin: ObsigraphPlugin): TypeSchema[] {
+  const types = [...plugin.index.schemas().schemas.values()].sort((a, b) => a.type.localeCompare(b.type));
+  if (types.length === 0) new Notice(`No schema notes found in ${normalizeFolder(plugin.settings.schemaFolder) || 'the schema folder'}.`);
+  return types;
+}
+
+function askTitle(plugin: ObsigraphPlugin, schema: TypeSchema, folder?: string): void {
+  new PromptModal(plugin.app, `New ${schema.type}`, (title) => void createFromType(plugin, schema, title, { folder })).open();
+}
+
+/** A menu with one entry per type, at the mouse position of the click that opened it. */
+function showNewNoteMenu(plugin: ObsigraphPlugin, evt: MouseEvent): void {
+  const types = typesOf(plugin);
+  if (types.length === 0) return;
+  const menu = new Menu();
+  for (const t of types) {
+    const icon = typeof t.style?.icon === 'string' && getIcon(t.style.icon) ? t.style.icon : 'file-plus';
+    menu.addItem((i) => i.setTitle(`New ${t.type}`).setIcon(icon).onClick(() => askTitle(plugin, t)));
+  }
+  menu.showAtMouseEvent(evt);
+}
+
+/** Ask for a title, then create a child or sibling of a note that has a Luhmann id (the active note by default). */
+function newLuhmannNote(plugin: ObsigraphPlugin, placement: 'child' | 'sibling', path?: string): void {
+  const from = path ?? plugin.app.workspace.getActiveFile()?.path;
+  const set = plugin.index.schemas();
+  const parent = from ? findLuhmannParent(plugin.index.graph, set, from) : null;
+  const schema = parent ? set.schemas.get(parent.type) : undefined;
+  if (!parent || !schema) {
+    new Notice('The note has no Luhmann id. Open a note whose type declares `id: {kind: luhmann, property: ...}` and has a value for it.');
+    return;
+  }
+  const folder = parent.path.includes('/') ? `${parent.path.slice(0, parent.path.lastIndexOf('/'))}/` : '';
+  new PromptModal(plugin.app, `New ${placement} of ${parent.title} (${parent.id})`, (title) => void createFromType(plugin, schema, title, { folder, parent: { ...parent, placement } })).open();
+}
+
 // @lat: [[graph-model#Schema notes]]
-async function createFromType(plugin: ObsigraphPlugin, schema: TypeSchema, title: string): Promise<void> {
+async function createFromType(
+  plugin: ObsigraphPlugin,
+  schema: TypeSchema,
+  title: string,
+  opts: { folder?: string; parent?: LuhmannParent & { placement: 'child' | 'sibling' }; luhmann?: boolean } = {},
+): Promise<void> {
   const { app } = plugin;
   let linkedBody: string | null = null;
   if (schema.template) {
@@ -286,10 +364,14 @@ async function createFromType(plugin: ObsigraphPlugin, schema: TypeSchema, title
     linkedBody = await bodyOf(app, templatePath(schema.template, schema.path, resolve));
     if (linkedBody === null) new Notice(`Template ${schema.template} for ${schema.type} was not found; using the next template source.`);
   }
-  const { body, generated } = chooseTemplate(schema, { linkedBody, schemaBody: (await bodyOf(app, schema.path)) ?? '' });
-  const parent = app.fileManager.getNewFileParent(app.workspace.getActiveFile()?.path ?? '');
-  const dir = parent.isRoot() ? '' : `${parent.path}/`;
-  await createNote(app, `${dir}${title}.md`, renderNoteFromType(schema, body, { placeholders: generated }), title);
+  if (opts.luhmann && !luhmannRule(schema)) opts = { ...opts, luhmann: false };
+  const plan = planNewNote({ schema, title, linkedBody, schemaBody: (await bodyOf(app, schema.path)) ?? '', graph: plugin.index.graph, parent: opts.parent, luhmann: opts.luhmann });
+  let dir = opts.folder;
+  if (dir === undefined) {
+    const parent = app.fileManager.getNewFileParent(app.workspace.getActiveFile()?.path ?? '');
+    dir = parent.isRoot() ? '' : `${parent.path}/`;
+  }
+  await createNote(app, `${dir}${plan.fileName}`, plan.content, title);
 }
 
 /** Create a note, refusing to overwrite an existing one. */

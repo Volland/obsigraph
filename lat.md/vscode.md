@@ -28,9 +28,15 @@ A welcome-view action runs `tg init --write` in a visible terminal after listing
 
 [[packages/vscode/src/setup.ts#runSetup]] prefers a global `tg` and falls back to `npx @typedgraph/cli init --write`. The extension never writes setup files itself, so `tg` stays the single owner of what init does; [[packages/vscode/src/setup.ts#SETUP_FILES]] is checked against the CLI's own plan by a test. The action shows while the workspace has no `lat.md/` or no tg-managed instruction block, and backlinks work either way. This is the funnel: users see value from backlinks first, then one click leads to agent integration.
 
+## Creating notes
+
+TypeGraph: New Typed Note creates a note from a declared type, and the child and sibling commands branch from the active note's Luhmann id.
+
+[[packages/vscode/src/new-note.ts#planWorkspaceNote]] is pure over the index: it finds the type in the schema folder (`typegraph.schemaFolder`, default `Types/`), reads the linked template note from disk, and returns a path and content with ids and template tokens filled in by core's planner. The adapter offers a type picker with each type's id kinds, asks for a title, never overwrites an existing file, and opens the new note. The command is also in the Explorer folder menu, which picks the folder. Child and sibling commands need the active note to have a value for its type's Luhmann id property; they create a note of the same type next to it with the next free id and a link back through the template's `{{parent-link}}`.
+
 ## Privacy
 
-The extension reads the workspace and never writes to it, collects no telemetry and makes no network requests of its own.
+The extension reads the workspace and writes only the notes a user creates with the New Typed Note commands, collects no telemetry and makes no network requests of its own.
 
 A test scans the sources for networking imports. The only outward step is the setup command the user confirms, and `npx` may then download the CLI.
 

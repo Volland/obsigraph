@@ -29,6 +29,11 @@
           "items": { "type": "string" },
           "default": ["node_modules"],
           "markdownDescription": "Folder names skipped at any depth, in addition to dot folders."
+        },
+        "typegraph.schemaFolder": {
+          "type": "string",
+          "default": "Types/",
+          "markdownDescription": "Folder, relative to the workspace folder, whose notes declare types (TGS). Used by the **New Typed Note** commands."
         }
       }
     },
@@ -50,12 +55,19 @@
     "commands": [
       { "command": "typegraph.openGraph", "title": "TypeGraph: Open Graph", "icon": "$(graph)" },
       { "command": "typegraph.setup", "title": "TypeGraph: Set Up TypeGraph" },
-      { "command": "typegraph.refresh", "title": "TypeGraph: Refresh Index", "icon": "$(refresh)" }
+      { "command": "typegraph.refresh", "title": "TypeGraph: Refresh Index", "icon": "$(refresh)" },
+      { "command": "typegraph.newNote", "title": "TypeGraph: New Typed Note", "icon": "$(new-file)" },
+      { "command": "typegraph.newChildNote", "title": "TypeGraph: New Child Note (Luhmann id)" },
+      { "command": "typegraph.newSiblingNote", "title": "TypeGraph: New Sibling Note (Luhmann id)" }
     ],
     "menus": {
       "view/title": [
         { "command": "typegraph.openGraph", "when": "view == typegraph.backlinks", "group": "navigation" },
+        { "command": "typegraph.newNote", "when": "view == typegraph.backlinks", "group": "navigation" },
         { "command": "typegraph.refresh", "when": "view == typegraph.backlinks", "group": "navigation" }
+      ],
+      "explorer/context": [
+        { "command": "typegraph.newNote", "when": "explorerResourceIsFolder", "group": "2_workspace@9" }
       ]
     }
   },

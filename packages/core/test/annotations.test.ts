@@ -70,7 +70,7 @@ it('reports a target whose section was renamed, and advisory schema violations',
   expect(checkAnnotationTarget(index, code.edges[0]!)).toMatchObject({ kind: 'code', file: 'src/b.ts', symbol: 'helper' });
   const typed = scanAnnotations('a.ts', `// ${TG} drops:: [[auth#Sign in]]\nfunction h() {}\n`).annotations[0]!;
   const rule = (type: string) => ({ type, targets: null, many: true, required: false });
-  const schema = { type: 'CodeSymbol', path: 'Types/CodeSymbol.md', properties: [], edges: [rule('implements'), rule('tests')], style: null, uri: null, template: null, bodyIsTemplate: true };
+  const schema = { type: 'CodeSymbol', path: 'Types/CodeSymbol.md', properties: [], edges: [rule('implements'), rule('tests')], style: null, uri: null, template: null, bodyIsTemplate: true, ids: [] };
   expect(schemaIssues(schema, typed)[0]).toContain("'drops' is not allowed");
   expect(schemaIssues(undefined, typed)).toEqual([]);
 });

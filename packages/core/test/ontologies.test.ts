@@ -61,19 +61,31 @@ describe('ontology gallery', () => {
     expect(set.schemas.size).toBe(0);
   });
 
+  // @lat: [[tests/ontology-gallery#Zettelkasten note types and sources]]
+  it('covers every Zettelkasten note and source type, and requires sources for literature notes and highlights', () => {
+    const notes = load('zettelkasten');
+    const used = new Set(notes.flatMap((n) => [n.frontmatter?.type].flat().filter(Boolean) as string[]));
+    for (const t of ['FleetingNote', 'LiteratureNote', 'PermanentNote', 'StructureNote', 'ProjectNote', 'BookSource', 'ArticleSource', 'Highlight', 'Writer', 'Topic']) expect(used.has(t), t).toBe(true);
+    const orphanLiterature: NoteInput = { path: 'Examples/No source.md', text: '---\ntype: LiteratureNote\n---\nA summary of nothing.\n', frontmatter: { type: 'LiteratureNote' } };
+    const orphanHighlight: NoteInput = { path: 'Examples/Loose.md', text: '---\ntype: Highlight\n---\nA line from nowhere.\n', frontmatter: { type: 'Highlight' } };
+    const { diagnostics } = check([...load('core'), ...notes, orphanLiterature, orphanHighlight]);
+    expect(diagnostics.some((d) => /Missing required edge 'cites' for type LiteratureNote/.test(d))).toBe(true);
+    expect(diagnostics.some((d) => /Missing required edge 'highlighted_in' for type Highlight/.test(d))).toBe(true);
+  });
+
   // @lat: [[tests/ontology-gallery#Ontologies compose]]
   it('combines into one vault with no clash, and a note can carry labels from two ontologies', () => {
     const merged = ALL.flatMap((id) => load(id).map((n) => ({ ...n, path: n.path.startsWith('Types/') ? n.path : `${id}/${n.path}` })));
     const both: NoteInput = {
       path: 'Shared/Thinking in Systems.md',
-      text: '---\ntype: [Book, Source]\nauthor: Donella Meadows\nstatus: finished\n---\n## Links\n\nwritten_by:: [[Donella Meadows]]\n',
-      frontmatter: { type: ['Book', 'Source'], author: 'Donella Meadows', status: 'finished' },
+      text: '---\ntype: [Book, BookSource]\nauthor: Donella Meadows\nstatus: finished\n---\n## Links\n\nwritten_by:: [[Donella Meadows]]\nauthored_by:: [[Donella Meadows]]\n',
+      frontmatter: { type: ['Book', 'BookSource'], author: 'Donella Meadows', status: 'finished' },
     };
-    const author: NoteInput = { path: 'Shared/Donella Meadows.md', text: '---\ntype: Author\n---\n', frontmatter: { type: 'Author' } };
+    const author: NoteInput = { path: 'Shared/Donella Meadows.md', text: '---\ntype: [Author, Writer]\n---\n', frontmatter: { type: ['Author', 'Writer'] } };
     const zettel: NoteInput = {
       path: 'Shared/Leverage points.md',
-      text: '---\ntype: Zettel\n---\n## Links\n\ncites:: [[Thinking in Systems]] {page: "145"}\n',
-      frontmatter: { type: 'Zettel' },
+      text: '---\ntype: PermanentNote\n---\n## Links\n\ncites:: [[Thinking in Systems]] {page: "145"}\n',
+      frontmatter: { type: 'PermanentNote' },
     };
     const { set, diagnostics } = check([...merged, both, author, zettel]);
     expect(diagnostics).toEqual([]);
@@ -85,8 +97,8 @@ describe('ontology gallery', () => {
   it('reports the duplicate edge type when two ontologies both declare it', () => {
     const dup: NoteInput = {
       path: 'Types/Extra.md',
-      text: '---\nedgeTypes:\n  contradicts: {from: Zettel}\n---\n',
-      frontmatter: { edgeTypes: { contradicts: { from: 'Zettel' } } },
+      text: '---\nedgeTypes:\n  contradicts: {from: PermanentNote}\n---\n',
+      frontmatter: { edgeTypes: { contradicts: { from: 'PermanentNote' } } },
     };
     const { diagnostics } = check([...ALL.flatMap((id) => load(id)), dup]);
     expect(diagnostics.some((d) => /Edge type 'contradicts' is declared in both/.test(d))).toBe(true);

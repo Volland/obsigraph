@@ -1,6 +1,7 @@
 import { markdownTarget, type Diagnostic } from '../edges/parse.js';
 import { titleOf, type Graph } from '../graph/graph.js';
 import { toYaml } from './frontmatter.js';
+import { ID_KINDS, type IdKind, type IdRule } from './ids.js';
 
 export type PropertyKind = 'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'link' | 'list';
 export const PROPERTY_KINDS: readonly PropertyKind[] = ['text', 'number', 'boolean', 'date', 'datetime', 'link', 'list'];
@@ -41,6 +42,8 @@ export interface TypeSchema {
   template: string | null;
   /** Declared under `schema:` (or implied by the note title), so the note body is the template. */
   bodyIsTemplate: boolean;
+  /** Identifiers generated for new notes of this type. */
+  ids: IdRule[];
 }
 
 export interface EdgeTypeSchema {
@@ -74,7 +77,7 @@ export interface SchemaSet {
 
 export const DEFAULT_SCHEMA_FOLDER = 'Types/';
 /** The Typed Graph Schema version this reader implements. */
-export const TGS_VERSION = '0.1';
+export const TGS_VERSION = '0.2';
 export const TGS_NAMESPACE = 'https://volland.github.io/obsigraph/ns/tgs#';
 export const DEFAULT_BASE_IRI = 'urn:tgs:';
 export const BUILTIN_PREFIXES: Readonly<Record<string, string>> = {
@@ -88,7 +91,7 @@ export const BUILTIN_PREFIXES: Readonly<Record<string, string>> = {
 };
 const IRI_SCHEMES = new Set(['http', 'https', 'urn', 'mailto', 'tag', 'did', 'file']);
 
-const TYPE_KEYS = new Set(['properties', 'edges', 'visualization', 'style', 'uri', 'template']);
+const TYPE_KEYS = new Set(['properties', 'edges', 'visualization', 'style', 'uri', 'template', 'id']);
 const EDGE_TYPE_KEYS = new Set(['from', 'to', 'properties', 'uri', 'visualization', 'style']);
 
 export function normalizeFolder(folder: string): string {
@@ -124,7 +127,7 @@ export function readSchemaNote(path: string, frontmatter: Record<string, unknown
     else if (Number(m[1]) !== 0) {
       diag(`TGS version ${v} is not supported (this reader implements ${TGS_VERSION}); schema ignored`);
       return out;
-    } else if (Number(m[2]) > 1) strict = true;
+    } else if (Number(m[2]) > 2) strict = true;
   }
 
   const has = (k: string) => fm[k] !== undefined;
@@ -179,16 +182,48 @@ function readTypeBlock(type: string, path: string, decl: Record<string, unknown>
   // `visualization` is the documented key; `style` is accepted as an alias.
   const vis = decl.visualization ?? decl.style;
   if (vis !== undefined && !isRecord(vis)) diag('`visualization` must be a mapping');
+  const properties = readProperties(decl.properties, diag);
+  const ids = readIds(decl.id, diag);
+  // An id property that is not declared is a plain text property.
+  for (const r of ids) if (!properties.some((p) => p.name === r.property)) properties.push({ name: r.property, kind: 'text', default: null, required: false, many: false, values: null, uri: null });
   return {
     type,
     path,
-    properties: readProperties(decl.properties, diag),
+    properties,
+    ids,
     edges: readEdges(decl.edges, diag),
     style: isRecord(vis) ? vis : null,
     uri: readString(decl.uri, '`uri`', diag),
     template: readString(decl.template, '`template`', diag),
     bodyIsTemplate,
   };
+}
+
+/** Read the `id` key: a kind, a mapping, or a list of mappings that each name their property. */
+function readIds(raw: unknown, diag: Diag): IdRule[] {
+  if (raw === undefined || raw === null) return [];
+  const list = Array.isArray(raw) ? raw : [raw];
+  const rules: IdRule[] = [];
+  for (const item of list) {
+    const spec: Record<string, unknown> = isRecord(item) ? item : { kind: item };
+    const kind = typeof spec.kind === 'string' ? (spec.kind.toLowerCase() as IdKind) : null;
+    if (!kind || !ID_KINDS.includes(kind)) {
+      diag(`\`id\` kind '${String(spec.kind)}' is not one of: ${ID_KINDS.join(', ')}; ignored`);
+      continue;
+    }
+    for (const k of Object.keys(spec)) if (!['kind', 'property', 'auto', 'filename'].includes(k)) diag(`Unknown key '${k}' in \`id\``);
+    if (Array.isArray(raw) && typeof spec.property !== 'string') {
+      diag('Each `id` in a list must name its `property`; ignored');
+      continue;
+    }
+    const property = typeof spec.property === 'string' && spec.property.trim() ? spec.property.trim() : 'id';
+    if (rules.some((r) => r.property === property)) {
+      diag(`\`id\` property '${property}' is declared twice; the first wins`);
+      continue;
+    }
+    rules.push({ kind, property, auto: typeof spec.auto === 'boolean' ? spec.auto : kind !== 'luhmann', filename: spec.filename === true });
+  }
+  return rules;
 }
 
 function readEdgeTypeBlock(type: string, path: string, decl: Record<string, unknown>, diag: Diag, strict: boolean): EdgeTypeSchema {
@@ -487,9 +522,10 @@ export function chooseTemplate(schema: TypeSchema, sources: { linkedBody: string
  * template body. With `placeholders`, every declared property gets a key.
  */
 // @lat: [[graph-model#Schema notes]]
-export function renderNoteFromType(schema: TypeSchema, templateBody: string, opts: { placeholders?: boolean } = {}): string {
-  const fm: Record<string, unknown> = { type: schema.type };
+export function renderNoteFromType(schema: TypeSchema, templateBody: string, opts: { placeholders?: boolean; ids?: Record<string, string> } = {}): string {
+  const fm: Record<string, unknown> = { type: schema.type, ...opts.ids };
   for (const p of schema.properties) {
+    if (p.name in fm) continue;
     if (p.default !== null && p.default !== undefined) fm[p.name] = p.default;
     else if (opts.placeholders) fm[p.name] = p.many ? [] : null;
   }

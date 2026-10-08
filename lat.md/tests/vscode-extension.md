@@ -93,3 +93,15 @@ The release script stops before publishing to either registry when one of the tw
 ### Same package to both
 
 With both tokens present the script publishes the same `.vsix` file to the Marketplace and to Open VSX.
+
+## Creating notes
+
+Typed notes planned in the workspace without VS Code, from the schema folder, templates on disk and the index.
+
+### Plan from a type
+
+A note of a declared type is planned with its path in the chosen folder, its automatic ids and its template body read from disk; an unknown type or an invalid title is refused.
+
+### Luhmann branch from a note
+
+The Luhmann parent of a note is read from its type's id property, a child and a sibling get the next free id, and the template's parent link points back at the note.

@@ -151,11 +151,13 @@ edgeTypes:
         <li>Kinds: <code>text</code>, <code>number</code>, <code>boolean</code>, <code>date</code>, <code>datetime</code>, <code>link</code>, <code>list</code>. Properties take <code>required</code>, <code>many</code>, <code>values</code>, <code>default</code> and <code>uri</code>.</li>
         <li><code>edges</code> is a list of allowed outgoing edge types, or a map to target types (<code>worksAt: Company</code>) or to <code>{target, many, required}</code>. Omit it to allow any edge.</li>
         <li><code>uri</code> accepts an IRI or a CURIE such as <code>schema:Person</code>; add prefixes with a <code>prefixes:</code> key.</li>
-        <li><em>Create note from type</em> uses the <code>template</code> note if set, else the <code>schema:</code> note's body, else a template generated from the schema. It never overwrites a note.</li>
+        <li><em>New typed note</em> (command, ribbon menu, or a folder's context menu) uses the <code>template</code> note if set, else the <code>schema:</code> note's body, else a template generated from the schema. It never overwrites a note. VS Code has <em>TypeGraph: New Typed Note</em> and the same templates.</li>
+        <li><code>id</code> gives new notes identifiers (TGS 0.2): <code>uuid</code>, <code>uuid7</code> (time-ordered, so ids sort by creation), <code>timestamp</code> (<code>YYYYMMDDHHmm</code>) or <code>luhmann</code> (<code>1</code>, <code>1a</code>, <code>1a1</code>, <code>2</code>). A list names a <code>property</code> for each; <code>auto: false</code> keeps an id for when you ask, and <code>filename: true</code> prefixes the file name. Luhmann ids are made by <em>New child note</em> and <em>New sibling note</em> from a note that has one, or <em>New top-level note</em> for the next number.</li>
+        <li>Templates may use <code>{{title}}</code>, <code>{{date}}</code>, <code>{{time}}</code>, <code>{{id}}</code>, <code>{{&lt;id property&gt;}}</code> and, for a child or sibling, <code>{{parent}}</code>, <code>{{parent-id}}</code> and <code>{{parent-link}}</code>. A line that names the parent is dropped when there is none; other braces, such as edge embeds, stay as written.</li>
         <li>Validation is advisory: required and allowed values, lists, allowed, required and single edges, edge endpoints and edge properties. Issues show in the status bar and <em>Show diagnostics</em>.</li>
         <li><em>Export schemas as SHACL</em> and <em>Import SHACL shapes</em> exchange schemas with RDF tools, as do <code>tg schema export</code> and <code>tg schema import</code>.</li>
       </ul>
-      <p>The format is an open specification, <a href="spec/tgs/v0.1/">Typed Graph Schema (TGS) 0.1</a>, with a JSON Schema and conformance examples.</p>
+      <p>The format is an open specification, <a href="spec/tgs/v0.2/">Typed Graph Schema (TGS) 0.2</a>, with a JSON Schema and conformance examples; <a href="spec/tgs/v0.1/">0.1</a> stays published, and every 0.1 schema note is valid 0.2.</p>
 
       <h2 id="embeds">Edge property embeds</h2>
 <pre>We met in {{edge: Alice -knows-> Bob . since}}.
@@ -350,7 +352,7 @@ RETURN p.title AS person, proj.title AS project,
 
       <h2 id="faq">FAQ</h2>
       <h3>Does it change my notes?</h3>
-      <p>No. The plugin and the sidecar only read notes. Only <em>Create note from type</em>, <em>Create schema note</em> and <em>Import SHACL shapes</em> write files, on request; the import changes only the schema keys of notes in the schema folder.</p>
+      <p>No. The plugin and the sidecar only read notes. Only <em>New typed note</em> and its child, sibling and top-level variants, <em>Create schema note</em> and <em>Import SHACL shapes</em> write files, on request; the import changes only the schema keys of notes in the schema folder.</p>
       <h3>Do I need Graph Link Types or Dataview?</h3>
       <p>No. Typed Graph reads the same <code>type:: [[Target]]</code> lines on its own.</p>
       <h3>Does my vault leave my machine?</h3>

@@ -23,7 +23,7 @@ export interface ShaclImport {
   dropped: DroppedConstruct[];
 }
 
-export interface ImportedType extends Omit<TypeSchema, 'path' | 'bodyIsTemplate'> {
+export interface ImportedType extends Omit<TypeSchema, 'path' | 'bodyIsTemplate' | 'ids'> {
   /** Value of `tgs:note`, if any. */
   note: string | null;
   /** Value of `tgs:templateBody`, if any. */

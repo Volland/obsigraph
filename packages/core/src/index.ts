@@ -42,6 +42,22 @@ export {
 export type { EdgeRule, EdgeTypeSchema, PropertyKind, PropertySchema, SchemaNote, SchemaSet, TypeSchema } from './schema/schema.js';
 export { splitFrontmatter, toYaml } from './schema/frontmatter.js';
 export {
+  compareLuhmann,
+  dateParts,
+  generateId,
+  ID_KINDS,
+  luhmannChild,
+  luhmannRoot,
+  luhmannSibling,
+  parseLuhmann,
+  timestampId,
+  uuid4,
+  uuid7,
+} from './schema/ids.js';
+export type { IdContext, IdKind, IdRule, RandomBytes } from './schema/ids.js';
+export { collectIds, expandTokens, findLuhmannParent, luhmannRule, luhmannTypes, planNewNote, templateNotePath } from './schema/newnote.js';
+export type { LuhmannParent, NewNotePlan, NewNoteRequest } from './schema/newnote.js';
+export {
   BUILTIN,
   colorFor,
   DEFAULT_EDGE_COLOR,

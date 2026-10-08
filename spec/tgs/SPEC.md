@@ -1,10 +1,11 @@
-# Typed Graph Schema (TGS) 0.1
+# Typed Graph Schema (TGS) 0.2
 
 | | |
 |---|---|
-| **Version** | 0.1 (published 2026-10-06; immutable) |
-| **This version** | `https://volland.github.io/obsigraph/spec/tgs/v0.1/` |
-| **JSON Schema** | `https://volland.github.io/obsigraph/spec/tgs/v0.1/tgs.schema.json` |
+| **Version** | 0.2 (published 2026-10-08; immutable) |
+| **Previous** | [0.1](../v0.1/) |
+| **This version** | `https://volland.github.io/obsigraph/spec/tgs/v0.2/` |
+| **JSON Schema** | `https://volland.github.io/obsigraph/spec/tgs/v0.2/tgs.schema.json` |
 | **Namespace** | `https://volland.github.io/obsigraph/ns/tgs#` (prefix `tgs:`) |
 | **Editor** | Volodymyr Pavlyshyn |
 | **Source** | `spec/tgs/` in [github.com/Volland/obsigraph](https://github.com/Volland/obsigraph) |
@@ -97,6 +98,7 @@ A type declaration is a mapping with these optional keys:
 | `properties` | section 5 | frontmatter properties of notes of this type |
 | `edges` | section 5.3 | allowed outgoing edges; absent means any edge is allowed |
 | `template` | link | template note for new notes of this type (section 8) |
+| `id` | section 8.1 | identifiers generated for new notes of this type (0.2) |
 | `visualization` | mapping | display hints (section 11); `style` is an alias |
 
 An empty mapping (`{}`) or a null value declares a type with no constraints.
@@ -192,6 +194,28 @@ A `template` link is a wikilink (`[[Templates/Person]]`, resolved as the host re
 
 A generated template SHOULD write a key for every declared property (its default, `[]` for many, empty otherwise) and one placeholder per declared edge that does not itself create an edge, so that a new note is complete but creates no links until it is filled in. The reference implementation writes `## Notes` followed by `## Relations` with one `- <edgeType>::` line per edge.
 
+### 8.1 Note identifiers
+
+The `id` key (added in 0.2) names the identifiers a reader generates when it creates a note of the type. It is one **id rule**, or a list of rules. A rule is a kind (`id: uuid7`) or a mapping:
+
+| Key | Value | Default | Meaning |
+|---|---|---|---|
+| `kind` | `uuid`, `uuid7`, `timestamp` or `luhmann` | required | how the id is made |
+| `property` | property name | `id` | frontmatter property that holds the id; required for each rule of a list |
+| `auto` | boolean | `true`, except `false` for `luhmann` | generate on every new note; otherwise only when the user asks (for `luhmann`, by placing the note under another) |
+| `filename` | boolean | `false` | prefix the file name with the id and a space |
+
+The kinds are:
+
+- `uuid`: a random UUID (RFC 9562 version 4).
+- `uuid7`: a time-ordered UUID (RFC 9562 version 7), whose first 48 bits are the Unix time in milliseconds, so ids made later sort later as strings.
+- `timestamp`: `YYYYMMDDHHmm` in local time; if the id is in use, the next minute is tried until one is free.
+- `luhmann`: a branching id in Luhmann's style: numbers and letters alternate, as in `1`, `1a`, `1a1`, `1a2`, `1b`, `2`. A new root is one more than the largest top-level number. A child of an id ending in a digit appends `a`, and a child of an id ending in a letter appends `1`. A sibling increments the last segment (numbers by one, letters as `a` to `z`, then `aa`). Any id already in use is skipped.
+
+A reader MUST generate ids that are not in use for the same `property` in the vault, MUST write each generated id as a text property of the new note, and SHOULD treat a property named by a rule but not declared in `properties` as a declared text property. A reader MUST report an unknown kind, an unknown key, a list entry without `property` and a repeated `property` as `invalid-declaration` and MUST ignore that rule.
+
+A template (section 8) MAY use these tokens, which a reader that supports them replaces: `{{title}}`, `{{date}}` (`YYYY-MM-DD`), `{{time}}` (`HH:mm`), `{{id}}` (the first generated id), `{{<property>}}` for each generated id, and for a note placed under a parent, `{{parent}}` (its title), `{{parent-id}}` and `{{parent-link}}` (a wikilink to it). Other double-brace text MUST be left unchanged. A template line that contains a parent token is removed when the note has no parent.
+
 ## 9. Validation
 
 Validation is advisory. A validator MUST report diagnostics and MUST NOT remove notes or edges from the graph. Stub targets and targets without labels are never reported as having the wrong type.
@@ -234,6 +258,8 @@ A schema note MAY declare `tgs: "<major>.<minor>"`. A reader implementing versio
 - MUST read a note that declares the same major version and a higher minor version, and MUST report each key inside a type or edge type declaration that it does not know as `unknown-key`;
 - MUST report a note that declares another major version as `unsupported-version` and MUST NOT use its declarations;
 - MUST read notes without `tgs` as version 0.1.
+
+TGS 0.2 adds the `id` key (section 8.1) and the template tokens. Every 0.1 note is a valid 0.2 note.
 
 Minor versions only add optional keys. A published version never changes.
 
@@ -343,7 +369,7 @@ SHACL cases also have a `shapes.ttl` that an exporter's output must be isomorphi
 
 ## 15. JSON Schema
 
-`tgs.schema.json` (JSON Schema draft 2020-12) validates the TGS keys of a schema note's frontmatter. It is strict about TGS 0.1 keys and leaves `visualization` and all non-TGS keys open. Notes declaring a newer minor version may not validate against it.
+`tgs.schema.json` (JSON Schema draft 2020-12) validates the TGS keys of a schema note's frontmatter. It is strict about TGS 0.2 keys and leaves `visualization` and all non-TGS keys open. Notes declaring a newer minor version may not validate against it.
 
 ## 16. References
 

@@ -16,3 +16,4 @@ packages/vscode/*.vsix
 # Rendered articles (quarto); their code samples contain @tg: examples that are not real annotations
 articles/*.html
 articles/*_files/
+site/assets/ontology-map.js

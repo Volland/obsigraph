@@ -73,7 +73,7 @@ function declarations(set: SchemaSet) {
   return {
     types: [...set.schemas.values()]
       .sort((a, b) => a.type.localeCompare(b.type))
-      .map((t) => ({ name: t.type, note: t.path, iri: iri(t, t.type), properties: props(t.properties), edges: t.edges, template: t.template })),
+      .map((t) => ({ name: t.type, note: t.path, iri: iri(t, t.type), properties: props(t.properties), edges: t.edges, template: t.template, ...(t.ids.length ? { ids: t.ids } : {}) })),
     edgeTypes: [...set.edgeTypes.values()]
       .sort((a, b) => a.type.localeCompare(b.type))
       .map((e) => ({ name: e.type, note: e.path, iri: iri(e, e.type), from: e.from, to: e.to, properties: props(e.properties) })),

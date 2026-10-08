@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://volland.github.io/obsigraph/spec/tgs/v0.1/tgs.schema.json",
-  "title": "Typed Graph Schema (TGS) 0.1 schema note frontmatter",
+  "$id": "https://volland.github.io/obsigraph/spec/tgs/v0.2/tgs.schema.json",
+  "title": "Typed Graph Schema (TGS) 0.2 schema note frontmatter",
   "description": "Validates the TGS keys of a schema note's YAML frontmatter, parsed to JSON. Other frontmatter keys are allowed. License: MIT.",
   "type": "object",
   "properties": {
@@ -11,7 +11,7 @@
         "number"
       ],
       "pattern": "^0\\.[0-9]+$",
-      "description": "TGS version the note is written for, e.g. \"0.1\"."
+      "description": "TGS version the note is written for, e.g. \"0.2\"."
     },
     "schema": {
       "$ref": "#/$defs/typeDeclaration",
@@ -237,6 +237,44 @@
         },
         "style": {
           "$ref": "#/$defs/visualization"
+        },
+        "id": {
+          "description": "Identifiers generated when a note of this type is created (TGS 0.2).",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idRule"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "uuid",
+                      "uuid7",
+                      "timestamp",
+                      "luhmann"
+                    ]
+                  },
+                  "property": {
+                    "$ref": "#/$defs/name"
+                  },
+                  "auto": {
+                    "type": "boolean"
+                  },
+                  "filename": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "property"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -267,6 +305,45 @@
         }
       },
       "additionalProperties": false
+    },
+    "idRule": {
+      "description": "One identifier generated for new notes of a type.",
+      "oneOf": [
+        {
+          "enum": [
+            "uuid",
+            "uuid7",
+            "timestamp",
+            "luhmann"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "uuid",
+                "uuid7",
+                "timestamp",
+                "luhmann"
+              ]
+            },
+            "property": {
+              "$ref": "#/$defs/name"
+            },
+            "auto": {
+              "type": "boolean"
+            },
+            "filename": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
     }
   }
 }
