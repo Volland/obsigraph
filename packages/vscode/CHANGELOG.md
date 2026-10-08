@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1
+
+- The graph clears expanded nodes when you switch to another file, as in Obsidian; expansions still survive refreshes of the same file, and the last file stays shown while focus is in the graph.
+- The Backlinks view says when the active file is outside `typegraph.roots`, and shows the "Set up TypeGraph" offer as the welcome view or as a row below the backlinks.
+
 ## 0.8.0
 
 - **New typed notes.** `TypeGraph: New Typed Note` (command palette, the Explorer folder menu and the Backlinks title bar) creates a note from a type declared in your schema folder (`typegraph.schemaFolder`, default `Types/`), using the type's template and never overwriting a file.

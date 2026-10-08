@@ -2,6 +2,27 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.10.0 — 2026-10-08
+
+### Added
+
+- **OpenSpec traceability (`tg`).** `tg` reads `openspec/specs/` and open changes, and code and tests point at requirements and scenarios with `@tg: implements:: [[openspec:<capability>#<Requirement>]]` and `@tg: verifies:: [[openspec:<capability>#<Requirement>#<Scenario>]]`. A `@tg:` comment above `it(...)` attaches to that test and records its name. lat.md files list the capabilities they explain as `openspec: [...]` in frontmatter.
+- **`tg trace [capability...] [--gaps] [--strict] [--json]`** reports, per requirement, the implementing code, the tests that verify each scenario and the explaining docs; `--strict` exits 1 on gaps, for CI. `tg cypher` gains `Requirement` and `Scenario` nodes, and the MCP server a `tg_trace` tool.
+- `tg check` rejects `openspec:` targets and frontmatter entries that do not resolve, with a did-you-mean suggestion. Missing traceability is never a check finding.
+- Sidecar MCP `vector_search` accepts the `then` follow-up query, `mode` and `backend`, as REST does.
+- Specs for typed note creation, the ontology gallery, the plugin install check and the example vault; the requirements of every capability were audited against the code and realigned.
+
+### Fixed
+
+- **Embedding dimension change.** Search and retrieve refuse with a rebuild message when the active model's vector size differs from the index, instead of scoring with NaN; `cosine` throws on vectors of different length. Retrieve flags a stale index like search does.
+- **Unresponsive embedding provider.** Requests time out after 30 seconds (`OBSIGRAPH_EMBED_TIMEOUT_MS`), so `tg search` falls back to lexical results instead of hanging. Empty or uneven-length vectors are rejected as a bad response.
+- **Key precedence.** `TG_EMBED_KEY`, `TG_EMBED_KEY_FILE` and `TG_EMBED_KEY_HELPER` now win over the `LAT_LLM_KEY*` aliases.
+- **SHACL import** warns when a template body cannot be written to an existing note instead of dropping it.
+- **Ladybug mirror.** A corrupt database is discarded and rebuilt instead of stopping the sidecar, and a failed sync is reported instead of serving the old snapshot.
+- **Cypher.** List and pattern comprehensions, map projections, pattern predicates and `EXISTS`/`COUNT`/`COLLECT {}` subqueries are reported as unsupported by name, not as syntax errors, and pass through to Ladybug. A variable-length relationship variable is a list column.
+- `retrieve` caps its total returned text and sets `truncated`; the sidecar MCP server reports its real version.
+- `tg section`, `refs` and `expand` print one JSON document under `--json` when nothing matches.
+
 ## 0.9.1 — 2026-10-08
 
 ### Fixed
