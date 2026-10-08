@@ -152,11 +152,91 @@ it('serves the tools over MCP and tg_cypher returns the tagged result contract',
 
 // @lat: [[tests/tg-agent#Bundled skills#Skills installed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Bundled skills#Skills installed]]
-it('installs both skills for Claude Code', async () => {
+it('installs all five skills for Claude Code', async () => {
   const dir = project();
   await tg(dir, ['init', '--write']);
-  expect(read(dir, '.claude/skills/tg-docs/SKILL.md')).toContain('name: tg-docs');
-  expect(read(dir, '.claude/skills/tg-graph/SKILL.md')).toContain('name: tg-graph');
+  for (const name of ['tg-docs', 'tg-graph', 'tg-trace', 'tg-impact', 'tg-audit']) expect(read(dir, `.claude/skills/${name}/SKILL.md`)).toContain(`name: ${name}`);
+});
+
+const OPENSPEC_SKILL = '---\nname: openspec-apply-change\n---\n\nImplement tasks from an OpenSpec change.\n';
+const OPENSPEC_CMD = '---\nname: "OPSX: Apply"\n---\n\nImplement tasks.\n';
+
+function withOpenspec(): string {
+  const dir = project();
+  mkdirSync(join(dir, '.claude/skills/openspec-apply-change'), { recursive: true });
+  mkdirSync(join(dir, '.claude/skills/openspec-onboard'), { recursive: true });
+  mkdirSync(join(dir, '.claude/commands/opsx'), { recursive: true });
+  writeFileSync(join(dir, '.claude/skills/openspec-apply-change/SKILL.md'), OPENSPEC_SKILL);
+  writeFileSync(join(dir, '.claude/skills/openspec-onboard/SKILL.md'), 'Onboard.\n');
+  writeFileSync(join(dir, '.claude/commands/opsx/apply.md'), OPENSPEC_CMD);
+  return dir;
+}
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Skills patched]]
+// @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Skills patched]]
+it('appends a tg block to OpenSpec apply skill and command and keeps their text', async () => {
+  const dir = withOpenspec();
+  await tg(dir, ['init', '--write']);
+  for (const [rel, original] of [['.claude/skills/openspec-apply-change/SKILL.md', OPENSPEC_SKILL], ['.claude/commands/opsx/apply.md', OPENSPEC_CMD]] as const) {
+    const text = read(dir, rel);
+    expect(text.startsWith(original)).toBe(true);
+    expect(text).toMatch(/<!-- tg:begin -->\n## Traceability with tg[\s\S]*@tg: implements::[\s\S]*@tg: verifies::[\s\S]*<!-- tg:end -->\n$/);
+  }
+  expect(read(dir, '.claude/skills/openspec-onboard/SKILL.md')).toBe('Onboard.\n');
+});
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Re-run is stable]]
+// @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Re-run is stable]]
+it('keeps exactly one block and reports nothing to change on a second run', async () => {
+  const dir = withOpenspec();
+  await tg(dir, ['init', '--write']);
+  const again = await tg(dir, ['init', '--write']);
+  expect(again.out).toContain('already set up');
+  expect(read(dir, '.claude/skills/openspec-apply-change/SKILL.md').split('<!-- tg:begin -->')).toHaveLength(2);
+});
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Regenerated skill]]
+// @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Regenerated skill]]
+it('appends the block again after OpenSpec regenerates a skill', async () => {
+  const dir = withOpenspec();
+  await tg(dir, ['init', '--write']);
+  writeFileSync(join(dir, '.claude/skills/openspec-apply-change/SKILL.md'), `${OPENSPEC_SKILL}\nNew upstream step.\n`);
+  await tg(dir, ['init', '--write']);
+  const text = read(dir, '.claude/skills/openspec-apply-change/SKILL.md');
+  expect(text).toContain('New upstream step.');
+  expect(text.split('<!-- tg:begin -->')).toHaveLength(2);
+});
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Opt out]]
+// @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Opt out]]
+it('leaves OpenSpec files alone with --no-openspec', async () => {
+  const dir = withOpenspec();
+  await tg(dir, ['init', '--write', '--no-openspec']);
+  expect(read(dir, '.claude/skills/openspec-apply-change/SKILL.md')).toBe(OPENSPEC_SKILL);
+  expect(read(dir, '.claude/commands/opsx/apply.md')).toBe(OPENSPEC_CMD);
+});
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Skills only]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Skills-only init#Existing lat.md project]]
+it('writes only skills and OpenSpec patches with --skills-only', async () => {
+  const dir = withOpenspec();
+  writeFileSync(join(dir, 'CLAUDE.md'), '%% lat:begin %%\nlat block\n%% lat:end %%\n');
+  const r = await tg(dir, ['init', '--skills-only', '--write', '--json']);
+  const paths = (JSON.parse(r.out) as { changes: { path: string }[] }).changes.map((c) => c.path);
+  expect(paths.length).toBe(7);
+  expect(paths.every((p) => p.startsWith('.claude/skills/') || p.startsWith('.claude/commands/'))).toBe(true);
+  expect(read(dir, 'CLAUDE.md')).toBe('%% lat:begin %%\nlat block\n%% lat:end %%\n');
+  expect(existsSync(join(dir, '.claude/settings.json'))).toBe(false);
+  expect(existsSync(join(dir, 'lat.md/code-ontology.md'))).toBe(false);
+});
+
+// @lat: [[tests/tg-agent#OpenSpec skill patching#Patch text printed]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Skill text available#Print a patch]]
+it('prints skills and patch blocks with tg gen', async () => {
+  const r = await tg(project(), ['gen', 'openspec-apply.md']);
+  expect(r.code).toBe(0);
+  expect(r.out).toContain('## Traceability with tg');
+  expect((await tg(project(), ['gen', 'impact-skill.md'])).out).toContain('name: tg-impact');
 });
 
 // @lat: [[tests/tg-agent#Code ontology#Ontology installed]]

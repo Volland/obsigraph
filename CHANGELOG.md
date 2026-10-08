@@ -2,6 +2,14 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.11.0 — 2026-10-08
+
+### Added
+
+- **Three advanced skills (`tg init`).** `tg-trace` links OpenSpec requirements to code, tests and docs and runs the trace; `tg-impact` finds the requirements, scenarios, tests and docs a code change touches, before and after the edit; `tg-audit` audits specs against code and turns drift into an OpenSpec change and annotations. `tg-graph` now covers `Requirement` and `Scenario` nodes.
+- **OpenSpec skills become tg-aware.** When OpenSpec's propose, apply, archive or explore skills (`.claude/skills/openspec-*`) or `/opsx` commands exist, `tg init` appends a `<!-- tg:begin -->` block with the tg steps for that stage: stable requirement names when proposing, `implements` and `verifies` while applying, `tg trace --gaps` and `tg check` around archiving. Re-running after `openspec update` restores the block; `--no-openspec` skips it.
+- `tg init --skills-only` writes only the skills and OpenSpec blocks, for projects that keep their own instruction files and hooks. `tg gen` prints every skill and block.
+
 ## 0.10.0 — 2026-10-08
 
 ### Added

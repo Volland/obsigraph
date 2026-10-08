@@ -147,3 +147,15 @@ After completing all artifacts, summarize:
 - Ask about ambiguities that would materially change scope, externally observable behavior, compatibility, or acceptance criteria; for minor details, make reasonable assumptions and record them
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
+
+<!-- tg:begin -->
+## Traceability with tg
+
+This project traces OpenSpec requirements to code with `tg` (see the `tg-trace` skill). While writing the change:
+
+- Before proposing, run `tg trace <capability>` for each capability you touch, and `tg search "<topic>"` for the lat.md sections that explain it. Build on what is implemented; mention gaps you find.
+- Requirement and scenario names become ids that code points at (`openspec:<capability>#<Requirement>#<Scenario>`). Choose short, stable, specific names. In MODIFIED deltas **keep every existing requirement and scenario name exactly**, and add scenarios instead of renaming them.
+- Give every requirement at least one scenario a test can prove; each scenario will get a `@tg: verifies::` line on its test.
+- In `tasks.md`, add a final task: "Annotate code with `@tg: implements::` and tests with `@tg: verifies::`; `tg check` and `tg trace <capabilities> --gaps` show no new gaps."
+- If the change adds a capability, plan which lat.md file will name it in its `openspec:` frontmatter.
+<!-- tg:end -->

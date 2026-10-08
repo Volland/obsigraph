@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Files `tg init --agent claude` creates or changes in a fresh project; verified against the CLI by a test. */
-export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', 'lat.md/code-ontology.md', 'ontology/code-types.md'] as const;
+export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', '.claude/skills/tg-trace/SKILL.md', '.claude/skills/tg-impact/SKILL.md', '.claude/skills/tg-audit/SKILL.md', 'lat.md/code-ontology.md', 'ontology/code-types.md'] as const;
 
 /** True when the workspace lacks `lat.md/` or any tg-managed instruction block. */
 // @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]

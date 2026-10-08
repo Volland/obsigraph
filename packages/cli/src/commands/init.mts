@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { EXIT_ERROR, EXIT_OK, register, type Command } from '../cli.mjs';
 import { unifiedDiff } from '../diff.mjs';
-import { TEMPLATES } from './gen.mjs';
+import { OPENSPEC_PATCHES, SKILLS, TEMPLATES } from './gen.mjs';
 
 export const BEGIN = '%% tg:begin %%';
 export const END = '%% tg:end %%';
@@ -67,6 +67,36 @@ export function withMcp(config: Record<string, unknown>, migrate: boolean): Reco
   return out;
 }
 
+export const OPENSPEC_BEGIN = '<!-- tg:begin -->';
+export const OPENSPEC_END = '<!-- tg:end -->';
+
+/** OpenSpec's Claude Code skills and commands, by the workflow stage each one drives. */
+const OPENSPEC_FILES: [keyof typeof OPENSPEC_PATCHES, string[]][] = [
+  ['propose', ['.claude/skills/openspec-propose/SKILL.md', '.claude/commands/opsx/propose.md']],
+  ['apply', ['.claude/skills/openspec-apply-change/SKILL.md', '.claude/commands/opsx/apply.md']],
+  ['archive', ['.claude/skills/openspec-archive-change/SKILL.md', '.claude/commands/opsx/archive.md']],
+  ['explore', ['.claude/skills/openspec-explore/SKILL.md', '.claude/commands/opsx/explore.md']],
+];
+
+/** Append or replace the tg block at the end of an OpenSpec skill or command; text outside the block is kept as is. */
+// @tg: implements:: [[openspec:tg-agent-integration#OpenSpec skill patching]]
+export function withOpenspecBlock(existing: string, patch: string): string {
+  const managed = `${OPENSPEC_BEGIN}\n${patch.trimEnd()}\n${OPENSPEC_END}`;
+  const mine = between(existing, OPENSPEC_BEGIN, OPENSPEC_END);
+  if (mine) return `${existing.slice(0, mine.start)}${managed}${existing.slice(mine.stop)}`;
+  const sep = existing.endsWith('\n\n') ? '' : existing.endsWith('\n') ? '\n' : '\n\n';
+  return `${existing}${sep}${managed}\n`;
+}
+
+export interface InitOptions {
+  /** Install the code ontology note and schema (default true). */
+  ontology?: boolean;
+  /** Patch OpenSpec's skills and commands when present (default true). */
+  openspec?: boolean;
+  /** Write only skills and OpenSpec patches. */
+  skillsOnly?: boolean;
+}
+
 const INDEX = `# Project
 
 This directory defines the high-level concepts, business logic and architecture of the project in markdown, managed with the \`tg\` CLI (compatible with lat.md). Run \`tg check\` to validate it.
@@ -94,13 +124,30 @@ function read(path: string): string | null {
 
 // @tg: implements:: [[openspec:tg-agent-integration#Bundled skills]]
 // @tg: implements:: [[openspec:tg-agent-integration#Safe init]]
-export function planInit(root: string, agent: string, migrate: boolean, ontology = true): { changes: Change[]; notes: string[] } {
+// @tg: implements:: [[openspec:tg-agent-integration#Skills-only init]]
+export function planInit(root: string, agent: string, migrate: boolean, options: InitOptions = {}): { changes: Change[]; notes: string[] } {
+  const { ontology = true, openspec = true, skillsOnly = false } = options;
   const changes: Change[] = [];
   const notes: string[] = [];
   const add = (rel: string, after: string) => {
     const before = read(join(root, rel));
     if (before !== after) changes.push({ path: rel, before, after });
   };
+  const addSkills = () => {
+    for (const [name, text] of Object.entries(SKILLS)) add(`.claude/skills/${name}/SKILL.md`, text);
+    if (!openspec) return;
+    for (const [stage, paths] of OPENSPEC_FILES) {
+      for (const rel of paths) {
+        const text = read(join(root, rel));
+        if (text !== null) add(rel, withOpenspecBlock(text, OPENSPEC_PATCHES[stage]));
+      }
+    }
+  };
+  if (skillsOnly) {
+    if (agent !== 'claude') notes.push('--skills-only installs Claude Code skills; --agent is ignored.');
+    addSkills();
+    return { changes, notes };
+  }
   if (!existsSync(join(root, 'lat.md'))) add('lat.md/lat.md', ontology ? `${INDEX}${INDEX_ONTOLOGY}` : INDEX);
   if (ontology) {
     // Project-owned once written: never overwritten, so local edits to the vocabulary survive a re-run.
@@ -125,8 +172,7 @@ export function planInit(root: string, agent: string, migrate: boolean, ontology
     const settingsPath = join(root, '.claude/settings.json');
     add('.claude/settings.json', `${JSON.stringify(withHooks(readJson(settingsPath), migrate), null, 2)}\n`);
     add('.mcp.json', `${JSON.stringify(withMcp(readJson(join(root, '.mcp.json')), migrate), null, 2)}\n`);
-    add('.claude/skills/tg-docs/SKILL.md', TEMPLATES.docsSkill);
-    add('.claude/skills/tg-graph/SKILL.md', TEMPLATES.graphSkill);
+    addSkills();
   }
   return { changes, notes };
 }
@@ -135,8 +181,8 @@ export function planInit(root: string, agent: string, migrate: boolean, ontology
 export const init: Command = {
   name: 'init',
   summary: 'Set up lat.md/, the code ontology, agent instructions, hooks, MCP and skills (dry run unless --write)',
-  usage: 'init [dir] [--agent claude|agents|cursor] [--write] [--migrate] [--no-ontology]',
-  flags: { write: 'bool', migrate: 'bool', agent: 'string', 'no-ontology': 'bool' },
+  usage: 'init [dir] [--agent claude|agents|cursor] [--write] [--migrate] [--no-ontology] [--no-openspec] [--skills-only]',
+  flags: { write: 'bool', migrate: 'bool', agent: 'string', 'no-ontology': 'bool', 'no-openspec': 'bool', 'skills-only': 'bool' },
   noProject: true,
   run(ctx, args, flags) {
     const root = resolve(ctx.cwd, args[0] ?? ctx.root);
@@ -145,7 +191,7 @@ export const init: Command = {
       ctx.err(`unknown agent "${agent}"; expected claude, agents or cursor\n`);
       return EXIT_ERROR;
     }
-    const { changes, notes } = planInit(root, agent, flags.has('migrate'), !flags.has('no-ontology'));
+    const { changes, notes } = planInit(root, agent, flags.has('migrate'), { ontology: !flags.has('no-ontology'), openspec: !flags.has('no-openspec'), skillsOnly: flags.has('skills-only') });
     const write = flags.has('write');
     if (ctx.json) {
       ctx.out(`${JSON.stringify({ root, write, changes: changes.map((c) => ({ path: c.path, created: c.before === null })), notes })}\n`);

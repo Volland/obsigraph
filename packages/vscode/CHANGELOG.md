@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+- Setup now lists the three new `tg` skills (`tg-trace`, `tg-impact`, `tg-audit`) among the files `tg init` will create.
+
 ## 0.8.1
 
 - The graph clears expanded nodes when you switch to another file, as in Obsidian; expansions still survive refreshes of the same file, and the last file stays shown while focus is in the graph.

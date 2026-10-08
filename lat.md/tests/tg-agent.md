@@ -68,7 +68,35 @@ Skills shipped with the package.
 
 ### Skills installed
 
-`tg init --write` for Claude Code creates the docs-maintenance and graph-query skills under `.claude/skills/`.
+`tg init --write` for Claude Code creates the five skills (`tg-docs`, `tg-graph`, `tg-trace`, `tg-impact`, `tg-audit`) under `.claude/skills/`.
+
+## OpenSpec skill patching
+
+How `tg init` makes OpenSpec's own skills and commands tg-aware.
+
+### Skills patched
+
+OpenSpec's apply skill and `/opsx:apply` command end with a `<!-- tg:begin -->` block naming `implements` and `verifies`, their original text is a prefix of the result, and an unrelated OpenSpec skill is untouched.
+
+### Re-run is stable
+
+A second `tg init --write` reports nothing to change and each file keeps exactly one block.
+
+### Regenerated skill
+
+After OpenSpec rewrites a skill without the block, the next run appends it again and keeps the new upstream text.
+
+### Opt out
+
+`--no-openspec` leaves OpenSpec files byte-identical.
+
+### Skills only
+
+`--skills-only` changes only files under `.claude/skills/` and `.claude/commands/`, leaving a lat.md instruction block, hooks and the ontology alone.
+
+### Patch text printed
+
+`tg gen openspec-apply.md` prints the apply block and `tg gen impact-skill.md` the impact skill.
 
 ## Code ontology
 
