@@ -2,6 +2,17 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.9.1 — 2026-10-08
+
+### Fixed
+
+- **Community review findings (plugin).** `main.js` no longer contains dynamic code: the build replaces the `Function('return this')()` fallback that cytoscape inlines from lodash, and the Cypher evaluator's `eval` method is renamed `evaluate`. Three lint warnings in the core library are fixed (an unneeded non-null assertion, `globalThis.crypto`, an untyped `Map`).
+
+### Added
+
+- **Install check.** `npm run check:install` (`scripts/check-plugin-install.mjs`) repeats Obsidian's installer downloads against the latest release. It runs as the last release step and every six hours in `.github/workflows/install-check.yml`.
+- OpenSpec proposal for AsciiDoc notes (`openspec/changes/asciidoc-notes`).
+
 ## 0.9.0 — 2026-10-08
 
 ### Added

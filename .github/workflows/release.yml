@@ -53,6 +53,10 @@ jobs:
             packages/plugin/dist/main.js packages/plugin/dist/manifest.json packages/plugin/dist/styles.css \
             typed-graph-demo-vault.zip \
             --title "Typed Graph ${GITHUB_REF_NAME}" --generate-notes
+      - name: Check Obsidian can install the release
+        # Obsidian reads manifest.json from main and downloads this release's assets.
+        run: |
+          for i in 1 2 3 4 5; do node scripts/check-plugin-install.mjs "${GITHUB_REPOSITORY}" && exit 0; sleep 15; done; exit 1
       - name: Publish the tg CLI to npm
         # Needs an NPM_TOKEN secret with publish rights on the @typedgraph scope.
         env:

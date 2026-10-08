@@ -57,7 +57,7 @@ export function execute(graph: Graph, q: Query, params: Params = {}, opts: ExecO
       }
       scope = new Map(items.map((it) => [it.name, kindOf(it.expr, scope)]));
       rows = projected.map((r) => new Map(items.map((it, i) => [it.name, r.values[i]!])));
-      if (clause.proj.where) rows = rows.filter((env) => ctx.eval(clause.proj.where!, env) === true);
+      if (clause.proj.where) rows = rows.filter((env) => ctx.evaluate(clause.proj.where!, env) === true);
     }
   }
 
@@ -209,12 +209,12 @@ function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): 
   type Out = { values: Value[]; env: Env; aggValues: Map<Expr, Value> };
   let out: Out[];
   if (aggs.length === 0 && orderAggs.length === 0) {
-    out = rows.map((env) => ({ env, values: items.map((it) => ctx.eval(it.expr, env)), aggValues: new Map() }));
+    out = rows.map((env) => ({ env, values: items.map((it) => ctx.evaluate(it.expr, env)), aggValues: new Map() }));
   } else {
     const keyItems = items.filter((it) => !containsAgg(it.expr));
     const groups = new Map<string, Env[]>();
     for (const env of rows) {
-      const key = keyOf(keyItems.map((it) => ctx.eval(it.expr, env)));
+      const key = keyOf(keyItems.map((it) => ctx.evaluate(it.expr, env)));
       let g = groups.get(key);
       if (!g) groups.set(key, (g = []));
       g.push(env);
@@ -224,7 +224,7 @@ function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): 
       const env = group[0] ?? new Map<string, Value>();
       const aggValues = new Map<Expr, Value>();
       for (const a of [...aggs, ...orderAggs]) aggValues.set(a, ctx.aggregate(a as Extract<Expr, { k: 'agg' }>, group));
-      return { env, aggValues, values: ctx.withAggs(aggValues, () => items.map((it) => ctx.eval(it.expr, env))) };
+      return { env, aggValues, values: ctx.withAggs(aggValues, () => items.map((it) => ctx.evaluate(it.expr, env))) };
     });
   }
 
@@ -242,7 +242,7 @@ function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): 
     const keyed = out.map((r) => {
       const env = new Map(r.env);
       items.forEach((it, idx) => env.set(it.name, r.values[idx]!));
-      return { r, keys: ctx.withAggs(r.aggValues, () => proj.order.map((o) => ctx.eval(o.expr, env))) };
+      return { r, keys: ctx.withAggs(r.aggValues, () => proj.order.map((o) => ctx.evaluate(o.expr, env))) };
     });
     keyed.sort((a, b) => {
       for (let i = 0; i < proj.order.length; i++) {
@@ -254,8 +254,8 @@ function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): 
     out = keyed.map((k) => k.r);
   }
 
-  const skip = proj.skip ? count(ctx.eval(proj.skip, new Map()), 'SKIP') : 0;
-  const limit = proj.limit ? count(ctx.eval(proj.limit, new Map()), 'LIMIT') : Infinity;
+  const skip = proj.skip ? count(ctx.evaluate(proj.skip, new Map()), 'SKIP') : 0;
+  const limit = proj.limit ? count(ctx.evaluate(proj.limit, new Map()), 'LIMIT') : Infinity;
   return out.slice(skip, skip + limit);
 }
 
@@ -276,7 +276,7 @@ function runMatch(ctx: Ctx, rows: Env[], patterns: Pattern[], where: Expr | null
   for (const row of rows) {
     let matched = false;
     matchPatterns(ctx, new Map(row), patterns, 0, new Set(), (env) => {
-      if (!where || ctx.eval(where, env) === true) {
+      if (!where || ctx.evaluate(where, env) === true) {
         out.push(new Map(env));
         matched = true;
       }
@@ -453,7 +453,7 @@ class Ctx {
   /** openCypher aggregation over a group; nulls ignored except by count(*). */
   aggregate(e: Extract<Expr, { k: 'agg' }>, group: Env[]): Value {
     if (e.arg === null) return group.length;
-    let values = group.map((env) => this.eval(e.arg!, env)).filter((v) => v !== null);
+    let values = group.map((env) => this.evaluate(e.arg!, env)).filter((v) => v !== null);
     if (e.distinct) {
       const seen = new Set<string>();
       values = values.filter((v) => {
@@ -519,11 +519,11 @@ class Ctx {
     return np.labels.every((l) => n.node.labels.includes(l)) && this.propsMatch(n, np.props, env);
   }
   propsMatch(target: NodeRef | RelRef, props: [string, Expr][], env: Env): boolean {
-    return props.every(([k, e]) => equals(property(target, k), this.eval(e, env)) === true);
+    return props.every(([k, e]) => equals(property(target, k), this.evaluate(e, env)) === true);
   }
 
   // @lat: [[query-engine#Supported subset]]
-  eval(e: Expr, env: Env): Value {
+  evaluate(e: Expr, env: Env): Value {
     switch (e.k) {
       case 'lit':
         return e.v;
@@ -533,15 +533,15 @@ class Ctx {
       case 'var':
         return env.get(e.name) ?? null;
       case 'prop': {
-        const o = this.eval(e.obj, env);
+        const o = this.evaluate(e.obj, env);
         if (o === null) return null;
         if (o instanceof NodeRef || o instanceof RelRef) return property(o, e.key);
         if (isMap(o)) return o[e.key] ?? null;
         throw runtime(`Cannot read property '${e.key}' of ${typeName(o)}`);
       }
       case 'index': {
-        const o = this.eval(e.obj, env);
-        const i = this.eval(e.idx, env);
+        const o = this.evaluate(e.obj, env);
+        const i = this.evaluate(e.idx, env);
         if (o === null || i === null) return null;
         if (Array.isArray(o) && typeof i === 'number') return o[i < 0 ? o.length + i : i] ?? null;
         if (isMap(o) && typeof i === 'string') return o[i] ?? null;
@@ -549,37 +549,37 @@ class Ctx {
         throw runtime(`Cannot index ${typeName(o)} with ${typeName(i)}`);
       }
       case 'labels': {
-        const o = this.eval(e.obj, env);
+        const o = this.evaluate(e.obj, env);
         if (o === null) return null;
         if (!(o instanceof NodeRef)) throw runtime(`Label predicate requires a node, got ${typeName(o)}`);
         return e.labels.every((l) => o.node.labels.includes(l));
       }
       case 'list':
-        return e.items.map((i) => this.eval(i, env));
+        return e.items.map((i) => this.evaluate(i, env));
       case 'map': {
         const m: { [k: string]: Value } = {};
-        for (const [k, v] of e.entries) m[k] = this.eval(v, env);
+        for (const [k, v] of e.entries) m[k] = this.evaluate(v, env);
         return m;
       }
       case 'call':
-        return this.call(e.name, e.args.map((a) => this.eval(a, env)));
+        return this.call(e.name, e.args.map((a) => this.evaluate(a, env)));
       case 'agg': {
         const v = this.aggValues?.get(e);
         if (v === undefined) throw new CypherError('syntax', `Aggregation ${e.name}() is only allowed in WITH or RETURN`, e.line, e.column);
         return v;
       }
       case 'not': {
-        const v = this.eval(e.e, env);
+        const v = this.evaluate(e.e, env);
         return v === null ? null : !truthy(v);
       }
       case 'neg': {
-        const v = this.eval(e.e, env);
+        const v = this.evaluate(e.e, env);
         if (v === null) return null;
         if (typeof v !== 'number') throw runtime(`Cannot negate ${typeName(v)}`);
         return -v;
       }
       case 'isnull': {
-        const isNull = this.eval(e.e, env) === null;
+        const isNull = this.evaluate(e.e, env) === null;
         return e.not ? !isNull : isNull;
       }
       case 'bin':
@@ -589,18 +589,18 @@ class Ctx {
 
   private binary(op: string, le: Expr, re: Expr, env: Env): Value {
     if (op === 'and' || op === 'or' || op === 'xor') {
-      const l = this.eval(le, env);
+      const l = this.evaluate(le, env);
       if (op === 'and' && l === false) return false;
       if (op === 'or' && l === true) return true;
-      const r = this.eval(re, env);
+      const r = this.evaluate(re, env);
       const lb = l === null ? null : truthy(l);
       const rb = r === null ? null : truthy(r);
       if (op === 'and') return lb === false || rb === false ? false : lb === null || rb === null ? null : true;
       if (op === 'or') return lb === true || rb === true ? true : lb === null || rb === null ? null : false;
       return lb === null || rb === null ? null : lb !== rb;
     }
-    const l = this.eval(le, env);
-    const r = this.eval(re, env);
+    const l = this.evaluate(le, env);
+    const r = this.evaluate(re, env);
     switch (op) {
       case '=':
         return equals(l, r);

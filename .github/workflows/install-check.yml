@@ -1,0 +1,23 @@
+name: Plugin install check
+
+# Do what Obsidian's community installer does against the live repository: read
+# manifest.json on main and download that version's release assets. Fails when
+# main announces a version whose release is missing, which breaks every install.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-plugin-install.mjs "${GITHUB_REPOSITORY}" main

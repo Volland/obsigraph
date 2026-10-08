@@ -19,7 +19,8 @@
     "example:install": "node scripts/install-example.mjs",
     "build:vscode": "npm run build -w typegraph-vscode",
     "package:vscode": "npm run package -w typegraph-vscode",
-    "release:vscode": "node scripts/release-vscode.mjs"
+    "release:vscode": "node scripts/release-vscode.mjs",
+    "check:install": "node scripts/check-plugin-install.mjs"
   },
   "devDependencies": {
     "@types/n3": "^1.26.4",
@@ -29,7 +30,7 @@
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },
-  "version": "0.9.0",
+  "version": "0.9.1",
   "dependencies": {
     "yaml": "^2.9.1"
   }

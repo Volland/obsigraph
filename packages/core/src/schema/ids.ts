@@ -20,7 +20,7 @@ export interface IdRule {
 
 export type RandomBytes = (length: number) => Uint8Array;
 
-const defaultRandom: RandomBytes = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n));
+const defaultRandom: RandomBytes = (n) => crypto.getRandomValues(new Uint8Array(n));
 const hex = (bytes: Uint8Array): string => [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 const dashed = (h: string): string => `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 

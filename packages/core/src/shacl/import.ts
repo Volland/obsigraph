@@ -59,7 +59,7 @@ export function importShacl(turtle: string, opts: ShaclImportOptions = {}): Shac
   for (const q of quads) {
     const s = key(q.subject);
     let preds = index.get(s);
-    if (!preds) index.set(s, (preds = new Map()));
+    if (!preds) index.set(s, (preds = new Map<string, Term[]>()));
     const list = preds.get(q.predicate.value) ?? [];
     list.push(q.object);
     preds.set(q.predicate.value, list);

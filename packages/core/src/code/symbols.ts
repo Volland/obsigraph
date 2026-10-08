@@ -319,7 +319,7 @@ function scanC(text: string): ScanResult {
       }
       if ((m = /^\s*(?:(?:static|inline|extern|const|unsigned|signed|struct|enum|union|volatile|register)\s+)*[A-Za-z_][\w\s*]*?[\s*]([A-Za-z_]\w*)\s*\([^;{}]*(?:\)\s*)?\{?\s*$/.exec(l)) && !C_NOT_FN.has(m[1]!)) {
         const end = declEnd(doc, i);
-        const body = doc.masked.slice(doc.offsets[i]!, doc.offsets[end]! + (doc.lines[end]?.length ?? 0));
+        const body = doc.masked.slice(doc.offsets[i], doc.offsets[end]! + (doc.lines[end]?.length ?? 0));
         if (body.includes('{') && !/^\s*\w[\w\s*]*\(.*\)\s*;\s*$/.test(l)) push(m[1]!, 'function', null, i, end);
       }
     } else if (doc.depth[i] === 1 && /^\s*\}\s*([A-Za-z_]\w*)\s*;/.test(l)) {
