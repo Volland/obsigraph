@@ -1,6 +1,6 @@
 {
   "name": "@typedgraph/cli",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "tg: map, check and query docs and code as a typed graph; a drop-in replacement for lat.md",
   "type": "module",
   "license": "MIT",

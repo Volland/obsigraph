@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- **New typed notes.** `TypeGraph: New Typed Note` (command palette, the Explorer folder menu and the Backlinks title bar) creates a note from a type declared in your schema folder (`typegraph.schemaFolder`, default `Types/`), using the type's template and never overwriting a file.
+- **Generated ids.** Types can ask for ids with the new `id` key of TGS 0.2: a random UUID, a time-ordered UUID v7, a timestamp, or a Luhmann id.
+- **Luhmann branching.** `TypeGraph: New Child Note` and `New Sibling Note` create the next free id (`1` to `1a` to `1a1`, `1b`, `2`) next to the active note, with a link back through the template.
+- Templates may use `{{title}}`, `{{date}}`, `{{id}}`, `{{parent-link}}` and more.
+- The extension now writes files, but only the notes you create with these commands.
+
 ## 0.7.0
 
 - Setup now installs `tg` 0.7.0, which adds `tg schema export` and `tg schema import` for exchanging Typed Graph Schema notes with SHACL. The extension itself does not read schema notes, so nothing else changes in the editor.

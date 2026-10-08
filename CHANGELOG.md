@@ -2,6 +2,19 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.9.0 — 2026-10-08
+
+### Added
+
+- **Typed Graph Schema 0.2: ids and template tokens.** A type can declare `id` rules (`uuid`, time-ordered `uuid7`, `timestamp`, `luhmann`), each stored in its own property, with `auto` and `filename` options. Templates may use `{{title}}`, `{{date}}`, `{{time}}`, `{{id}}`, `{{<id property>}}`, `{{parent}}`, `{{parent-id}}` and `{{parent-link}}`. TGS 0.1 stays published; every 0.1 schema note is valid 0.2.
+- **New typed note menu (plugin).** The command *New typed note*, a ribbon menu with one entry per type, and *New typed note here* in the folder menu replace *Create note from type*. *New child note*, *New sibling note* and *New top-level note* create Luhmann ids from the active note.
+- **Zettelkasten ontology.** Fleeting, literature, permanent, structure and project notes, book and article sources with writers, highlights and topics, a `uid` for every type, optional Luhmann ids on permanent notes, one template per note type and new examples. *Breaking for existing users of the gallery ontology:* `Zettel` and `stage` are replaced by the note types, and `Source` by `BookSource` and `ArticleSource`.
+- **Website.** New home page, Agents, Obsidian, Teams, Install and Compare pages, launch articles, demo clips, and on the ontology page a Zettelkasten walkthrough and schema maps of every ontology.
+
+### Changed
+
+- The core library, `tg` and the sidecar read TGS 0.2; `tg` itself has no new commands.
+
 ## 0.8.0 — 2026-10-07
 
 ### Added
