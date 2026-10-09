@@ -12,7 +12,7 @@ That essay is the reason people still build slip boxes. It is also the reason mo
 
 The missing piece is not more notes or more links. It is **what kind** of note each one is and **what kind** of link each one makes. "This idea came from that page" is a different statement from "this idea contradicts that one", and a slip box that cannot tell them apart can only show you a hairball.
 
-This article builds a Zettelkasten in which notes and links have types. We will use the Zettelkasten ontology from the [TypeGraph ontology gallery](ontologies.html), and connect it to the books and articles you read. We will then compose it with a second ontology, a library for your reading life, without either one breaking the other. At the end we will ask it a dozen questions, from "what have I not processed?" to "which of my ideas came from fiction?", and show the real answers it gives.
+This article builds a Zettelkasten in which notes and links have types. We will use the Zettelkasten ontology from the [Typed Graph ontology gallery](ontologies.html), and connect it to the books and articles you read. We will then compose it with a second ontology, a library for your reading life, without either one breaking the other. At the end we will ask it a dozen questions, from "what have I not processed?" to "which of my ideas came from fiction?", and show the real answers it gives.
 
 Everything here is plain Markdown. Every query and validator message below was run against the real engine on the vault described in this article.
 
@@ -283,7 +283,7 @@ edgeTypes:
 
 You could merge the two ontologies into one big schema, and you would regret it. The Zettelkasten would grow fields about shelves and formats it does not care about. The library would learn about literature notes it does not need. Every update to either would become a manual merge.
 
-Instead, keep both as they are and compose them. Composition in TypeGraph is deliberately simple: put the schema notes in the same schema folder. Three notes make up the vault in this article:
+Instead, keep both as they are and compose them. Composition in Typed Graph is deliberately simple: put the schema notes in the same schema folder. Three notes make up the vault in this article:
 
 ```
 Types/
@@ -580,7 +580,7 @@ That division of labor is the whole design. The ontology makes your judgments ex
 
 Queries are questions you know how to ask. Sometimes you want to ask in plain language: *what do I think about attention, and where did it come from?*
 
-The TypeGraph sidecar is a small headless service that reads the same vault. It exposes it to agents over MCP with three read-only tools:
+The Typed Graph sidecar is a small headless service that reads the same vault. It exposes it to agents over MCP with three read-only tools:
 
 - **`cypher_query`** runs the same openCypher as the queries above.
 - **`vector_search`** finds notes, and edges, by meaning.

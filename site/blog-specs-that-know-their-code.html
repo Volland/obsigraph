@@ -15,7 +15,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./">Home</a>
         <a href="agents.html">Agents</a>
@@ -45,18 +45,18 @@
 <p>Each of the three is useful. The trouble is the gaps between them. A requirement can say one thing while the code does another. A design doc can describe a feature that was changed a month ago. A test can be named after a scenario it no longer exercises. Nobody notices, because nothing connects the three: you find out when a user files a bug, or when an agent reads a stale spec and writes code against it.</p>
 <p>This article is about closing those gaps with typed links, and about what we found when we closed them in our own repository.</p>
 <h2>The starting point: zero links</h2>
-<p>Before this work, the TypeGraph repository had 32 OpenSpec capabilities holding 212 requirements. It had a well-kept <code>lat.md/</code> folder: 37 test-specification files, 671 <code>@<span></span>lat:</code> comments tying tests and code to it, and a <code>lat check</code> that passed.</p>
+<p>Before this work, the Typed Graph repository had 32 OpenSpec capabilities holding 212 requirements. It had a well-kept <code>lat.md/</code> folder: 37 test-specification files, 671 <code>@<span></span>lat:</code> comments tying tests and code to it, and a <code>lat check</code> that passed.</p>
 <p>And not one file in the whole repository mentioned <code>openspec</code>.</p>
 <p>Code pointed at design docs. Tests pointed at test specifications. Requirements pointed at nothing, and nothing pointed at them. To answer &quot;is this requirement implemented, and which test proves it?&quot; you had to read the code. We could not answer it for one requirement without effort, let alone for two hundred.</p>
 <p>There was a reason for that, and it was not laziness. lat.md links can only target sections inside <code>lat.md/</code> or symbols in source files. An earlier article on this blog said so plainly: a <code>@<span></span>tg:</code> annotation could not point at a file under <code>openspec/</code>, and <code>tg check</code> reported it as unresolved. Requirements were simply not addressable.</p>
 <h2>Step one: make a requirement addressable</h2>
-<p>The fix is an id. Every OpenSpec requirement already has a unique name inside its capability, and every scenario a unique name inside its requirement. So <code>tg</code>, the TypeGraph CLI, now reads <code>openspec/specs/*/spec.md</code> and accepts targets of this shape:</p>
+<p>The fix is an id. Every OpenSpec requirement already has a unique name inside its capability, and every scenario a unique name inside its requirement. So <code>tg</code>, the Typed Graph CLI, now reads <code>openspec/specs/*/spec.md</code> and accepts targets of this shape:</p>
 <pre>openspec:&lt;capability&gt;#&lt;Requirement&gt;
 openspec:&lt;capability&gt;#&lt;Requirement&gt;#&lt;Scenario&gt;</pre>
 <p>The <code>openspec:</code> prefix matters. It keeps requirement ids out of the lat.md id space, so short-id resolution and parity with <code>lat check</code> are untouched. lat.md ignores <code>@<span></span>tg:</code> comments entirely, so the two tools still agree on every finding.</p>
 <p>Requirements in <em>open</em> changes resolve too, marked pending, so you can annotate code while the change that specifies it is still being written. When the change is archived, the id stays the same.</p>
 <h2>Step two: say how code relates to a requirement</h2>
-<p>TypeGraph already had a grammar for typed links in code comments, the same one notes use: <code>type:: [[target]] {properties}</code>. It also ships a small code ontology whose edge types include exactly the two we needed:</p>
+<p>Typed Graph already had a grammar for typed links in code comments, the same one notes use: <code>type:: [[target]] {properties}</code>. It also ships a small code ontology whose edge types include exactly the two we needed:</p>
 <ul>
 <li><code>implements</code>: this code realizes that requirement.</li>
 <li><code>verifies</code>: this test proves that scenario.</li>
@@ -203,7 +203,7 @@ vector-index  11 req · 9 implemented · 8 verified · 11 documented
 
   <footer>
     <div class="wrap">
-      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

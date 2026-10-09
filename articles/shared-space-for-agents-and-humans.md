@@ -14,7 +14,7 @@ The usual fixes split in two. You keep notes for people, and you build a separat
 
 ## One space
 
-TypeGraph takes the opposite position: the knowledge lives once, in Markdown files in your repository or vault, and both readers use it.
+Typed Graph takes the opposite position: the knowledge lives once, in Markdown files in your repository or vault, and both readers use it.
 
 - A person writes it in Obsidian or in an editor, with the [Obsidian plugin](obsidian.html) or the [VS Code extension](install.html).
 - An agent reads it through the `tg` command line or its MCP server, from Claude Code, Cursor or any MCP client.
@@ -24,7 +24,7 @@ There is no export step and no second store. Everything else, the graph, the sea
 
 ## What makes it reliable
 
-Shared is not enough. A shared space that rots is worse than none, because both readers trust it. TypeGraph adds three things.
+Shared is not enough. A shared space that rots is worse than none, because both readers trust it. Typed Graph adds three things.
 
 **Typed links.** A plain link says two things are related. A typed edge says how: this function `implements` that design section, this note `contradicts` that decision, this spec `supersedes` the old one. Agents can traverse relationships and people can filter them, instead of both re-reading prose.
 
@@ -34,7 +34,7 @@ Shared is not enough. A shared space that rots is worse than none, because both 
 
 ## What it is not
 
-It is not a replacement for good writing. Intent is written by people, and a tool cannot generate the reason a decision was made from the code that resulted. TypeGraph gives that intent a structure, and makes sure it stays connected to the code.
+It is not a replacement for good writing. Intent is written by people, and a tool cannot generate the reason a decision was made from the code that resulted. Typed Graph gives that intent a structure, and makes sure it stays connected to the code.
 
 It is not an alternative to lat.md so much as a superset of it. It reads the same `lat.md/` folders and agrees with `lat check`, then adds typed edges, openCypher queries, a graph view and an Obsidian plugin. lat.md is stronger in places, and [the comparison](compare.html) says where.
 

@@ -31,7 +31,7 @@ POSTS.push(
     src: 'articles/shared-space-for-agents-and-humans.md',
     out: 'site/blog-shared-space.html',
     title: 'A Shared Space for Agents and Humans',
-    description: 'Why coding agents need the same documented, checked knowledge as the people they work with, and how TypeGraph keeps it in plain Markdown with typed links, a check and agent hooks.',
+    description: 'Why coding agents need the same documented, checked knowledge as the people they work with, and how Typed Graph keeps it in plain Markdown with typed links, a check and agent hooks.',
     date: '7 October 2026',
     related: ['blog-claude-code-memory.html', 'Give Claude Code a memory in five minutes'],
   },
@@ -41,7 +41,7 @@ POSTS.push(
     title: 'Give Claude Code a Memory in Five Minutes',
     description: 'Install the tg CLI, let tg init wire up Claude Code, write a first typed link, and see what the agent gets: search first, a graph to query and a check it cannot skip.',
     date: '7 October 2026',
-    related: ['agents.html', 'TypeGraph for agents'],
+    related: ['agents.html', 'Typed Graph for agents'],
   },
   {
     src: 'articles/zettelkasten-thinking-machine.md',
@@ -102,7 +102,7 @@ for (const p of POSTS) {
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./">Home</a>
         <a href="agents.html">Agents</a>
@@ -130,7 +130,7 @@ ${html}
 
   <footer>
     <div class="wrap">
-      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

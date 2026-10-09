@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>A Shared Space for Agents and Humans</title>
-  <meta name="description" content="Why coding agents need the same documented, checked knowledge as the people they work with, and how TypeGraph keeps it in plain Markdown with typed links, a check and agent hooks.">
+  <meta name="description" content="Why coding agents need the same documented, checked knowledge as the people they work with, and how Typed Graph keeps it in plain Markdown with typed links, a check and agent hooks.">
   <meta property="og:title" content="A shared space for agents and humans">
-  <meta property="og:description" content="Why coding agents need the same documented, checked knowledge as the people they work with, and how TypeGraph keeps it in plain Markdown with typed links, a check and agent hooks.">
+  <meta property="og:description" content="Why coding agents need the same documented, checked knowledge as the people they work with, and how Typed Graph keeps it in plain Markdown with typed links, a check and agent hooks.">
   <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
   <meta property="og:type" content="article">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -15,7 +15,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./">Home</a>
         <a href="agents.html">Agents</a>
@@ -42,7 +42,7 @@
 <p>Most teams meet this as a chore. You re-explain the architecture. You paste the same context into every session. The agent confidently breaks something a design document warned about, because the document was never in its context, or was stale when it got there.</p>
 <p>The usual fixes split in two. You keep notes for people, and you build a separate memory for the agent, in a vector store or a settings file nobody reviews. Now there are two sources of truth, and they drift apart.</p>
 <h2>One space</h2>
-<p>TypeGraph takes the opposite position: the knowledge lives once, in Markdown files in your repository or vault, and both readers use it.</p>
+<p>Typed Graph takes the opposite position: the knowledge lives once, in Markdown files in your repository or vault, and both readers use it.</p>
 <ul>
 <li>A person writes it in Obsidian or in an editor, with the <a href="obsidian.html">Obsidian plugin</a> or the <a href="install.html">VS Code extension</a>.</li>
 <li>An agent reads it through the <code>tg</code> command line or its MCP server, from Claude Code, Cursor or any MCP client.</li>
@@ -50,12 +50,12 @@
 </ul>
 <p>There is no export step and no second store. Everything else, the graph, the search index, the query engine, is derived from the Markdown and can be rebuilt from it.</p>
 <h2>What makes it reliable</h2>
-<p>Shared is not enough. A shared space that rots is worse than none, because both readers trust it. TypeGraph adds three things.</p>
+<p>Shared is not enough. A shared space that rots is worse than none, because both readers trust it. Typed Graph adds three things.</p>
 <p><strong>Typed links.</strong> A plain link says two things are related. A typed edge says how: this function <code>implements</code> that design section, this note <code>contradicts</code> that decision, this spec <code>supersedes</code> the old one. Agents can traverse relationships and people can filter them, instead of both re-reading prose.</p>
 <p><strong>A check.</strong> <code>tg check</code> validates links, code symbols, section rules and test-spec coverage, with the same verdicts as lat.md, and exits non-zero on findings. Run it in CI and the documentation fails the build the day it stops matching the code.</p>
 <p><strong>A gate for agents.</strong> <code>tg init</code> installs hooks for Claude Code and Cursor. One searches the docs before the agent answers. The other blocks finishing while the check fails.</p>
 <h2>What it is not</h2>
-<p>It is not a replacement for good writing. Intent is written by people, and a tool cannot generate the reason a decision was made from the code that resulted. TypeGraph gives that intent a structure, and makes sure it stays connected to the code.</p>
+<p>It is not a replacement for good writing. Intent is written by people, and a tool cannot generate the reason a decision was made from the code that resulted. Typed Graph gives that intent a structure, and makes sure it stays connected to the code.</p>
 <p>It is not an alternative to lat.md so much as a superset of it. It reads the same <code>lat.md/</code> folders and agrees with <code>lat check</code>, then adds typed edges, openCypher queries, a graph view and an Obsidian plugin. lat.md is stronger in places, and <a href="compare.html">the comparison</a> says where.</p>
 <h2>Try it</h2>
 <p>For an agent, <a href="agents.html">set up Claude Code</a> in a minute:</p>
@@ -69,7 +69,7 @@ tg init --write</pre>
 
   <footer>
     <div class="wrap">
-      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

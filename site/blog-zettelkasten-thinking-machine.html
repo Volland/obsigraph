@@ -15,7 +15,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./"><img src="assets/logo.svg" alt="">TypeGraph</a>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="">Typed Graph</a>
       <nav class="nav">
         <a href="./">Home</a>
         <a href="agents.html">Agents</a>
@@ -41,7 +41,7 @@
 <p>Niklas Luhmann wrote about seventy books and several hundred articles. He credited a wooden cabinet of about ninety thousand index cards for most of it. In 1981 he described the cabinet as a <em>communication partner</em>: a system that, once it held enough linked notes, would answer back with connections he had not planned.</p>
 <p>That essay is the reason people still build slip boxes. It is also the reason most of them are disappointed. Their notes pile up and the links accumulate, but nothing answers back. A folder of Markdown files with <code>[[wikilinks]]</code> is a better index card than paper, but it is still an index card. You can follow a link. You cannot ask the box a question.</p>
 <p>The missing piece is not more notes or more links. It is <strong>what kind</strong> of note each one is and <strong>what kind</strong> of link each one makes. &quot;This idea came from that page&quot; is a different statement from &quot;this idea contradicts that one&quot;, and a slip box that cannot tell them apart can only show you a hairball.</p>
-<p>This article builds a Zettelkasten in which notes and links have types. We will use the Zettelkasten ontology from the <a href="ontologies.html">TypeGraph ontology gallery</a>, and connect it to the books and articles you read. We will then compose it with a second ontology, a library for your reading life, without either one breaking the other. At the end we will ask it a dozen questions, from &quot;what have I not processed?&quot; to &quot;which of my ideas came from fiction?&quot;, and show the real answers it gives.</p>
+<p>This article builds a Zettelkasten in which notes and links have types. We will use the Zettelkasten ontology from the <a href="ontologies.html">Typed Graph ontology gallery</a>, and connect it to the books and articles you read. We will then compose it with a second ontology, a library for your reading life, without either one breaking the other. At the end we will ask it a dozen questions, from &quot;what have I not processed?&quot; to &quot;which of my ideas came from fiction?&quot;, and show the real answers it gives.</p>
 <p>Everything here is plain Markdown. Every query and validator message below was run against the real engine on the vault described in this article.</p>
 <h2>A Zettelkasten is already a graph with types</h2>
 <p>The method has types even when the tool does not. As Sönke Ahrens describes it in <em>How to Take Smart Notes</em>, and as Christian Tietze and Sascha Fast extend it on zettelkasten.de, a note moves through stages:</p>
@@ -277,7 +277,7 @@ RETURN nodes(path) AS trail, length(path) AS hops ORDER BY hops</pre>
 edgeTypes:
   in_series: {from: Book, to: Series, properties: {volume: number}}</pre>
 <p>You could merge the two ontologies into one big schema, and you would regret it. The Zettelkasten would grow fields about shelves and formats it does not care about. The library would learn about literature notes it does not need. Every update to either would become a manual merge.</p>
-<p>Instead, keep both as they are and compose them. Composition in TypeGraph is deliberately simple: put the schema notes in the same schema folder. Three notes make up the vault in this article:</p>
+<p>Instead, keep both as they are and compose them. Composition in Typed Graph is deliberately simple: put the schema notes in the same schema folder. Three notes make up the vault in this article:</p>
 <pre>Types/
   Core.md           edge types shared by several ontologies
   Zettelkasten.md
@@ -437,7 +437,7 @@ Write for your future self  Writing is how thinking happens</pre>
 <p>That division of labor is the whole design. The ontology makes your judgments explicit (this extends that, this contradicts that), and queries look for the places where a judgment is missing.</p>
 <h2>Letting an agent think with you</h2>
 <p>Queries are questions you know how to ask. Sometimes you want to ask in plain language: <em>what do I think about attention, and where did it come from?</em></p>
-<p>The TypeGraph sidecar is a small headless service that reads the same vault. It exposes it to agents over MCP with three read-only tools:</p>
+<p>The Typed Graph sidecar is a small headless service that reads the same vault. It exposes it to agents over MCP with three read-only tools:</p>
 <ul>
 <li><strong><code>cypher_query</code></strong> runs the same openCypher as the queries above.</li>
 <li><strong><code>vector_search</code></strong> finds notes, and edges, by meaning.</li>
@@ -472,7 +472,7 @@ Write for your future self  Writing is how thinking happens</pre>
 
   <footer>
     <div class="wrap">
-      <span>TypeGraph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
+      <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
       <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>

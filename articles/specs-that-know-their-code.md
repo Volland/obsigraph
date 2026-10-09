@@ -20,7 +20,7 @@ This article is about closing those gaps with typed links, and about what we fou
 
 ## The starting point: zero links
 
-Before this work, the TypeGraph repository had 32 OpenSpec capabilities holding 212 requirements. It had a well-kept `lat.md/` folder: 37 test-specification files, 671 `@lat:` comments tying tests and code to it, and a `lat check` that passed.
+Before this work, the Typed Graph repository had 32 OpenSpec capabilities holding 212 requirements. It had a well-kept `lat.md/` folder: 37 test-specification files, 671 `@lat:` comments tying tests and code to it, and a `lat check` that passed.
 
 And not one file in the whole repository mentioned `openspec`.
 
@@ -30,7 +30,7 @@ There was a reason for that, and it was not laziness. lat.md links can only targ
 
 ## Step one: make a requirement addressable
 
-The fix is an id. Every OpenSpec requirement already has a unique name inside its capability, and every scenario a unique name inside its requirement. So `tg`, the TypeGraph CLI, now reads `openspec/specs/*/spec.md` and accepts targets of this shape:
+The fix is an id. Every OpenSpec requirement already has a unique name inside its capability, and every scenario a unique name inside its requirement. So `tg`, the Typed Graph CLI, now reads `openspec/specs/*/spec.md` and accepts targets of this shape:
 
 ```
 openspec:<capability>#<Requirement>
@@ -43,7 +43,7 @@ Requirements in *open* changes resolve too, marked pending, so you can annotate 
 
 ## Step two: say how code relates to a requirement
 
-TypeGraph already had a grammar for typed links in code comments, the same one notes use: `type:: [[target]] {properties}`. It also ships a small code ontology whose edge types include exactly the two we needed:
+Typed Graph already had a grammar for typed links in code comments, the same one notes use: `type:: [[target]] {properties}`. It also ships a small code ontology whose edge types include exactly the two we needed:
 
 - `implements`: this code realizes that requirement.
 - `verifies`: this test proves that scenario.
