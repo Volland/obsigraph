@@ -97,16 +97,16 @@ Planned for 0.17 and later. Once the developer wedge works, it brings in Obsidia
 | Feature | What it is | Why |
 | --- | --- | --- |
 | Dataview, Breadcrumbs and Juggl import | Converts their fields and queries to typed edges and Cypher, with a report of what did not convert | Dataview already uses `key:: value`: "Dataview fields with meaning" |
-| Embeddings in the plugin | Pulled forward, see below | Semantic search on mobile without the [[sidecar]] |
+| Embeddings in the plugin | On demand after a first CLI iteration, see below | Semantic search on mobile without the [[sidecar]] |
 | AsciiDoc notes | The open OpenSpec change asciidoc-notes | Parked until an outside user asks for it |
 
 Gate: the GitHub Action has steady outside users before anything under Later starts.
 
-### Embedded search pulled forward
+### Embedded search in two steps
 
-Decided Oct 9, 2026: plugin embeddings no longer wait for the Phase 3 gate; they ship as part of [[embedded-search]], after the CLI changes that serve the developer wedge.
+Revised Oct 9, 2026: only a first iteration ships now; the rest of [[embedded-search]] waits for demand, since it serves the Phase 3 audience and does not move the Phase 1 or 2 gates.
 
-Order: add-embedded-graph-store, add-local-embedding and add-hybrid-ranking first, which give `tg search` offline hybrid ranking with no key; then add-plugin-search once the mobile spike in the first change passes; converge-sidecar-vectors last. No new host or note format is added, so the freeze holds.
+Now: improve-tg-search-ranking, a few days inside today's in-memory `tg search`: an exact-identifier tier, section chunks for vectors, a similarity floor and a ranking evaluation with lat.md as reference. Later, when Phase 2's `tg init --infer` needs a local model or Obsidian users ask for semantic search: add-embedded-graph-store, add-local-embedding and add-hybrid-ranking, then add-plugin-search once the mobile spike passes, converge-sidecar-vectors last. No new host or note format is added, so the freeze holds.
 
 ## Later
 

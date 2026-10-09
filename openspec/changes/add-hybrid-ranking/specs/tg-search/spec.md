@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Search output
-`tg search <query> [--limit N] [--mode hybrid|lexical|semantic] [--target nodes|chunks|facts] [--type T,...] [--explain] [--no-boost] [--no-embed] [--then '<cypher>']` SHALL return at most N results (default 5), grouped one per node for `--target nodes` (the default) or as individual Chunks or Facts otherwise; `--lexical` SHALL remain an alias of `--mode lexical`. With `--json` it SHALL print one JSON document holding `mode`, the model display name and fingerprint, any notice, the number of units waiting for vectors, the query, ranked hits with id, score, file, line range, heading path, snippet and matching Facts, per-list ranks when `--explain` is given, and the rows of the `--then` query when given.
+`tg search <query> [--limit N] [--mode hybrid|lexical|semantic] [--target nodes|chunks|facts] [--type T,...] [--explain] [--boost|--no-boost] [--no-embed] [--then '<cypher>']` SHALL return at most N results (default 5), grouped one per node for `--target nodes` (the default) or as individual Chunks or Facts otherwise; `--lexical` SHALL remain an alias of `--mode lexical`. With `--json` it SHALL print one JSON document holding `mode`, the model display name and fingerprint, any notice, the number of units waiting for vectors, the query, ranked hits with id, score, tier (`exact` or `fused`), file, line range, heading path, snippet and matching Facts, per-list ranks when `--explain` is given, and the rows of the `--then` query when given.
 
 #### Scenario: JSON output
 - **WHEN** `tg search login --json --lexical` runs

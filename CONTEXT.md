@@ -35,7 +35,7 @@ The identity of an **Embedding model** as it affects vectors; two vectors are co
 _Avoid_: model name, label
 
 **Card**:
-The one embedded summary of a node: its title, types, key properties, leading paragraph and main outgoing edges. Answers "which thing".
+The one embedded summary of a vault node: its title, types, key properties, leading paragraph and main outgoing edges. Answers "which thing". **Lattice** sections have none, since their first **Chunk** already says the same.
 _Avoid_: node embedding, pooled vector, profile
 
 **Chunk**:
@@ -47,7 +47,7 @@ A typed edge reified as a searchable item, carrying the edge's sentence and poin
 _Avoid_: edge vector, triple, statement
 
 **Graph boost**:
-The ranking bonus a search hit earns from being directly linked to other top hits, so related results rise together.
+The bounded ranking bonus a search hit earns from typed edges to other top hits, so related results rise together. Untyped links (`contains`, `references`) never count.
 _Avoid_: PageRank, graph rerank
 
 **Context pack**:

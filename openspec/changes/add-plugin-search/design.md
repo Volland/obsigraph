@@ -25,7 +25,7 @@ Obsidian's community store installs only `main.js`, `manifest.json` and `styles.
 - `Model not downloaded · set up`
 - `Index rebuilding · <n>%` (structural phase after a format change or eviction)
 
-**3. Related notes.** A side leaf following the active file: top 10 nodes by cosine to the active note's Card vector from the vector index, fused with its graph neighbors by the same RRF and boost, excluding itself. It needs no query embedding, so it works when the model is not downloaded but the store has vectors from the pack. It shows "No vectors yet" otherwise.
+**3. Related notes.** A side leaf following the active file: top 10 nodes by cosine to the active note's Card vector by exact scan, fused with its graph neighbors by the same RRF and boost, excluding itself. It needs no query embedding, so it works when the model is not downloaded but the store has vectors from the pack. It shows "No vectors yet" otherwise.
 
 **4. Copy context pack.** A button in the search view and a command; runs retrieve for the current query (depth 1, budget 16,000 characters), renders markdown with a header naming the vault and query, each Chunk as a quote with `[[path#heading]]` citation, and the connecting Facts; copies to the clipboard and shows a notice with the character count.
 

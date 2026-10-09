@@ -5,7 +5,7 @@ openspec: [graph-store, store-sync, local-embedding, vector-pack, hybrid-ranking
 
 Planned: one embedded LadybugDB graph store per host holding graph, text and vectors, a bundled local embedding model, and one hybrid ranking pipeline for CLI, plugin (desktop and mobile) and sidecar.
 
-Nothing here is implemented yet. It is specified by five OpenSpec changes, built in order: add-embedded-graph-store, add-local-embedding, add-hybrid-ranking, add-plugin-search, converge-sidecar-vectors. Decisions with lasting trade-offs are recorded in `docs/adr/` 0001 to 0003, and the vocabulary (Graph store, Card, Chunk, Fact, Model fingerprint, Shadow build, Vector pack, Graph boost, Context pack) in `CONTEXT.md`. When a change lands, its part of this page moves into [[vector-search]], [[ladybug-mirror]], [[cli#Search]] or [[sidecar]].
+Nothing here is implemented yet. A first iteration, improve-tg-search-ranking, fixes today's in-memory `tg search` (exact-identifier tier, section chunks, similarity floor) and adds a ranking evaluation. The rest is specified by five OpenSpec changes, deferred until there is demand: add-embedded-graph-store, add-local-embedding, add-hybrid-ranking, add-plugin-search, converge-sidecar-vectors. Decisions with lasting trade-offs are recorded in `docs/adr/` 0001 to 0003, and the vocabulary (Graph store, Card, Chunk, Fact, Model fingerprint, Shadow build, Vector pack, Graph boost, Context pack) in `CONTEXT.md`. When a change lands, its part of this page moves into [[vector-search]], [[ladybug-mirror]], [[cli#Search]] or [[sidecar]].
 
 ## Graph store per host
 
@@ -27,9 +27,11 @@ Presets: `minilm-l6` (English, default), `bge-small-en` (English) and `e5-small-
 
 ## Searchable units and ranking
 
-Each node has a Card (what it is), Chunks (where things are said) and, for typed edges, Facts (which relationship), each with vector and full-text indexes.
+Vault nodes have a Card (what it is); every node has token-sized Chunks (where things are said); typed edges become Facts (which relationship). Lattice sections get no Card.
 
-The pipeline gathers up to six lists, lifts Chunk and Fact hits to nodes, fuses them with weighted reciprocal rank fusion, adds a graph boost for hits linked to other top hits, and groups one result per node. `tg search` gains modes, targets, type filters, `--explain` and `--then`; `tg retrieve` and MCP `tg_retrieve` return the sidecar's context-pack contract.
+The baseline is lat.md 0.13, which is already hybrid: BM25 over chunks, an exact-identifier tier, cosine with a 0.2 floor and two-list RRF. The pipeline keeps all of that and adds Cards, Facts and the graph boost only where a held-out evaluation shows a gain.
+
+Lists come from a `ListSource` interface, so ranking runs over today's in-memory index before the store lands: exact identifiers (including camelCase), BM25 over Chunks and Facts, and exact cosine scans over Chunks, Cards and Facts with a per-preset floor. Each list fetches until it holds 50 distinct nodes. Facts lift fully to their source and half to their target; weighted RRF fuses; a graph boost over typed edges only, degree-normalized and capped at a quarter of the top-20 score spread, may follow; exact-identifier nodes rank first; results group one per node. An HNSW index is used only above 50,000 units. `tg search` gains modes, targets, type filters, `--explain` and `--then`; `tg retrieve` and MCP `tg_retrieve` return the sidecar's context-pack contract.
 
 ## Plugin search and devices
 

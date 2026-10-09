@@ -18,7 +18,7 @@ The bundled MiniLM vocabulary is `bert-base-uncased` (30,522 tokens), so it is E
 
 ## Decisions
 
-**1. Runtime.** Build `@typedgraph/embed` from lat.md's candle engine source (MIT, attribution in `NOTICE`), producing a web target for the plugin and a Node target for the CLI and sidecar, behind one `Embedder` interface: `{fingerprint, dimensions, embed(texts, kind: 'query' | 'passage', onProgress)}`. Alternative: transformers.js with onnxruntime-web; rejected because its runtime is several times larger and would ship inside `main.js`. Alternative: depend on `@lat.md/embed` directly; rejected for the plugin because its loader needs `fs` and `worker_threads`, but the CLI may use it until our build exists.
+**1. Runtime.** Build `@typedgraph/embed` from lat.md's candle engine source (MIT, attribution in `NOTICE`), producing a web target for the plugin and a Node target for the CLI and sidecar, behind one `Embedder` interface: `{fingerprint, dimensions, maxTokens, countTokens(text), embed(texts, kind: 'query' | 'passage', onProgress)}`; the chunker uses `countTokens` to size chunks within `maxTokens` (add-hybrid-ranking). Alternative: transformers.js with onnxruntime-web; rejected because its runtime is several times larger and would ship inside `main.js`. Alternative: depend on `@lat.md/embed` directly; rejected for the plugin because its loader needs `fs` and `worker_threads`, but the CLI may use it until our build exists.
 
 **2. Presets.**
 

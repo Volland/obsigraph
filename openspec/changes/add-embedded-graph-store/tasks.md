@@ -3,7 +3,8 @@
 - [ ] 1.1 Bundle `@ladybugdb/wasm-core` as a string in a test plugin build and measure cold start on a mid-range Android phone, an iPhone and desktop; pass if startup grows by under 300 ms
 - [ ] 1.2 Open an IDBFS-backed store in Obsidian mobile, sync 2,000 notes, kill the app, reopen; record size, memory and persistence behavior
 - [ ] 1.3 Check whether OPFS synchronous access handles work in Obsidian's iOS and Android WebViews
-- [ ] 1.4 Record results in `design.md` and decide go / revise before add-plugin-search
+- [ ] 1.4 Check whether a Ladybug vector index accepts `SET` on an indexed column that was empty at creation, and time an exact `array_cosine_similarity` scan over 30,000 384-dimension vectors in the WASM build (add-hybrid-ranking scans by default)
+- [ ] 1.5 Record results in `design.md` and decide go / revise before add-plugin-search
 
 ## 2. Core store
 
