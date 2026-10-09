@@ -78,7 +78,7 @@ describe('schema notes', () => {
   it('treats an unknown kind as text and reports it', () => {
     const r = readSchema('Types/Person.md', { schema: { properties: { mood: { kind: 'emotion' } } } });
     expect(r.schema.properties[0]!.kind).toBe('text');
-    expect(r.diagnostics).toEqual([{ path: 'Types/Person.md', line: 0, column: 0, message: "Property 'mood' has unknown kind 'emotion'; treated as text" }]);
+    expect(r.diagnostics).toEqual([{ path: 'Types/Person.md', line: 0, column: 0, message: "Property 'mood' has unknown kind 'emotion'; treated as text", code: 'unknown-kind' }]);
   });
 
   // @lat: [[tests/schema-notes#Disallowed edge reported]]
@@ -93,7 +93,7 @@ describe('schema notes', () => {
     ]);
     const diags = validateSchemas(graph, schemasFromGraph(graph, 'Types/'));
     expect(diags).toEqual([
-      { path: 'Alice.md', line: 1, column: 0, message: "Edge type 'owns' is not allowed for Person (allowed: knows, worksAt)" },
+      { path: 'Alice.md', line: 1, column: 0, message: "Edge type 'owns' is not allowed for Person (allowed: knows, worksAt)", code: 'edge-not-allowed' },
     ]);
   });
 
@@ -102,7 +102,7 @@ describe('schema notes', () => {
   it('reports a missing required property but keeps the node', () => {
     const graph = vault([person({ properties: { born: { kind: 'date', required: true } } }), { path: 'Alice.md', text: '', frontmatter: { type: 'Person' } }]);
     const diags = validateSchemas(graph, schemasFromGraph(graph, 'Types/'));
-    expect(diags).toEqual([{ path: 'Alice.md', line: 0, column: 0, message: "Missing required property 'born' for type Person" }]);
+    expect(diags).toEqual([{ path: 'Alice.md', line: 0, column: 0, message: "Missing required property 'born' for type Person", code: 'missing-property' }]);
     expect(graph.node('Alice.md')).toBeDefined();
   });
 
@@ -218,7 +218,7 @@ describe('typed graph schema (TGS) declarations', () => {
     ]);
     const set = schemasFromGraph(graph, 'Types/');
     expect(set.schemas.get('Person')!.path).toBe('Types/A.md');
-    expect(set.diagnostics).toEqual([{ path: 'Types/B.md', line: 0, column: 0, message: "Type 'Person' is declared in both Types/A.md and Types/B.md; using Types/A.md" }]);
+    expect(set.diagnostics).toEqual([{ path: 'Types/B.md', line: 0, column: 0, message: "Type 'Person' is declared in both Types/A.md and Types/B.md; using Types/A.md", code: 'duplicate-declaration' }]);
   });
 
   // @lat: [[tests/schema-notes#Identifiers expanded]]
@@ -233,7 +233,7 @@ describe('typed graph schema (TGS) declarations', () => {
     ]);
     const set = schemasFromGraph(graph, 'Types/');
     expect(set.prefixes.ex).toBe('https://example.org/');
-    expect(set.diagnostics).toEqual([{ path: 'Types/Org.md', line: 0, column: 0, message: "Type 'Other' has uri 'zz:Other': unknown prefix 'zz'" }]);
+    expect(set.diagnostics).toEqual([{ path: 'Types/Org.md', line: 0, column: 0, message: "Type 'Other' has uri 'zz:Other': unknown prefix 'zz'", code: 'unknown-prefix' }]);
   });
 
   // @lat: [[tests/schema-notes#TGS version handling]]
@@ -291,8 +291,8 @@ describe('TGS validation', () => {
     ]);
     const diags = validateSchemas(graph, schemasFromGraph(graph, 'Types/'));
     expect(diags).toEqual([
-      { path: 'Alice.md', line: 0, column: 0, message: "Missing required property 'role' on edge 'worksAt'" },
-      { path: 'Carol.md', line: 0, column: 0, message: "Edge property 'role' value 'cto' is not one of: dev, ops" },
+      { path: 'Alice.md', line: 0, column: 0, message: "Missing required property 'role' on edge 'worksAt'", code: 'missing-edge-property' },
+      { path: 'Carol.md', line: 0, column: 0, message: "Edge property 'role' value 'cto' is not one of: dev, ops", code: 'edge-value-not-allowed' },
     ]);
     expect(graph.edges().next().value).toBeDefined();
   });

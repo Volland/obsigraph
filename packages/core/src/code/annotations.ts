@@ -68,7 +68,7 @@ function parsePayload(payload: string, path: string, line: number): { edges: Ann
     for (const e of r.edges) edges.push({ type: e.type, sign: e.sign, target: e.subpath ? `${e.target}#${e.subpath}` : e.target, props: e.props });
     for (const d of r.diagnostics) diagnostics.push({ ...d, line });
     if (r.edges.length === 0 && r.diagnostics.length === 0) {
-      diagnostics.push({ path, line, column: 0, message: `@tg: could not read an edge from "${raw}"; expected \`type:: [[Target]] {props}\` or \`[[Target]]\`` });
+      diagnostics.push({ path, line, column: 0, message: `@tg: could not read an edge from "${raw}"; expected \`type:: [[Target]] {props}\` or \`[[Target]]\``, code: 'edge-syntax' });
     }
   }
   return { edges, diagnostics };
@@ -145,7 +145,7 @@ export function scanAnnotations(path: string, text: string): AnnotationScan {
           continue;
         }
         const source = attach(symbolsOf(), runEnd1);
-        if (source.kind === 'file') diagnostics.push({ path, line: i + 1, column: 0, message: `@tg: annotation is not followed by a declaration within ${ATTACH_WINDOW} lines; attached to the file` });
+        if (source.kind === 'file') diagnostics.push({ path, line: i + 1, column: 0, message: `@tg: annotation is not followed by a declaration within ${ATTACH_WINDOW} lines; attached to the file`, code: 'annotation' });
         annotations.push({ kind: 'tg', file: path, line: i + 1, edges, source });
       }
     }

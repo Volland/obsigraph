@@ -32,5 +32,5 @@ export function latDiagnostics(index: LatIndex): Diagnostic[] {
   return checkLattice(
     { index, annotations: [], latEntries: [], latDirName: 'lat.md', readLatFile: () => null, checkSourceLink: () => null },
     ['md', 'sections'],
-  ).map((f) => ({ path: f.file, line: Math.max(0, f.line - 1), column: 0, message: f.message.split('\n')[0]! }));
+  ).map((f) => ({ path: f.file, line: Math.max(0, f.line - 1), column: 0, message: f.message.split('\n')[0]!, code: 'lat-link' }));
 }

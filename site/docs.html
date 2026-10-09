@@ -301,8 +301,17 @@ RETURN p.title AS person, proj.title AS project,
         <tr><td><code>tg gen &lt;target&gt;</code></td><td>Print <code>agents.md</code>, <code>claude.md</code>, <code>cursor-rules.md</code>, <code>skill.md</code> or <code>graph-skill.md</code>.</td></tr>
         <tr><td><code>tg init</code>, <code>tg hook</code>, <code>tg mcp</code></td><td>See <a href="#cli-agents">Agents and hooks</a>.</td></tr>
         <tr><td><code>tg export</code>, <code>tg import</code>, <code>tg schema</code></td><td>See <a href="#export">Export and import</a>.</td></tr>
+        <tr><td><code>tg validate [--vault dir] [--schema-folder Types] [--only codes] [--ignore codes] [--schema-only] [--strict] [--format text|json|sarif]</code></td><td>Validate a vault against its schema notes without Obsidian, with the same findings as the plugin's diagnostics list: edge syntax, schema declarations, required properties and edges, edge endpoints, style values and edge embeds. Every finding has a stable code (the <a href="spec/tgs/v0.2/#9-validation">TGS diagnostic names</a>, <code>edge-syntax</code>, <code>style</code>, <code>embed</code>). Declaration problems are errors and everything else warnings; exit 1 on errors, or on any finding with <code>--strict</code>. <code>--schema-only</code> checks just the schema notes, and <code>--format sarif</code> writes SARIF 2.1.0 for GitHub code scanning. See <a href="#ci">CI</a>.</td></tr>
         <tr><td><code>tg okf check [dir]</code></td><td>Check any folder against <a href="blog-okf-ready.html">Open Knowledge Format</a> v0.2 conformance: concepts need parseable frontmatter with a string <code>type</code>, index files no frontmatter (except <code>okf_version</code> at the root), log date headings <code>YYYY-MM-DD</code>. Broken links, wikilinks and missing descriptions are warnings. Exit 1 only on errors.</td></tr>
       </table>
+
+      <h3 id="ci">Validating in CI</h3>
+      <p>A GitHub Actions job that fails on schema errors and shows every finding as a code scanning annotation:</p>
+<pre>- run: npx -y @typedgraph/cli validate --format sarif &gt; tg.sarif || true
+- uses: github/codeql-action/upload-sarif@v3
+  with: { sarif_file: tg.sarif }
+- run: npx -y @typedgraph/cli validate --strict   # or drop --strict to fail on errors only</pre>
+      <p>For a pre-commit hook, <code>tg validate --schema-only</code> checks only the schema notes and is fast on any vault size.</p>
 
       <h2 id="annotations">Annotations in code</h2>
       <p>Two comment forms link code to docs, in <code>//</code>, <code>#</code> and block comments:</p>

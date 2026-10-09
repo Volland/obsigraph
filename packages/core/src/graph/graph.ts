@@ -195,7 +195,7 @@ export class Graph {
         line: p.line,
       };
       if (this.edgeMap.has(id)) {
-        file.diagnostics.push({ path, line: p.line, column: 0, message: `Duplicate edge id '${id}' ignored` });
+        file.diagnostics.push({ path, line: p.line, column: 0, message: `Duplicate edge id '${id}' ignored`, code: 'edge-syntax' });
         if (!resolved) this.releaseStub(target);
         continue;
       }

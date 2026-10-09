@@ -21,7 +21,8 @@
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0",
     "@obsigraph/core": "*",
-    "zod": "^4.6.5",
-    "esbuild": "^0.28.2"
+    "@obsigraph/node-vault": "*",
+    "esbuild": "^0.28.2",
+    "zod": "^4.6.5"
   }
 }

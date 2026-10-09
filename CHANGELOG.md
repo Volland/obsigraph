@@ -2,6 +2,13 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **`tg validate`.** Validates a vault against its schema notes without Obsidian, with the same findings as the plugin's diagnostics list: edge syntax, TGS declaration diagnostics, schema validation, style values and edge embeds. Every finding has a stable code and a severity (declaration problems are errors, the rest warnings); `--strict` fails on warnings, `--only` and `--ignore` filter by code, `--schema-only` checks just the schema notes, and `--json` or `--format sarif` (SARIF 2.1.0) feed scripts and GitHub code scanning.
+- Core: `Diagnostic` gains an optional `code`, and `validateVault`, `vaultDiagnostics`, `toFindings` and `severityOf` are exported. The plugin's diagnostics list now comes from the same function.
+
 ## 0.11.0 — 2026-10-08
 
 ### Added

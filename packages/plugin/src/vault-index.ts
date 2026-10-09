@@ -6,7 +6,7 @@ import {
   schemasFromGraph,
   styleSource,
   styleSourcesFromSchemas,
-  validateSchemas,
+  vaultDiagnostics,
   type CodeMode,
   type Diagnostic,
   type ExecOptions,
@@ -76,15 +76,13 @@ export class VaultIndex {
   }
 
   /** Parse, schema and validation diagnostics for the whole vault. */
+  // @tg: implements:: [[openspec:tg-validate#Same findings as the plugin]]
   diagnostics(): Diagnostic[] {
     if (!this.diagnosticCache) {
       const set = this.schemas();
+      // Shared with `tg validate`, so the command and this list agree.
       this.diagnosticCache = [
-        ...this.graph.diagnostics(),
-        ...set.diagnostics,
-        ...validateSchemas(this.graph, set),
-        ...this.styleSources().diagnostics,
-        ...this.embeds.warnings(this.graph),
+        ...vaultDiagnostics({ graph: this.graph, schemas: set, style: this.styleSources().diagnostics, embeds: this.embeds }),
         ...latDiagnostics(this.lat),
       ];
     }

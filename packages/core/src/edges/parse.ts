@@ -22,6 +22,8 @@ export interface Diagnostic {
   line: number;
   column: number;
   message: string;
+  /** Stable finding code such as `edge-syntax` or a TGS diagnostic name; see `severityOf`. */
+  code?: string;
 }
 
 export interface ParseResult {
@@ -117,6 +119,7 @@ export function parseEdges(text: string, path: string | null = null, options: Pa
           line: n,
           column: valueStart + restOffset + err.offset,
           message: `Malformed edge property block: ${err.message}`,
+          code: 'edge-syntax',
         });
       }
     }

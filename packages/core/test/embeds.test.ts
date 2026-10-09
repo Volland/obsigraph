@@ -101,6 +101,7 @@ describe('edge embeds', () => {
         line: 1,
         column: 0,
         message: '{{edge: Alice -knows-> Bob . since}} refers to an unpinned edge in Alice.md line 1; add {id: "alice-knows-bob"} to keep the reference stable',
+        code: 'embed',
       },
     ]);
   });

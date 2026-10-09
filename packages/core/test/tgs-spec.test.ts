@@ -23,26 +23,6 @@ const WRITE = process.env.TGS_WRITE_EXPECTED === '1';
 const ajv = new Ajv({ strict: true, allowUnionTypes: true });
 const validateJson = ajv.compile(JSON.parse(readFileSync(join(SPEC, 'tgs.schema.json'), 'utf8')));
 
-/** Diagnostic names from the spec, mapped from the reference implementation's messages. */
-const DIAGNOSTICS: [RegExp, string][] = [
-  [/has unknown kind/, 'unknown-kind'],
-  [/is declared in both/, 'duplicate-declaration'],
-  [/unknown prefix/, 'unknown-prefix'],
-  [/TGS version .* is not supported/, 'unsupported-version'],
-  [/^Unknown key|: Unknown key/, 'unknown-key'],
-  [/^Missing required property '.*' for type/, 'missing-property'],
-  [/^Missing required property '.*' on edge/, 'missing-edge-property'],
-  [/^Edge property '.*' value/, 'edge-value-not-allowed'],
-  [/^Property '.*' value '.*' is not one of/, 'value-not-allowed'],
-  [/holds a list but is not declared many/, 'unexpected-list'],
-  [/is not allowed for/, 'edge-not-allowed'],
-  [/^Missing required edge/, 'missing-edge'],
-  [/allows one edge/, 'too-many-edges'],
-  [/expects target type/, 'wrong-target-type'],
-  [/expects source type/, 'wrong-source-type'],
-];
-const nameOf = (message: string) => DIAGNOSTICS.find(([re]) => re.test(message))?.[1] ?? 'invalid-declaration';
-
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? files(join(dir, f)) : [join(dir, f)]));
 }
@@ -82,7 +62,7 @@ function declarations(set: SchemaSet) {
 
 const diagnosticsOf = (ds: Diagnostic[]) =>
   ds
-    .map((d) => ({ path: d.path, line: d.line ? d.line + 1 : null, diagnostic: nameOf(d.message) }))
+    .map((d) => ({ path: d.path, line: d.line ? d.line + 1 : null, diagnostic: d.code }))
     .sort((a, b) => `${a.path}:${String(a.line).padStart(5, '0')}:${a.diagnostic}`.localeCompare(`${b.path}:${String(b.line).padStart(5, '0')}:${b.diagnostic}`));
 
 const cases = readdirSync(join(SPEC, 'examples')).sort();

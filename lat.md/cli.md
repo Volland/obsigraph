@@ -1,5 +1,5 @@
 ---
-openspec: [code-layer, lat-resolver, lat-vault-integration, symbol-provider, tg-agent-integration, tg-annotations, tg-check, tg-cli, tg-search, tg-trace]
+openspec: [code-layer, lat-resolver, lat-vault-integration, symbol-provider, tg-agent-integration, tg-annotations, tg-check, tg-cli, tg-search, tg-trace, tg-validate]
 ---
 # CLI
 
@@ -110,3 +110,11 @@ In the plugin, [[packages/plugin/src/vault-index.ts#VaultIndex]] feeds every not
 `tg export <out> --format okf` writes an Open Knowledge Format bundle instead, keeping typed edges as prose, and `tg okf check [dir]` validates any folder against OKF conformance; both are described in [[okf]].
 
 `tg import <path> [--mount] [--into name]` copies a `lat.md/` folder (or the one inside a project directory) into the current vault or project, or symlinks it with `--mount`. It refuses a non-empty destination and never modifies the source.
+
+## Vault validation
+
+`tg validate` checks a whole vault against its schema notes outside Obsidian, with the findings the plugin's diagnostics list shows, stable codes and text, JSON or SARIF output for CI.
+
+[[packages/core/src/validate/validate.ts#validateVault]] builds the graph from parsed notes and collects edge syntax, TGS declaration, schema validation, style and embed diagnostics through [[packages/core/src/validate/validate.ts#vaultDiagnostics]], the same function [[packages/plugin/src/vault-index.ts#VaultIndex]] calls, so the two cannot disagree; lat.md link findings stay plugin-only and in `tg check`. Every `Diagnostic` carries a `code` set where it is created: the TGS diagnostic names, `edge-syntax`, `style`, `embed`, plus `annotation` and `lat-link` outside this command. [[packages/core/src/validate/validate.ts#severityOf]] makes `invalid-declaration`, `unsupported-version` and `duplicate-declaration` errors and everything else warnings, since validation is advisory; [[packages/core/src/validate/validate.ts#toFindings]] converts lines to 1-based (null for note-level findings) and sorts by path, line and code.
+
+`tg validate [--vault dir] [--schema-folder Types] [--only codes] [--ignore codes] [--schema-only] [--strict] [--format text|json|sarif]` (`packages/cli/src/commands/validate.mts`) reads notes with `@obsigraph/node-vault`, skipping dot folders, and never writes. Exit 0 without errors, 1 with an error (or any warning under `--strict`), 2 for a missing vault or unknown format. `--schema-only` checks only the schema notes' declarations, cheap enough for a pre-commit hook. `--json` prints `ok`, `notes`, `counts` and `findings`; `--format sarif` writes SARIF 2.1.0 by hand with one rule per code in use and locations relative to the working directory, for GitHub code scanning.

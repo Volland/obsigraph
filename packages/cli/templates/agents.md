@@ -27,6 +27,7 @@ tg section "file#Section"     # read a section with its links and code reference
 tg expand "user prompt text"  # expand [[refs]] to resolved locations
 tg cypher "MATCH (s:Section) RETURN s.section LIMIT 5"   # query the section graph
 tg check                      # validate all links, code refs, indexes and annotations
+tg validate --vault <dir>     # check notes against schema notes (if the project has a vault with Types/)
 ```
 
 Run `tg --help` when in doubt about available commands or options.

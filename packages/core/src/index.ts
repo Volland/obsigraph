@@ -86,3 +86,5 @@ export * from './latmd.js';
 export * from './code.js';
 export * from './okf.js';
 export * from './openspec.js';
+export { severityOf, toFindings, validateVault, vaultDiagnostics } from './validate/validate.js';
+export type { DiagnosticSources, Severity, ValidateOptions, VaultFinding } from './validate/validate.js';

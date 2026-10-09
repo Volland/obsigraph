@@ -151,7 +151,7 @@ export class EmbedIndex {
     const out: Diagnostic[] = [];
     for (const [path, list] of this.byPath) {
       for (const occ of list) {
-        const at = { path, line: occ.line, column: occ.column };
+        const at = { path, line: occ.line, column: occ.column, code: 'embed' };
         if (!occ.embed) {
           out.push({ ...at, message: `Malformed edge embed ${occ.raw}: ${occ.error}` });
           continue;

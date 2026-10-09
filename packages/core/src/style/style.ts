@@ -87,6 +87,7 @@ function bad(ctx: ReadCtx, attr: string, value: unknown, expected: string): void
     line: 0,
     column: 0,
     message: `Ignored ${attr} '${String(value)}' for ${ctx.subject} in ${ctx.source}: expected ${expected}`,
+    code: 'style',
   });
 }
 
@@ -185,7 +186,7 @@ export function styleSourcesFromSchemas(
     const { edges: rawEdges, ...nodeRaw } = schema.style;
     const r = styleSource(`schema ${schema.path}`, schema.path, { [schema.type]: nodeRaw }, isRecord(rawEdges) ? rawEdges : {}, iconExists);
     if (rawEdges !== undefined && !isRecord(rawEdges)) {
-      r.diagnostics.push({ path: schema.path, line: 0, column: 0, message: `Ignored visualization.edges in schema ${schema.path}: expected a mapping` });
+      r.diagnostics.push({ path: schema.path, line: 0, column: 0, message: `Ignored visualization.edges in schema ${schema.path}: expected a mapping`, code: 'style' });
     }
     sources.push({ ...r.source, level: 'schema' });
     diagnostics.push(...r.diagnostics);

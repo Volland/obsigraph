@@ -112,7 +112,8 @@ export function isSchemaPath(path: string, folder: string): boolean {
   return !path.slice(f.length).includes('/');
 }
 
-type Diag = (message: string) => void;
+/** Report a declaration problem; the code defaults to `invalid-declaration`. */
+type Diag = (message: string, code?: string) => void;
 
 /**
  * Read every declaration in a schema note: the type named by the title
@@ -125,7 +126,7 @@ type Diag = (message: string) => void;
 export function readSchemaNote(path: string, frontmatter: Record<string, unknown> | null | undefined): SchemaNote {
   const fm = frontmatter ?? {};
   const out: SchemaNote = { path, types: [], edgeTypes: [], prefixes: {}, diagnostics: [] };
-  const diag: Diag = (message) => out.diagnostics.push({ path, line: 0, column: 0, message });
+  const diag: Diag = (message, code = 'invalid-declaration') => out.diagnostics.push({ path, line: 0, column: 0, message, code });
 
   let strict = false;
   if (fm.tgs !== undefined) {
@@ -133,7 +134,7 @@ export function readSchemaNote(path: string, frontmatter: Record<string, unknown
     const m = /^(\d+)\.(\d+)$/.exec(v);
     if (!m) diag(`\`tgs\` must be a version such as "${TGS_VERSION}"`);
     else if (Number(m[1]) !== 0) {
-      diag(`TGS version ${v} is not supported (this reader implements ${TGS_VERSION}); schema ignored`);
+      diag(`TGS version ${v} is not supported (this reader implements ${TGS_VERSION}); schema ignored`, 'unsupported-version');
       return out;
     } else if (Number(m[2]) > 2) strict = true;
   }
@@ -148,7 +149,7 @@ export function readSchemaNote(path: string, frontmatter: Record<string, unknown
     if (!isRecord(fm.schemas)) diag('`schemas` must be a mapping from type name to schema');
     else
       for (const [name, raw] of Object.entries(fm.schemas)) {
-        const d: Diag = (m) => diag(`Type '${name}': ${m}`);
+        const d: Diag = (m, c) => diag(`Type '${name}': ${m}`, c);
         if (raw !== null && !isRecord(raw)) d('schema must be a mapping');
         out.types.push(readTypeBlock(name, path, isRecord(raw) ? raw : {}, false, d, strict));
       }
@@ -157,7 +158,7 @@ export function readSchemaNote(path: string, frontmatter: Record<string, unknown
     if (!isRecord(fm.edgeTypes)) diag('`edgeTypes` must be a mapping from edge type name to declaration');
     else
       for (const [name, raw] of Object.entries(fm.edgeTypes)) {
-        const d: Diag = (m) => diag(`Edge type '${name}': ${m}`);
+        const d: Diag = (m, c) => diag(`Edge type '${name}': ${m}`, c);
         if (raw !== null && !isRecord(raw)) d('declaration must be a mapping');
         out.edgeTypes.push(readEdgeTypeBlock(name, path, isRecord(raw) ? raw : {}, d, strict));
       }
@@ -180,13 +181,14 @@ export function readSchemaNote(path: string, frontmatter: Record<string, unknown
 export function readSchema(path: string, frontmatter: Record<string, unknown> | null | undefined): { schema: TypeSchema; diagnostics: Diagnostic[] } {
   const diagnostics: Diagnostic[] = [];
   const raw = frontmatter?.schema;
-  if (raw !== undefined && raw !== null && !isRecord(raw)) diagnostics.push({ path, line: 0, column: 0, message: '`schema` must be a mapping' });
-  const schema = readTypeBlock(titleOf(path), path, isRecord(raw) ? raw : {}, true, (message) => diagnostics.push({ path, line: 0, column: 0, message }), false);
+  const diag: Diag = (message, code = 'invalid-declaration') => diagnostics.push({ path, line: 0, column: 0, message, code });
+  if (raw !== undefined && raw !== null && !isRecord(raw)) diag('`schema` must be a mapping');
+  const schema = readTypeBlock(titleOf(path), path, isRecord(raw) ? raw : {}, true, diag, false);
   return { schema, diagnostics };
 }
 
 function readTypeBlock(type: string, path: string, decl: Record<string, unknown>, bodyIsTemplate: boolean, diag: Diag, strict: boolean): TypeSchema {
-  if (strict) for (const k of Object.keys(decl)) if (!TYPE_KEYS.has(k)) diag(`Unknown key '${k}' (newer TGS version?)`);
+  if (strict) for (const k of Object.keys(decl)) if (!TYPE_KEYS.has(k)) diag(`Unknown key '${k}' (newer TGS version?)`, 'unknown-key');
   // `visualization` is the documented key; `style` is accepted as an alias.
   const vis = decl.visualization ?? decl.style;
   if (vis !== undefined && !isRecord(vis)) diag('`visualization` must be a mapping');
@@ -237,7 +239,7 @@ function readIds(raw: unknown, diag: Diag): IdRule[] {
 
 // @tg: implements:: [[openspec:schema-notes#Edge type declarations]]
 function readEdgeTypeBlock(type: string, path: string, decl: Record<string, unknown>, diag: Diag, strict: boolean): EdgeTypeSchema {
-  if (strict) for (const k of Object.keys(decl)) if (!EDGE_TYPE_KEYS.has(k)) diag(`Unknown key '${k}' (newer TGS version?)`);
+  if (strict) for (const k of Object.keys(decl)) if (!EDGE_TYPE_KEYS.has(k)) diag(`Unknown key '${k}' (newer TGS version?)`, 'unknown-key');
   const vis = decl.visualization ?? decl.style;
   if (vis !== undefined && !isRecord(vis)) diag('`visualization` must be a mapping');
   return {
@@ -258,7 +260,7 @@ function readProperties(props: unknown, diag: Diag): PropertySchema[] {
     const s = isRecord(spec) ? spec : { kind: spec ?? undefined };
     let kind = typeof s.kind === 'string' ? (s.kind.toLowerCase() as PropertyKind) : s.kind === undefined ? 'text' : (String(s.kind) as PropertyKind);
     if (!PROPERTY_KINDS.includes(kind)) {
-      diag(`Property '${name}' has unknown kind '${String(s.kind)}'; treated as text`);
+      diag(`Property '${name}' has unknown kind '${String(s.kind)}'; treated as text`, 'unknown-kind');
       kind = 'text';
     }
     if (properties.some((p) => p.name === name)) return;
@@ -298,7 +300,7 @@ function readEdges(raw: unknown, diag: Diag): EdgeRule[] | null {
     return null;
   }
   return Object.entries(raw).map(([type, v]) => {
-    const d: Diag = (m) => diag(`Edge '${type}': ${m}`);
+    const d: Diag = (m, c) => diag(`Edge '${type}': ${m}`, c);
     if (isRecord(v)) return { type, targets: readNames(v.target, '`target`', d), many: v.many !== false, required: v.required === true };
     return { type, targets: readNames(v, 'target', d), many: true, required: false };
   });
@@ -360,7 +362,7 @@ export function schemaSetFromNotes(notes: SchemaNote[]): SchemaSet {
   const set: SchemaSet = { schemas: new Map(), edgeTypes: new Map(), prefixes: { ...BUILTIN_PREFIXES }, diagnostics: [] };
   const userPrefix = new Map<string, string>();
   const dup = (what: string, name: string, first: string, path: string) =>
-    set.diagnostics.push({ path, line: 0, column: 0, message: `${what} '${name}' is declared in both ${first} and ${path}; using ${first}` });
+    set.diagnostics.push({ path, line: 0, column: 0, message: `${what} '${name}' is declared in both ${first} and ${path}; using ${first}`, code: 'duplicate-declaration' });
   for (const note of [...notes].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))) {
     set.diagnostics.push(...note.diagnostics);
     for (const t of note.types) {
@@ -386,7 +388,7 @@ export function schemaSetFromNotes(notes: SchemaNote[]): SchemaSet {
   const check = (uri: string | null, subject: string, path: string) => {
     if (!uri) return;
     const r = expandIri(uri, set.prefixes);
-    if ('error' in r) set.diagnostics.push({ path, line: 0, column: 0, message: `${subject} has uri '${uri}': ${r.error}` });
+    if ('error' in r) set.diagnostics.push({ path, line: 0, column: 0, message: `${subject} has uri '${uri}': ${r.error}`, code: r.error.startsWith('unknown prefix') ? 'unknown-prefix' : 'invalid-declaration' });
   };
   for (const t of set.schemas.values()) {
     check(t.uri, `Type '${t.type}'`, t.path);
@@ -451,7 +453,7 @@ const show = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
 export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
   const out: Diagnostic[] = [];
   if (set.schemas.size === 0 && set.edgeTypes.size === 0) return out;
-  const at = (path: string, line: number, message: string) => out.push({ path, line, column: 0, message });
+  const at = (path: string, line: number, code: string, message: string) => out.push({ path, line, column: 0, message, code });
   for (const n of graph.nodes()) {
     if (n.stub) continue;
     const labels = n.labels.join(', ');
@@ -461,21 +463,21 @@ export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
       for (const p of schema.properties) {
         const v = n.props[p.name];
         if (!present(v)) {
-          if (p.required) at(n.id, 0, `Missing required property '${p.name}' for type ${labels}`);
+          if (p.required) at(n.id, 0, 'missing-property', `Missing required property '${p.name}' for type ${labels}`);
           continue;
         }
-        if (!p.many && Array.isArray(v)) at(n.id, 0, `Property '${p.name}' holds a list but is not declared many for type ${labels}`);
-        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(n.id, 0, `Property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
+        if (!p.many && Array.isArray(v)) at(n.id, 0, 'unexpected-list', `Property '${p.name}' holds a list but is not declared many for type ${labels}`);
+        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(n.id, 0, 'value-not-allowed', `Property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
       }
       if (schema.edges) {
         const names = schema.edges.map((r) => r.type);
         for (const e of outEdges) {
-          if (!names.includes(e.type)) at(n.id, e.line, `Edge type '${e.type}' is not allowed for ${labels} (allowed: ${names.join(', ') || 'none'})`);
+          if (!names.includes(e.type)) at(n.id, e.line, 'edge-not-allowed', `Edge type '${e.type}' is not allowed for ${labels} (allowed: ${names.join(', ') || 'none'})`);
         }
         for (const r of schema.edges) {
           const own = outEdges.filter((e) => e.type === r.type);
-          if (r.required && own.length === 0) at(n.id, 0, `Missing required edge '${r.type}' for type ${labels}`);
-          if (!r.many && own.length > 1) at(n.id, own[1]!.line, `Edge type '${r.type}' allows one edge for ${labels}, found ${own.length}`);
+          if (r.required && own.length === 0) at(n.id, 0, 'missing-edge', `Missing required edge '${r.type}' for type ${labels}`);
+          if (!r.many && own.length > 1) at(n.id, own[1]!.line, 'too-many-edges', `Edge type '${r.type}' allows one edge for ${labels}, found ${own.length}`);
         }
       }
     }
@@ -485,20 +487,20 @@ export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
       if (targets) {
         const t = graph.node(e.target);
         if (t && !t.stub && t.labels.length && !t.labels.some((l) => targets.includes(l))) {
-          at(n.id, e.line, `Edge '${e.type}' expects target type ${targets.join(' or ')}, found ${t.labels.join(', ')}`);
+          at(n.id, e.line, 'wrong-target-type', `Edge '${e.type}' expects target type ${targets.join(' or ')}, found ${t.labels.join(', ')}`);
         }
       }
       if (!et) continue;
       if (et.from && n.labels.length && !n.labels.some((l) => et.from!.includes(l))) {
-        at(n.id, e.line, `Edge '${e.type}' expects source type ${et.from.join(' or ')}, found ${labels}`);
+        at(n.id, e.line, 'wrong-source-type', `Edge '${e.type}' expects source type ${et.from.join(' or ')}, found ${labels}`);
       }
       for (const p of et.properties) {
         const v = e.props[p.name];
         if (!present(v)) {
-          if (p.required) at(n.id, e.line, `Missing required property '${p.name}' on edge '${e.type}'`);
+          if (p.required) at(n.id, e.line, 'missing-edge-property', `Missing required property '${p.name}' on edge '${e.type}'`);
           continue;
         }
-        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(n.id, e.line, `Edge property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
+        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(n.id, e.line, 'edge-value-not-allowed', `Edge property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
       }
     }
   }
