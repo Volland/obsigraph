@@ -23,6 +23,8 @@ LadybugDB runs inside the [[sidecar]], not the plugin: Obsidian's plugin store o
 
 The plugin reaches it over HTTP for `backend: ladybug` queries. Verified with `@ladybugdb/core` 0.21.2: Node prebuilt binary, schema-ful Cypher, variable-length paths, `array_cosine_similarity`, and a read-only open mode that rejects writes.
 
+This limit applies to the native module only. Ladybug's WASM build can ship inside `main.js` and run in a Worker on desktop and mobile; [[embedded-search#Graph store per host]] plans that.
+
 ## Storage layout
 
 One `Node` table and one relationship table per edge type, because a Ladybug node belongs to exactly one table while notes can have several labels.

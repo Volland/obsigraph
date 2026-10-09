@@ -8,10 +8,11 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[ladybug-mirror]] — one-way disposable LadybugDB mirror
 - [[vector-search]] — Ollama embeddings for node chunks and verbalized edges
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
+- [[embedded-search]] — planned: embedded Ladybug graph store, bundled local model and hybrid ranking on every host
 - [[cli]] — `tg` CLI: lat.md replacement, annotations, code layer, OpenSpec trace, vault integration
 - [[okf]] — Open Knowledge Format: reading bundles, OKF export and conformance check
 - [[shacl]] — SHACL export and import of schema notes and the open Typed Graph Schema spec
 - [[vscode]] — VS Code extension: typed backlinks, graph webview, tg init funnel
-- [[roadmap]] — phased delivery v0.1 to v0.4 and open questions
+- [[roadmap]] — shipped releases v0.1 to v0.11, assessment, focus and the phased plan from 0.12
 - [[tests]] — test specifications tied to test code
 - [[publishing]] — releases, store submission and the website
