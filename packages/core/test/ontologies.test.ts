@@ -67,7 +67,7 @@ describe('ontology gallery', () => {
   it('covers every Zettelkasten note and source type, and requires sources for literature notes and highlights', () => {
     const notes = load('zettelkasten');
     const used = new Set(notes.flatMap((n) => [n.frontmatter?.type].flat().filter(Boolean) as string[]));
-    for (const t of ['FleetingNote', 'LiteratureNote', 'PermanentNote', 'StructureNote', 'ProjectNote', 'BookSource', 'ArticleSource', 'Highlight', 'Writer', 'Topic']) expect(used.has(t), t).toBe(true);
+    for (const t of ['FleetingNote', 'LiteratureNote', 'PermanentNote', 'StructureNote', 'ProjectNote', 'BookSource', 'ArticleSource', 'PaperSource', 'Highlight', 'Writer', 'Topic']) expect(used.has(t), t).toBe(true);
     const orphanLiterature: NoteInput = { path: 'Examples/No source.md', text: '---\ntype: LiteratureNote\n---\nA summary of nothing.\n', frontmatter: { type: 'LiteratureNote' } };
     const orphanHighlight: NoteInput = { path: 'Examples/Loose.md', text: '---\ntype: Highlight\n---\nA line from nowhere.\n', frontmatter: { type: 'Highlight' } };
     const { diagnostics } = check([...load('core'), ...notes, orphanLiterature, orphanHighlight]);

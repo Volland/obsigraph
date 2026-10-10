@@ -1,6 +1,6 @@
 # Zettelkasten ontology
 
-The note types of the Zettelkasten method, the sources they come from, the highlights you take from them and the topics that index it all. Open this folder as an Obsidian vault with the Typed Graph plugin, or copy `Types/` into your own vault.
+The note types of the Zettelkasten method, the sources they come from (books, articles and papers), the highlights you take from them and the topics that index it all. Open this folder as an Obsidian vault with the Typed Graph plugin, or copy `Types/` into your own vault.
 
 ## The method, as types
 
@@ -17,8 +17,9 @@ Sources and what comes from them:
 | Type | What it is |
 |---|---|
 | `BookSource`, `ArticleSource` | A book or an article, with `year`, reading `status` and (for articles) `publication` and `url`. Each needs `authored_by` a writer and can be `about` topics. |
+| `PaperSource` | A research paper, with `year`, `kind` (journal, conference, preprint, thesis, report), `venue`, `doi`, `url` and reading `status`. Needs `authored_by` a writer, and `cites` the books, articles and papers in its bibliography. |
 | `Writer` | The author of a source. |
-| `Highlight` | Raw text you marked in a source, with `page` and `color`. Must be `highlighted_in` a source. |
+| `Highlight` | Raw text you marked in a book, article or paper, with `page` and `color`. Must be `highlighted_in` a source. |
 | `Topic` | A subject (`seed`, `growing`, `mature`) that notes, sources and highlights are `about`. |
 
 ## Following a note from capture to idea
@@ -27,7 +28,7 @@ A note moves forward by writing a new one and linking back, so the trail stays i
 
 `Highlight` ← `based_on` ← `LiteratureNote` ← `derived_from` ← `PermanentNote`, and `FleetingNote` `processed_into` a literature or permanent note.
 
-Other edges: `extends`, `supports`, `example_of`, `follows` (with a `luhmann` id) and `contradicts` (shown dashed red) between permanent notes, `cites` from literature and permanent notes to sources, and `related_to` between topics.
+Other edges: `extends`, `supports`, `example_of`, `follows` (with a `luhmann` id) and `contradicts` (shown dashed red) between permanent notes, `cites` from literature and permanent notes to sources and from a paper to the sources it cites, and `related_to` between topics.
 
 ## Ids and templates
 
@@ -43,7 +44,8 @@ MATCH (p:PermanentNote) OPTIONAL MATCH (p)-[r:cites]->(s) WITH p, count(r) AS n 
 
 - Which fleeting notes are still in the inbox?
 - Which highlights have no literature note yet?
-- Which permanent notes come from which book, and which writers feed a topic?
+- Which permanent notes come from which book or paper, and which writers feed a topic?
+- Which papers I have notes on cite each other?
 - Which permanent notes contradict another note?
 
 ## Mixing with the library ontology

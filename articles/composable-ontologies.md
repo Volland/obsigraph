@@ -10,7 +10,7 @@ The hardest part of a typed graph is not the syntax. It is deciding what the typ
 
 | Ontology | Types | For |
 |---|---|---|
-| **Zettelkasten** | FleetingNote, LiteratureNote, PermanentNote, StructureNote, ProjectNote, BookSource, ArticleSource, Highlight, Writer, Topic | the note types of the method, their sources, highlights and topics |
+| **Zettelkasten** | FleetingNote, LiteratureNote, PermanentNote, StructureNote, ProjectNote, BookSource, ArticleSource, PaperSource, Highlight, Writer, Topic | the note types of the method, their sources, highlights and topics |
 | **Book management** | Book, Author, Series, Genre, Quote | what you own, are reading, and want to read |
 | **Coding and requirements** | Requirement, Scenario, Decision, Constraint, Concept, Change, Stakeholder, Release, Risk | what the product SHALL do, why, for whom, and what could go wrong |
 | **Prompts and agents** | Prompt, Agent, Tool, Skill, Knowledge, Eval | a catalogue of prompts, agents and what they call and read |

@@ -12,7 +12,7 @@ Every ontology in the gallery reads without diagnostics, validates its own examp
 
 ## Zettelkasten note types and sources
 
-The Zettelkasten examples use every note, source and highlight type; a literature note or a highlight without a source is reported as a missing required edge.
+The Zettelkasten examples use every note, source (book, article, paper) and highlight type; a literature note or a highlight without a source is reported as a missing required edge.
 
 ## Zettelkasten trail steps exist
 
