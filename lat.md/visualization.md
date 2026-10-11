@@ -11,6 +11,8 @@ Two surfaces share one renderer and one config: inline `graph-query` blocks and 
 
 Both use [[packages/graph-ui/src/graph-renderer.ts#GraphRenderer]]. Inline blocks are driven by [[packages/plugin/src/query/query-block.ts#QueryBlock]], which re-runs only while visible and reuses its renderer across refreshes to avoid flicker; [[packages/plugin/src/query/plan.ts#planRender]] picks graph or table and falls back to a table above the element cap. Only the leaf, [[packages/plugin/src/view/graph-view.ts#GraphView]], supports click-to-expand of neighbors; with an empty query it follows the active note's [[packages/graph-ui/src/view-state.ts#neighborhood]] and keeps expanded nodes across live refreshes. Patching or replacing the core graph view is explicitly out of scope; see [[visualization#Core graph view]].
 
+The leaf opens from the command palette or a ribbon button. The button and the leaf's tab use a custom "TG" icon registered in [[packages/plugin/src/icon.ts#registerTgIcon]], so they don't look like the core Graph view's icon.
+
 ## Shared renderer
 
 The renderer, styler, style sheet and view-state live in the host-independent `graph-ui` package so the Obsidian plugin and the VS Code extension draw identical graphs.

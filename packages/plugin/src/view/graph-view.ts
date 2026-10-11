@@ -7,6 +7,7 @@ import type { GraphElements } from '../render/elements';
 import { GraphRenderer } from '../render/graph-renderer';
 import { themeFrom } from '../render/theme';
 import { renderTable } from '../render/table';
+import { TG_ICON } from '../icon';
 import { edgeDetails, mergeElements, neighborhood, nodeDetails, type Details } from './view-state';
 
 export const VIEW_TYPE_GRAPH = 'obsigraph-graph-view';
@@ -42,7 +43,7 @@ export class GraphView extends ItemView {
     return 'Typed graph';
   }
   getIcon(): string {
-    return 'git-fork';
+    return TG_ICON;
   }
 
   async onOpen(): Promise<void> {

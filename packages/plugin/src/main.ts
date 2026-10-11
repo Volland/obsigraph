@@ -9,6 +9,7 @@ import { DEFAULT_SETTINGS, ObsigraphSettingTab, type ObsigraphSettings } from '.
 import { VaultIndex } from './vault-index';
 import { GraphView, VIEW_TYPE_GRAPH } from './view/graph-view';
 import { DiagnosticsModal, registerSchemaCommands } from './schema-commands';
+import { registerTgIcon, TG_ICON } from './icon';
 
 // @lat: [[architecture#Standalone plugin]]
 export default class ObsigraphPlugin extends Plugin {
@@ -37,9 +38,10 @@ export default class ObsigraphPlugin extends Plugin {
       ctx.addChild(new QueryBlock(el, source, ctx.sourcePath, this));
     });
 
+    registerTgIcon();
     this.registerView(VIEW_TYPE_GRAPH, (leaf) => new GraphView(leaf, this));
     this.addCommand({ id: 'open-graph-view', name: 'Open graph view', callback: () => this.openGraphView() });
-    this.addRibbonIcon('git-fork', 'Open graph view', () => this.openGraphView());
+    this.addRibbonIcon(TG_ICON, 'Open graph view', () => this.openGraphView());
     registerSchemaCommands(this);
 
     // lat.md ids such as [[file#Heading#Sub]] are not Obsidian heading links; resolve them with the lat resolver.
