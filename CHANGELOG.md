@@ -2,6 +2,13 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.13.0 — 2026-10-11
+
+### Added
+
+- **Edge notes.** A note with frontmatter `type: edge`, `from`, `to` and `edgeType` declares one edge instead of a node, so a relationship can have a body, Properties panel fields and a row in Bases. Its other frontmatter fields are edge properties, a `-` prefix on `edgeType` makes it negative, and its id is the note's path unless `id` pins one. Every graph view draws it as an edge between its endpoints, and opening an edge note shows that edge. Schema findings, edge details and VS Code backlinks point at the edge note. A missing field, or a link to an edge note (which is not a node), gives an `edge-note` finding.
+- Core: `GraphEdge.file` names the edge note that declared an edge; `Graph.declaredEdges` and `isEdgeNote` are exported.
+
 ## 0.12.0 — 2026-10-11
 
 ### Added
