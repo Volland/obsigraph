@@ -43,3 +43,10 @@ The renderer SHALL never draw an edge without both endpoints, adding a relations
 #### Scenario: Relationship-only result
 - **WHEN** a query returns only `r` for `(a)-[r:knows]->(b)`
 - **THEN** the drawn graph contains `a`, `b` and the `knows` edge between them
+
+### Requirement: Edge note neighborhood
+The system SHALL, when asked for the neighborhood of an edge note's path, return the edge it declares and both endpoint nodes, so opening an edge note shows it as an edge.
+
+#### Scenario: Active edge note
+- **WHEN** the graph view focuses `Alice knows Bob.md`, an edge note from Alice to Bob
+- **THEN** it shows nodes `Alice.md` and `Bob.md` and the `knows` edge between them

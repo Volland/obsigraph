@@ -6,7 +6,7 @@ import { nodeElement, type EdgeElement, type GraphElements } from './elements';
 // @tg: implements:: [[openspec:graph-ui#Neighborhood view-state]]
 export function neighborhood(graph: Graph, id: string): GraphElements {
   const center = graph.node(id);
-  if (!center) return { nodes: [], edges: [] };
+  if (!center) return edgeNoteNeighborhood(graph, id);
   const nodes = new Map([[id, nodeElement(center)]]);
   const edges: EdgeElement[] = [];
   for (const e of [...graph.outEdges(id), ...graph.inEdges(id)]) {
@@ -15,6 +15,23 @@ export function neighborhood(graph: Graph, id: string): GraphElements {
     if (!other) continue;
     if (!nodes.has(otherId)) nodes.set(otherId, nodeElement(other));
     if (!edges.some((x) => x.id === e.id)) edges.push(edgeElement(e));
+  }
+  return { nodes: [...nodes.values()], edges };
+}
+
+/** An edge note is drawn as the edge it declares, between its endpoints. */
+// @lat: [[edge-syntax#Edge notes]]
+// @tg: implements:: [[openspec:graph-ui#Edge note neighborhood]]
+function edgeNoteNeighborhood(graph: Graph, path: string): GraphElements {
+  const nodes = new Map<string, GraphElements['nodes'][number]>();
+  const edges: EdgeElement[] = [];
+  for (const e of graph.declaredEdges(path)) {
+    if (e.file !== path) continue;
+    for (const end of [e.source, e.target]) {
+      const n = graph.node(end);
+      if (n && !nodes.has(end)) nodes.set(end, nodeElement(n));
+    }
+    edges.push(edgeElement(e));
   }
   return { nodes: [...nodes.values()], edges };
 }
@@ -66,6 +83,7 @@ export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyl
     ['from', title(e.source)],
     ['to', title(e.target)],
   ];
+  if (e.file) rows.push(['note', e.file]);
   if (e.heading) rows.push(['heading', e.heading]);
   for (const [k, v] of Object.entries(e.props)) if (k !== 'id') rows.push([k, show(v)]);
   if (style) rows.push(...styleRows(style));

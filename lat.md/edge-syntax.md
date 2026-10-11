@@ -39,6 +39,22 @@ A sign goes inside the arrow before the type: `-knows->` matches either sign, `-
 
 ## Edge notes
 
-A note with `type: edge` frontmatter may also declare an edge, as a later escape hatch for Properties panel and Bases integration.
+A note with frontmatter `type: edge` declares one edge instead of a node, so a relationship can have a body, Properties panel fields and a row in Bases.
+
+```yaml
+---
+type: edge
+from: "[[Alice]]"
+to: "[[Bob]]"
+edgeType: knows
+since: 2020
+---
+```
+
+`from` and `to` are wikilinks, markdown links or bare link text, resolved like written links, with stubs for missing notes; YAML's reading of unquoted `[[Bob]]` as a nested list is accepted. `edgeType` may carry a `-` or `+` sign prefix, `id` pins the id, and every other field except `type` and `types` is an edge property. Read by [[packages/core/src/graph/graph.ts#Graph#upsertEdgeNote]] and recognized by [[packages/core/src/graph/graph.ts#isEdgeNote]].
+
+The note is not a node, so every graph surface draws it as an ordinary edge between its endpoints. Its id is the note's path unless pinned, which keeps it stable for embeds, and the edge records the note as its declaring `file`, so schema findings, edge details and VS Code backlinks point at the edge note. Opening an edge note in a graph view shows its edge and both endpoints. The body contributes no edges.
+
+A missing `from`, `to` or `edgeType` gives an `edge-note` finding and no edge. An edge or edge note whose endpoint is an edge note is refused with an `edge-note` finding at the link, because edge notes are not nodes; links are accepted again once the note stops being an edge note.
 
 Both forms feed the same [[graph-model|graph model]].

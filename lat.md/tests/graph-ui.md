@@ -17,3 +17,7 @@ A negative edge always gets a tee arrow in the shared style sheet, whichever hos
 ## Graph UI has no host imports
 
 The shared renderer sources import neither `obsidian` nor `vscode`.
+
+## Edge note drawn as an edge
+
+The neighborhood of an edge note's path is its declared edge and both endpoint nodes, and the edge also appears in each endpoint's neighborhood.

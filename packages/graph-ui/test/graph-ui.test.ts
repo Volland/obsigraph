@@ -34,3 +34,18 @@ it('imports no host module', () => {
     .filter((f) => /from\s+['"](obsidian|vscode)['"]/.test(readFileSync(join(src, f), 'utf8')));
   expect(offenders).toEqual([]);
 });
+
+// @lat: [[tests/graph-ui#Edge note drawn as an edge]]
+// @tg: verifies:: [[openspec:graph-ui#Edge note neighborhood#Active edge note]]
+it('shows an edge note as its edge between both endpoints', async () => {
+  const { Graph } = await import('@obsigraph/core');
+  const { neighborhood } = await import('../src/index');
+  const graph = new Graph((l) => (['Alice', 'Bob'].includes(l) ? `${l}.md` : null));
+  graph.upsertNote({ path: 'Alice.md', text: '' });
+  graph.upsertNote({ path: 'Bob.md', text: '' });
+  graph.upsertNote({ path: 'Alice knows Bob.md', text: '', frontmatter: { type: 'edge', from: '[[Alice]]', to: '[[Bob]]', edgeType: 'knows' } });
+  const els = neighborhood(graph, 'Alice knows Bob.md');
+  expect(els.nodes.map((n) => n.id).sort()).toEqual(['Alice.md', 'Bob.md']);
+  expect(els.edges).toEqual([{ id: 'Alice knows Bob.md', source: 'Alice.md', target: 'Bob.md', type: 'knows', sign: 1 }]);
+  expect(neighborhood(graph, 'Alice.md').edges.map((e) => e.id)).toEqual(['Alice knows Bob.md']);
+});

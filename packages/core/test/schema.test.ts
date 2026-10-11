@@ -297,6 +297,20 @@ describe('TGS validation', () => {
     expect(graph.edges().next().value).toBeDefined();
   });
 
+  // @lat: [[tests/edge-notes#Findings in the edge note]]
+  // @tg: verifies:: [[openspec:graph-model#Findings at the declaring file#Edge property validated in the edge note]]
+  it('reports edge property findings for an edge note at the edge note', () => {
+    const graph = vault([
+      org,
+      note('Acme.md', { type: 'Company' }),
+      note('Alice.md', { type: 'Person' }),
+      note('Alice at Acme.md', { type: 'edge', from: '[[Alice]]', to: '[[Acme]]', edgeType: 'worksAt', since: 2020 }),
+    ]);
+    expect(validateSchemas(graph, schemasFromGraph(graph, 'Types/'))).toEqual([
+      { path: 'Alice at Acme.md', line: 0, column: 0, message: "Missing required property 'role' on edge 'worksAt'", code: 'missing-edge-property' },
+    ]);
+  });
+
   // @lat: [[tests/schema-notes#Edge endpoint validation]]
   // @tg: verifies:: [[openspec:schema-notes#Edge endpoint validation#Stub target not reported]]
   // @tg: verifies:: [[openspec:schema-notes#Edge endpoint validation#Wrong target type]]

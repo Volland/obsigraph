@@ -472,12 +472,12 @@ export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
       if (schema.edges) {
         const names = schema.edges.map((r) => r.type);
         for (const e of outEdges) {
-          if (!names.includes(e.type)) at(n.id, e.line, 'edge-not-allowed', `Edge type '${e.type}' is not allowed for ${labels} (allowed: ${names.join(', ') || 'none'})`);
+          if (!names.includes(e.type)) at(e.file ?? n.id, e.line, 'edge-not-allowed', `Edge type '${e.type}' is not allowed for ${labels} (allowed: ${names.join(', ') || 'none'})`);
         }
         for (const r of schema.edges) {
           const own = outEdges.filter((e) => e.type === r.type);
           if (r.required && own.length === 0) at(n.id, 0, 'missing-edge', `Missing required edge '${r.type}' for type ${labels}`);
-          if (!r.many && own.length > 1) at(n.id, own[1]!.line, 'too-many-edges', `Edge type '${r.type}' allows one edge for ${labels}, found ${own.length}`);
+          if (!r.many && own.length > 1) at(own[1]!.file ?? n.id, own[1]!.line, 'too-many-edges', `Edge type '${r.type}' allows one edge for ${labels}, found ${own.length}`);
         }
       }
     }
@@ -487,20 +487,20 @@ export function validateSchemas(graph: Graph, set: SchemaSet): Diagnostic[] {
       if (targets) {
         const t = graph.node(e.target);
         if (t && !t.stub && t.labels.length && !t.labels.some((l) => targets.includes(l))) {
-          at(n.id, e.line, 'wrong-target-type', `Edge '${e.type}' expects target type ${targets.join(' or ')}, found ${t.labels.join(', ')}`);
+          at(e.file ?? n.id, e.line, 'wrong-target-type', `Edge '${e.type}' expects target type ${targets.join(' or ')}, found ${t.labels.join(', ')}`);
         }
       }
       if (!et) continue;
       if (et.from && n.labels.length && !n.labels.some((l) => et.from!.includes(l))) {
-        at(n.id, e.line, 'wrong-source-type', `Edge '${e.type}' expects source type ${et.from.join(' or ')}, found ${labels}`);
+        at(e.file ?? n.id, e.line, 'wrong-source-type', `Edge '${e.type}' expects source type ${et.from.join(' or ')}, found ${labels}`);
       }
       for (const p of et.properties) {
         const v = e.props[p.name];
         if (!present(v)) {
-          if (p.required) at(n.id, e.line, 'missing-edge-property', `Missing required property '${p.name}' on edge '${e.type}'`);
+          if (p.required) at(e.file ?? n.id, e.line, 'missing-edge-property', `Missing required property '${p.name}' on edge '${e.type}'`);
           continue;
         }
-        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(n.id, e.line, 'edge-value-not-allowed', `Edge property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
+        if (p.values) for (const x of Array.isArray(v) ? v : [v]) if (!inValues(p.values, x)) at(e.file ?? n.id, e.line, 'edge-value-not-allowed', `Edge property '${p.name}' value '${show(x)}' is not one of: ${p.values.map(show).join(', ')}`);
       }
     }
   }

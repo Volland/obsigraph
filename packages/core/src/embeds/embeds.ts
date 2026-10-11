@@ -162,7 +162,8 @@ export class EmbedIndex {
         if (res.matches > 1) {
           out.push({ ...at, message: `${res.matches} edges match ${occ.raw}; showing the first. Pin the one you mean with an id.` });
         }
-        if (res.edge.props.id === undefined) {
+        // An edge note's id is its path, which does not shift.
+        if (res.edge.props.id === undefined && !res.edge.file) {
           out.push({
             ...at,
             message: `${occ.raw} refers to an unpinned edge in ${res.edge.source} line ${res.edge.line + 1}; add {id: "${suggestId(res.edge)}"} to keep the reference stable`,

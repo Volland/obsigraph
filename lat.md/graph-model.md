@@ -41,7 +41,7 @@ Templates come from the note a type's `template` links to, else the body of a `s
 
 Edges carry a type, optional label, sign, properties, a derived or pinned ID and the heading they were written under.
 
-Syntax is defined in [[edge-syntax]].
+Syntax is defined in [[edge-syntax]]. An [[edge-syntax#Edge notes|edge note]] contributes an edge and no node; its edge's `file` names the note that declares it, and [[packages/core/src/graph/graph.ts#Graph#declaredEdges]] lists the edges a file wrote.
 
 ## Plain link edges
 
