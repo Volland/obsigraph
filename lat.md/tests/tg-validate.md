@@ -30,6 +30,10 @@ Warnings exit 0, `--strict` makes them exit 1, and a missing vault or an unknown
 
 `--ignore` and `--only` filter findings and counts by code, and `--schema-only` reports a duplicate type but not a malformed edge in a data note.
 
+## Frontmatter edges flag
+
+`--frontmatter-edges` makes a frontmatter link to the wrong type a finding, and without it the same vault is clean.
+
 ## Output formats
 
 `--json` and `--format json` print one document with `ok`, note count, counts by severity and findings; `--format sarif` prints a SARIF 2.1.0 log with rules, levels and physical locations.

@@ -124,6 +124,19 @@ describe('tg validate', () => {
     expect(s.findings.map((f) => [f.code, f.path])).toEqual([['duplicate-declaration', 'Types/B.md']]);
   });
 
+  // @lat: [[tests/tg-validate#Frontmatter edges flag]]
+  it('checks frontmatter links against edge types only with --frontmatter-edges', async () => {
+    const v = folder({
+      'Types/Edges.md': '---\nedgeTypes:\n  requirement: {from: [Task], to: [Requirement]}\n---\n',
+      'Login.md': '---\ntype: Requirement\n---\n',
+      'Bug1.md': '---\ntype: Bug\n---\n',
+      'Bad.md': '---\ntype: Task\nrequirement: "[[Bug1]]"\n---\n',
+    });
+    expect(json((await tg(v, 'validate', '--json')).out).findings).toEqual([]);
+    const f = json((await tg(v, 'validate', '--json', '--frontmatter-edges')).out).findings;
+    expect(f.map((x) => [x.code, x.path])).toEqual([['wrong-target-type', 'Bad.md']]);
+  });
+
   // @lat: [[tests/tg-validate#Output formats]]
   // @tg: verifies:: [[openspec:tg-validate#Output formats#JSON output]]
   // @tg: verifies:: [[openspec:tg-validate#Output formats#SARIF output]]

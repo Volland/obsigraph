@@ -31,6 +31,7 @@ export default class ObsigraphPlugin extends Plugin {
       () => ({ maxPathDepth: this.settings.maxPathDepth }),
       () => this.settings.codeMode,
       () => this.settings.codeRoot,
+      () => this.settings.frontmatterEdges,
     );
     this.addSettingTab(new ObsigraphSettingTab(this.app, this));
 
