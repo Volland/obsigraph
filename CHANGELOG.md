@@ -2,6 +2,12 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Fixed
+
+- **`view: graph` blocks crashed on every render** with "Cannot read properties of undefined" (#3). The block rendered before its container was attached and sized, so Cytoscape ran its default layout on an empty graph in a zero-width container. The renderer now starts with the `null` layout and the block's first render waits one animation frame, cancelled if the block unloads first.
+
 ## 0.13.0 — 2026-10-11
 
 ### Added
