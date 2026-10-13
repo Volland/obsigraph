@@ -94,4 +94,13 @@ describe('edge notes', () => {
     expect(graph.outEdges('Carol.md')).toEqual([]);
     expect(graph.edge('Alice knows Bob.md')).toBeDefined();
   });
+
+  it('still declares only its one edge when frontmatter links are edges too', () => {
+    const existing = new Set(['Alice.md', 'Bob.md', 'Paper.md']);
+    const graph = new Graph((l) => (existing.has(`${l}.md`) ? `${l}.md` : null), undefined, { frontmatterEdges: true });
+    for (const p of existing) graph.upsertNote({ path: p, text: '' });
+    graph.upsertNote(edgeNote('e.md', { from: '[[Alice]]', to: '[[Bob]]', edgeType: 'knows', source: '[[Paper]]' }));
+    expect([...graph.edges()].map((e) => [e.id, e.type, e.source, e.target])).toEqual([['e.md', 'knows', 'Alice.md', 'Bob.md']]);
+    expect(graph.edge('e.md')!.props).toEqual({ source: '[[Paper]]' });
+  });
 });
