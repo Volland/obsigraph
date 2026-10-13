@@ -2,6 +2,12 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.15.1 — 2026-10-13
+
+### Changed
+
+- The plugin now requires Obsidian 1.8.7 or later. The Graph view details panel remembers its width and toggles with `App.loadLocalStorage` and `saveLocalStorage`, which Obsidian added in 1.8.7, so the declared minimum was too low and the community plugin check flagged it.
+
 ## 0.15.0 — 2026-10-13
 
 Thanks again to [@ma-be](https://github.com/ma-be) (Martin Bergner), who contributed both changes in this release: [#5](https://github.com/Volland/obsigraph/pull/5) and [#4](https://github.com/Volland/obsigraph/pull/4).
