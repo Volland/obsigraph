@@ -9,6 +9,10 @@ All notable changes to the Typed Graph plugin, the `tg` CLI, the core library an
 - **Frontmatter links as edges.** With the new `frontmatterEdges` graph option, a wikilink or markdown link in a frontmatter property becomes an edge typed by the property name, so `requirement: "[[Login]]"` reads as `requirement:: [[Login]]` and schema `edgeTypes` check it. Text, numbers, `[[]]` placeholders and `tags`, `aliases`, `cssclasses`, `type` and `types` give no edges. Off by default; the plugin has a "Frontmatter links as edges" setting that re-indexes the vault, and `tg validate --frontmatter-edges` applies it to validation.
 - Core: `frontmatterEdges()`, `FRONTMATTER_EDGE_SKIP`, `ParseOptions.frontmatterEdges` and `ValidateOptions.frontmatterEdges` are exported.
 
+### Fixed
+
+- **`view: graph` blocks crashed on every render** with "Cannot read properties of undefined" (#3). The block rendered before its container was attached and sized, so Cytoscape ran its default layout on an empty graph in a zero-width container. The renderer now starts with the `null` layout and the block's first render waits one animation frame, cancelled if the block unloads first.
+
 ## 0.14.0 — 2026-10-13
 
 Thanks to [@ma-be](https://github.com/ma-be) (Martin Bergner) for the details panel work in [#6](https://github.com/Volland/obsigraph/pull/6), the first outside contribution.
