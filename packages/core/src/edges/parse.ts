@@ -34,6 +34,11 @@ export interface ParseResult {
 export interface ParseOptions {
   /** Also turn plain links in prose into untyped `links_to` edges, as OKF consumers read them. */
   linkEdges?: boolean;
+  /**
+   * Also turn links in frontmatter property values into edges typed by the property name, so
+   * `requirement: "[[Login]]"` reads as `requirement:: [[Login]]`. See `frontmatterEdges`.
+   */
+  frontmatterEdges?: boolean;
 }
 
 /** Edge type given to plain links when link edges are on. */
@@ -164,6 +169,29 @@ function scanLinks(value: string, path: string | null): {
     i = j + 1;
   }
   return { links, end: i };
+}
+
+/** Properties whose links never become edges: Obsidian's own and the note's type. */
+export const FRONTMATTER_EDGE_SKIP: ReadonlySet<string> = new Set(['tags', 'aliases', 'cssclasses', 'type', 'types']);
+
+/**
+ * Edges for the links in a note's frontmatter: each property whose value is, or lists, a wikilink
+ * or markdown link yields one edge per link, typed by the property name and recorded at line 0
+ * with no heading. Values without links (text, numbers, `[[]]` placeholders) yield nothing, and
+ * so do `tags`, `aliases`, `cssclasses`, `type` and `types`.
+ */
+// @lat: [[edge-syntax#Frontmatter edges]]
+// @tg: implements:: [[openspec:edge-parsing#Frontmatter link edges]]
+export function frontmatterEdges(frontmatter: Record<string, unknown> | null | undefined, path: string | null = null): ParsedEdge[] {
+  const edges: ParsedEdge[] = [];
+  for (const [type, value] of Object.entries(frontmatter ?? {})) {
+    if (FRONTMATTER_EDGE_SKIP.has(type)) continue;
+    for (const v of Array.isArray(value) ? value.flat(Infinity) : [value]) {
+      if (typeof v !== 'string') continue;
+      for (const link of scanLinks(v, path).links) edges.push({ type, sign: 1, ...link, props: {}, line: 0, heading: null });
+    }
+  }
+  return edges;
 }
 
 /**

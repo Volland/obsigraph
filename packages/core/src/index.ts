@@ -1,4 +1,4 @@
-export { LINK_EDGE_TYPE, markdownTarget, parseEdges } from './edges/parse.js';
+export { FRONTMATTER_EDGE_SKIP, LINK_EDGE_TYPE, frontmatterEdges, markdownTarget, parseEdges } from './edges/parse.js';
 export type { ParsedEdge, Diagnostic, ParseOptions, ParseResult, Sign } from './edges/parse.js';
 export { parseProps, PropsSyntaxError } from './edges/props.js';
 export type { Props, PropValue } from './edges/props.js';

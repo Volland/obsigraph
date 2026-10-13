@@ -1,4 +1,4 @@
-import { markdownTarget, parseEdges, type Diagnostic, type ParsedEdge, type ParseOptions, type Sign } from '../edges/parse.js';
+import { frontmatterEdges, markdownTarget, parseEdges, type Diagnostic, type ParsedEdge, type ParseOptions, type Sign } from '../edges/parse.js';
 import type { Props } from '../edges/props.js';
 
 export interface GraphNode {
@@ -68,7 +68,7 @@ export class Graph {
   constructor(
     private readonly resolve: LinkResolver,
     private readonly resolveSub?: SubpathResolver,
-    /** `linkEdges` also turns plain links in prose into `links_to` edges. */
+    /** `linkEdges` also turns plain links in prose into `links_to` edges; `frontmatterEdges` turns links in frontmatter properties into edges. */
     private readonly options: ParseOptions = {},
   ) {}
 
@@ -144,7 +144,8 @@ export class Graph {
       stub: false,
     });
     const { edges: parsed, diagnostics } = parseEdges(note.text, note.path, this.options);
-    const edges = note.edges?.length ? [...parsed, ...note.edges] : parsed;
+    const fromFrontmatter = this.options.frontmatterEdges ? frontmatterEdges(note.frontmatter, note.path) : [];
+    const edges = fromFrontmatter.length || note.edges?.length ? [...parsed, ...fromFrontmatter, ...(note.edges ?? [])] : parsed;
     this.files.set(note.path, { parsed: edges, diagnostics, edgeIds: [], skipped: [] });
     this.addEdges(note.path);
 

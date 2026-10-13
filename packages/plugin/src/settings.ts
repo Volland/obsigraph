@@ -25,6 +25,8 @@ export interface ObsigraphSettings {
   /** Typed Graph sidecar base URL, e.g. http://127.0.0.1:8765. */
   sidecarUrl: string;
   sidecarToken: string;
+  /** Read links in frontmatter properties as edges typed by the property name. */
+  frontmatterEdges: boolean;
   /** Derived code layer: off, annotated symbols only, or every symbol. */
   codeMode: CodeMode;
   /** Vault folder scanned for source files; empty means the whole vault. */
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   defaultBackend: 'builtin',
   sidecarUrl: '',
   sidecarToken: '',
+  frontmatterEdges: false,
   codeMode: 'off',
   codeRoot: '',
 };
@@ -171,6 +174,17 @@ export class ObsigraphSettingTab extends PluginSettingTab {
         t.setPlaceholder(DEFAULT_BASE_IRI).setValue(this.plugin.settings.schemaBaseIri).onChange(async (v) => {
           this.plugin.settings.schemaBaseIri = v.trim() || DEFAULT_BASE_IRI;
           await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('Frontmatter links as edges')
+      .setDesc('Read wikilinks in note properties as edges typed by the property name, so `requirement: "[[Login]]"` is the edge `requirement:: [[Login]]`. Tags, aliases, cssclasses and type are skipped. Re-indexes the vault when changed.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.frontmatterEdges).onChange(async (v) => {
+          this.plugin.settings.frontmatterEdges = v;
+          await this.plugin.saveSettings();
+          await this.plugin.index.reindex();
         }),
       );
 

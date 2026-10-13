@@ -29,6 +29,12 @@ Each edge gets a derived ID `source#type#target#n`, where `n` is its ordinal amo
 
 Derived IDs shift when duplicate edges are reordered, so anything that references an edge long-term should use a pinned `id`. [[packages/core/src/embeds/embeds.ts#EmbedIndex]] warns about edges referenced by endpoint embeds that are not pinned, suggesting an id such as `alice-knows-bob`, and about ambiguous endpoint embeds; pinned or unreferenced edges never warn.
 
+## Frontmatter edges
+
+With the `frontmatterEdges` graph option, a wikilink or markdown link in a frontmatter property is an edge typed by the property name, so `requirement: "[[Login]]"` reads as `requirement:: [[Login]]`.
+
+[[packages/core/src/edges/parse.ts#frontmatterEdges]] scans each property value, or each item of a list, with the inline link scanner, so aliases, `#subpaths` and markdown links work as they do after `::`. Edges are +1, carry no properties and sit at line 0 with no heading. Text, numbers, empty `[[]]` placeholders and the Obsidian-owned `tags`, `aliases`, `cssclasses`, `type` and `types` give nothing; an unquoted `[[X]]` is a nested YAML list in Obsidian, so quote links. The option is off by default so existing graphs and queries do not change; the plugin exposes it as a setting and `tg validate --frontmatter-edges` applies it to validation. Schema `edgeTypes` (`from`, `to`) and per-type `edges` check these edges like any other. Writing a relation both in frontmatter and in the body yields two edges. An [[edge-syntax#Edge notes|edge note]] is exempt: its links stay edge properties and it declares only its one edge.
+
 ## Property embeds
 
 Edge properties are shown in prose with `{{edge: Alice -knows-> Bob . since}}` or `{{edge: met-2020 . since}}`, both resolved through the same lookup.

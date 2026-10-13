@@ -51,6 +51,7 @@ export class VaultIndex {
     engineOptions: () => ExecOptions = () => ({}),
     codeMode: () => CodeMode = () => 'off',
     codeRoot: () => string = () => '',
+    frontmatterEdges: () => boolean = () => false,
   ) {
     this.graph = new Graph(
       (link, source) => {
@@ -59,6 +60,12 @@ export class VaultIndex {
       },
       // `[[src/auth.ts#login]]` ends at the code node when the code layer has it.
       (link, sub) => (this.graph.node(`${link}#${sub}`) ? `${link}#${sub}` : null),
+      // Read at each upsert, so the setting applies to notes indexed after it changes.
+      {
+        get frontmatterEdges() {
+          return frontmatterEdges();
+        },
+      },
     );
     this.code = new CodeLayer(app, this.graph, codeMode, codeRoot);
     this.engine = new BuiltinEngine(this.graph, engineOptions);
@@ -127,6 +134,12 @@ export class VaultIndex {
       await new Promise((r) => window.setTimeout(r, 0));
     }
     this.ready = true;
+    this.flush();
+  }
+
+  /** Re-read every note, e.g. after a setting that changes how notes become edges. */
+  async reindex(): Promise<void> {
+    for (const f of this.app.vault.getMarkdownFiles()) this.upsert(await this.read(f));
     this.flush();
   }
 

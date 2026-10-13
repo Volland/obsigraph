@@ -66,6 +66,8 @@ export interface ValidateOptions {
   schemaFolder?: string;
   /** Also read plain prose links as `links_to` edges. */
   linkEdges?: boolean;
+  /** Also read links in frontmatter properties as edges typed by the property name. */
+  frontmatterEdges?: boolean;
   /** Check only the schema notes' declarations. */
   schemaOnly?: boolean;
   iconExists?: IconCheck;
@@ -81,7 +83,7 @@ export function validateVault(notes: readonly NoteInput[], options: ValidateOpti
     return toFindings(schemaSetFromNotes(schemaNotes).diagnostics);
   }
   const paths = notes.map((n) => n.path);
-  const graph = new Graph(pathResolver(() => paths), undefined, { linkEdges: options.linkEdges ?? false });
+  const graph = new Graph(pathResolver(() => paths), undefined, { linkEdges: options.linkEdges ?? false, frontmatterEdges: options.frontmatterEdges ?? false });
   const embeds = new EmbedIndex();
   for (const n of notes) {
     embeds.upsert(n.path, n.text);

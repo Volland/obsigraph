@@ -4,7 +4,7 @@ import { DEFAULT_SCHEMA_FOLDER, normalizeFolder, validateVault, type VaultFindin
 import { listMarkdown, readNote } from '@obsigraph/node-vault';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, VERSION, type Command, type Ctx } from '../cli.mjs';
 
-const USAGE = 'validate [--vault dir] [--schema-folder Types] [--only codes] [--ignore codes] [--schema-only] [--strict] [--format text|json|sarif]';
+const USAGE = 'validate [--vault dir] [--schema-folder Types] [--only codes] [--ignore codes] [--schema-only] [--frontmatter-edges] [--strict] [--format text|json|sarif]';
 
 /** Short descriptions for SARIF rules, from the TGS specification's diagnostics table. */
 const RULES: Record<string, string> = {
@@ -99,6 +99,7 @@ async function runValidate(ctx: Ctx, flags: Map<string, string | true>): Promise
   const findings = validateVault(notes, {
     schemaFolder: normalizeFolder(str(flags, 'schema-folder') ?? DEFAULT_SCHEMA_FOLDER),
     schemaOnly: flags.has('schema-only'),
+    frontmatterEdges: flags.has('frontmatter-edges'),
   }).filter((f) => (!only || only.has(f.code)) && !ignore.has(f.code));
   const errors = findings.filter((f) => f.severity === 'error').length;
   const warnings = findings.length - errors;
@@ -115,7 +116,7 @@ export const validate: Command = {
   name: 'validate',
   summary: 'Validate a vault against its schema notes: edge syntax, schema, style and embed findings',
   usage: USAGE,
-  flags: { vault: 'string', 'schema-folder': 'string', only: 'string', ignore: 'string', 'schema-only': 'bool', strict: 'bool', format: 'string' },
+  flags: { vault: 'string', 'schema-folder': 'string', only: 'string', ignore: 'string', 'schema-only': 'bool', 'frontmatter-edges': 'bool', strict: 'bool', format: 'string' },
   noProject: true,
   run(ctx, args, flags) {
     if (args.length) {
