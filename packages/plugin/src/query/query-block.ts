@@ -20,6 +20,7 @@ export class QueryBlock extends MarkdownRenderChild {
   private visible = true;
   private dirty = false;
   private observer: IntersectionObserver | null = null;
+  private frame: number | null = null;
   private generation = 0;
   private retryTimer: number | null = null;
 
@@ -34,7 +35,11 @@ export class QueryBlock extends MarkdownRenderChild {
 
   onload(): void {
     this.containerEl.addClass('obsigraph-block');
-    this.render();
+    // Wait a frame so the container is attached and sized before Cytoscape measures it.
+    this.frame = window.requestAnimationFrame(() => {
+      this.frame = null;
+      this.render();
+    });
     this.register(this.plugin.index.onChange(() => this.refresh()));
     this.register(this.plugin.onStylesChanged(() => this.refresh()));
     if (typeof IntersectionObserver !== 'undefined') {
@@ -48,6 +53,7 @@ export class QueryBlock extends MarkdownRenderChild {
 
   onunload(): void {
     this.generation++;
+    if (this.frame !== null) window.cancelAnimationFrame(this.frame);
     if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
     this.observer?.disconnect();
     this.renderer?.destroy();

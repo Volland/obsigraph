@@ -19,6 +19,8 @@ The renderer, styler, style sheet and view-state live in the host-independent `g
 
 Hosts supply a theme function instead of the renderer reading host variables: the plugin reads Obsidian CSS variables in [[packages/plugin/src/render/theme.ts#themeFrom]], the extension's webview reads `--vscode-*` variables. The renderer re-reads the theme on every restyle so theme switches apply. A test keeps the package free of `obsidian` and `vscode` imports; see [[tests/graph-ui]]. The VS Code webview is a third surface for the same renderer, described in [[vscode#Graph webview]].
 
+The renderer starts Cytoscape with the `null` layout, so the empty bootstrap graph is never laid out against a container that may not be sized yet, and [[packages/plugin/src/query/query-block.ts#QueryBlock]] defers its first render by one animation frame (cancelled on unload) so the container is attached and sized when Cytoscape measures it. Without both, a `view: graph` block crashed on every render with a zero-width container (issue #3).
+
 ## Code nodes
 
 Derived `CodeFile` and `CodeSymbol` nodes from the code layer share the renderer: distinct built-in shapes and colors, a Code dropdown in the Graph view and a `code: hide` block option; see [[cli#Code layer]].

@@ -37,7 +37,9 @@ export class GraphRenderer {
     this.styler = opts.styler;
     container.style.height = `${opts.height}px`;
     container.classList.add('obsigraph-graph');
-    this.cy = cytoscape({ container, elements: [], wheelSensitivity: 0.3, minZoom: 0.1, maxZoom: 4 });
+    // No layout on the empty bootstrap graph: Cytoscape's default grid layout measures the container,
+    // which may not be sized yet, and throws.
+    this.cy = cytoscape({ container, elements: [], layout: { name: 'null' }, wheelSensitivity: 0.3, minZoom: 0.1, maxZoom: 4 });
     this.cy.style(buildStylesheet(opts.theme()));
 
     const target = (e: cytoscape.EventObject) => e.target as cytoscape.SingularElementReturnValue;
