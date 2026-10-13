@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.5
+
+- The graph no longer runs a layout on an empty, not yet sized canvas, which could throw on first render (from #4 by @ma-be).
+
 ## 0.8.4
 
 - The README describes the `tg` CLI (lat.md compatible checks, typed code annotations, Cypher, trace and validate) and the agent setup: hooks, MCP server and skills.
