@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4
+
+- The README describes the `tg` CLI (lat.md compatible checks, typed code annotations, Cypher, trace and validate) and the agent setup: hooks, MCP server and skills.
+
 ## 0.8.3
 
 - Edge notes: a note with `type: edge`, `from`, `to` and `edgeType` frontmatter shows as an edge between its endpoints in the graph, and opening it shows that edge. Backlinks for such an edge open the edge note.

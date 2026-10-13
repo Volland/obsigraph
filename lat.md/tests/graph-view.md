@@ -29,3 +29,12 @@ A node produces identical element data, classes and style rules whether it comes
 ## Stubs visible in neighborhood
 
 Stub neighbors appear in the view with no note path, so unresolved links stay visible but cannot be opened.
+
+## Business and technical rows
+
+With a known schema, a node's labels, stub flag, path, style rows and undeclared properties are technical and the declared ones are note properties; an edge's sign and id are technical, and without a schema every property is a note property.
+
+## Links in values
+
+A property value splits into text and link parts: one line per list item, aliases and subpaths kept, markdown links resolved against the note, and empty or non-note links left as text.
+

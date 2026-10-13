@@ -9,6 +9,15 @@ All notable changes to the Typed Graph plugin, the `tg` CLI, the core library an
 - **Frontmatter links as edges.** With the new `frontmatterEdges` graph option, a wikilink or markdown link in a frontmatter property becomes an edge typed by the property name, so `requirement: "[[Login]]"` reads as `requirement:: [[Login]]` and schema `edgeTypes` check it. Text, numbers, `[[]]` placeholders and `tags`, `aliases`, `cssclasses`, `type` and `types` give no edges. Off by default; the plugin has a "Frontmatter links as edges" setting that re-indexes the vault, and `tg validate --frontmatter-edges` applies it to validation.
 - Core: `frontmatterEdges()`, `FRONTMATTER_EDGE_SKIP`, `ParseOptions.frontmatterEdges` and `ValidateOptions.frontmatterEdges` are exported.
 
+## 0.14.0 — 2026-10-13
+
+Thanks to [@ma-be](https://github.com/ma-be) (Martin Bergner) for the details panel work in [#6](https://github.com/Volland/obsigraph/pull/6), the first outside contribution.
+
+### Added
+
+- **Graph view details panel.** Drag the handle between the graph and the panel to set its width (remembered per device); long values wrap. Rows are split into the note's own properties, listed first, and technical rows (labels, stub, path, style, edge sign, id and heading, and properties the schema does not declare), which a Technical toggle shows. Wikilinks and markdown links in values are clickable and open the note, one list item per line, with a Links toggle for the old plain text. ([#6](https://github.com/Volland/obsigraph/pull/6), by @ma-be)
+- Graph UI: `Details` gains `technical`, `values` and `source`, `nodeDetails` and `edgeDetails` accept the declared property names, and `valueLines` splits a value into text and link parts.
+
 ## 0.13.0 — 2026-10-11
 
 ### Added
