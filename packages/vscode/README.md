@@ -10,6 +10,27 @@ Typed backlinks and a graph view for the markdown and code in your workspace, wi
 - **New typed notes.** `TypeGraph: New Typed Note` creates a note from a type in your schema folder with its template and generated ids (UUID, time-ordered UUID, timestamp or Luhmann). `New Child Note` and `New Sibling Note` branch a Luhmann id from the active note. Nothing is written until you run a command, and nothing is overwritten.
 - **Set up TypeGraph.** For projects without `lat.md/` or `tg` agent setup, one button runs `tg init` (a global `tg` if you have one, otherwise `npx @typedgraph/cli init`) in a visible terminal, after listing the files it will create or change and asking you to confirm.
 
+## The `tg` CLI: lat.md, plus types
+
+The extension reads the same files as [`tg`](https://www.npmjs.com/package/@typedgraph/cli) (`npm i -g @typedgraph/cli`), the command line that keeps a project's knowledge graph checked in CI and available to agents.
+
+- **Drop-in for lat.md.** `tg locate`, `section`, `refs`, `expand` and `check` read the same `lat.md/` folder, section ids, `[[wiki]]` links and `@lat:` comments as [lat.md](https://www.npmjs.com/package/lat.md). A parity suite checks that `tg check` reports the same findings as `lat check`.
+- **Typed links from code.** `// @tg: implements:: [[auth#Login]]` uses the same edge syntax as notes, so code, docs and specs form one typed graph.
+- **Queries.** `tg cypher` runs openCypher over the section graph; `tg edges` lists annotations; `tg search` ranks sections lexically, or hybrid with embeddings.
+- **Specs to code.** `tg trace` links OpenSpec requirements to the code that implements them, the tests that verify them and the docs that explain them, and reports the gaps.
+- **Vault checks.** `tg validate` checks notes against their schema notes, with JSON or SARIF output for CI.
+
+## Built for agentic flows
+
+`tg init` (or the **Set up TypeGraph** button) prepares a project for coding agents: Claude Code, `AGENTS.md`-based agents or Cursor. It shows a diff and writes nothing until you pass `--write`.
+
+- **Instructions and hooks.** A managed block in `CLAUDE.md` or `AGENTS.md`, plus prompt and stop hooks that point the agent at relevant sections and flag docs left stale by code changes.
+- **MCP server.** `tg mcp` gives agents the same commands as tools: locate, section, search, refs, check, Cypher, edges and trace.
+- **Skills.** `tg-docs` keeps `lat.md/` in sync, `tg-graph` queries the section graph, `tg-trace` links requirements to code and tests, `tg-impact` finds what a change touches before and after the edit, and `tg-audit` turns spec drift into an OpenSpec change.
+- **Shared vocabulary.** A small code ontology (Decision, Requirement, Constraint, `implements`, `verifies`, ...) so people and agents use the same names.
+
+The backlinks panel and graph view in this extension show what the agent sees.
+
 ## Settings
 
 | Setting | Default | Meaning |
@@ -24,4 +45,4 @@ The extension reads files in your workspace and never writes to them. It collect
 
 ## Edge syntax
 
-Typed edges look like `knows:: [[Bob]] {since: 2020}`; a leading `-` makes an edge negative. See the [project README](https://github.com/Volland/obsigraph) for the full syntax, the `tg` CLI and the Obsidian plugin.
+Typed edges look like `knows:: [[Bob]] {since: 2020}`; a leading `-` makes an edge negative. A note with `type: edge`, `from`, `to` and `edgeType` frontmatter is an edge note: it shows as an edge between its endpoints, not as a node. See the [project README](https://github.com/Volland/obsigraph) for the full syntax, the `tg` CLI and the Obsidian plugin.
