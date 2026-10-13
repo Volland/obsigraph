@@ -1,4 +1,4 @@
-import type { Graph, GraphEdge, GraphNode, ResolvedEdgeStyle, ResolvedNodeStyle } from '@obsigraph/core';
+import { markdownTarget, type Graph, type GraphEdge, type GraphNode, type ResolvedEdgeStyle, type ResolvedNodeStyle } from '@obsigraph/core';
 import { nodeElement, type EdgeElement, type GraphElements } from './elements';
 
 /** A node, its incident edges in both directions, and its direct neighbors. */
@@ -51,7 +51,62 @@ export function mergeElements(...sets: GraphElements[]): GraphElements {
 export interface Details {
   title: string;
   rows: [string, string][];
+  /**
+   * Keys of rows that describe the graph rather than the note: labels, stub flag, path, style
+   * origins, edge sign, id and heading, and properties the schema does not declare.
+   */
+  technical: ReadonlySet<string>;
+  /** Property values as written, by row key, so links in them can be drawn as links. */
+  values: Readonly<Record<string, unknown>>;
+  /** Note that relative links in `values` resolve from, or null. */
+  source: string | null;
 }
+
+/** A piece of a property value: plain text or a link to a note. */
+export type ValuePart = { text: string } | { link: { target: string; subpath: string | null; label: string } };
+
+// `[[Target#Sub|alias]]` or `[text](dest)`; same shapes the edge parser reads.
+const VALUE_LINK = /\[\[([^\]|#\r\n]*)(?:#([^\]|\r\n]*))?(?:\|([^\]\r\n]*))?\]\]|\[((?:[^[\]\r\n]|\[[^\]\r\n]*\])*)\]\(\s*(<[^>\n]*>|[^)\s]*)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/g;
+
+/**
+ * Split a property value into lines of text and link parts: a list gives one line per item, a
+ * string with links gives text and link parts, anything else gives its plain text. An empty
+ * `[[]]` and a markdown link that is not a note stay text.
+ */
+// @lat: [[visualization#Details panel]]
+// @tg: implements:: [[openspec:graph-view#Details panel#Links in values]]
+export function valueLines(value: unknown, source: string | null = null): ValuePart[][] {
+  if (Array.isArray(value)) return value.length ? value.flat(Infinity).map((v) => valueParts(v, source)) : [[{ text: '[]' }]];
+  return [valueParts(value, source)];
+}
+
+function valueParts(v: unknown, source: string | null): ValuePart[] {
+  if (typeof v !== 'string') return [{ text: show(v) }];
+  const parts: ValuePart[] = [];
+  let last = 0;
+  for (const m of v.matchAll(VALUE_LINK)) {
+    const link =
+      m[4] === undefined
+        ? m[1]!.trim()
+          ? { target: m[1]!.trim(), subpath: m[2]?.trim() || null, label: m[3]?.trim() || m[1]!.trim() }
+          : null
+        : (() => {
+            const t = markdownTarget(m[5]!, source);
+            return t ? { ...t, label: m[4]!.trim() || t.target } : null;
+          })();
+    if (!link) continue;
+    if (m.index! > last) parts.push({ text: v.slice(last, m.index) });
+    parts.push({ link });
+    last = m.index! + m[0].length;
+  }
+  if (last < v.length) parts.push({ text: v.slice(last) });
+  return parts.length ? parts : [{ text: v }];
+}
+
+/** Properties that always count as note properties, even when a schema does not declare them. */
+const NOTE_KEYS = new Set(['type', 'types']);
+
+const isTechnical = (key: string, declared: ReadonlySet<string> | undefined): boolean => !!declared && !declared.has(key) && !NOTE_KEYS.has(key);
 
 /** Rows naming each resolved style attribute and the source that supplied it. */
 // @lat: [[visualization#Styling]]
@@ -62,19 +117,33 @@ export function styleRows(style: ResolvedNodeStyle | ResolvedEdgeStyle): [string
   });
 }
 
+/**
+ * Rows for a selected node. `declared` names the properties the node's schema declares: the rest
+ * are technical. Without it every property of the note counts as a note property.
+ */
 // @tg: implements:: [[openspec:graph-view#Selection details]]
-export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle): Details {
+// @tg: implements:: [[openspec:graph-view#Details panel]]
+export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle, declared?: ReadonlySet<string>): Details {
   const rows: [string, string][] = [
     ['labels', n.labels.join(', ') || '—'],
     ['stub', String(n.stub)],
   ];
-  for (const [k, v] of Object.entries(n.props)) if (k !== 'title') rows.push([k, show(v)]);
-  if (style) rows.push(...styleRows(style));
-  return { title: String(n.props.title ?? n.id), rows };
+  const technical = new Set(['labels', 'stub', 'path']);
+  const values: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(n.props)) {
+    if (k === 'title') continue;
+    rows.push([k, show(v)]);
+    values[k] = v;
+    if (isTechnical(k, declared)) technical.add(k);
+  }
+  if (style) for (const r of styleRows(style)) (rows.push(r), technical.add(r[0]));
+  return { title: String(n.props.title ?? n.id), rows, technical, values, source: n.stub ? null : n.id };
 }
 
+/** Rows for a selected edge; `declared` names the edge type's declared properties, as for `nodeDetails`. */
 // @tg: implements:: [[openspec:graph-view#Selection details]]
-export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyle): Details {
+// @tg: implements:: [[openspec:graph-view#Details panel]]
+export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyle, declared?: ReadonlySet<string>): Details {
   const title = (id: string) => String(graph.node(id)?.props.title ?? id);
   const rows: [string, string][] = [
     ['type', e.type],
@@ -83,11 +152,18 @@ export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyl
     ['from', title(e.source)],
     ['to', title(e.target)],
   ];
-  if (e.file) rows.push(['note', e.file]);
-  if (e.heading) rows.push(['heading', e.heading]);
-  for (const [k, v] of Object.entries(e.props)) if (k !== 'id') rows.push([k, show(v)]);
-  if (style) rows.push(...styleRows(style));
-  return { title: `${title(e.source)} ${e.sign < 0 ? '−' : ''}${e.type} → ${title(e.target)}`, rows };
+  const technical = new Set(['sign', 'id']);
+  const values: Record<string, unknown> = {};
+  if (e.file) (rows.push(['note', e.file]), technical.add('note'));
+  if (e.heading) (rows.push(['heading', e.heading]), technical.add('heading'));
+  for (const [k, v] of Object.entries(e.props)) {
+    if (k === 'id') continue;
+    rows.push([k, show(v)]);
+    values[k] = v;
+    if (isTechnical(k, declared)) technical.add(k);
+  }
+  if (style) for (const r of styleRows(style)) (rows.push(r), technical.add(r[0]));
+  return { title: `${title(e.source)} ${e.sign < 0 ? '−' : ''}${e.type} → ${title(e.target)}`, rows, technical, values, source: e.file ?? e.source };
 }
 
 function edgeElement(e: GraphEdge): EdgeElement {

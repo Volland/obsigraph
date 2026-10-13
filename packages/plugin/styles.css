@@ -69,7 +69,10 @@
   overflow: auto;
 }
 .obsigraph-details {
+  flex: none;
   width: 220px;
+  min-width: 160px;
+  max-width: 80%;
   overflow: auto;
   font-size: var(--font-smaller);
 }
@@ -81,6 +84,41 @@
   color: var(--text-muted);
   padding-right: 6px;
   vertical-align: top;
+}
+.obsigraph-details td {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.obsigraph-details-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+.obsigraph-details-bar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.obsigraph-technical {
+  opacity: 0.7;
+}
+.obsigraph-hide-technical .obsigraph-technical {
+  display: none;
+}
+.obsigraph-resizer {
+  flex: none;
+  width: 6px;
+  align-self: stretch;
+  cursor: col-resize;
+  border-radius: 3px;
+}
+.obsigraph-resizer:hover {
+  background: var(--interactive-accent);
+}
+.obsigraph-view-main:has(.obsigraph-details:empty) .obsigraph-resizer {
+  display: none;
 }
 .obsigraph-muted {
   color: var(--text-muted);

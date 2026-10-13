@@ -2,7 +2,7 @@ import { Graph } from '@obsigraph/core';
 import { describe, expect, it } from 'vitest';
 import { toElements } from '../src/render/elements';
 import { makeStyler } from '../src/render/styler';
-import { edgeDetails, mergeElements, neighborhood, nodeDetails } from '../src/view/view-state';
+import { edgeDetails, mergeElements, neighborhood, nodeDetails, valueLines } from '../src/view/view-state';
 import { BuiltinEngine } from '@obsigraph/core';
 
 function fixture() {
@@ -83,5 +83,42 @@ describe('graph view', () => {
   it('includes stub neighbors so unresolved links stay visible', () => {
     const g = neighborhood(fixture(), 'Carol.md');
     expect(g.nodes.find((n) => n.id === 'Ghost')).toMatchObject({ stub: true, path: null });
+  });
+  // @lat: [[tests/graph-view#Business and technical rows]]
+  // @tg: verifies:: [[openspec:graph-view#Details panel#Business and technical properties]]
+  it('marks graph bookkeeping and undeclared properties as technical when a schema is known', () => {
+    const graph = new Graph(() => null);
+    graph.upsertNote({ path: 'T.md', text: '', frontmatter: { type: 'Task', status: 'To Do', tags: ['x'], owner: 'bob' } });
+    const n = graph.node('T.md')!;
+    const style = makeStyler([]).resolveNode(n.labels);
+    const d = nodeDetails(n, style, new Set(['status', 'owner']));
+    expect([...d.technical].sort()).toEqual(['labels', 'path', 'stub', 'style.color', 'style.icon', 'style.label', 'style.shape', 'tags'].sort());
+    expect(d.rows.map(([k]) => k).filter((k) => !d.technical.has(k))).toEqual(['type', 'status', 'owner']);
+    expect(d.source).toBe('T.md');
+
+    const open = nodeDetails(n, undefined);
+    expect(open.rows.map(([k]) => k).filter((k) => !open.technical.has(k))).toEqual(['type', 'status', 'tags', 'owner']);
+
+    const edge = fixture().edge('Alice.md#knows#Bob.md#0')!;
+    const e = edgeDetails(edge, fixture(), undefined, new Set(['since']));
+    expect([...e.technical].sort()).toEqual(['id', 'sign']);
+    expect(edgeDetails(edge, fixture(), undefined, new Set()).technical.has('since')).toBe(true);
+  });
+
+  // @lat: [[tests/graph-view#Links in values]]
+  // @tg: verifies:: [[openspec:graph-view#Details panel#Links in values]]
+  it('splits property values into text and link parts, one line per list item', () => {
+    expect(valueLines('[[Login]]')).toEqual([[{ link: { target: 'Login', subpath: null, label: 'Login' } }]]);
+    expect(valueLines('see [[Auth#Flow|the flow]] now')).toEqual([[{ text: 'see ' }, { link: { target: 'Auth', subpath: 'Flow', label: 'the flow' } }, { text: ' now' }]]);
+    expect(valueLines(['[[A]]', 'plain', 3], 'Tasks/T.md')).toEqual([
+      [{ link: { target: 'A', subpath: null, label: 'A' } }],
+      [{ text: 'plain' }],
+      [{ text: '3' }],
+    ]);
+    expect(valueLines('[Guide](docs/Guide.md)', 'Tasks/T.md')).toEqual([[{ link: { target: 'Tasks/docs/Guide.md', subpath: null, label: 'Guide' } }]]);
+    expect(valueLines('[site](https://example.com)')).toEqual([[{ text: '[site](https://example.com)' }]]);
+    expect(valueLines('[[]]')).toEqual([[{ text: '[[]]' }]]);
+    expect(valueLines([])).toEqual([[{ text: '[]' }]]);
+    expect(valueLines(null)).toEqual([[{ text: '' }]]);
   });
 });

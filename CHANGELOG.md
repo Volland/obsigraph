@@ -2,6 +2,13 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **Graph view details panel.** Drag the handle between the graph and the panel to set its width (remembered per device); long values wrap. Rows are split into the note's own properties, listed first, and technical rows (labels, stub, path, style, edge sign, id and heading, and properties the schema does not declare), which a Technical toggle shows. Wikilinks and markdown links in values are clickable and open the note, one list item per line, with a Links toggle for the old plain text.
+- Graph UI: `Details` gains `technical`, `values` and `source`, `nodeDetails` and `edgeDetails` accept the declared property names, and `valueLines` splits a value into text and link parts.
+
 ## 0.13.0 — 2026-10-11
 
 ### Added

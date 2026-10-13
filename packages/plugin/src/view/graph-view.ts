@@ -1,4 +1,4 @@
-import { CypherError } from '@obsigraph/core';
+import { CypherError, mergeSchemas } from '@obsigraph/core';
 import { ItemView, type WorkspaceLeaf } from 'obsidian';
 import type ObsigraphPlugin from '../main';
 import { DEFAULT_OPTIONS } from '../query/block';
@@ -8,9 +8,15 @@ import { GraphRenderer } from '../render/graph-renderer';
 import { themeFrom } from '../render/theme';
 import { renderTable } from '../render/table';
 import { TG_ICON } from '../icon';
-import { edgeDetails, mergeElements, neighborhood, nodeDetails, type Details } from './view-state';
+import { edgeDetails, mergeElements, neighborhood, nodeDetails, valueLines, type Details } from './view-state';
 
 export const VIEW_TYPE_GRAPH = 'obsigraph-graph-view';
+
+// Device-local view state: how wide the details pane is and which rows it shows.
+const WIDTH_KEY = 'obsigraph:details-width';
+const TECHNICAL_KEY = 'obsigraph:details-technical';
+const LINKS_KEY = 'obsigraph:details-links';
+const MIN_DETAILS_WIDTH = 160;
 
 /**
  * Full-pane exploratory graph. With an empty query it shows the active note's
@@ -24,6 +30,8 @@ export class GraphView extends ItemView {
   private input!: HTMLTextAreaElement;
   private body!: HTMLElement;
   private details!: HTMLElement;
+  private resizer!: HTMLElement;
+  private selection: { kind: 'node' | 'edge'; id: string } | null = null;
   private message!: HTMLElement;
   private query = '';
   private focus: string | null = null;
@@ -73,7 +81,9 @@ export class GraphView extends ItemView {
     this.message = root.createDiv({ cls: 'obsigraph-status' });
     const main = root.createDiv({ cls: 'obsigraph-view-main' });
     this.body = main.createDiv({ cls: 'obsigraph-view-body' });
+    this.resizer = main.createDiv({ cls: 'obsigraph-resizer', attr: { 'aria-label': 'Drag to resize the details pane' } });
     this.details = main.createDiv({ cls: 'obsigraph-details' });
+    this.initResizer(main);
 
     this.register(this.plugin.index.onChange(() => this.refresh()));
     this.register(this.plugin.onStylesChanged(() => this.refresh()));
@@ -167,27 +177,102 @@ export class GraphView extends ItemView {
     return this.renderer;
   }
 
+  // @tg: implements:: [[openspec:graph-view#Details panel]]
   private showDetails(sel: { kind: 'node' | 'edge'; id: string } | null): void {
+    this.selection = sel;
     this.details.empty();
     if (!sel) return;
     const graph = this.plugin.index.graph;
     let d: Details | null = null;
     const styler = this.plugin.makeStyler();
+    const schemas = this.plugin.index.schemas();
     if (sel.kind === 'node') {
       const n = graph.node(sel.id);
-      if (n) d = nodeDetails(n, styler.resolveNode(n.labels));
+      const schema = n ? mergeSchemas(n.labels, schemas.schemas) : null;
+      if (n) d = nodeDetails(n, styler.resolveNode(n.labels), schema ? new Set(schema.properties.map((p) => p.name)) : undefined);
     } else {
       const e = graph.edge(sel.id);
-      if (e) d = edgeDetails(e, graph, styler.resolveEdge(e.type, e.sign));
+      const declared = e ? schemas.edgeTypes.get(e.type) : undefined;
+      if (e) d = edgeDetails(e, graph, styler.resolveEdge(e.type, e.sign), declared ? new Set(declared.properties.map((p) => p.name)) : undefined);
     }
     if (!d) return;
+    const technical = this.app.loadLocalStorage(TECHNICAL_KEY) === '1';
+    const links = this.app.loadLocalStorage(LINKS_KEY) !== '0';
+    const bar = this.details.createDiv({ cls: 'obsigraph-details-bar' });
+    this.toggle(bar, 'Technical', 'Show graph bookkeeping and properties the schema does not declare', technical, (on) => {
+      this.app.saveLocalStorage(TECHNICAL_KEY, on ? '1' : '0');
+      this.details.toggleClass('obsigraph-hide-technical', !on);
+    });
+    this.toggle(bar, 'Links', 'Show [[links]] in values as clickable links instead of plain text', links, (on) => {
+      this.app.saveLocalStorage(LINKS_KEY, on ? '1' : '0');
+      this.showDetails(this.selection);
+    });
+    this.details.toggleClass('obsigraph-hide-technical', !technical);
     this.details.createEl('h4', { text: d.title });
     const table = this.details.createEl('table');
-    for (const [k, v] of d.rows) {
+    // Note properties first, graph bookkeeping after.
+    const rows = [...d.rows].sort((a, b) => Number(d.technical.has(a[0])) - Number(d.technical.has(b[0])));
+    for (const [k, text] of rows) {
       const tr = table.createEl('tr');
+      if (d.technical.has(k)) tr.addClass('obsigraph-technical');
       tr.createEl('th', { text: k });
-      tr.createEl('td', { text: v });
+      const td = tr.createEl('td');
+      if (links && k in d.values) this.renderValue(td, d.values[k], d.source);
+      else td.setText(text);
     }
+  }
+
+  private toggle(bar: HTMLElement, label: string, title: string, on: boolean, change: (on: boolean) => void): void {
+    const l = bar.createEl('label', { attr: { title } });
+    const box = l.createEl('input', { attr: { type: 'checkbox' } });
+    box.checked = on;
+    l.createSpan({ text: label });
+    box.addEventListener('change', () => change(box.checked));
+  }
+
+  /** Text and links of a property value; links open their note, in a new tab with Cmd/Ctrl. */
+  private renderValue(td: HTMLElement, value: unknown, source: string | null): void {
+    const lines = valueLines(value, source);
+    for (const parts of lines) {
+      const host = lines.length > 1 ? td.createDiv() : td;
+      for (const part of parts) {
+        if ('text' in part) {
+          host.appendText(part.text);
+          continue;
+        }
+        const { target, subpath, label } = part.link;
+        const href = subpath ? `${target}#${subpath}` : target;
+        const a = host.createEl('a', { cls: 'internal-link', text: label, attr: { href, 'data-href': href, title: href } });
+        if (!this.app.metadataCache.getFirstLinkpathDest(target, source ?? '')) a.addClass('is-unresolved');
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          void this.app.workspace.openLinkText(href, source ?? '', ev.ctrlKey || ev.metaKey);
+        });
+      }
+    }
+  }
+
+  /** Drag the handle between the graph and the details pane to set the pane's width. */
+  private initResizer(main: HTMLElement): void {
+    const saved = Number(this.app.loadLocalStorage(WIDTH_KEY));
+    if (saved > 0) this.details.style.width = `${saved}px`;
+    this.resizer.addEventListener('pointerdown', (down) => {
+      down.preventDefault();
+      this.resizer.setPointerCapture(down.pointerId);
+      const move = (ev: PointerEvent) => {
+        const box = main.getBoundingClientRect();
+        this.details.style.width = `${Math.max(MIN_DETAILS_WIDTH, Math.min(box.width * 0.7, box.right - ev.clientX))}px`;
+        this.renderer?.cy.resize();
+      };
+      const up = () => {
+        this.resizer.removeEventListener('pointermove', move);
+        this.resizer.removeEventListener('pointerup', up);
+        this.renderer?.cy.resize();
+        this.app.saveLocalStorage(WIDTH_KEY, String(Math.round(this.details.getBoundingClientRect().width)));
+      };
+      this.resizer.addEventListener('pointermove', move);
+      this.resizer.addEventListener('pointerup', up);
+    });
   }
 
   private showError(msg: string): void {
