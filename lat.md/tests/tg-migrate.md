@@ -51,6 +51,10 @@ A link with two candidates and no cue is reported with its file, line, section, 
 
 "reasonable" is not the cue `reason`, so that link stays ambiguous, and a period inside `[[constraints#St. Louis hosting]]` does not cut the sentence before its "because".
 
+### Clause scope
+
+In a long sentence, a "because" outside the parenthesized group around a link is not its cue, while "(because of [[x]])" still is.
+
 ### No cue without infer
 
 A single candidate without a cue is reported as `no cue`, and applied with `--infer`.

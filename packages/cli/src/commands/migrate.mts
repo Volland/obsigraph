@@ -112,6 +112,41 @@ export function sentenceOf(line: string, target: string): string {
   return line.slice(start === -1 ? 0 : start + 2, ends.length ? at + Math.min(...ends) + 1 : line.length);
 }
 
+/**
+ * The clause of the link's sentence that cue words may come from: the
+ * innermost parenthesized group holding the link, or else the part of the
+ * sentence between colons or parenthesized groups that holds it. A cue far
+ * away in a long sentence says nothing about this link.
+ */
+export function clauseOf(sentence: string, target: string): string {
+  const at = sentence.indexOf(`[[${target}`);
+  if (at === -1) return sentence;
+  const close = sentence.indexOf(']]', at);
+  const end = close === -1 ? at : close + 2;
+  // Innermost enclosing parentheses, if any.
+  let depth = 0;
+  let open = -1;
+  for (let i = at - 1; i >= 0; i--) {
+    const c = sentence[i];
+    if (c === ')') depth++;
+    else if (c === '(') {
+      if (depth === 0) {
+        open = i;
+        break;
+      }
+      depth--;
+    }
+  }
+  if (open !== -1) {
+    const shut = sentence.indexOf(')', end);
+    return sentence.slice(open + 1, shut === -1 ? sentence.length : shut);
+  }
+  const cut = (i: number) => i !== -1;
+  const left = Math.max(sentence.lastIndexOf(': ', at), sentence.lastIndexOf(')', at), sentence.lastIndexOf('(', at));
+  const rights = [sentence.indexOf(': ', end), sentence.indexOf('(', end)].filter(cut);
+  return sentence.slice(left === -1 ? 0 : left + 1, rights.length ? Math.min(...rights) : sentence.length);
+}
+
 export type RelationChoice = { chosen: EdgeTypeSchema | null; candidates: string[]; cued: boolean };
 
 /**
@@ -311,13 +346,14 @@ export function planMigration(project: Project, options: MigrateOptions = {}): M
         continue;
       }
       const sentence = sentenceOf(text, ref.target);
-      const { chosen, candidates } = chooseRelation(set, from, to, sentence, infer);
+      const clause = clauseOf(sentence, ref.target);
+      const { chosen, candidates } = chooseRelation(set, from, to, clause, infer);
       if (!chosen) {
         plan.unresolved.push({ ...base, text: sentence.trim(), reason: candidates.length === 0 ? 'no candidate' : candidates.length === 1 ? 'no cue' : 'ambiguous', candidates });
         continue;
       }
       done.add(ref.target);
-      const props = edgeProps(chosen, { since: dateOf(path, ref.line), line: sentence, path });
+      const props = edgeProps(chosen, { since: dateOf(path, ref.line), line: clause, path });
       const sign = NEGATIVE.has(chosen.type) ? '-' : '';
       (additions.get(section) ?? additions.set(section, []).get(section)!).push(`- ${sign}${chosen.type}:: [[${ref.target}]]${propBlock(props)}`);
       plan.edges.push({ ...base, type: chosen.type, props });

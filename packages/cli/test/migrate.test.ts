@@ -291,3 +291,14 @@ it('refuses to write through a symlink that leads outside the project, even with
   expect(r.out).toContain('lat.md/shared/decisions.md');
   expect(read(outside, 'decisions.md')).toBe(before);
 });
+
+// @lat: [[tests/tg-migrate#Link typing#Clause scope]]
+// @tg: verifies:: [[openspec:tg-migrate#Link typing#Clause scope]]
+it('reads cue words only from the clause around the link', async () => {
+  const long = 'The site has a page (the [[decisions#Long sessions]] with a download link) and a blog, which is static because the Pages workflow publishes files.';
+  const dir = latProject(withDecisions(`${long} Tokens are short (because of [[constraints#Session limit]]).`));
+  const p = await plan(dir, '--no-since');
+  expect(p.edges.map((e) => e.target)).not.toContain('decisions#Long sessions');
+  expect(p.unresolved.find((u) => u.target === 'decisions#Long sessions')?.reason).toBe('ambiguous');
+  expect(p.edges.map((e) => [e.type, e.target])).toContainEqual(['motivated_by', 'constraints#Session limit']);
+});

@@ -6,6 +6,7 @@ All notable changes to the Typed Graph plugin, the `tg` CLI, the core library an
 
 ### Fixed
 
+- `tg migrate` read cue words from the whole sentence around a link, so in a long sentence a "because" about something else could turn an unrelated link into `motivated_by`. Cues now count only in the clause that holds the link: its parenthesized group, or the part between colons.
 - `tg init --migrate` and `tg migrate` left the lat block in `CLAUDE.md` or `AGENTS.md` when an earlier `tg init` without `--migrate` had already added a tg block next to it. They now remove the stale lat block and keep one tg block.
 
 ## 0.18.0 — 2026-10-14
