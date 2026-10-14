@@ -24,6 +24,7 @@ const graphOf = (notes: OkfNote[], linkEdges = false): Graph => {
 };
 
 describe('reading OKF links', () => {
+  // @tg: verifies:: [[tests/okf-compat#Reading#Bundle-absolute link target]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Bundle-absolute link target]]
   // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#Bundle-absolute link]]
   it('accepts a bundle-absolute markdown link as an edge target', () => {
@@ -32,6 +33,7 @@ describe('reading OKF links', () => {
     expect(edges[1]).toMatchObject({ target: 'papers/Typed Links.md', subpath: 'intro' });
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Relative link target]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Relative link target]]
   // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#Relative link]]
   it('resolves relative links against the source folder and mixes link forms', () => {
@@ -40,6 +42,7 @@ describe('reading OKF links', () => {
     expect(edges.every((e) => e.type === 'works_at')).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#External URL ignored]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#External URL ignored]]
   // @tg: verifies:: [[openspec:edge-parsing#Markdown link targets#External URL]]
   it('ignores URLs, anchors and non-note files in edge lines', () => {
@@ -49,6 +52,7 @@ describe('reading OKF links', () => {
     expect(parseEdges('mail:: [me](mailto:a@b.c), [Bob](bob.md)', 'a.md').edges.map((e) => e.target)).toEqual(['bob.md']);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Link edges from prose]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Link edges from prose]]
   // @tg: verifies:: [[openspec:graph-model#Plain link edges#OKF prose link]]
   it('turns prose links into links_to edges when link edges are on', () => {
@@ -69,6 +73,7 @@ describe('reading OKF links', () => {
     expect(g.node('tables/orders.md')?.labels).toEqual(['BigQuery Table']);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Link edges off by default]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Link edges off by default]]
   // @tg: verifies:: [[openspec:graph-model#Plain link edges#Option off]]
   it('produces no prose edges without the option', () => {
@@ -76,6 +81,7 @@ describe('reading OKF links', () => {
     expect(g.size.edges).toBe(0);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Images are not edges]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Images are not edges]]
   // @tg: verifies:: [[openspec:graph-model#Plain link edges#Images ignored]]
   it('never turns images or code spans into edges', () => {
@@ -83,6 +89,7 @@ describe('reading OKF links', () => {
     expect(edges).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Frontmatter title kept]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Frontmatter title kept]]
   // @tg: verifies:: [[openspec:graph-model#Frontmatter title#OKF title]]
   it('uses a frontmatter title as the node title', () => {
@@ -91,6 +98,7 @@ describe('reading OKF links', () => {
     expect(g.node('b.md')?.props.title).toBe('b');
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Reading#Types list adds labels]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Reading#Types list adds labels]]
   // @tg: verifies:: [[openspec:graph-model#Frontmatter title#Types list]]
   it('merges a types list into the labels', () => {
@@ -109,6 +117,7 @@ const vault = (): OkfNote[] => [
 const byPath = (files: { path: string; text: string }[], p: string): string => files.find((f) => f.path === p)?.text ?? '';
 
 describe('OKF export', () => {
+  // @tg: verifies:: [[tests/okf-compat#Export#Typed edge kept as prose]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Typed edge kept as prose]]
   // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Typed edge kept as prose]]
   it('keeps typed edges as prose with markdown links', () => {
@@ -118,6 +127,7 @@ describe('OKF export', () => {
     expect(alice).toContain('-distrusts:: [Eve Doe](/People/Eve%20Doe.md)');
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#Round trip]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Round trip]]
   // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Round trip]]
   it('reads back into the same typed graph', () => {
@@ -130,6 +140,7 @@ describe('OKF export', () => {
     expect(after.node('People/Bob.md')?.labels).toEqual(['Person', 'Employee']);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#Unresolved link kept]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Unresolved link kept]]
   // @tg: verifies:: [[openspec:okf-compat#OKF export projection#Unresolved link]]
   it('keeps unresolved links as links to not-yet-written concepts', () => {
@@ -138,6 +149,7 @@ describe('OKF export', () => {
     expect(report.find((r) => r.kind === 'broken-link')?.count).toBe(1);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#Missing type defaulted]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Missing type defaulted]]
   // @tg: verifies:: [[openspec:okf-compat#Concept frontmatter#Missing type]]
   it('adds type, title and description without touching other keys', () => {
@@ -147,6 +159,7 @@ describe('OKF export', () => {
     expect(byPath(files, 'People/Alice.md')).toContain('title: Alice\ndescription: Alice is a researcher.\ntype: Person\nrole: lead');
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#List type split]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#List type split]]
   // @tg: verifies:: [[openspec:okf-compat#Concept frontmatter#List type]]
   it('splits a list type into type and types', () => {
@@ -157,6 +170,7 @@ describe('OKF export', () => {
     expect(fm.title).toBe('Bob');
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#Reserved note renamed]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Reserved note renamed]]
   // @tg: verifies:: [[openspec:okf-compat#Reserved filenames and index files#Reserved note renamed]]
   it('renames reserved notes and rewrites links to them', () => {
@@ -165,6 +179,7 @@ describe('OKF export', () => {
     expect(byPath(files, 'People/Alice.md')).toContain('[the project list](/Projects/index-note.md)');
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Export#Index files generated]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Export#Index files generated]]
   // @tg: verifies:: [[openspec:okf-compat#Reserved filenames and index files#Index generated]]
   it('generates an index.md per directory, frontmatter only at the root', () => {
@@ -181,6 +196,7 @@ describe('OKF export', () => {
 });
 
 describe('OKF check', () => {
+  // @tg: verifies:: [[tests/okf-compat#Check#Conformant despite broken links]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Check#Conformant despite broken links]]
   it('treats broken links, wikilinks and missing descriptions as warnings', () => {
     const findings = checkOkf([note('a.md', '---\ntype: Metric\n---\nSee [b](/b.md) and [[c]].\n')]);
@@ -188,6 +204,7 @@ describe('OKF check', () => {
     expect(findings.map((f) => f.kind).sort()).toEqual(['broken-link', 'missing-description', 'wikilink']);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Check#Missing type rejected]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Check#Missing type rejected]]
   it('rejects concepts without parseable frontmatter or a string type', () => {
     const kinds = checkOkf([
@@ -201,6 +218,7 @@ describe('OKF check', () => {
     expect(kinds).toEqual(['bad.md invalid-frontmatter', 'list.md type-not-string', 'none.md missing-frontmatter', 'untyped.md missing-type']);
   });
 
+  // @tg: verifies:: [[tests/okf-compat#Check#Index and log structure]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/okf-compat#Check#Index and log structure]]
   it('checks index frontmatter and log date headings', () => {
     const errors = checkOkf([

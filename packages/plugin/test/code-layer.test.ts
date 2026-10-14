@@ -22,6 +22,7 @@ function world(symbols: number) {
   return { run };
 }
 
+// @tg: verifies:: [[tests/code-layer#Visible on demand#Hidden by header]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/code-layer#Visible on demand#Hidden by header]]
 it('code: hide removes code nodes and their edges from a block graph', () => {
   const { run } = world(2);
@@ -37,6 +38,7 @@ it('code: hide removes code nodes and their edges from a block graph', () => {
   expect(parseBlock('code: maybe\nMATCH (n) RETURN n').errors[0]!.message).toMatch(/Invalid code 'maybe'/);
 });
 
+// @tg: verifies:: [[tests/code-layer#Visible on demand#Over the cap]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/code-layer#Visible on demand#Over the cap]]
 // @tg: verifies:: [[openspec:code-layer#Visible on demand#Over the cap]]
 it('falls back to a table with a notice when all-mode code exceeds the element cap', () => {

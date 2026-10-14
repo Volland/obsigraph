@@ -20,6 +20,7 @@ function graph(mode: CodeMode, files = [{ path: 'src/auth.ts', text: AUTH }]) {
 const rows = (g: Graph, q: string) => new BuiltinEngine(g).run(q).rows;
 
 describe('code layer', () => {
+  // @tg: verifies:: [[tests/code-layer#Derived code nodes#Annotated symbol]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Derived code nodes#Annotated symbol]]
   // @tg: verifies:: [[openspec:code-layer#Derived code nodes#Annotated symbol]]
   it('builds a CodeSymbol with its typed edge to the section node', () => {
@@ -32,6 +33,7 @@ describe('code layer', () => {
     expect(g.node('src/auth.ts')!.labels).toEqual(['CodeFile']);
   });
 
+  // @tg: verifies:: [[tests/code-layer#Code mode setting#Off]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Code mode setting#Off]]
   // @tg: verifies:: [[openspec:code-layer#Code mode setting#Off]]
   it('creates no code nodes or annotation edges when off', () => {
@@ -40,6 +42,7 @@ describe('code layer', () => {
     expect([...g.edges()].some((e) => e.type === 'implements')).toBe(false);
   });
 
+  // @tg: verifies:: [[tests/code-layer#Code mode setting#Annotated only]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Code mode setting#Annotated only]]
   // @tg: verifies:: [[openspec:code-layer#Code mode setting#Annotated only]]
   it('keeps only annotated symbols and their file in annotated mode, and everything in all mode', () => {
@@ -54,6 +57,7 @@ describe('code layer', () => {
     expect(contains).toEqual(['src/auth.ts#Session#start', 'src/auth.ts#Session#stop']);
   });
 
+  // @tg: verifies:: [[tests/code-layer#Queryable code nodes#Match code symbols]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Queryable code nodes#Match code symbols]]
   // @tg: verifies:: [[openspec:code-layer#Queryable code nodes#Match code symbols]]
   it('matches code symbols and their relationships in Cypher', () => {
@@ -65,6 +69,7 @@ describe('code layer', () => {
     expect(t).toEqual([['Session#start', 1]]);
   });
 
+  // @tg: verifies:: [[tests/code-layer#Link and node identity agree#Link from a note]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Link and node identity agree#Link from a note]]
   // @tg: verifies:: [[openspec:code-layer#Link and node identity agree#Link from a note]]
   it('links a note to the code node instead of making a stub', () => {
@@ -82,6 +87,7 @@ describe('code layer', () => {
     expect(plain.outEdges('Note.md')[0]!.target).toBe('src/auth.ts#login');
   });
 
+  // @tg: verifies:: [[tests/code-layer#Visible on demand#Toggle on]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/code-layer#Visible on demand#Toggle on]]
   // @tg: verifies:: [[openspec:code-layer#Visible on demand#Toggle on]]
   it('gives code nodes distinct built-in styles', () => {
@@ -94,6 +100,7 @@ describe('code layer', () => {
     expect(resolveNodeStyle(['CodeSymbol'], [{ name: 'settings', nodes: { CodeSymbol: { color: '#ff0000' } }, edges: {} }]).color).toBe('#ff0000');
   });
 
+  // @tg: verifies:: [[tests/code-layer#Queryable code nodes#File type labels]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/code-layer#Queryable code nodes#File type labels]]
   it('labels sections below the title with the file type: list', () => {
     const index = new LatIndex([

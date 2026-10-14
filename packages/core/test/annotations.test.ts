@@ -6,6 +6,7 @@ import { LatIndex } from '../src/latmd.js';
 const LAT = '@' + 'lat:';
 const TG = '@' + 'tg:';
 
+// @tg: verifies:: [[tests/tg-annotations#lat annotations#Test reference]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#lat annotations#Test reference]]
 // @tg: verifies:: [[openspec:tg-annotations#lat annotations#Test reference]]
 it('reads a lat annotation as a references edge from the next function', () => {
@@ -17,6 +18,7 @@ it('reads a lat annotation as a references edge from the next function', () => {
   expect(fn.source).toMatchObject({ kind: 'symbol', name: 'login', symbolPath: 'login' });
 });
 
+// @tg: verifies:: [[tests/tg-annotations#lat annotations#Python comment]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#lat annotations#Python comment]]
 // @tg: verifies:: [[openspec:tg-annotations#lat annotations#Python comment]]
 it('reads hash comments in Python', () => {
@@ -24,6 +26,7 @@ it('reads hash comments in Python', () => {
   expect(annotations[0]).toMatchObject({ kind: 'lat', source: { kind: 'symbol', name: 'test_login' } });
 });
 
+// @tg: verifies:: [[tests/tg-annotations#tg annotations#Typed edge with properties]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#tg annotations#Typed edge with properties]]
 // @tg: verifies:: [[openspec:tg-annotations#tg annotations#Typed edge with properties]]
 it('parses typed edges with properties', () => {
@@ -32,6 +35,7 @@ it('parses typed edges with properties', () => {
   expect(annotations[0]!.edges).toEqual([{ type: 'implements', sign: 1, target: 'auth#Login', props: { since: 2 } }]);
 });
 
+// @tg: verifies:: [[tests/tg-annotations#tg annotations#Negative edge]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#tg annotations#Negative edge]]
 // @tg: verifies:: [[openspec:tg-annotations#tg annotations#Negative edge]]
 it('reads a minus prefix as a negative edge', () => {
@@ -39,6 +43,7 @@ it('reads a minus prefix as a negative edge', () => {
   expect(annotations[0]!.edges[0]).toMatchObject({ type: 'contradicts', sign: -1, target: 'design#Cache' });
 });
 
+// @tg: verifies:: [[tests/tg-annotations#tg annotations#Several edges]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#tg annotations#Several edges]]
 // @tg: verifies:: [[openspec:tg-annotations#tg annotations#Several edges]]
 it('produces one edge per comma-separated segment and treats a bare link as references', () => {
@@ -49,6 +54,7 @@ it('produces one edge per comma-separated segment and treats a bare link as refe
   expect(bare.edges[0]).toMatchObject({ type: 'references', target: 'a#X' });
 });
 
+// @tg: verifies:: [[tests/tg-annotations#Edge source#Next declaration]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#Edge source#Next declaration]]
 // @tg: verifies:: [[openspec:tg-annotations#Edge source#Next declaration]]
 it('attaches to a member declared within three lines, skipping a comment run', () => {
@@ -57,6 +63,7 @@ it('attaches to a member declared within three lines, skipping a comment run', (
   expect(a.source).toMatchObject({ kind: 'symbol', name: 'handle', parent: 'Api', symbolPath: 'Api#handle' });
 });
 
+// @tg: verifies:: [[tests/tg-annotations#Edge source#File fallback]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#Edge source#File fallback]]
 // @tg: verifies:: [[openspec:tg-annotations#Edge source#File fallback]]
 it('falls back to the file with a warning when no declaration follows', () => {
@@ -66,6 +73,7 @@ it('falls back to the file with a warning when no declaration follows', () => {
   expect(diagnostics[0]!.message).toContain('attached to the file');
 });
 
+// @tg: verifies:: [[tests/tg-annotations#Annotation validation#Broken target]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-annotations#Annotation validation#Broken target]]
 // @tg: verifies:: [[openspec:tg-annotations#Annotation validation#Broken target]]
 it('reports a target whose section was renamed, and advisory schema violations', () => {

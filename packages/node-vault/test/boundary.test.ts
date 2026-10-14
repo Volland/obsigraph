@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 
 const SRC = join(import.meta.dirname, '..', 'src');
 
+// @tg: verifies:: [[tests/node-vault#No host imports]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/node-vault#No host imports]]
 // @tg: verifies:: [[openspec:node-vault-loader#No host dependencies#Import check]]
 it('loader sources import no host module', () => {

@@ -76,6 +76,7 @@ describe('Plugin install', () => {
 
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
+  // @tg: verifies:: [[tests/plugin-install#Plugin Install Tests#Manifest is installable]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/plugin-install#Plugin Install Tests#Manifest is installable]]
   // @tg: verifies:: [[openspec:plugin-install#Manifest is installable#Versions in step]]
   it('ships a manifest Obsidian accepts, the same everywhere it is read', () => {
@@ -85,6 +86,7 @@ describe('Plugin install', () => {
     expect(readJson(join(REPO_ROOT, 'versions.json'))[rootManifest.version]).toBe(rootManifest.minAppVersion);
   });
 
+  // @tg: verifies:: [[tests/plugin-install#Plugin Install Tests#Release attaches the installer assets]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/plugin-install#Plugin Install Tests#Release attaches the installer assets]]
   // @tg: verifies:: [[openspec:plugin-install#Release attaches the installer assets#Release workflow assets]]
   it('attaches every asset the installer downloads to the release', () => {
@@ -93,6 +95,7 @@ describe('Plugin install', () => {
     for (const a of ASSETS) expect(create).toContain(`packages/plugin/dist/${a}`);
   });
 
+  // @tg: verifies:: [[tests/plugin-install#Plugin Install Tests#Bundle loads in Obsidian]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/plugin-install#Plugin Install Tests#Bundle loads in Obsidian]]
   // @tg: verifies:: [[openspec:plugin-install#Bundle loads in Obsidian#Load and unload]]
   it('loads the installed main.js and runs onload and onunload', async () => {
@@ -105,6 +108,7 @@ describe('Plugin install', () => {
     await plugin.onunload?.();
   });
 
+  // @tg: verifies:: [[tests/plugin-install#Plugin Install Tests#Missing release is reported]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/plugin-install#Plugin Install Tests#Missing release is reported]]
   // @tg: verifies:: [[openspec:plugin-install#Missing release is reported#Version without a release]], verifies:: [[openspec:plugin-install#Missing release is reported#Complete release]]
   it('reports a manifest on main whose release was never published', async () => {

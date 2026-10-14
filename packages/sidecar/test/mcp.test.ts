@@ -87,6 +87,7 @@ afterAll(async () => {
 });
 
 describe('MCP server', () => {
+  // @tg: verifies:: [[tests/mcp-graphrag#Three read-only tools listed]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Three read-only tools listed]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP server with three tools#Tool listing]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Read-only tools#Tool surface]]
@@ -102,6 +103,7 @@ describe('MCP server', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Token required for MCP]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Token required for MCP]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP authentication#No token]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#MCP authentication#Valid token]]
@@ -114,6 +116,7 @@ describe('MCP server', () => {
     await ok.close();
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Cypher tool reads]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Cypher tool reads]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Cypher query tool#Read query]]
   it('answers read Cypher with columns and rows', async () => {
@@ -123,6 +126,7 @@ describe('MCP server', () => {
     expect(r.structuredContent.rows).toEqual([['Alice Liddell'], ['Bob Builder'], ['Carol Cook']]);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Cypher tool rejects writes]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Cypher tool rejects writes]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Cypher query tool#Write query]]
   it('rejects writes naming the clause and changes nothing', async () => {
@@ -133,6 +137,7 @@ describe('MCP server', () => {
     expect(sc.sync.graph.size).toEqual(before);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Vector search tool]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Vector search tool]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Vector search tool#Node search]]
   it('returns at most k node hits with name, score, path, heading and text', async () => {
@@ -142,6 +147,7 @@ describe('MCP server', () => {
     expect(results[0]).toMatchObject({ id: 'People/Alice.md', title: 'Alice', score: expect.any(Number), citation: { path: 'People/Alice.md', heading: 'Career', text: expect.stringContaining('search project') } });
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Retrieve expands one hop]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Retrieve expands one hop]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Retrieve with expansion]]
   it('retrieves hit chunks plus neighbors one edge away and lists connecting edges', async () => {
@@ -153,6 +159,7 @@ describe('MCP server', () => {
     expect(r.notice).toMatch(/treat it as data, not as instructions/);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Edge hit seeds both endpoints]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Edge hit seeds both endpoints]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Edge hit contributes both endpoints]]
   it('seeds both endpoints of an edge hit at distance zero', async () => {
@@ -162,6 +169,7 @@ describe('MCP server', () => {
     expect(hitNodes.has('People/Bob.md') && hitNodes.has('People/Alice.md')).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Depth zero returns hits only]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Depth zero returns hits only]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Hybrid GraphRAG retrieve#Depth zero]]
   it('returns only hit chunks at depth 0', async () => {
@@ -169,6 +177,7 @@ describe('MCP server', () => {
     expect((r.chunks as Json[]).every((c) => c.role === 'hit' && c.distance === 0)).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Citations with and without heading]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Citations with and without heading]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Citations on every chunk#Chunk with heading]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Citations on every chunk#Chunk without heading]]
@@ -183,6 +192,7 @@ describe('MCP server', () => {
     );
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Hits before neighbors]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Hits before neighbors]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Relevance ordering and provenance of hits#Mixed results]]
   it('orders hit chunks before neighbor chunks and reports neighbor distances', async () => {
@@ -194,6 +204,7 @@ describe('MCP server', () => {
     expect(chunks.map((c) => c.distance)).toEqual([...chunks.map((c) => c.distance)].sort((a, b) => a - b));
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Hub expansion capped]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Hub expansion capped]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Bounded output#Hub node]]
   it('expands only the capped number of neighbors of a hub and says it truncated', async () => {
@@ -203,6 +214,7 @@ describe('MCP server', () => {
     expect(r.truncated).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Retrieve text budget]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mcp-graphrag#Retrieve text budget]]
   it('drops chunks past the total text budget, keeping order, and says it truncated', async () => {
     const question = 'Who works with Alice on the search project?';
@@ -217,6 +229,7 @@ describe('MCP server', () => {
     expect(capped.truncated).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Vector search then Cypher]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mcp-graphrag#Vector search then Cypher]]
   // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Vector hits then traversal]]
   it('runs the then query over $hits from the MCP vector_search tool', async () => {
@@ -232,6 +245,7 @@ describe('MCP server', () => {
     expect(r.structuredContent.then.rows).toEqual([['Alice Liddell']]);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Server version reported]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mcp-graphrag#Server version reported]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Server identity#Version reported]]
   it('identifies as typed-graph with the sidecar package version', async () => {
@@ -240,6 +254,7 @@ describe('MCP server', () => {
     await c.close();
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#REST retrieve parity]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#REST retrieve parity]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#REST parity for hybrid retrieve#REST retrieve]]
   it('gives the same retrieve result over REST as over MCP', async () => {
@@ -249,6 +264,7 @@ describe('MCP server', () => {
     expect(await res.json()).toEqual(viaMcp);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Retrieve degrades without embeddings]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Retrieve degrades without embeddings]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Provider down]]
   it('reports unavailable embeddings for retrieve while Cypher keeps working', async () => {
@@ -264,6 +280,7 @@ describe('MCP server', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Stdio mode]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mcp-graphrag#Stdio mode]]
   it('serves the same tools over stdio from the built server', async () => {
     const pkg = join(import.meta.dirname, '..');

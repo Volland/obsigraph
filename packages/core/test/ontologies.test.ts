@@ -42,6 +42,7 @@ describe('ontology gallery', () => {
     expect(ALL).toEqual(['agents', 'core', 'library', 'okf', 'requirements', 'zettelkasten']);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#Each ontology stands alone]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/ontology-gallery#Each ontology stands alone]]
   // @tg: verifies:: [[openspec:ontology-gallery#Each ontology stands alone#Ontology checked alone]]
   it.each(IDS)('%s reads, validates its examples, exports to SHACL and matches the JSON Schema', (id) => {
@@ -62,6 +63,7 @@ describe('ontology gallery', () => {
     expect(set.schemas.size).toBe(0);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#Zettelkasten note types and sources]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/ontology-gallery#Zettelkasten note types and sources]]
   // @tg: verifies:: [[openspec:ontology-gallery#Zettelkasten ontology#Literature note without a source]]
   it('covers every Zettelkasten note and source type, and requires sources for literature notes and highlights', () => {
@@ -75,6 +77,7 @@ describe('ontology gallery', () => {
     expect(diagnostics.some((d) => /Missing required edge 'highlighted_in' for type Highlight/.test(d))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#Ontologies compose]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/ontology-gallery#Ontologies compose]]
   // @tg: verifies:: [[openspec:ontology-gallery#Ontologies compose#All composed]]
   it('combines into one vault with no clash, and a note can carry labels from two ontologies', () => {
@@ -96,6 +99,7 @@ describe('ontology gallery', () => {
     expect(set.edgeTypes.has('contradicts')).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#Clash without core]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/ontology-gallery#Clash without core]]
   // @tg: verifies:: [[openspec:ontology-gallery#Ontologies compose#Clash without core]]
   it('reports the duplicate edge type when two ontologies both declare it', () => {
@@ -108,6 +112,7 @@ describe('ontology gallery', () => {
     expect(diagnostics.some((d) => /Edge type 'contradicts' is declared in both/.test(d))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#Mixin bridges two ontologies]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/ontology-gallery#Mixin bridges two ontologies]]
   // @tg: verifies:: [[openspec:ontology-gallery#Mixins bridge ontologies#Edge granted by mixin]]
   it('lets a mixin type grant an edge across ontologies, and rejects it without the mixin', () => {
@@ -127,6 +132,7 @@ describe('ontology gallery', () => {
     expect(without.some((d) => /'implements' is not allowed for/.test(d))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/ontology-gallery#OKF ontology exports conformant]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/ontology-gallery#OKF ontology exports conformant]]
   // @tg: verifies:: [[openspec:ontology-gallery#OKF ontology exports conformant#Export and check]]
   it('exports the OKF ontology as a bundle with no conformance errors', () => {

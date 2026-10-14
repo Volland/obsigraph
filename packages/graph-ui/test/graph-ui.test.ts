@@ -5,6 +5,7 @@ import { buildStylesheet } from '../src/index';
 
 const flat = (rules: ReturnType<typeof buildStylesheet>) => JSON.stringify(rules);
 
+// @tg: verifies:: [[tests/graph-ui#Theme supplied by host]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/graph-ui#Theme supplied by host]]
 // @tg: verifies:: [[openspec:graph-ui#Host-independent rendering#Theme supplied by host]]
 it('uses exactly the colors the host passes', () => {
@@ -15,6 +16,7 @@ it('uses exactly the colors the host passes', () => {
   expect(flat(buildStylesheet({ text: '#111111', muted: '#222222', background: '#333333' }))).not.toContain('#123456');
 });
 
+// @tg: verifies:: [[tests/graph-ui#Negative edge looks the same]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/graph-ui#Negative edge looks the same]]
 // @tg: verifies:: [[openspec:graph-ui#Host-independent rendering#Negative edge]]
 it('gives a negative edge a tee arrow regardless of theme', () => {
@@ -25,6 +27,7 @@ it('gives a negative edge a tee arrow regardless of theme', () => {
   }
 });
 
+// @tg: verifies:: [[tests/graph-ui#Graph UI has no host imports]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/graph-ui#Graph UI has no host imports]]
 // @tg: verifies:: [[openspec:graph-ui#No host imports#Import check]]
 it('imports no host module', () => {
@@ -35,6 +38,7 @@ it('imports no host module', () => {
   expect(offenders).toEqual([]);
 });
 
+// @tg: verifies:: [[tests/graph-ui#Edge note drawn as an edge]] {since: "2026-10-11", level: unit}
 // @lat: [[tests/graph-ui#Edge note drawn as an edge]]
 // @tg: verifies:: [[openspec:graph-ui#Edge note neighborhood#Active edge note]]
 it('shows an edge note as its edge between both endpoints', async () => {

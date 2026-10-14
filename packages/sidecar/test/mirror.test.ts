@@ -62,6 +62,7 @@ const sync = async (m: LadybugMirror, graph: Graph) => {
 };
 
 describe('ladybug mirror', () => {
+  // @tg: verifies:: [[tests/mirror-sync#External edits never reach notes]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#External edits never reach notes]]
   // @tg: verifies:: [[openspec:ladybug-mirror#One-way sync from vault to database#Database edited externally]]
   it('never writes notes and a rebuild restores an externally edited mirror', async () => {
@@ -75,6 +76,7 @@ describe('ladybug mirror', () => {
     expect(JSON.stringify([...v.graph.nodes()])).toBe(before);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Delete and rebuild]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Delete and rebuild]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is a disposable cache#Delete and rebuild]]
   it('rebuilds from markdown alone after the mirror is deleted', async () => {
@@ -86,6 +88,7 @@ describe('ladybug mirror', () => {
     expect(mirror.status()).toMatchObject({ state: 'idle', nodes: 3, edges: 2 });
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Incremental equals rebuild]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Incremental equals rebuild]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is a disposable cache#Incremental equals rebuild]]
   it('matches a fresh rebuild after random edit sequences', async () => {
@@ -111,6 +114,7 @@ describe('ladybug mirror', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Edge removed from note]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Edge removed from note]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Incremental sync per changed file#Edge removed from a note]]
   it('drops an edge removed from a note', async () => {
@@ -121,6 +125,7 @@ describe('ladybug mirror', () => {
     expect((await store.dump()).edges.map((e) => e.type)).toEqual(['likes']);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Note renamed]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Note renamed]]
   it('moves a renamed note and its edges', async () => {
     const v = vault({ 'Alice.md': 'knows:: [[Bob]]', 'Bob.md': '', 'Carol.md': 'knows:: [[Alice]]' });
@@ -135,6 +140,7 @@ describe('ladybug mirror', () => {
     expect(dump).toEqual(expected(v.graph));
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Deleted note becomes stub]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Deleted note becomes stub]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Incremental sync per changed file#Note deleted with incoming edges]]
   it('re-points incoming edges of a deleted note to a stub', async () => {
@@ -147,6 +153,7 @@ describe('ladybug mirror', () => {
     expect(dump.edges).toEqual([expect.objectContaining({ source: 'Alice.md', target: 'Bob' })]);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Signed edge with properties]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Signed edge with properties]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Signed edge with properties]]
   it('keeps type, sign, id, heading and properties of signed edges', async () => {
@@ -156,6 +163,7 @@ describe('ladybug mirror', () => {
     expect(JSON.parse((await store.dump()).edges[0]!.props)).toEqual({ id: 'a-e', since: 2019, why: 'phishing' });
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Multiple labels kept]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Multiple labels kept]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Multiple labels]]
   it('stores every label of a multi-label node', async () => {
@@ -166,6 +174,7 @@ describe('ladybug mirror', () => {
     expect(JSON.parse(bob.props)).toMatchObject({ age: 40, type: ['Person', 'Employee'] });
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Parallel edges kept]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Parallel edges kept]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Fidelity of labels and properties#Parallel edges]]
   it('keeps parallel edges between the same nodes as separate rows', async () => {
@@ -174,6 +183,7 @@ describe('ladybug mirror', () => {
     expect((await store.dump()).edges.map((e) => e.id)).toEqual(['Alice.md#knows#Bob.md#0', 'Alice.md#knows#Bob.md#1']);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Format change rebuilds]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Format change rebuilds]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt#Format version changed]]
   it('rebuilds when the stored format version differs', async () => {
@@ -190,6 +200,7 @@ describe('ladybug mirror', () => {
     expect(await store.dump()).toEqual(expected(v.graph));
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Interrupted sync rebuilds]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Interrupted sync rebuilds]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt#Interrupted sync]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Sync does not block queries#Sync failure]]
@@ -210,6 +221,7 @@ describe('ladybug mirror', () => {
     expect(await store.dump()).toEqual(expected(v.graph));
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Disabled by configuration]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Disabled by configuration]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is optional#Disabled by configuration]]
   it('creates no mirror when disabled and keeps queries working', async () => {
@@ -224,6 +236,7 @@ describe('ladybug mirror', () => {
     expect(new BuiltinEngine(sc.sync.graph).run('MATCH (a)-->(b) RETURN b.title').rows).toEqual([['Bob']]);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Not installed reported]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Not installed reported]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Mirror is optional#Not installed]]
   it('reports the mirror as unavailable with the reason when the store cannot load', async () => {
@@ -241,6 +254,7 @@ describe('ladybug mirror', () => {
     expect(((await q.json()) as { rows: unknown }).rows).toEqual([['Bob']]);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Large build does not block queries]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Large build does not block queries]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Sync does not block queries#Large initial build]]
   it('syncs in the background so queries answer during a slow build', async () => {
@@ -259,6 +273,7 @@ describe('ladybug mirror', () => {
     expect(m.status()).toMatchObject({ state: 'idle', nodes: 200, edges: 200 });
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Real LadybugDB round trip]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/mirror-sync#Real LadybugDB round trip]]
   it('mirrors into a real LadybugDB and answers Cypher there', async () => {
     const loaded = await loadLadybug();

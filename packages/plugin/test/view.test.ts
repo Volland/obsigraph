@@ -20,6 +20,7 @@ function fixture() {
 const ids = (xs: { id: string }[]) => xs.map((x) => x.id).sort();
 
 describe('graph view', () => {
+  // @tg: verifies:: [[tests/graph-view#Neighborhood of active note]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Neighborhood of active note]]
   // @tg: verifies:: [[openspec:graph-view#Graph view leaf#Default content]]
   it('shows a node with its incident edges and direct neighbors in both directions', () => {
@@ -29,6 +30,7 @@ describe('graph view', () => {
     expect(neighborhood(fixture(), 'Missing.md')).toEqual({ nodes: [], edges: [] });
   });
 
+  // @tg: verifies:: [[tests/graph-view#Expansion keeps existing elements]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Expansion keeps existing elements]]
   // @tg: verifies:: [[openspec:graph-view#Click to expand#Expand neighbors]]
   it('merges an expanded neighborhood without dropping existing elements', () => {
@@ -40,6 +42,7 @@ describe('graph view', () => {
     for (const n of base.nodes) expect(merged.nodes).toContain(n);
   });
 
+  // @tg: verifies:: [[tests/graph-view#Edge selection details]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Edge selection details]]
   // @tg: verifies:: [[openspec:graph-view#Selection details#Select an edge]]
   it('describes a selected edge with type, sign, id, heading and properties', () => {
@@ -59,6 +62,7 @@ describe('graph view', () => {
     expect(neg.rows).toEqual(expect.arrayContaining([['sign', '-1 (negative)'], ['heading', 'Trust']]));
   });
 
+  // @tg: verifies:: [[tests/graph-view#Node selection details]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Node selection details]]
   it('describes a selected node with labels and properties', () => {
     const d = nodeDetails(fixture().node('Bob.md')!);
@@ -66,6 +70,7 @@ describe('graph view', () => {
     expect(d.rows).toEqual(expect.arrayContaining([['labels', 'Person, Employee'], ['stub', 'false'], ['path', 'Bob.md']]));
   });
 
+  // @tg: verifies:: [[tests/graph-view#Same element same style]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Same element same style]]
   // @tg: verifies:: [[openspec:graph-view#Shared renderer#Consistent styling]]
   it('produces identical element data and classes for a node in a block and in the view', () => {
@@ -79,11 +84,13 @@ describe('graph view', () => {
     expect(styler.node(a)).toEqual(styler.node(b));
   });
 
+  // @tg: verifies:: [[tests/graph-view#Stubs visible in neighborhood]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Stubs visible in neighborhood]]
   it('includes stub neighbors so unresolved links stay visible', () => {
     const g = neighborhood(fixture(), 'Carol.md');
     expect(g.nodes.find((n) => n.id === 'Ghost')).toMatchObject({ stub: true, path: null });
   });
+  // @tg: verifies:: [[tests/graph-view#Business and technical rows]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/graph-view#Business and technical rows]]
   // @tg: verifies:: [[openspec:graph-view#Details panel#Business and technical properties]]
   it('marks graph bookkeeping and undeclared properties as technical when a schema is known', () => {
@@ -105,6 +112,7 @@ describe('graph view', () => {
     expect(edgeDetails(edge, fixture(), undefined, new Set()).technical.has('since')).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/graph-view#Links in values]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/graph-view#Links in values]]
   // @tg: verifies:: [[openspec:graph-view#Details panel#Links in values]]
   it('splits property values into text and link parts, one line per list item', () => {

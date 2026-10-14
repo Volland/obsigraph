@@ -48,6 +48,7 @@ describe('example vault', () => {
   const graph = loadGraph();
   const engine = new BuiltinEngine(graph);
 
+  // @tg: verifies:: [[tests/example-vault#Every guide query runs]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/example-vault#Every guide query runs]]
   // @tg: verifies:: [[openspec:example-vault#Every guide query runs#Guide queries checked]]
   it.each(blocks.filter((b) => b.path !== PLAYGROUND).map((b) => [`${b.path}:${b.line}`, b] as const))('%s runs and returns rows', (_, b) => {
@@ -60,6 +61,7 @@ describe('example vault', () => {
     expect(plan).toBeTruthy();
   });
 
+  // @tg: verifies:: [[tests/example-vault#Playground queries fail clearly]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/example-vault#Playground queries fail clearly]]
   // @tg: verifies:: [[openspec:example-vault#Playground queries fail clearly#Write query in the playground]]
   it('reports the playground queries as positioned or read-only errors', () => {
@@ -77,6 +79,7 @@ describe('example vault', () => {
     expect(errors[1]!.message).toMatch(/read-only/i);
   });
 
+  // @tg: verifies:: [[tests/example-vault#Embeds resolve]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/example-vault#Embeds resolve]]
   // @tg: verifies:: [[openspec:example-vault#Embeds resolve#Only the deliberate miss]]
   it('resolves every embed outside the playground, and leaves the playground miss unresolved', () => {
@@ -90,6 +93,7 @@ describe('example vault', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/example-vault#Deliberate diagnostics only]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/example-vault#Deliberate diagnostics only]]
   // @tg: verifies:: [[openspec:example-vault#Deliberate diagnostics only#Diagnostics listed]]
   it('reports exactly the deliberate schema and syntax problems', () => {

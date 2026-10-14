@@ -68,6 +68,7 @@ const diagnosticsOf = (ds: Diagnostic[]) =>
 const cases = readdirSync(join(SPEC, 'examples')).sort();
 
 describe('TGS conformance examples', () => {
+  // @tg: verifies:: [[tests/tgs-spec#Conformance examples pass]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/tgs-spec#Conformance examples pass]]
   it.each(cases)('%s', (name) => {
     const dir = join(SPEC, 'examples', name);
@@ -94,6 +95,7 @@ describe('TGS conformance examples', () => {
 });
 
 describe('TGS JSON Schema', () => {
+  // @tg: verifies:: [[tests/tgs-spec#Spec examples validate]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/tgs-spec#Spec examples validate]]
   // @tg: verifies:: [[openspec:tgs-spec#Machine-readable schema#Examples validate]]
   it('accepts every YAML example in the specification and the scaffold', () => {
@@ -110,6 +112,7 @@ describe('TGS JSON Schema', () => {
     expect(validateJson(parseYaml(splitFrontmatter(scaffoldSchemaNote()).yaml!))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/tgs-spec#Invalid notes rejected]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/tgs-spec#Invalid notes rejected]]
   // @tg: verifies:: [[openspec:tgs-spec#Machine-readable schema#Invalid note rejected]]
   it('rejects malformed declarations', () => {
@@ -118,6 +121,7 @@ describe('TGS JSON Schema', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/tgs-spec#Namespace terms documented]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/tgs-spec#Namespace terms documented]]
   // @tg: verifies:: [[openspec:tgs-spec#Namespace IRI#Namespace documented]]
   it('documents every tgs: term the SHACL export uses', () => {

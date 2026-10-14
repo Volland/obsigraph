@@ -5,6 +5,7 @@ import { STEPS } from '../../../site/src/trail-steps';
 
 const EXAMPLES = join(__dirname, '../../../ontologies/zettelkasten/Examples');
 
+// @tg: verifies:: [[tests/ontology-gallery#Zettelkasten trail steps exist]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/ontology-gallery#Zettelkasten trail steps exist]]
 // @tg: verifies:: [[openspec:ontology-gallery#Zettelkasten ontology#Walkthrough notes exist]]
 it('names only example notes that exist, each in one step, in a growing trail', () => {

@@ -51,6 +51,7 @@ function schemaOf(notes: NoteInput[], type: string): { schema: TypeSchema; graph
 }
 
 describe('generated ids', () => {
+  // @tg: verifies:: [[tests/new-notes#Generated ids#UUID versions]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#UUID versions]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#UUID versions]]
   it('makes version 4 and version 7 UUIDs with the clock in the first 48 bits', () => {
@@ -64,6 +65,7 @@ describe('generated ids', () => {
     expect(parseInt(b.replace(/-/g, '').slice(0, 12), 16)).toBe(now.getTime());
   });
 
+  // @tg: verifies:: [[tests/new-notes#Generated ids#Time-ordered ids sort]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#Time-ordered ids sort]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Time-ordered ids sort]]
   it('sorts version 7 ids by creation time as plain strings', () => {
@@ -71,6 +73,7 @@ describe('generated ids', () => {
     expect([...ids].sort()).toEqual(ids);
   });
 
+  // @tg: verifies:: [[tests/new-notes#Generated ids#Timestamp id skips taken minutes]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#Timestamp id skips taken minutes]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Timestamp id skips taken minutes]]
   it('writes a local YYYYMMDDHHmm and moves on while it is taken', () => {
@@ -79,6 +82,7 @@ describe('generated ids', () => {
     expect(timestampId(now, set('202601121530', '202601121531'))).toBe('202601121532');
   });
 
+  // @tg: verifies:: [[tests/new-notes#Generated ids#Luhmann siblings]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#Luhmann siblings]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann siblings]]
   it('finds the next free Luhmann sibling', () => {
@@ -89,6 +93,7 @@ describe('generated ids', () => {
     expect(luhmannSibling('1a2', set())).toBe('1a3');
   });
 
+  // @tg: verifies:: [[tests/new-notes#Generated ids#Luhmann children]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#Luhmann children]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann children]]
   it('finds the next free Luhmann child', () => {
@@ -99,6 +104,7 @@ describe('generated ids', () => {
     expect(() => luhmannChild('a1', set())).toThrow();
   });
 
+  // @tg: verifies:: [[tests/new-notes#Generated ids#Luhmann roots and order]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Generated ids#Luhmann roots and order]]
   // @tg: verifies:: [[openspec:typed-note-creation#Generated ids#Luhmann roots and order]]
   it('numbers roots after the largest and orders ids as a slip box shelves them', () => {
@@ -111,6 +117,7 @@ describe('generated ids', () => {
 describe('the id key', () => {
   const read = (id: unknown) => readSchemaNote('Types/T.md', { schema: { id } });
 
+  // @tg: verifies:: [[tests/new-notes#The id key#Id key forms]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#The id key#Id key forms]]
   // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Id key forms]]
   it('reads a bare kind, a mapping and a list', () => {
@@ -120,6 +127,7 @@ describe('the id key', () => {
     expect(list.map((r) => [r.property, r.auto, r.filename])).toEqual([['uid', true, false], ['stamp', false, true]]);
   });
 
+  // @tg: verifies:: [[tests/new-notes#The id key#Id property is implied]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#The id key#Id property is implied]]
   // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Id property is implied]]
   it('declares an undeclared id property as text', () => {
@@ -127,6 +135,7 @@ describe('the id key', () => {
     expect(t.properties.find((p) => p.name === 'uid')).toMatchObject({ kind: 'text', required: false });
   });
 
+  // @tg: verifies:: [[tests/new-notes#The id key#Invalid id declarations]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#The id key#Invalid id declarations]]
   // @tg: verifies:: [[openspec:typed-note-creation#Id rules#Invalid id declarations]]
   it('reports and ignores invalid id declarations', () => {
@@ -145,6 +154,7 @@ describe('planning a note', () => {
   const now = new Date(2026, 0, 12, 15, 30);
   const base = [TYPES, note('Ideas/Root.md', { type: 'Idea', luhmann: '1', uid: 'x' }), note('Ideas/Leaf.md', { type: 'Idea', luhmann: '1a' })];
 
+  // @tg: verifies:: [[tests/new-notes#Planning a note#Ids and tokens]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Planning a note#Ids and tokens]]
   // @tg: verifies:: [[openspec:typed-note-creation#Template tokens#Ids and tokens]]
   it('puts automatic ids in the frontmatter and the template, and leaves other braces alone', () => {
@@ -158,6 +168,7 @@ describe('planning a note', () => {
     expect(splitFrontmatter(plan.content).yaml).toContain('status: open');
   });
 
+  // @tg: verifies:: [[tests/new-notes#Planning a note#Luhmann placement]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Planning a note#Luhmann placement]]
   // @tg: verifies:: [[openspec:typed-note-creation#Luhmann placement#Child of the active note]]
   it('gives a child or sibling the next free Luhmann id and fills the parent tokens', () => {
@@ -174,6 +185,7 @@ describe('planning a note', () => {
     expect(findLuhmannParent(graph, set2, 'Missing.md')).toBeNull();
   });
 
+  // @tg: verifies:: [[tests/new-notes#Planning a note#Lines without a parent are dropped]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Planning a note#Lines without a parent are dropped]]
   // @tg: verifies:: [[openspec:typed-note-creation#Template tokens#Lines without a parent are dropped]]
   it('drops template lines that mention the parent when there is none', () => {
@@ -185,6 +197,7 @@ describe('planning a note', () => {
     expect(plan.ids.luhmann).toBe('2');
   });
 
+  // @tg: verifies:: [[tests/new-notes#Planning a note#File name carries the id]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Planning a note#File name carries the id]]
   // @tg: verifies:: [[openspec:typed-note-creation#File name carries the id#Prefixed file name]]
   it('prefixes the file name with an id when the rule says so', () => {
@@ -201,6 +214,7 @@ function files(dir: string): string[] {
 }
 
 describe('the Zettelkasten ontology', () => {
+  // @tg: verifies:: [[tests/new-notes#Zettelkasten ontology#Zettelkasten ids and templates]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/new-notes#Zettelkasten ontology#Zettelkasten ids and templates]]
   it('gives every type a uid, permanent notes a Luhmann id, and note types templates that make valid notes', () => {
     const notes: NoteInput[] = files(ROOT)

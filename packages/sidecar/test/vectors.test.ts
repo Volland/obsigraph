@@ -97,6 +97,7 @@ async function settle(sc: Sidecar, cond: () => boolean | Promise<boolean>) {
 }
 
 describe('vector index', { timeout: 20000 }, () => {
+  // @tg: verifies:: [[tests/vector-index#Chunks and edges indexed]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Chunks and edges indexed]]
   // @tg: verifies:: [[openspec:vector-index#Index covers nodes and edges#Note and edge indexed]]
   it('indexes chunk vectors per node and one sentence vector per edge', async () => {
@@ -111,6 +112,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(st.edges).toBe(4);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Model identity recorded]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Model identity recorded]]
   // @tg: verifies:: [[openspec:sidecar-service#Vector search over REST#Status shows vectors]]
   // @tg: verifies:: [[openspec:vector-index#Index records model identity#Metadata stored]]
@@ -122,6 +124,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(status.vectors).toMatchObject({ state: 'ready', chunks: 7, edges: 4 });
   });
 
+  // @tg: verifies:: [[tests/vector-index#Model change blocks writes]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Model change blocks writes]]
   // @tg: verifies:: [[openspec:embedding-provider#Mismatch never mixes vectors#Model changed]]
   // @tg: verifies:: [[openspec:sidecar-service#Embedding provider configuration#Model mismatch]]
@@ -149,6 +152,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(b.embedded.some((t) => t.includes('quantum'))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/mcp-graphrag#Retrieve flags a stale index]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mcp-graphrag#Retrieve flags a stale index]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Model mismatch with equal dimensions]]
   it('answers retrieve from the old index with stale: true and a notice naming both models', async () => {
@@ -163,6 +167,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(r.body.notices[0]).toMatch(/stale index.*model-a.*model-b/);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Dimension change refuses queries]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/vector-index#Dimension change refuses queries]]
   // @tg: verifies:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors#Model mismatch with different dimensions]]
   // @tg: verifies:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild#Dimension changed]]
@@ -183,6 +188,7 @@ describe('vector index', { timeout: 20000 }, () => {
     }
   });
 
+  // @tg: verifies:: [[tests/vector-index#Only edited chunk re-embedded]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Only edited chunk re-embedded]]
   // @tg: verifies:: [[openspec:vector-index#Incremental update per file#One paragraph edited]]
   it('re-embeds only the edited chunk of a five-chunk note', async () => {
@@ -196,6 +202,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(p.embedded).toEqual([expect.stringContaining('gamma text changed')]);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Removed edge and note dropped]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Removed edge and note dropped]]
   // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Edge removed]]
   // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Note deleted]]
@@ -211,6 +218,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect((await api(sc, '/search', { query: 'transformers', k: 10 })).body.results.map((r: Json) => r.id)).not.toContain('People/Bob.md');
   });
 
+  // @tg: verifies:: [[tests/vector-index#Rename reuses vectors]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Rename reuses vectors]]
   // @tg: verifies:: [[openspec:vector-index#Incremental update per file#Note renamed]]
   it('re-attributes vectors on a folder move without re-embedding unchanged text', async () => {
@@ -225,6 +233,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(p.embedded.filter((t) => t.startsWith('Carol'))).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Top nodes with citations]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Top nodes with citations]]
   // @tg: verifies:: [[openspec:sidecar-service#Vector search over REST#Vector search over REST]]
   // @tg: verifies:: [[openspec:vector-index#Vector search over nodes#Top nodes]]
@@ -240,6 +249,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(results.slice(0, 3).map((x) => x.id).sort()).toEqual(['ML.md', 'People/Alice.md', 'People/Bob.md']);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Edge search returns sentences]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Edge search returns sentences]]
   // @tg: verifies:: [[openspec:vector-index#Vector search over edges#Relationship query]]
   it('finds edges by the meaning of their sentence', async () => {
@@ -253,6 +263,7 @@ describe('vector index', { timeout: 20000 }, () => {
     });
   });
 
+  // @tg: verifies:: [[tests/vector-index#Search then traverse]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Search then traverse]]
   // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Vector hits then traversal]]
   it('feeds vector hits into a Cypher query as $hits', async () => {
@@ -268,6 +279,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(r.body.then.rows).toEqual([['Acme'], ['Initech']]);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Type filter]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Type filter]]
   // @tg: verifies:: [[openspec:vector-index#Combined vector and graph query#Type filter]]
   it('restricts node search to a type', async () => {
@@ -277,6 +289,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(r.body.results.map((x: Json) => x.id)).toEqual(['ML.md']);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Rebuild gives same results]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Rebuild gives same results]]
   // @tg: verifies:: [[openspec:vector-index#Index is derived and rebuildable#Index deleted]]
   it('gives the same results after the index storage is deleted and rebuilt', async () => {
@@ -290,6 +303,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect((await api(sc2, '/search', { query: 'machine learning robots', k: 5 })).body.results).toEqual(before);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Provider down keeps old vectors]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Provider down keeps old vectors]]
   // @tg: verifies:: [[openspec:vector-index#Unavailable provider degrades gracefully#Ollama down during edit]]
   it('keeps old vectors searchable while the provider is down and catches up later', async () => {
@@ -309,6 +323,7 @@ describe('vector index', { timeout: 20000 }, () => {
     await until(() => sc.vectors!.status().state === 'ready' && sc.vectors!.status().pending === 0);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Provider unreachable at start]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Provider unreachable at start]]
   // @tg: verifies:: [[openspec:sidecar-service#Embedding provider configuration#Provider unreachable at start]]
   it('starts, serves graph queries and reports degraded when the provider is down at start', async () => {
@@ -323,6 +338,7 @@ describe('vector index', { timeout: 20000 }, () => {
     await until(() => sc.vectors!.status().state === 'ready');
   });
 
+  // @tg: verifies:: [[tests/vector-index#Search request validated]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Search request validated]]
   it('validates search requests and reports a disabled index', async () => {
     const f = vault();
@@ -337,6 +353,7 @@ describe('vector index', { timeout: 20000 }, () => {
     expect(existsSync(join(g.data, 'vectors'))).toBe(false);
   });
 
+  // @tg: verifies:: [[tests/vector-index#Real Ollama semantic search]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/vector-index#Real Ollama semantic search]]
   it('finds semantically related notes and edges with the real local Ollama', async () => {
     const probe = await new OllamaProvider().embed(['ping']).catch(() => null);

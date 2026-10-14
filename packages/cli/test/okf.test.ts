@@ -21,6 +21,7 @@ async function tg(cwd: string, ...args: string[]) {
   return { code, out, err };
 }
 
+// @tg: verifies:: [[tests/okf-compat#Check#Check command exit codes]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/okf-compat#Check#Check command exit codes]]
 // @tg: verifies:: [[openspec:okf-compat#OKF conformance check#Conformant bundle]]
 // @tg: verifies:: [[openspec:okf-compat#OKF conformance check#Missing type]]
@@ -43,6 +44,7 @@ it('exits 0 on a conformant bundle and 1 on conformance errors', async () => {
   expect((await tg(bad, 'okf')).code).toBe(2);
 });
 
+// @tg: verifies:: [[tests/okf-compat#Check#Export command verifies]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/okf-compat#Check#Export command verifies]]
 // @tg: verifies:: [[openspec:okf-compat#OKF change report#Report shown]]
 it('exports a vault as a verified OKF bundle with a change report', async () => {

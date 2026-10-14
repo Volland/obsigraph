@@ -20,6 +20,7 @@ function vault() {
 }
 
 describe('graph model', () => {
+  // @tg: verifies:: [[tests/graph-store#One node per note]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#One node per note]]
   // @tg: verifies:: [[openspec:graph-model#One note is one node#Note with headings]]
   it('creates exactly one node per note regardless of headings', () => {
@@ -28,6 +29,7 @@ describe('graph model', () => {
     expect([...graph.nodes()].filter((n) => !n.stub).map((n) => n.id)).toEqual(['Alice.md']);
   });
 
+  // @tg: verifies:: [[tests/graph-store#Stub for unresolved link]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Stub for unresolved link]]
   // @tg: verifies:: [[openspec:graph-model#Stub nodes for unresolved links#Link to missing note]]
   it('creates a stub node for an unresolved target', () => {
@@ -38,6 +40,7 @@ describe('graph model', () => {
     expect(graph.outEdges('Alice.md')[0]!.target).toBe('Nobody');
   });
 
+  // @tg: verifies:: [[tests/graph-store#Stub promoted when note created]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Stub promoted when note created]]
   // @tg: verifies:: [[openspec:graph-model#Stub nodes for unresolved links#Stub becomes real]]
   it('replaces the stub with the real node when the note appears', () => {
@@ -52,6 +55,7 @@ describe('graph model', () => {
     expect(changed[0]).toEqual(expect.arrayContaining(['Nobody.md', 'Alice.md']));
   });
 
+  // @tg: verifies:: [[tests/graph-store#Labels from frontmatter type]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Labels from frontmatter type]]
   // @tg: verifies:: [[openspec:graph-model#Node labels from frontmatter#Multiple types]]
   it('derives labels from a string or list type', () => {
@@ -64,6 +68,7 @@ describe('graph model', () => {
     expect(graph.node('Raw.md')!.labels).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/graph-store#Frontmatter path and title properties]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Frontmatter path and title properties]]
   // @tg: verifies:: [[openspec:graph-model#Node properties#Frontmatter property]]
   it('exposes frontmatter, path and title as node properties', () => {
@@ -72,6 +77,7 @@ describe('graph model', () => {
     expect(graph.node('People/Ann.md')!.props).toMatchObject({ age: 31, path: 'People/Ann.md', title: 'Ann' });
   });
 
+  // @tg: verifies:: [[tests/graph-store#Derived edge ids with ordinals]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Derived edge ids with ordinals]]
   // @tg: verifies:: [[openspec:graph-model#Derived edge IDs#Duplicate edges]]
   it('gives duplicate edges ids that differ only in the ordinal', () => {
@@ -84,6 +90,7 @@ describe('graph model', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/graph-store#Pinned edge id]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Pinned edge id]]
   // @tg: verifies:: [[openspec:graph-model#Derived edge IDs#Pinned ID]]
   it('uses a pinned id when present and reports duplicate pinned ids', () => {
@@ -94,6 +101,7 @@ describe('graph model', () => {
     expect(graph.diagnostics()[0]!.message).toMatch(/Duplicate edge id 'met-2020'/);
   });
 
+  // @tg: verifies:: [[tests/graph-store#Incremental edit]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Incremental edit]]
   // @tg: verifies:: [[openspec:graph-model#Incremental updates#Note edited]]
   it('replaces only the edited note edges', () => {
@@ -106,6 +114,7 @@ describe('graph model', () => {
     expect(graph.outEdges('Bob.md')[0]).toBe(bobEdge);
   });
 
+  // @tg: verifies:: [[tests/graph-store#Deleted target becomes stub]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Deleted target becomes stub]]
   // @tg: verifies:: [[openspec:graph-model#Incremental updates#Note deleted]]
   it('turns edges to a deleted note into edges to a stub', () => {
@@ -118,6 +127,7 @@ describe('graph model', () => {
     expect(graph.outEdges('Alice.md')[0]!.target).toBe('Bob');
   });
 
+  // @tg: verifies:: [[tests/graph-store#Stubs released when unreferenced]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-store#Stubs released when unreferenced]]
   it('removes stubs when no edge references them and handles rename', () => {
     const { graph, put, del, existing } = vault();

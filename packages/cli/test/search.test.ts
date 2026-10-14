@@ -42,6 +42,7 @@ async function tg(cwd: string, env: Record<string, string>, f: typeof fetch | un
   return { code, out, err };
 }
 
+// @tg: verifies:: [[tests/tg-search#Lexical default#No configuration]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Lexical default#No configuration]]
 // @tg: verifies:: [[openspec:tg-search#Lexical default#No configuration]]
 it('searches lexically with no configuration and no network', async () => {
@@ -55,6 +56,7 @@ it('searches lexically with no configuration and no network', async () => {
   expect(r.out).toContain('[[lat.md/syntax#Edge Syntax]]');
 });
 
+// @tg: verifies:: [[tests/tg-search#Lexical default#Title outranks body]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Lexical default#Title outranks body]]
 // @tg: verifies:: [[openspec:tg-search#Lexical default#Title outranks body]]
 it('ranks the section titled with the query above one that only mentions it', async () => {
@@ -64,6 +66,7 @@ it('ranks the section titled with the query above one that only mentions it', as
   expect(ids).toContain('lat.md/notes#Notes#Misc');
 });
 
+// @tg: verifies:: [[tests/tg-search#Hybrid ranking#Provider configured]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Hybrid ranking#Provider configured]]
 // @tg: verifies:: [[openspec:tg-search#Hybrid ranking#Provider configured]]
 it('fuses lexical and vector ranks when a provider is configured', async () => {
@@ -78,6 +81,7 @@ it('fuses lexical and vector ranks when a provider is configured', async () => {
   expect(f.calls.some((c) => c.url.endsWith('/api/embed'))).toBe(true);
 });
 
+// @tg: verifies:: [[tests/tg-search#Hybrid ranking#Provider down]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Hybrid ranking#Provider down]]
 // @tg: verifies:: [[openspec:tg-search#Hybrid ranking#Provider down]]
 it('falls back to lexical results with a notice when the provider fails', async () => {
@@ -88,6 +92,7 @@ it('falls back to lexical results with a notice when the provider fails', async 
   expect(r.out).toContain('(lexical match)');
 });
 
+// @tg: verifies:: [[tests/tg-search#Key variable aliases#Alias honored]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Key variable aliases#Alias honored]]
 // @tg: verifies:: [[openspec:tg-search#Key variable aliases#Alias honored]]
 it('uses LAT_LLM_KEY as the provider key', async () => {
@@ -98,6 +103,7 @@ it('uses LAT_LLM_KEY as the provider key', async () => {
   expect(f.calls[0]!.headers.authorization).toBe('Bearer sk-test-123');
 });
 
+// @tg: verifies:: [[tests/tg-search#Key variable aliases#TG variables win over aliases]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-search#Key variable aliases#TG variables win over aliases]]
 it('prefers TG_EMBED_KEY_FILE over LAT_LLM_KEY', async () => {
   const dir = project();
@@ -109,6 +115,7 @@ it('prefers TG_EMBED_KEY_FILE over LAT_LLM_KEY', async () => {
   expect(f.calls[0]!.headers.authorization).toBe('Bearer sk-from-file');
 });
 
+// @tg: verifies:: [[tests/tg-search#Key variable aliases#Not written to disk]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Key variable aliases#Not written to disk]]
 // @tg: verifies:: [[openspec:tg-search#Key variable aliases#Not written to disk]]
 it('never persists a key', async () => {
@@ -119,6 +126,7 @@ it('never persists a key', async () => {
   for (const f of files) expect(readFileSync(join(dir, '.tg', f), 'utf8')).not.toContain('sk-secret-xyz');
 });
 
+// @tg: verifies:: [[tests/tg-search#Derived cache#Cache deleted]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-search#Derived cache#Cache deleted]]
 // @tg: verifies:: [[openspec:tg-search#Derived cache#Cache deleted]]
 it('recreates a deleted cache and reuses unchanged vectors on reindex', async () => {

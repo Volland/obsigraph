@@ -1,4 +1,5 @@
 ---
+type: Scenario
 lat:
   require-code-mention: true
 ---

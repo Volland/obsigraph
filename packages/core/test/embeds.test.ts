@@ -23,6 +23,7 @@ const show = (graph: Graph, raw: string, from = 'Notes.md') => {
 };
 
 describe('edge embeds', () => {
+  // @tg: verifies:: [[tests/edge-embeds#Value by endpoints]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Value by endpoints]]
   // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Value rendered]]
   it('renders a property value found by source, type and target', () => {
@@ -31,6 +32,7 @@ describe('edge embeds', () => {
     expect(show(graph, '[[Alice]] -knows-> [[Bob|Bobby]] . since')).toEqual({ kind: 'value', text: '2020' });
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Signed type]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Signed type]]
   // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Signed type]]
   it('matches negative edges with an explicit or omitted sign', () => {
@@ -39,6 +41,7 @@ describe('edge embeds', () => {
     expect(show(graph, 'Alice -distrusts-> Eve . since')).toEqual({ kind: 'value', text: '2019' });
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Sign mismatch unresolved]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Sign mismatch unresolved]]
   // @tg: verifies:: [[openspec:edge-embeds#Embed by endpoints#Sign mismatch]]
   it('does not resolve when the embed sign differs from the edge sign', () => {
@@ -47,6 +50,7 @@ describe('edge embeds', () => {
     expect(show(graph, 'Alice -+knows-> Bob . since').kind).toBe('value');
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Value by pinned id]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Value by pinned id]]
   // @tg: verifies:: [[openspec:edge-embeds#Embed by pinned ID#Resolve by ID]]
   // @tg: verifies:: [[openspec:edge-embeds#Embed by pinned ID#Unknown ID]]
@@ -56,6 +60,7 @@ describe('edge embeds', () => {
     expect(show(graph, 'nope-1 . since')).toEqual({ kind: 'unresolved', text: "no edge with id 'nope-1'" });
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Whole block as table]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Whole block as table]]
   // @tg: verifies:: [[openspec:edge-embeds#Whole property block as table#Edge without properties]]
   // @tg: verifies:: [[openspec:edge-embeds#Whole property block as table#Table rendered]]
@@ -65,6 +70,7 @@ describe('edge embeds', () => {
     expect(show(graph, 'Alice -likes-> Eve')).toEqual({ kind: 'empty', text: 'no properties' });
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Missing property or edge]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Missing property or edge]]
   // @tg: verifies:: [[openspec:edge-embeds#Missing property and unresolved embeds#Edge not found]]
   // @tg: verifies:: [[openspec:edge-embeds#Missing property and unresolved embeds#Property absent]]
@@ -76,6 +82,7 @@ describe('edge embeds', () => {
     expect(parseEmbed('Alice -knows Bob')).toMatch(/Edge id 'Alice -knows Bob' cannot contain spaces/);
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Ambiguous endpoints]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Ambiguous endpoints]]
   // @tg: verifies:: [[openspec:edge-embeds#Ambiguous endpoint embeds#Duplicate edges]]
   it('renders the first of duplicate edges and warns about ambiguity', () => {
@@ -86,6 +93,7 @@ describe('edge embeds', () => {
     expect(idx.warnings(graph).map((d) => d.message)).toContainEqual(expect.stringMatching(/^2 edges match \{\{edge: Alice -knows-> Bob \. since\}\}/));
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Pinned id warnings]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Pinned id warnings]]
   // @tg: verifies:: [[openspec:edge-embeds#Pinned-ID warnings#No warning when pinned]]
   // @tg: verifies:: [[openspec:edge-embeds#Pinned-ID warnings#Unreferenced unpinned edge]]
@@ -106,6 +114,7 @@ describe('edge embeds', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Live value refresh]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Live value refresh]]
   // @tg: verifies:: [[openspec:edge-embeds#Live refresh#Value edited]]
   it('shows the new value after the edge is edited', () => {
@@ -115,6 +124,7 @@ describe('edge embeds', () => {
     expect(show(graph, 'Alice -knows-> Bob . since')).toEqual({ kind: 'value', text: '2021' });
   });
 
+  // @tg: verifies:: [[tests/edge-embeds#Embeds outside code only]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/edge-embeds#Embeds outside code only]]
   it('finds embeds outside fenced and inline code, and reports malformed ones', () => {
     const text = ['a {{edge: x . y}} b', '`{{edge: inline}}`', '```', '{{edge: fenced}}', '```', '{{ edge:  }}'].join('\n');

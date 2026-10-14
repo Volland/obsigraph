@@ -121,6 +121,7 @@ function chmodRecursive(dir: string, mode: number) {
 }
 
 describe('sidecar service', () => {
+  // @tg: verifies:: [[tests/sidecar-service#Read-only vault]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Read-only vault]]
   // @tg: verifies:: [[openspec:sidecar-service#Read-only vault access#Vault mounted read-only]]
   it('indexes a read-only vault and writes only into the data directory', async () => {
@@ -137,6 +138,7 @@ describe('sidecar service', () => {
     expect(readdirSync(f.data)).toEqual(['sync-state.json']);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Data directory required]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Data directory required]]
   // @tg: verifies:: [[openspec:sidecar-service#Read-only vault access#Data directory missing]]
   it('refuses to start without a writable data directory, naming it', () => {
@@ -146,6 +148,7 @@ describe('sidecar service', () => {
     expect(() => loadConfig(env(f, { OBSIGRAPH_DATA: join(f.vault, 'People') }))).toThrow(/must be outside the vault/);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Same results as plugin engine]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Same results as plugin engine]]
   // @tg: verifies:: [[openspec:sidecar-service#Same semantics as the plugin#Conformance with plugin]]
   it('returns the same columns and rows as the plugin engine on the same vault', async () => {
@@ -171,6 +174,7 @@ describe('sidecar service', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#First start indexes everything]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#First start indexes everything]]
   // @tg: verifies:: [[openspec:sidecar-service#Initial sync#First start]]
   // @tg: verifies:: [[openspec:sidecar-service#REST API#Status]]
@@ -184,6 +188,7 @@ describe('sidecar service', () => {
     expect(typeof status.lastSync).toBe('string');
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Restart reprocesses only changes]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Restart reprocesses only changes]]
   // @tg: verifies:: [[openspec:sidecar-service#Initial sync#Restart after edits]]
   it('hands only notes changed while stopped to processors after a restart', async () => {
@@ -200,6 +205,7 @@ describe('sidecar service', () => {
     expect(sc.sync.status().lastReconciled.sort()).toEqual(['Alice.md', 'Eve.md', 'New.md']);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Live edit becomes queryable]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Live edit becomes queryable]]
   // @tg: verifies:: [[openspec:sidecar-service#Live watching#Note edited]]
   it('makes a new edge queryable after an edit', async () => {
@@ -214,6 +220,7 @@ describe('sidecar service', () => {
     await until(async () => (await json(await (await query(sc, 'MATCH (z {title: "Zed"}) RETURN z')))).rows.length === 0);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Burst of saves coalesced]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Burst of saves coalesced]]
   // @tg: verifies:: [[openspec:sidecar-service#Live watching#Burst of saves]]
   it('processes a burst of saves to one file once', async () => {
@@ -228,6 +235,7 @@ describe('sidecar service', () => {
     expect(rec.upserts).toEqual(['Carol.md']);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Polling fallback]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Polling fallback]]
   // @tg: verifies:: [[openspec:sidecar-service#Live watching#Watching without native events]]
   it('detects changes by polling when native events are missing', async () => {
@@ -243,6 +251,7 @@ describe('sidecar service', () => {
     await until(() => rec.upserts.includes('Eve.md'));
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Writes rejected over REST]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Writes rejected over REST]]
   // @tg: verifies:: [[openspec:sidecar-service#Read-only query surface#Write attempt]]
   it('rejects write Cypher with a client error naming the clause', async () => {
@@ -254,6 +263,7 @@ describe('sidecar service', () => {
     expect(sc.sync.status().notes).toBe(4);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Health and status]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Health and status]]
   // @tg: verifies:: [[openspec:sidecar-service#REST API#Health]]
   it('serves health without a token and status with one', async () => {
@@ -269,6 +279,7 @@ describe('sidecar service', () => {
     expect((await call(sc, '/query')).status).toBe(405);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Query contract over REST]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Query contract over REST]]
   // @tg: verifies:: [[openspec:sidecar-service#REST API#Cypher over REST]]
   it('returns the {columns, rows} contract with tagged graph values', async () => {
@@ -281,6 +292,7 @@ describe('sidecar service', () => {
     expect(r.rows[0][2]).toBe(2020);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Token required]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Token required]]
   // @tg: verifies:: [[openspec:sidecar-service#Token authentication#Missing token]]
   // @tg: verifies:: [[openspec:sidecar-service#Token authentication#Wrong token]]
@@ -296,6 +308,7 @@ describe('sidecar service', () => {
     expect(logs.join('\n')).not.toContain(TOKEN);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#No token refuses to start]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#No token refuses to start]]
   // @tg: verifies:: [[openspec:sidecar-service#Token authentication#No token configured]]
   it('refuses to start without a token unless explicitly overridden on loopback', () => {
@@ -309,6 +322,7 @@ describe('sidecar service', () => {
     expect(loadConfig({ ...e, OBSIGRAPH_TOKEN_FILE: file }).token).toBe(TOKEN);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Loopback by default]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Loopback by default]]
   // @tg: verifies:: [[openspec:sidecar-service#Safe default network binding#Default bind]]
   // @tg: verifies:: [[openspec:sidecar-service#Safe default network binding#Explicit wide bind]]
@@ -321,6 +335,7 @@ describe('sidecar service', () => {
     expect(logs.some((l) => l.includes('without TLS'))).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/sidecar-service#Bounded requests]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/sidecar-service#Bounded requests]]
   // @tg: verifies:: [[openspec:sidecar-service#Bounded request handling#Slow query]]
   it('limits body size and times out slow queries without stack traces', async () => {

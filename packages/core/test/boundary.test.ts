@@ -11,6 +11,7 @@ function files(dir: string): string[] {
   });
 }
 
+// @tg: verifies:: [[tests/edge-parsing#Core has no host imports]] {since: "2026-10-03", level: unit}
 // @lat: [[tests/edge-parsing#Core has no host imports]]
 it('core source has no Obsidian or DOM dependencies', () => {
   const offenders = files(SRC).filter((f) => {

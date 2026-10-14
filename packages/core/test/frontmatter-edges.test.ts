@@ -11,6 +11,7 @@ const vault = (notes: NoteInput[], options?: { frontmatterEdges?: boolean }) => 
 const note = (path: string, frontmatter: Record<string, unknown> | null = null, text = ''): NoteInput => ({ path, text, frontmatter });
 
 describe('frontmatter edges', () => {
+  // @tg: verifies:: [[tests/frontmatter-edges#Links become typed edges]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Links become typed edges]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Single and list values]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Alias, subpath and markdown links]]
@@ -33,6 +34,7 @@ describe('frontmatter edges', () => {
     expect(edges.every((e) => e.sign === 1 && e.line === 0 && e.heading === null && Object.keys(e.props).length === 0)).toBe(true);
   });
 
+  // @tg: verifies:: [[tests/frontmatter-edges#Only links count]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Only links count]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Values without links and skipped properties]]
   it('ignores text, numbers, empty placeholders and Obsidian-owned properties', () => {
@@ -54,6 +56,7 @@ describe('frontmatter edges', () => {
     expect(frontmatterEdges(undefined)).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/frontmatter-edges#Off unless enabled]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Off unless enabled]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Off by default]]
   it('adds graph edges only when the option is on', () => {
@@ -64,6 +67,7 @@ describe('frontmatter edges', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/frontmatter-edges#Alongside body edges]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Alongside body edges]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Alongside body edges]]
   it('keeps body edges and gives repeated links distinct ids', () => {
@@ -71,6 +75,7 @@ describe('frontmatter edges', () => {
     expect([...g.edges()].map((e) => e.id)).toEqual(['B.md#related#A.md#0', 'B.md#related#A.md#1', 'B.md#related#A.md#2']);
   });
 
+  // @tg: verifies:: [[tests/frontmatter-edges#Follows edits and unresolved links]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Follows edits and unresolved links]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Follows note edits]]
   it('updates edges when the note changes and stubs unresolved targets', () => {
@@ -83,6 +88,7 @@ describe('frontmatter edges', () => {
     expect([...g.edges()]).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/frontmatter-edges#Schemas check frontmatter edges]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/frontmatter-edges#Schemas check frontmatter edges]]
   // @tg: verifies:: [[openspec:edge-parsing#Frontmatter link edges#Schema checks apply]]
   it('lets edge type declarations check frontmatter links', () => {

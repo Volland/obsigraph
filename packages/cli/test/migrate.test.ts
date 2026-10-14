@@ -55,6 +55,7 @@ const BASE = {
 };
 const withDecisions = (body: string) => ({ ...BASE, 'lat.md/decisions.md': `# Decisions\n\nChoices we made.\n\n## Short tokens\n\n${body}\n\n## Long sessions\n\nSessions lasted a day.\n` });
 
+// @tg: verifies:: [[tests/tg-migrate#Migrate command#Dry run]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Migrate command#Dry run]]
 // @tg: verifies:: [[openspec:tg-migrate#Migrate command#Dry run]]
 it('prints a diff and changes nothing with --dry-run', async () => {
@@ -67,6 +68,7 @@ it('prints a diff and changes nothing with --dry-run', async () => {
   expect(existsSync(join(dir, 'Types'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Migrate command#Idempotent]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Migrate command#Idempotent]]
 // @tg: verifies:: [[openspec:tg-migrate#Migrate command#Idempotent]]
 it('changes nothing on a second run, and the migrated project checks clean', async () => {
@@ -79,6 +81,7 @@ it('changes nothing on a second run, and the migrated project checks clean', asy
   expect((await tg(dir, ['migrate'])).out).toContain('Nothing to migrate');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#File typing#Decisions typed by name]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#File typing#Decisions typed by name]]
 // @tg: verifies:: [[openspec:tg-migrate#File typing#Decisions typed by name]]
 it('types files by their path and requirement content, never index files', async () => {
@@ -102,6 +105,7 @@ it('types files by their path and requirement content, never index files', async
   expect(read(dir, 'lat.md/lat.md').startsWith('# Lat')).toBe(true);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#File typing#Existing type kept]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#File typing#Existing type kept]]
 // @tg: verifies:: [[openspec:tg-migrate#File typing#Existing type kept]]
 it('keeps an existing type', async () => {
@@ -109,6 +113,7 @@ it('keeps an existing type', async () => {
   expect((await plan(dir)).typed.map((t) => t.file)).not.toContain('lat.md/decisions.md');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#Cued relation]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#Cued relation]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#Cued relation]]
 it('writes a cued relation as a typed edge line and keeps the prose link', async () => {
@@ -118,6 +123,7 @@ it('writes a cued relation as a typed edge line and keeps the prose link', async
   expect(text).toContain('Tokens are short because of [[constraints#Session limit]].\n\n- motivated_by:: [[constraints#Session limit]]\n\n## Long sessions');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#Sentence scope]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#Sentence scope]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#Sentence scope]]
 it('reads cue words from the sentence of each link', async () => {
@@ -129,6 +135,7 @@ it('reads cue words from the sentence of each link', async () => {
   ]);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#Ambiguous link left plain]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#Ambiguous link left plain]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#Ambiguous link left plain]]
 it('reports an ambiguous link with its candidates and sentence', async () => {
@@ -140,6 +147,7 @@ it('reports an ambiguous link with its candidates and sentence', async () => {
   ]);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#No cue without infer]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#No cue without infer]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#No cue without infer]]
 it('needs a cue for a single candidate unless --infer is given', async () => {
@@ -150,6 +158,7 @@ it('needs a cue for a single candidate unless --infer is given', async () => {
   expect(inferred.edges.map((e) => e.type)).toEqual(['constrains', 'motivated_by']);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Edge metadata#Strength from the sentence]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Edge metadata#Strength from the sentence]]
 // @tg: verifies:: [[openspec:tg-migrate#Edge metadata#Strength from the sentence]]
 it('adds strength from the sentence and since from git', async () => {
@@ -162,6 +171,7 @@ it('adds strength from the sentence and since from git', async () => {
   expect(read(dir, 'lat.md/constraints.md')).toContain('- constrains:: [[requirements#Token expiry]] {strength: must}');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Edge metadata#Undeclared property not added]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Edge metadata#Undeclared property not added]]
 // @tg: verifies:: [[openspec:tg-migrate#Edge metadata#Undeclared property not added]]
 it('adds only properties the edge type declares', async () => {
@@ -173,6 +183,7 @@ it('adds only properties the edge type declares', async () => {
   expect(p.edges).toEqual([expect.objectContaining({ type: 'motivated_by', props: {} })]);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Code reference upgrade#Implementation upgraded]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Code reference upgrade#Implementation upgraded]]
 // @tg: verifies:: [[openspec:tg-migrate#Code reference upgrade#Implementation upgraded]]
 it('upgrades @lat comments to implements and verifies by the target type', async () => {
@@ -191,6 +202,7 @@ it('upgrades @lat comments to implements and verifies by the target type', async
   expect((await tg(dir, ['check'])).out).toContain('All checks passed');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Code reference upgrade#Keep lat]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Code reference upgrade#Keep lat]]
 // @tg: verifies:: [[openspec:tg-migrate#Code reference upgrade#Keep lat]]
 it('keeps the @lat line with --keep-lat', async () => {
@@ -203,6 +215,7 @@ it('keeps the @lat line with --keep-lat', async () => {
   expect(read(dir, 'src/token.ts')).toBe(`// ${TG} implements:: [[requirements#Token expiry]]\n// ${LAT} [[requirements#Token expiry]]\nexport function refresh() {}\n`);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Setup swap#lat block replaced]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Setup swap#lat block replaced]]
 // @tg: verifies:: [[openspec:tg-migrate#Setup swap#lat block replaced]]
 it('replaces the lat agent block and adds the tg setup', async () => {
@@ -216,6 +229,7 @@ it('replaces the lat agent block and adds the tg setup', async () => {
   expect(existsSync(join(dir, 'Types/code-types.md'))).toBe(true);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Migration safety#Dirty file refused]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Migration safety#Dirty file refused]]
 // @tg: verifies:: [[openspec:tg-migrate#Migration safety#Dirty file refused]]
 it('refuses files with uncommitted changes unless --force', async () => {
@@ -229,6 +243,7 @@ it('refuses files with uncommitted changes unless --force', async () => {
   expect(read(dir, 'lat.md/decisions.md')).toContain('type: Decision');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Migration report#JSON for an agent]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Migration report#JSON for an agent]]
 // @tg: verifies:: [[openspec:tg-migrate#Migration report#JSON for an agent]]
 it('reports typed files, edges, upgrades and unresolved links as JSON', async () => {
@@ -239,6 +254,7 @@ it('reports typed files, edges, upgrades and unresolved links as JSON', async ()
   expect((await tg(dir, ['migrate', '--dry-run'])).out).toContain('Left 1 link plain (no cue 1)');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#Words, not substrings]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#Words, not substrings]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#Words, not substrings]]
 it('matches cue words as words and keeps link targets whole', async () => {
@@ -260,6 +276,7 @@ it('adds a type to CRLF frontmatter without a second block', async () => {
   expect(read(dir, 'lat.md/decisions.md')).toBe('---\r\ntype: Decision\r\nowner: ops\r\n---\r\n# Decisions\r\n\r\nChoices.\r\n');
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Migration safety#Symlink out of the project]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Migration safety#Symlink out of the project]]
 // @tg: verifies:: [[openspec:tg-migrate#Migration safety#Symlink out of the project]]
 it('refuses to write through a symlink that leads outside the project, even with --force', async () => {

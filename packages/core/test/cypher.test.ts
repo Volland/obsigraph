@@ -35,6 +35,7 @@ const fail = (q: string): CypherError => {
 };
 
 describe('cypher subset', () => {
+  // @tg: verifies:: [[tests/cypher-query#Typed traversal with filter]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Typed traversal with filter]]
   // @tg: verifies:: [[openspec:cypher-query#Supported clauses#Typed traversal with filter]]
   it('matches typed traversals filtered by relationship properties', () => {
@@ -51,6 +52,7 @@ describe('cypher subset', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Ordering and limit]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Ordering and limit]]
   // @tg: verifies:: [[openspec:cypher-query#Supported clauses#Ordering and limit]]
   it('orders, skips and limits rows', () => {
@@ -59,6 +61,7 @@ describe('cypher subset', () => {
     expect(titles(run('MATCH (n) RETURN n.age AS age ORDER BY age'))).toEqual([25, 31, 35, 40, null, null]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Sign and id are queryable]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Sign and id are queryable]]
   // @tg: verifies:: [[openspec:cypher-query#Edge sign and id are queryable#Filter negative edges]]
   it('exposes r.sign, r.id and n.stub', () => {
@@ -68,6 +71,7 @@ describe('cypher subset', () => {
     expect(stubs.rows).toEqual([['Ghost']]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Write clauses rejected]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Write clauses rejected]]
   // @tg: verifies:: [[openspec:cypher-query#Read-only#Write attempt]]
   it('rejects every write clause as read-only', () => {
@@ -78,6 +82,7 @@ describe('cypher subset', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Unsupported syntax named]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Unsupported syntax named]]
   // @tg: verifies:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly#Unsupported function]]
   // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Unsupported clause]]
@@ -100,6 +105,7 @@ describe('cypher subset', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Unsupported expression constructs named]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/cypher-query#Unsupported expression constructs named]]
   // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Unsupported expression construct]]
   it('names list comprehensions, map projections, pattern predicates and subqueries as unsupported', () => {
@@ -123,6 +129,7 @@ describe('cypher subset', () => {
     expect(run('MATCH (n:Person) WHERE (n.age) - 1 > 35 RETURN n.title').rows).toEqual([['Bob']]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Variable-length relationship is a list column]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/cypher-query#Variable-length relationship is a list column]]
   it('reports a variable-length relationship variable as a scalar list column', () => {
     const r = run('MATCH (a {title: "Alice"})-[rs:knows*1..2]->(b) RETURN rs, b ORDER BY b.title');
@@ -136,6 +143,7 @@ describe('cypher subset', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Syntax errors have positions]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Syntax errors have positions]]
   // @tg: verifies:: [[openspec:cypher-query#Unsupported syntax fails clearly#Syntax error]]
   it('reports syntax errors with line and column', () => {
@@ -148,6 +156,7 @@ describe('cypher subset', () => {
     expect([multi.line, multi.column]).toEqual([2, 8]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Column kinds reported]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Column kinds reported]]
   // @tg: verifies:: [[openspec:cypher-query#Result shape#Mixed columns]]
   it('reports column kinds statically, even for empty results', () => {
@@ -160,6 +169,7 @@ describe('cypher subset', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Stubs included by default]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Stubs included by default]]
   // @tg: verifies:: [[openspec:cypher-query#Deterministic stub handling#Exclude stubs]]
   it('includes stubs by default and lets queries exclude them', () => {
@@ -167,6 +177,7 @@ describe('cypher subset', () => {
     expect(titles(run('MATCH (n) WHERE n.stub = false RETURN n ORDER BY n.title'))).toEqual(['Acme', 'Alice', 'Bob', 'Carol', 'Eve']);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Expression semantics]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Expression semantics]]
   it('evaluates expressions with openCypher null semantics', () => {
     const one = (q: string, params?: Record<string, unknown>) => run(q, params).rows[0]![0];
@@ -183,6 +194,7 @@ describe('cypher subset', () => {
     expect(run('MATCH (a)-[:knows|likes]->(b) RETURN DISTINCT b.title AS t ORDER BY t').rows).toEqual([['Bob'], ['Carol'], ['Ghost']]);
   });
 
+  // @tg: verifies:: [[tests/cypher-query#Undirected and multi-pattern matches]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-query#Undirected and multi-pattern matches]]
   it('matches undirected relationships, shared variables and enforces relationship uniqueness', () => {
     const undirected = run('MATCH (a {title: "Carol"})-[:knows]-(b) RETURN b.title ORDER BY b.title');

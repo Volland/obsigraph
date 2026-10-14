@@ -33,6 +33,7 @@ describe('SHACL export', () => {
   const set = setOf({ 'Types/Org.md': ORG, 'Types/Team.md': { schema: { template: '[[Templates/Team]]' } } });
   const ttl = exportShacl(set, { body: (p) => (p === 'Types/Team.md' ? '## Members\n' : null) });
 
+  // @tg: verifies:: [[tests/shacl-interop#Export writes valid Turtle]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Export writes valid Turtle]]
   // @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Deterministic output]]
   it('writes one node shape per type that parses as Turtle, deterministically', () => {
@@ -45,6 +46,7 @@ describe('SHACL export', () => {
     expect(empty).toContain('@prefix sh: <http://www.w3.org/ns/shacl#> .');
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Node type mapping]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Node type mapping]]
   // @tg: verifies:: [[openspec:shacl-interop#Node type mapping#Declared URI used]]
   // @tg: verifies:: [[openspec:shacl-interop#Node type mapping#Property shape exported]]
@@ -59,6 +61,7 @@ describe('SHACL export', () => {
     expect(ttl).toContain('sh:path ex:site ;\n        sh:name "site" ;\n        sh:nodeKind sh:IRI ;');
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Edge mapping]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Edge mapping]]
   // @tg: verifies:: [[openspec:shacl-interop#Edge mapping#Edge with target exported]]
   it('maps per-type edges to property shapes with classes and marks closed edge lists', () => {
@@ -68,6 +71,7 @@ describe('SHACL export', () => {
     expect(ttl.match(/tgs:edgesClosed true/g)).toHaveLength(2);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Edge type shapes]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Edge type shapes]]
   // @tg: verifies:: [[openspec:shacl-interop#Edge type shapes#Edge properties exported]]
   it('exports edge types as reification shapes with endpoint and property constraints', () => {
@@ -80,6 +84,7 @@ describe('SHACL export', () => {
     );
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Annotations preserved]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Annotations preserved]]
   // @tg: verifies:: [[openspec:shacl-interop#Typed Graph annotations#Visualization preserved]]
   it('keeps note, template and visualization as tgs annotations', () => {
@@ -91,6 +96,7 @@ describe('SHACL export', () => {
 describe('SHACL import', () => {
   const ttl = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } }, 'Types/Company.md': { schema: {} } }));
 
+  // @tg: verifies:: [[tests/shacl-interop#Import layouts]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Import layouts]]
   // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#One note per type]]
   // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#Single note layout]]
@@ -104,6 +110,7 @@ describe('SHACL import', () => {
     expect(single.writes.map((w) => [w.path, w.text])).toEqual([['Types/Org.md', '---\nschemas:\n  Company: {}\n  Person:\n    properties: {name: text}\n---\n']]);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Single layout warns about templates]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Single layout warns about templates]]
   // @tg: verifies:: [[openspec:shacl-interop#Layouts that cannot keep a template are reported#Single layout drops a template body]]
   it('warns that a single-note layout cannot keep template bodies', () => {
@@ -113,6 +120,7 @@ describe('SHACL import', () => {
     expect(planImport(importShacl(withBody), [], { layout: 'per-type' }).warnings).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Existing note warns about templates]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/shacl-interop#Existing note warns about templates]]
   it('warns when a template body cannot be written because the type note already exists', () => {
     const withBody = exportShacl(setOf({ 'Types/Person.md': { schema: { properties: { name: 'text' } } } }), { body: () => '## Notes' });
@@ -124,6 +132,7 @@ describe('SHACL import', () => {
     expect(planImport(importShacl(withBody), [same], {}).warnings).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Existing body kept]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Existing body kept]]
   // @tg: verifies:: [[openspec:shacl-interop#Import SHACL into schema notes#Existing body kept]]
   it('replaces only the schema keys of an existing note', () => {
@@ -135,6 +144,7 @@ describe('SHACL import', () => {
     expect(person.text).toBe('---\ntags: [ontology]\nschema:\n  properties: {name: text}\ncssclasses: wide\n---\n\n# Person\n\nHand-written notes.\n');
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Mixed note protected]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Mixed note protected]]
   // @tg: verifies:: [[openspec:shacl-interop#Imports never clobber silently#Mixed note protected]]
   it('refuses to rewrite a note that declares types missing from the import unless forced', () => {
@@ -147,6 +157,7 @@ describe('SHACL import', () => {
     expect(forced.writes.find((w) => w.path === 'Types/Org.md')!.text).toBe('---\nschemas:\n  Person:\n    properties: {name: text}\n  Team: {}\n---\nDocs\n');
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#External shapes imported]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#External shapes imported]]
   // @tg: verifies:: [[openspec:shacl-interop#Reverse mapping#External shape imported]]
   it('reads foreign SHACL with schema.org IRIs, sh:node edges and reification shapes', () => {
@@ -179,6 +190,7 @@ describe('SHACL import', () => {
     expect(imp.edgeTypes).toMatchObject([{ type: 'worksFor', from: ['Person'], to: null, uri: 'schema:worksFor', properties: [{ name: 'startDate', kind: 'date' }] }]);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Unsupported constructs reported]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Unsupported constructs reported]]
   // @tg: verifies:: [[openspec:shacl-interop#Drop report#Unsupported construct reported]]
   it('reports constructs outside the subset and imports the rest of the shape', () => {
@@ -206,6 +218,7 @@ describe('SHACL import', () => {
     expect(imp.types.map((t) => [t.type, t.properties.map((p) => p.name)])).toEqual([['Thing', ['code', 'kind', 'weight']]]);
   });
 
+  // @tg: verifies:: [[tests/shacl-interop#Round trip is lossless]] {since: "2026-10-06", level: unit}
   // @lat: [[tests/shacl-interop#Round trip is lossless]]
   // @tg: verifies:: [[openspec:shacl-interop#Lossless round trip#Export import export]]
   it('reproduces the same Turtle after export, import into an empty vault and export', () => {

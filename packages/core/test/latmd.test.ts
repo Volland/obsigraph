@@ -5,6 +5,7 @@ import { LatIndex, leadingParagraphIssue, parseMarkdown } from '../src/latmd.js'
 
 const idx = (files: Record<string, string>) => new LatIndex(Object.entries(files).map(([path, text]) => ({ path, text })));
 
+// @tg: verifies:: [[tests/lat-resolver#Section tree#Nested headings]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Section tree#Nested headings]]
 // @tg: verifies:: [[openspec:lat-resolver#Section tree#Nested headings]]
 it('nests sections by heading level', () => {
@@ -15,6 +16,7 @@ it('nests sections by heading level', () => {
   expect(p.flat.map((s) => s.endLine)).toEqual([4, 8, 11]);
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Section tree#Heading in code fence]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Section tree#Heading in code fence]]
 // @tg: verifies:: [[openspec:lat-resolver#Section tree#Heading in code fence]]
 it('ignores headings and links inside fenced code', () => {
@@ -23,6 +25,7 @@ it('ignores headings and links inside fenced code', () => {
   expect(p.refs.map((r) => r.target)).toEqual(['real']);
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Section ids#Short id]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Section ids#Short id]]
 // @tg: verifies:: [[openspec:lat-resolver#Section ids#Short id]]
 it('resolves a short id when the file name is unique', () => {
@@ -33,6 +36,7 @@ it('resolves a short id when the file name is unique', () => {
   expect(i.resolve('SEARCH#indexing').kind).toBe('section');
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Section ids#Ambiguous short id]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Section ids#Ambiguous short id]]
 // @tg: verifies:: [[openspec:lat-resolver#Section ids#Ambiguous short id]]
 it('reports ambiguity instead of guessing', () => {
@@ -48,6 +52,7 @@ it('reports ambiguity instead of guessing', () => {
   }
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Link resolution#Code target]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Link resolution#Code target]]
 // @tg: verifies:: [[openspec:lat-resolver#Link resolution#Code target]]
 it('resolves source links to code targets', () => {
@@ -56,6 +61,7 @@ it('resolves source links to code targets', () => {
   expect(i.resolve('src/x.mts#Foo#bar')).toEqual({ kind: 'code', file: 'src/x.mts', symbol: 'Foo#bar' });
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Link resolution#Missing section]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Link resolution#Missing section]]
 // @tg: verifies:: [[openspec:lat-resolver#Link resolution#Missing section]]
 it('reports a missing section with the closest suggestion', () => {
@@ -65,6 +71,7 @@ it('reports a missing section with the closest suggestion', () => {
   expect(i.resolve('notes/file.docx#x')).toMatchObject({ kind: 'missing', reason: 'unsupported-extension', ext: '.docx' });
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Leading paragraph rule#Missing leading paragraph]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Leading paragraph rule#Missing leading paragraph]]
 // @tg: verifies:: [[openspec:lat-resolver#Leading paragraph rule#Missing leading paragraph]]
 it('flags a heading followed directly by a child heading', () => {
@@ -73,6 +80,7 @@ it('flags a heading followed directly by a child heading', () => {
   expect(leadingParagraphIssue(p.flat[1]!)).toBeNull();
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Leading paragraph rule#Wiki links not counted]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Leading paragraph rule#Wiki links not counted]]
 // @tg: verifies:: [[openspec:lat-resolver#Leading paragraph rule#Wiki links not counted]]
 it('does not count wiki link content toward the 250 limit', () => {
@@ -84,6 +92,7 @@ it('does not count wiki link content toward the 250 limit', () => {
   expect(leadingParagraphIssue(over.flat[0]!)).toMatchObject({ kind: 'too-long', length: 260 });
 });
 
+// @tg: verifies:: [[tests/lat-resolver#Link resolution#Real project resolves]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/lat-resolver#Link resolution#Real project resolves]]
 it("resolves every section link in this repository's lat.md", () => {
   const root = join(import.meta.dirname, '..', '..', '..');

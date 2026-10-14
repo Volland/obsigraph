@@ -4,6 +4,7 @@ import { release } from '../../../scripts/release-vscode.mjs';
 
 type Call = [string, string[]];
 
+// @tg: verifies:: [[tests/vscode-extension#Release#Refuses with a missing token]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Release#Refuses with a missing token]]
 // @tg: verifies:: [[openspec:vscode-extension#Dual-registry publishing#One package, two registries]]
 it('publishes to neither registry when a token is missing', () => {
@@ -15,6 +16,7 @@ it('publishes to neither registry when a token is missing', () => {
   expect(calls).toEqual([]);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Release#Same package to both]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Release#Same package to both]]
 // @tg: verifies:: [[openspec:vscode-extension#Dual-registry publishing#One package, two registries]]
 it('publishes the same vsix to the Marketplace and Open VSX', () => {

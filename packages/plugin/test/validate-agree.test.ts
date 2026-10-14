@@ -37,6 +37,7 @@ function app(): App {
   return { vault, metadataCache } as unknown as App;
 }
 
+// @tg: verifies:: [[tests/tg-validate#Plugin and command agree]] {since: "2026-10-09", level: unit}
 // @lat: [[tests/tg-validate#Plugin and command agree]]
 // @tg: verifies:: [[openspec:tg-validate#Same findings as the plugin#Plugin and command agree]]
 it('gives the same findings for the example vault through tg validate and the plugin', async () => {

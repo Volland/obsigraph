@@ -41,6 +41,7 @@ function readOnlyApp(root: string): App {
   return { vault, metadataCache } as unknown as App;
 }
 
+// @tg: verifies:: [[tests/tg-vault#Read in place#Indexing leaves files untouched]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-vault#Read in place#Indexing leaves files untouched]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Read in place#Nested heading link]]
 it('indexes in-vault lat.md folders without changing a byte', async () => {

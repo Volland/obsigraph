@@ -14,6 +14,7 @@ function vault(files: Record<string, string>): string {
   return dir;
 }
 
+// @tg: verifies:: [[tests/node-vault#Skips dot and ignored folders]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/node-vault#Skips dot and ignored folders]]
 // @tg: verifies:: [[openspec:node-vault-loader#List markdown files#Dot folders skipped]]
 // @tg: verifies:: [[openspec:node-vault-loader#List markdown files#Ignore list honored]]
@@ -33,6 +34,7 @@ it('lists markdown sorted, skipping dot folders and ignored names', async () => 
   expect(isNotePath('docs/n.md', ['node_modules'])).toBe(true);
 });
 
+// @tg: verifies:: [[tests/node-vault#Reads frontmatter read-only]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/node-vault#Reads frontmatter read-only]]
 // @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#Valid frontmatter]]
 it('reads text, frontmatter and hash without touching the file', async () => {
@@ -46,6 +48,7 @@ it('reads text, frontmatter and hash without touching the file', async () => {
   expect(readFileSync(join(dir, 'p.md'), 'utf8')).toBe(r.note.text);
 });
 
+// @tg: verifies:: [[tests/node-vault#Reports broken frontmatter]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/node-vault#Reports broken frontmatter]]
 // @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#Broken frontmatter]]
 it('keeps the text and reports a one-line error for invalid YAML', async () => {

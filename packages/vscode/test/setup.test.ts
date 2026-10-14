@@ -22,6 +22,7 @@ function deps(hasTg: boolean, answer: boolean) {
   };
 }
 
+// @tg: verifies:: [[tests/vscode-extension#Set up TypeGraph#Confirmation first]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Set up TypeGraph#Confirmation first]]
 // @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Confirmation first]]
 it('lists the files before running anything and runs nothing when declined', async () => {
@@ -35,6 +36,7 @@ it('lists the files before running anything and runs nothing when declined', asy
   expect(no.calls.ran).toEqual([]);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Set up TypeGraph#Global tg preferred]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Set up TypeGraph#Global tg preferred]]
 // @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Global tg preferred]]
 it('uses a global tg when present and npx otherwise', () => {
@@ -42,6 +44,7 @@ it('uses a global tg when present and npx otherwise', () => {
   expect(setupCommand(false)).toBe('npx @typedgraph/cli init --write');
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Set up TypeGraph#File list matches the CLI]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Set up TypeGraph#File list matches the CLI]]
 it('lists exactly the files tg init plans for a fresh project', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'tgvs-init-'));
@@ -53,6 +56,7 @@ it('lists exactly the files tg init plans for a fresh project', async () => {
   expect(readdirSync(dir)).toEqual([]);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Set up TypeGraph#Detects finished setup]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Set up TypeGraph#Detects finished setup]]
 it('needs setup without lat.md or a tg block and not with both', () => {
   const dir = mkdtempSync(join(tmpdir(), 'tgvs-need-'));
@@ -65,6 +69,7 @@ it('needs setup without lat.md or a tg block and not with both', () => {
   expect(needsSetup(dir)).toBe(false);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Set up TypeGraph#tg.md counts as set up]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Set up TypeGraph#tg.md counts as set up]]
 // @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#tg.md counts as set up]]
 it('treats a tg.md docs folder with a tg block as set up', () => {

@@ -41,6 +41,7 @@ const people = () =>
 const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : [join(dir, e.name)]));
 
 describe('tg validate', () => {
+  // @tg: verifies:: [[tests/tg-validate#Findings reported]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Findings reported]]
   // @tg: verifies:: [[openspec:tg-validate#Validate a vault#Findings reported]]
   it('lists schema findings per note without changing the vault', async () => {
@@ -60,6 +61,7 @@ describe('tg validate', () => {
     for (const [f, t] of before) expect(readFileSync(f, 'utf8')).toBe(t);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Clean vault]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Clean vault]]
   // @tg: verifies:: [[openspec:tg-validate#Validate a vault#Clean vault]]
   it('prints a one-line summary for a clean vault', async () => {
@@ -67,6 +69,7 @@ describe('tg validate', () => {
     expect(await tg(v, 'validate')).toEqual({ code: 0, out: 'No findings in 2 notes.\n', err: '' });
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Vault without schemas]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Vault without schemas]]
   // @tg: verifies:: [[openspec:tg-validate#Validate a vault#Vault without schemas]]
   it('reports only syntax and embed findings when there are no schema notes', async () => {
@@ -78,6 +81,7 @@ describe('tg validate', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Finding codes]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Finding codes]]
   // @tg: verifies:: [[openspec:tg-validate#Finding codes and severities#Code on every finding]]
   // @tg: verifies:: [[openspec:tg-validate#Finding codes and severities#Declaration error]]
@@ -90,6 +94,7 @@ describe('tg validate', () => {
     expect(json(d.out).findings).toEqual([{ code: 'invalid-declaration', severity: 'error', path: 'Types/Thing.md', line: null, message: expect.any(String) }]);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Exit codes]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Exit codes]]
   // @tg: verifies:: [[openspec:tg-validate#Exit codes and strictness#Warnings pass by default]]
   // @tg: verifies:: [[openspec:tg-validate#Exit codes and strictness#Strict fails on warnings]]
@@ -104,6 +109,7 @@ describe('tg validate', () => {
     expect((await tg(v, 'validate', '--format', 'xml')).code).toBe(2);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Selecting findings]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Selecting findings]]
   // @tg: verifies:: [[openspec:tg-validate#Selecting findings#Ignore a code]]
   // @tg: verifies:: [[openspec:tg-validate#Selecting findings#Schema-only]]
@@ -124,6 +130,7 @@ describe('tg validate', () => {
     expect(s.findings.map((f) => [f.code, f.path])).toEqual([['duplicate-declaration', 'Types/B.md']]);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Frontmatter edges flag]] {since: "2026-10-13", level: unit}
   // @lat: [[tests/tg-validate#Frontmatter edges flag]]
   it('checks frontmatter links against edge types only with --frontmatter-edges', async () => {
     const v = folder({
@@ -137,6 +144,7 @@ describe('tg validate', () => {
     expect(f.map((x) => [x.code, x.path])).toEqual([['wrong-target-type', 'Bad.md']]);
   });
 
+  // @tg: verifies:: [[tests/tg-validate#Output formats]] {since: "2026-10-09", level: unit}
   // @lat: [[tests/tg-validate#Output formats]]
   // @tg: verifies:: [[openspec:tg-validate#Output formats#JSON output]]
   // @tg: verifies:: [[openspec:tg-validate#Output formats#SARIF output]]

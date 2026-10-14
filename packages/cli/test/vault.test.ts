@@ -30,6 +30,7 @@ async function tg(cwd: string, ...args: string[]) {
 const read = (...p: string[]) => readFileSync(join(...p), 'utf8');
 const hasLat = spawnSync('lat', ['--version'], { encoding: 'utf8' }).status === 0;
 
+// @tg: verifies:: [[tests/tg-vault#Export projection#Typed edge flattened]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Export projection#Typed edge flattened]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Export projection#Typed edge flattened]]
 it('flattens typed edges to plain links and drops property blocks', async () => {
@@ -47,6 +48,7 @@ it('flattens typed edges to plain links and drops property blocks', async () => 
   expect(read(v, 'People/Alice.md')).toContain('knows:: [[Bob]] {since: 2020}');
 });
 
+// @tg: verifies:: [[tests/tg-vault#Export projection#Valid output]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Export projection#Valid output]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Export projection#Valid output]]
 it('writes a project that tg check and lat check both accept', async () => {
@@ -64,6 +66,7 @@ it('writes a project that tg check and lat check both accept', async () => {
   }
 });
 
+// @tg: verifies:: [[tests/tg-vault#Loss report#Report shown]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Loss report#Report shown]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Loss report#Report shown]]
 it('reports each dropped construct by kind', async () => {
@@ -81,6 +84,7 @@ it('reports each dropped construct by kind', async () => {
   expect(text).toContain('round trip is not guaranteed');
 });
 
+// @tg: verifies:: [[tests/tg-vault#Safe export target#Non-empty target]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Safe export target#Non-empty target]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Safe export target#Non-empty target]]
 it('refuses to overwrite a non-empty target unless forced', async () => {
@@ -95,6 +99,7 @@ it('refuses to overwrite a non-empty target unless forced', async () => {
   expect((await tg(v, 'export', join(v, 'sub'))).code).toBe(2);
 });
 
+// @tg: verifies:: [[tests/tg-vault#Import#Copy]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Import#Copy]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Import#Copy]]
 it('copies an existing lat.md folder into a vault and leaves the source unchanged', async () => {

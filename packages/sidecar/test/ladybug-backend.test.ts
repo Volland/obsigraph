@@ -45,6 +45,7 @@ afterAll(async () => {
 });
 
 describe.skipIf(!available)('ladybug backend', () => {
+  // @tg: verifies:: [[tests/ladybug-backend#Same columns and values]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Same columns and values]]
   // @tg: verifies:: [[openspec:ladybug-backend#Same interface and result contract#Mixed columns]]
   it('returns the same columns, kinds and tagged values as the built-in engine', async () => {
@@ -65,6 +66,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Full Cypher for reads]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Full Cypher for reads]]
   // @tg: verifies:: [[openspec:ladybug-backend#Full Cypher for reads#Clause unsupported in-plugin]]
   it('runs read syntax the built-in engine does not support', async () => {
@@ -75,6 +77,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(l.body.notices[0]).toMatch(/untranslated/);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Constructs outside the subset pass through]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/ladybug-backend#Constructs outside the subset pass through]]
   // @tg: verifies:: [[openspec:ladybug-backend#Full Cypher for reads#Clause unsupported in-plugin]]
   it('passes subqueries and text the built-in parser cannot read to Ladybug untranslated', async () => {
@@ -93,6 +96,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(sliced.body.rows).toEqual([[[1, 2]]]);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Writes rejected]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Writes rejected]]
   // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Schema statement]]
   // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Write attempt]]
@@ -115,6 +119,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(after.body.rows).toEqual([[6]]);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Keywords in strings allowed]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Keywords in strings allowed]]
   // @tg: verifies:: [[openspec:ladybug-backend#Read-only enforcement#Keyword inside a string]]
   it('does not reject keywords inside strings, comments, properties or labels', async () => {
@@ -125,6 +130,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(r.body.rows).toEqual([[0]]);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Negative edges filter]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Negative edges filter]]
   // @tg: verifies:: [[openspec:ladybug-backend#Sign, id and stub properties#Filter negative edges]]
   it('filters negative edges by r.sign like the built-in engine', async () => {
@@ -133,6 +139,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(l.body.rows).toEqual(b.body.rows);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Unknown backend rejected]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Unknown backend rejected]]
   it('rejects an unknown backend value', async () => {
     const r = await post('MATCH (n) RETURN n', 'neo4j');
@@ -140,6 +147,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(r.body.error.message).toMatch(/"builtin" or "ladybug"/);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Unavailable and not ready]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Unavailable and not ready]]
   it('answers 503 when Ladybug is unavailable or the mirror is not ready', async () => {
     const r2 = mkdtempSync(join(tmpdir(), 'obsigraph-lbb-off-'));
@@ -157,6 +165,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     await expect(backend.run('MATCH (n) RETURN n')).rejects.toMatchObject({ kind: 'not_ready' });
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Failed sync is reported]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/ladybug-backend#Failed sync is reported]]
   it('reports a failed sync instead of serving the old snapshot or retrying forever', async () => {
     for (const ready of [true, false]) {
@@ -167,6 +176,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Edit then query]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Edit then query]]
   // @tg: verifies:: [[openspec:ladybug-backend#Freshness before reads#Edit then query]]
   it('includes an edge as soon as the built-in engine sees it', async () => {
@@ -181,6 +191,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     expect(l.body.rows).toEqual([['Acme', 1999]]);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Stale results flagged]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Stale results flagged]]
   // @tg: verifies:: [[openspec:ladybug-backend#Freshness before reads#Sync pending]]
   it('answers with a staleness notice when a sync does not settle in time', async () => {
@@ -192,6 +203,7 @@ describe.skipIf(!available)('ladybug backend', () => {
     backend.close();
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Errors with position]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Errors with position]]
   // @tg: verifies:: [[openspec:ladybug-backend#Errors reported with position#Syntax error]]
   it('reports syntax errors with a position', async () => {

@@ -26,6 +26,7 @@ async function tg(cwd: string, args: string[], stdin = '') {
 
 const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 
+// @tg: verifies:: [[tests/tg-agent#Safe init#Dry run]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Safe init#Dry run]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Dry run]]
 it('prints a diff and changes nothing with --dry-run', async () => {
@@ -39,6 +40,7 @@ it('prints a diff and changes nothing with --dry-run', async () => {
   expect(existsSync(join(dir, '.claude'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Safe init#Writes by default]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Safe init#Writes by default]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Writes by default]]
 it('writes and lists the files by default, and accepts --write as a no-op', async () => {
@@ -53,6 +55,7 @@ it('writes and lists the files by default, and accepts --write as a no-op', asyn
   expect(again.out).toContain('Wrote ');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Safe init#Idempotent write]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Safe init#Idempotent write]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Idempotent write]]
 it('writes once and then has nothing left to change', async () => {
@@ -66,6 +69,7 @@ it('writes once and then has nothing left to change', async () => {
   expect(settings.hooks.Stop).toHaveLength(1);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Migration from lat#Existing block detected]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Migration from lat#Existing block detected]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Migration from lat#Existing block detected]]
 it('reports an existing lat block and leaves it alone without --migrate', async () => {
@@ -87,6 +91,7 @@ it('removes a lat block left next to an existing tg block with --migrate', async
   expect(md).not.toContain('\nold\n');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Migration from lat#Migration applied]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Migration from lat#Migration applied]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Migration from lat#Migration applied]]
 it('replaces the lat block, hooks and MCP entry with --write --migrate', async () => {
@@ -108,6 +113,7 @@ it('replaces the lat block, hooks and MCP entry with --write --migrate', async (
   expect(Object.keys(mcp.mcpServers).sort()).toEqual(['other', 'tg']);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Instruction generation#Generate]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Instruction generation#Generate]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Instruction generation#Generate]]
 it('generates instructions that tell the agent to search first and check last', async () => {
@@ -118,6 +124,7 @@ it('generates instructions that tell the agent to search first and check last', 
   expect((await tg(process.cwd(), ['gen', 'nope'])).code).toBe(2);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent hooks#Prompt hook]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Agent hooks#Prompt hook]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Prompt hook]]
 it('the prompt hook reminds, expands refs and adds search hits', async () => {
@@ -131,6 +138,7 @@ it('the prompt hook reminds, expands refs and adds search hits', async () => {
   expect(ctx.additionalContext).toContain('Search results for the user prompt');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent hooks#Internal failure]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Agent hooks#Internal failure]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Internal failure]]
 it('a hook outside any project exits 0 without blocking', async () => {
@@ -143,6 +151,7 @@ it('a hook outside any project exits 0 without blocking', async () => {
   expect(bad.out).toContain('run `tg search`');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent hooks#Cursor init]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#Agent hooks#Cursor init]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Cursor init]]
 it('writes Cursor rules and skills and no Cursor hook configuration', async () => {
@@ -157,6 +166,7 @@ it('writes Cursor rules and skills and no Cursor hook configuration', async () =
   expect(existsSync(join(dir, '.claude'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#MCP server#Cypher over docs and code]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#MCP server#Cypher over docs and code]]
 // @tg: verifies:: [[openspec:tg-agent-integration#MCP server#Cypher over docs and code]]
 it('serves the tools over MCP and tg_cypher returns the tagged result contract', async () => {
@@ -176,6 +186,7 @@ it('serves the tools over MCP and tg_cypher returns the tagged result contract',
   expect(check.content[0]!.text).toContain('All checks passed');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Bundled skills#Skills installed]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-agent#Bundled skills#Skills installed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Bundled skills#Skills installed]]
 it('installs all five skills for Claude Code', async () => {
@@ -198,6 +209,7 @@ function withOpenspec(): string {
   return dir;
 }
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Skills patched]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Skills patched]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Skills patched]]
 it('appends a tg block to OpenSpec apply skill and command and keeps their text', async () => {
@@ -211,6 +223,7 @@ it('appends a tg block to OpenSpec apply skill and command and keeps their text'
   expect(read(dir, '.claude/skills/openspec-onboard/SKILL.md')).toBe('Onboard.\n');
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Re-run is stable]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Re-run is stable]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Re-run is stable]]
 it('keeps exactly one block and reports nothing to change on a second run', async () => {
@@ -221,6 +234,7 @@ it('keeps exactly one block and reports nothing to change on a second run', asyn
   expect(read(dir, '.claude/skills/openspec-apply-change/SKILL.md').split('<!-- tg:begin -->')).toHaveLength(2);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Regenerated skill]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Regenerated skill]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Regenerated skill]]
 it('appends the block again after OpenSpec regenerates a skill', async () => {
@@ -233,6 +247,7 @@ it('appends the block again after OpenSpec regenerates a skill', async () => {
   expect(text.split('<!-- tg:begin -->')).toHaveLength(2);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Opt out]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Opt out]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Opt out]]
 it('leaves OpenSpec files alone with --no-openspec', async () => {
@@ -242,6 +257,7 @@ it('leaves OpenSpec files alone with --no-openspec', async () => {
   expect(read(dir, '.claude/commands/opsx/apply.md')).toBe(OPENSPEC_CMD);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Skills only]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Skills only]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Skills-only init#Existing lat.md project]]
 it('writes only skills and OpenSpec patches with --skills-only', async () => {
@@ -256,6 +272,7 @@ it('writes only skills and OpenSpec patches with --skills-only', async () => {
   expect(existsSync(join(dir, 'lat.md/code-ontology.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Patch text printed]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Patch text printed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Skill text available#Print a patch]]
 it('prints skills and patch blocks with tg gen', async () => {
@@ -265,6 +282,7 @@ it('prints skills and patch blocks with tg gen', async () => {
   expect((await tg(project(), ['gen', 'impact-skill.md'])).out).toContain('name: tg-impact');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Code ontology#Ontology installed]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/tg-agent#Code ontology#Ontology installed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Code ontology install#Types and templates]]
 it('installs the ontology note, schema in Types/ and templates, and the project still checks clean', async () => {
@@ -284,6 +302,7 @@ it('installs the ontology note, schema in Types/ and templates, and the project 
   expect(report).toMatchObject({ types: 6, edgeTypes: 11, diagnostics: [] });
 });
 
+// @tg: verifies:: [[tests/tg-agent#Code ontology#Ontology kept on re-run]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/tg-agent#Code ontology#Ontology kept on re-run]]
 it('does not overwrite an edited ontology note on a later init', async () => {
   const dir = project();
@@ -294,6 +313,7 @@ it('does not overwrite an edited ontology note on a later init', async () => {
   expect(read(dir, 'lat.md/code-ontology.md')).toBe('# Ours\n\nOur own words.\n');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Code ontology#Ontology opt-out]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/tg-agent#Code ontology#Ontology opt-out]]
 it('leaves the ontology out with --no-ontology', async () => {
   const dir = project();

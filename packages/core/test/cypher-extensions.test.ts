@@ -31,12 +31,14 @@ const fail = (q: string): CypherError => {
 };
 
 describe('cypher extensions', () => {
+  // @tg: verifies:: [[tests/cypher-extensions#Filter on aggregate]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Filter on aggregate]]
   // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Filter on aggregate]]
   it('stages with WITH and filters on an aggregate', () => {
     expect(plain(run('MATCH (a)-[:knows]->(b) WITH a, count(b) AS n WHERE n > 2 RETURN a, n'))).toEqual([['Alice', 3]]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Out-of-scope variable]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Out-of-scope variable]]
   // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Out-of-scope variable]]
   it('hides variables not carried by WITH', () => {
@@ -46,6 +48,7 @@ describe('cypher extensions', () => {
     expect(fail('MATCH (a) WITH a.title RETURN a').message).toMatch(/must be aliased with AS/);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Order and limit inside WITH]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Order and limit inside WITH]]
   // @tg: verifies:: [[openspec:cypher-extensions#WITH stages a query#Ordering and limit inside WITH]]
   it('orders and limits inside WITH before further matching', () => {
@@ -53,6 +56,7 @@ describe('cypher extensions', () => {
     expect(r.rows).toEqual([['Carol', 'Alice']]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Optional match yields null]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Optional match yields null]]
   // @tg: verifies:: [[openspec:cypher-extensions#OPTIONAL MATCH#Missing relationship yields null]]
   it('keeps rows without an optional match, binding null', () => {
@@ -60,6 +64,7 @@ describe('cypher extensions', () => {
     expect(r.rows).toEqual([['Alice', null], ['Bob', 'Acme'], ['Carol', null], ['Dave', null]]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Optional where keeps row]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Optional where keeps row]]
   // @tg: verifies:: [[openspec:cypher-extensions#OPTIONAL MATCH#Optional WHERE applies to the optional part]]
   it('applies WHERE to the optional part only', () => {
@@ -67,6 +72,7 @@ describe('cypher extensions', () => {
     expect(r.rows).toEqual([['Alice', null], ['Bob', null], ['Carol', null], ['Dave', null]]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Bounded reachability]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Bounded reachability]]
   // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Bounded reachability]]
   it('finds nodes reachable within a bounded number of hops', () => {
@@ -76,6 +82,7 @@ describe('cypher extensions', () => {
     expect(run('MATCH (a {title: "Dave"})-[:knows*0..1]->(b) RETURN b.title').rows).toEqual([['Dave']]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Cycles terminate]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Cycles terminate]]
   // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Cycles terminate]]
   it('terminates on cycles and never repeats a relationship in a path', () => {
@@ -88,6 +95,7 @@ describe('cypher extensions', () => {
     expect(r.notices).toBeUndefined();
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Unbounded depth is capped]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Unbounded depth is capped]]
   // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Unbounded depth is capped]]
   it('stops unbounded expansion at the cap and says so', () => {
@@ -97,6 +105,7 @@ describe('cypher extensions', () => {
     expect(run('MATCH (a {title: "Alice"})-[:knows*1..1]->(b) RETURN b', 1).notices).toBeUndefined();
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Path result]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Path result]]
   // @tg: verifies:: [[openspec:cypher-query#Result shape#Path column]]
   it('binds path variables and reports a path column', () => {
@@ -115,6 +124,7 @@ describe('cypher extensions', () => {
     expect(r.rows.map(([, len]) => len)).toEqual([1, 1, 1, 2, 2]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Count per group]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Count per group]]
   // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Count per group]]
   it('groups by non-aggregate items and counts', () => {
@@ -123,12 +133,14 @@ describe('cypher extensions', () => {
     expect(run('MATCH (a)-[:knows]->(b) RETURN count(*), count(DISTINCT b)').rows).toEqual([[5, 4]]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Numeric aggregates]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Numeric aggregates]]
   // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Numeric aggregates on edge property]]
   it('computes avg, min, max and sum over an edge property', () => {
     expect(run('MATCH ()-[r:rated]->() RETURN avg(r.score), min(r.score), max(r.score), sum(r.score)').rows).toEqual([[3, 2, 4, 9]]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Collect values]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Collect values]]
   // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Collect values]]
   it('collects values per group', () => {
@@ -137,6 +149,7 @@ describe('cypher extensions', () => {
     expect((r.rows[0]![1] as string[]).sort()).toEqual(['Bob', 'Carol', 'Dave']);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Empty input aggregates]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Empty input aggregates]]
   // @tg: verifies:: [[openspec:cypher-extensions#Aggregation functions#Empty input]]
   it('returns openCypher empty-input values without grouping keys', () => {
@@ -145,6 +158,7 @@ describe('cypher extensions', () => {
     expect(run('MATCH (a:Nobody) RETURN a.title, count(a)').rows).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Non-numeric sum]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Non-numeric sum]]
   // @tg: verifies:: [[openspec:cypher-extensions#Aggregation type errors#Non-numeric sum]]
   it('fails sum and avg on non-numeric values, naming the function', () => {
@@ -155,12 +169,14 @@ describe('cypher extensions', () => {
     expect(fail('MATCH (a) WHERE count(a) > 1 RETURN a').message).toMatch(/not allowed in WHERE/);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Aggregates are scalar columns]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Aggregates are scalar columns]]
   it('reports aggregate and list columns as scalars', () => {
     const r = run('MATCH (a)-[r:knows]->(b) RETURN a, count(r) AS n, collect(b) AS bs');
     expect(r.columns.map((c) => c.kind)).toEqual(['node', 'scalar', 'scalar']);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Still unsupported or read-only]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Still unsupported or read-only]]
   // @tg: verifies:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly#Writes remain rejected]]
   it('keeps rejecting unsupported functions and writes after WITH', () => {

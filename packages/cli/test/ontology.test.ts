@@ -59,6 +59,7 @@ function decisions(body: string): Record<string, string> {
   return { ...DOCS, 'lat.md/decisions.md': doc('Decision', 'Decisions', `## Regional storage\n\nWe store data in Frankfurt.\n\n${body}`) };
 }
 
+// @tg: verifies:: [[tests/tg-ontology#Typed edges in docs#Decision motivated by a constraint]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Typed edges in docs#Decision motivated by a constraint]]
 // @tg: verifies:: [[openspec:tg-cli#Typed edges in docs#Decision motivated by a constraint]]
 it('turns a typed edge line in a doc into a named edge with properties, replacing the plain reference', async () => {
@@ -70,6 +71,7 @@ it('turns a typed edge line in a doc into a named edge with properties, replacin
   expect(rows(plain.out)).toEqual([[0]]);
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Typed edges in docs#Negative edge to a requirement]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Typed edges in docs#Negative edge to a requirement]]
 // @tg: verifies:: [[openspec:tg-cli#Typed edges in docs#Negative edge to a requirement]]
 it('makes a negative typed edge to an OpenSpec requirement', async () => {
@@ -81,6 +83,7 @@ it('makes a negative typed edge to an OpenSpec requirement', async () => {
   expect(rows(r.out)).toEqual([['Regional storage', 'Token expiry', -1, 'PLAT-481']]);
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Typed edges in docs#Code fence ignored]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Typed edges in docs#Code fence ignored]]
 // @tg: verifies:: [[openspec:tg-cli#Typed edges in docs#Code fence ignored]]
 it('ignores typed edge lines inside code fences', async () => {
@@ -89,6 +92,7 @@ it('ignores typed edge lines inside code fences', async () => {
   expect(rows(r.out)).toEqual([[0]]);
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology listing#Code ontology listed]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology listing#Code ontology listed]]
 // @tg: verifies:: [[openspec:tg-cli#Ontology listing#Code ontology listed]]
 it('lists the ontology tg init installs', async () => {
@@ -104,6 +108,7 @@ it('lists the ontology tg init installs', async () => {
   expect(text.out).toContain('motivated_by: Decision → Constraint|Concept|Decision');
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology listing#No ontology]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology listing#No ontology]]
 // @tg: verifies:: [[openspec:tg-cli#Ontology listing#No ontology]]
 it('says when no ontology is declared', async () => {
@@ -113,6 +118,7 @@ it('says when no ontology is declared', async () => {
   expect(r.out).toContain('tg init');
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology check#Unknown edge name]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology check#Unknown edge name]]
 // @tg: verifies:: [[openspec:tg-cli#Ontology check#Unknown edge name]]
 it('reports an undeclared edge name with the closest declared one', async () => {
@@ -122,6 +128,7 @@ it('reports an undeclared edge name with the closest declared one', async () => 
   expect(r.out).toContain("lat.md/decisions.md:12: edge type 'motivatedBy' is not in the ontology; did you mean 'motivated_by'?");
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology check#Wrong endpoint type]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology check#Wrong endpoint type]]
 // @tg: verifies:: [[openspec:tg-cli#Ontology check#Wrong endpoint type]]
 it('reports an edge whose source type the edge type does not allow, and undeclared or out-of-range properties', async () => {
@@ -138,6 +145,7 @@ it('reports an edge whose source type the edge type does not allow, and undeclar
   expect(r.code).toBe(1);
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology check#Clean ontology use]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology check#Clean ontology use]]
 // @tg: verifies:: [[openspec:tg-cli#Ontology check#Clean ontology use]]
 it('passes when every typed edge fits, ignoring references and @lat links', async () => {
@@ -153,6 +161,7 @@ it('passes when every typed edge fits, ignoring references and @lat links', asyn
   expect((await tg(project(decisions('- madeUp:: [[constraints#GDPR]]\n')), ['ontology', 'check'])).out).toContain('No ontology declared');
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology-aware guidance#Instructions teach the ontology]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology-aware guidance#Instructions teach the ontology]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Ontology-aware guidance#Instructions teach the ontology]]
 it('teaches the ontology in the generated instructions and skills', async () => {
@@ -165,6 +174,7 @@ it('teaches the ontology in the generated instructions and skills', async () => 
   for (const patch of ['openspec-propose.md', 'openspec-apply.md', 'openspec-archive.md', 'openspec-explore.md']) expect((await tg(dir, ['gen', patch])).out).toContain('tg ontology');
 });
 
+// @tg: verifies:: [[tests/tg-ontology#Ontology-aware guidance#OpenSpec rules teach typed records]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-ontology#Ontology-aware guidance#OpenSpec rules teach typed records]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Ontology-aware guidance#OpenSpec rules teach typed records]]
 it('asks OpenSpec for Decision sections with motivated_by edges and an ontology check', () => {

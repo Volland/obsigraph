@@ -21,6 +21,7 @@ async function tg(cwd: string, ...args: string[]) {
   return { code, out, err };
 }
 
+// @tg: verifies:: [[tests/shacl-interop#Schema commands]] {since: "2026-10-06", level: unit}
 // @lat: [[tests/shacl-interop#Schema commands]]
 // @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Empty schema folder]]
 // @tg: verifies:: [[openspec:shacl-interop#Export schemas as SHACL#Export from the CLI]]

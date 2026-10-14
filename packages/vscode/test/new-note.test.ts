@@ -19,6 +19,7 @@ async function open() {
   return { dir, idx };
 }
 
+// @tg: verifies:: [[tests/vscode-extension#Creating notes#Plan from a type]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/vscode-extension#Creating notes#Plan from a type]]
 it('plans a note of a declared type with ids and its template, and refuses bad input', async () => {
   const { dir, idx } = await open();
@@ -35,6 +36,7 @@ it('plans a note of a declared type with ids and its template, and refuses bad i
   expect(() => readFileSync(`${dir}/Ideas/Fresh thought.md`)).toThrow();
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Creating notes#Luhmann branch from a note]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/vscode-extension#Creating notes#Luhmann branch from a note]]
 it('branches a child or sibling from the active note with the next free Luhmann id', async () => {
   const { dir, idx } = await open();

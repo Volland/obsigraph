@@ -22,6 +22,7 @@ function vault() {
 const edgeNote = (path: string, fm: Record<string, unknown>, text = ''): NoteInput => ({ path, text, frontmatter: { type: 'edge', ...fm } });
 
 describe('edge notes', () => {
+  // @tg: verifies:: [[tests/edge-notes#Edge note becomes an edge]] {since: "2026-10-11", level: unit}
   // @lat: [[tests/edge-notes#Edge note becomes an edge]]
   // @tg: verifies:: [[openspec:graph-model#Edge notes#Edge note becomes an edge]]
   it('turns a type: edge note into one edge and no node', () => {
@@ -38,6 +39,7 @@ describe('edge notes', () => {
     expect(graph.declaredEdges('Alice knows Bob.md')).toHaveLength(1);
   });
 
+  // @tg: verifies:: [[tests/edge-notes#Pinned id and sign]] {since: "2026-10-11", level: unit}
   // @lat: [[tests/edge-notes#Pinned id and sign]]
   // @tg: verifies:: [[openspec:graph-model#Edge notes#Negative edge note]]
   it('takes the sign from the edgeType prefix and pins the id', () => {
@@ -48,6 +50,7 @@ describe('edge notes', () => {
     expect(e).toMatchObject({ id: 'grudge', type: 'distrusts', sign: -1, source: 'Alice.md', target: 'Eve', props: { id: 'grudge' } });
   });
 
+  // @tg: verifies:: [[tests/edge-notes#Endpoints follow notes]] {since: "2026-10-11", level: unit}
   // @lat: [[tests/edge-notes#Endpoints follow notes]]
   // @tg: verifies:: [[openspec:graph-model#Edge notes#Missing endpoint becomes a stub]]
   it('points missing endpoints at stubs and re-points them when notes appear or vanish', () => {
@@ -66,6 +69,7 @@ describe('edge notes', () => {
     expect(graph.size.edges).toBe(0);
   });
 
+  // @tg: verifies:: [[tests/edge-notes#Incomplete edge note]] {since: "2026-10-11", level: unit}
   // @lat: [[tests/edge-notes#Incomplete edge note]]
   // @tg: verifies:: [[openspec:graph-model#Edge notes#Incomplete edge note]]
   it('reports a missing field and contributes nothing', () => {
@@ -75,6 +79,7 @@ describe('edge notes', () => {
     expect(graph.diagnostics()).toEqual([{ path: 'e.md', line: 0, column: 0, message: 'Edge note is missing edgeType; it declares no edge', code: 'edge-note' }]);
   });
 
+  // @tg: verifies:: [[tests/edge-notes#Links to edge notes refused]] {since: "2026-10-11", level: unit}
   // @lat: [[tests/edge-notes#Links to edge notes refused]]
   // @tg: verifies:: [[openspec:graph-model#Links to edge notes#Inline edge to an edge note]]
   it('refuses links to an edge note and accepts them again when it becomes a note', () => {

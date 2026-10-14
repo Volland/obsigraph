@@ -21,6 +21,7 @@ beforeAll(async () => {
 }, 120000);
 
 describe('engine conformance suite', () => {
+  // @tg: verifies:: [[tests/engine-conformance#Both engines run the corpus]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Both engines run the corpus]]
   // @tg: verifies:: [[openspec:engine-conformance#Shared corpus on a fixed fixture#Both engines run]]
   it('runs every corpus query on both engines with no unclassified divergence', () => {
@@ -31,11 +32,13 @@ describe('engine conformance suite', () => {
     expect(counts.match + counts['expected-difference'] + counts.skipped).toBe(report.entries.length);
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Differences registry in lock-step]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Differences registry in lock-step]]
   it('keeps the documented differences and the corpus in lock-step', () => {
     expect(checkRegistry(loadDifferences(), report.entries, report.outcomes)).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Recorded built-in expectations]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Recorded built-in expectations]]
   // @tg: verifies:: [[openspec:engine-conformance#Graceful skip when Ladybug is unavailable#Ladybug not installed in CI]]
   it('matches the recorded built-in expectations, with or without Ladybug', async () => {
@@ -48,6 +51,7 @@ describe('engine conformance suite', () => {
     for (const e of offline.entries) expect(compare(e.query, offline.builtin.get(e.id)!, e.expected!), e.id).toBeNull();
   }, 120000);
 
+  // @tg: verifies:: [[tests/engine-conformance#Writes rejected on both]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Writes rejected on both]]
   // @tg: verifies:: [[openspec:engine-conformance#Write rejection conformance#Both reject writes]]
   it('rejects writes on both engines and leaves the fixture unchanged', async () => {
@@ -70,6 +74,7 @@ describe('engine conformance suite', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Corpus covers the subset]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Corpus covers the subset]]
   // @tg: verifies:: [[openspec:engine-conformance#Corpus grows with the supported subset#New clause added]]
   // @tg: verifies:: [[openspec:engine-conformance#Corpus grows with the supported subset#New function added]]
@@ -88,6 +93,7 @@ describe('engine conformance suite', () => {
     expect(queryConstructs(parseQuery("MATCH (n) WHERE n.title = 'ORDER BY toLower(x)' RETURN n.limit"))).toEqual(new Set(['MATCH', 'WHERE', '=', 'RETURN']));
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Report printed with counts]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/engine-conformance#Report printed with counts]]
   // @tg: verifies:: [[openspec:engine-conformance#Divergences are reported and fail the run#All match]]
   it('prints a report listing each query and the counts per outcome', () => {
@@ -97,6 +103,7 @@ describe('engine conformance suite', () => {
     expect(report.text).toContain(`${counts.match} match, ${counts['expected-difference']} expected difference, ${counts.divergence} divergence, ${counts.skipped} skipped`);
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Write clauses in the corpus]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/engine-conformance#Write clauses in the corpus]]
   // @tg: verifies:: [[openspec:engine-conformance#Write rejection conformance#Both reject writes]]
   it('keeps CREATE, MERGE, SET, DELETE and REMOVE in the corpus, read-only on both engines', () => {
@@ -111,6 +118,7 @@ describe('engine conformance suite', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Fixture coverage]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Fixture coverage]]
   // @tg: verifies:: [[openspec:engine-conformance#Shared corpus on a fixed fixture#Fixture coverage]]
   it('uses a fixture with multi-labels, stubs, signed, pinned and parallel edges and edge properties', async () => {
@@ -140,6 +148,7 @@ const ok = (rows: unknown[][], kinds: string[] = rows[0]?.map(() => 'scalar') ??
 });
 
 describe('conformance comparison rules', () => {
+  // @tg: verifies:: [[tests/engine-conformance#Unordered rows compare as sets]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Unordered rows compare as sets]]
   // @tg: verifies:: [[openspec:engine-conformance#Comparison rules#Unordered query]]
   it('treats rows as a multiset without ORDER BY', () => {
@@ -147,6 +156,7 @@ describe('conformance comparison rules', () => {
     expect(compare('MATCH (n) RETURN n.x', ok([[1], [1]]), ok([[1], [2]]))).toBe('rows differ');
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Order matters under ORDER BY]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Order matters under ORDER BY]]
   // @tg: verifies:: [[openspec:engine-conformance#Comparison rules#Ordered query]]
   it('requires the same order under ORDER BY', () => {
@@ -154,6 +164,7 @@ describe('conformance comparison rules', () => {
     expect(compare('MATCH (n) WITH n ORDER BY n.x LIMIT 2 RETURN n.x', ok([[1], [2]]), ok([[2], [1]]))).toBeNull();
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Column kinds must agree]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Column kinds must agree]]
   // @tg: verifies:: [[openspec:engine-conformance#Comparison rules#Different column kind]]
   it('flags different column kinds or names', () => {
@@ -161,6 +172,7 @@ describe('conformance comparison rules', () => {
     expect(compare('RETURN 1', ok([[1]]), { ok: false, error: 'runtime' })).toMatch(/only one engine failed: ladybug/);
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Unexpected divergence fails]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Unexpected divergence fails]]
   // @tg: verifies:: [[openspec:engine-conformance#Divergences are reported and fail the run#Unexpected divergence]]
   // @tg: verifies:: [[openspec:engine-conformance#Documented intentional differences#Construct unsupported in-plugin]]
@@ -177,6 +189,7 @@ describe('conformance comparison rules', () => {
     expect(text).toContain('0 match, 0 expected difference, 1 divergence, 0 skipped');
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Expected difference must match its nature]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/engine-conformance#Expected difference must match its nature]]
   // @tg: verifies:: [[openspec:engine-conformance#Divergences are reported and fail the run#Unexpected divergence]]
   it('accepts a cited difference only when the divergence matches its documented nature', async () => {
@@ -192,6 +205,7 @@ describe('conformance comparison rules', () => {
     expect(classify({ ...entry, difference: 'nope' }, { ok: false, error: 'unsupported' }, ok([[1]]), undefined, diffs)).toMatchObject({ kind: 'divergence', reason: expect.stringMatching(/unknown difference nope/) });
   });
 
+  // @tg: verifies:: [[tests/engine-conformance#Registry entries checked]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/engine-conformance#Registry entries checked]]
   // @tg: verifies:: [[openspec:engine-conformance#Documented intentional differences#Entry without a query]]
   // @tg: verifies:: [[openspec:engine-conformance#Documented intentional differences#Stale entry]]

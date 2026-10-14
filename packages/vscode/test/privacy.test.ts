@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 
 const SRC = join(import.meta.dirname, '..', 'src');
 
+// @tg: verifies:: [[tests/vscode-extension#Privacy#No telemetry]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Privacy#No telemetry]]
 // @tg: verifies:: [[openspec:vscode-extension#No telemetry#Offline operation]]
 it('imports no networking module and calls no fetch', () => {

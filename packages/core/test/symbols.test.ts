@@ -5,6 +5,7 @@ afterEach(() => resetProviders());
 
 const names = (path: string, text: string) => scanFile(path, text)!.symbols.map((s) => (s.parent ? `${s.parent}#${s.name}` : s.name));
 
+// @tg: verifies:: [[tests/symbol-provider#Symbol discovery#Class method]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Symbol discovery#Class method]]
 // @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Class method]]
 it('finds TypeScript classes with their methods and top-level declarations', () => {
@@ -28,6 +29,7 @@ export interface Opts { a: number }
   expect(scanFile('a.ts', ts)!.reliable).toBe(true);
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Symbol discovery#Python function]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Symbol discovery#Python function]]
 // @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Python function]]
 it('finds Python functions, classes and methods', () => {
@@ -52,6 +54,7 @@ it('finds Go, Rust and C symbols', () => {
   expect(cn).not.toContain('proto');
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Symbol discovery#Node ES-module sources]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Symbol discovery#Node ES-module sources]]
 // @tg: verifies:: [[openspec:symbol-provider#Symbol discovery#Node ES-module sources]]
 it('treats .mts and .cts as TypeScript and .mjs as JavaScript', () => {
@@ -61,6 +64,7 @@ it('treats .mts and .cts as TypeScript and .mjs as JavaScript', () => {
   expect(names('main.mts', 'export function createApi() {}\n')).toEqual(['createApi']);
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Honest lookup#Absent symbol]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Honest lookup#Absent symbol]]
 // @tg: verifies:: [[openspec:symbol-provider#Honest lookup#Absent symbol]]
 it('reports absent for a symbol missing from a cleanly scanned file', () => {
@@ -71,6 +75,7 @@ it('reports absent for a symbol missing from a cleanly scanned file', () => {
   expect(lookupSymbol('a.ts', 'function a() { return `unterminated\n', 'gone')).toEqual({ status: 'unresolvable', reason: 'uncertain' });
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Honest lookup#Unsupported language]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Honest lookup#Unsupported language]]
 // @tg: verifies:: [[openspec:symbol-provider#Honest lookup#Unsupported language]]
 it('reports unresolvable for an unsupported language or unreadable file', () => {
@@ -78,6 +83,7 @@ it('reports unresolvable for an unsupported language or unreadable file', () => 
   expect(lookupSymbol('a.ts', null, 'x')).toEqual({ status: 'unresolvable', reason: 'unreadable' });
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Source walker#Ignored folder]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Source walker#Ignored folder]]
 it('honors gitignore patterns', () => {
   const rules = compileIgnore('node_modules/\n*.log\n/build\n!keep.log\ndocs/**/tmp\n');
@@ -90,6 +96,7 @@ it('honors gitignore patterns', () => {
   expect(rules.test('docs/a/b/tmp', true)).toBe(true);
 });
 
+// @tg: verifies:: [[tests/symbol-provider#Replaceable provider#Registered provider]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/symbol-provider#Replaceable provider#Registered provider]]
 // @tg: verifies:: [[openspec:symbol-provider#Replaceable provider#Registered provider]]
 it('uses a registered provider instead of the built-in finder', () => {

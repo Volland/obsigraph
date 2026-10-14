@@ -40,6 +40,7 @@ const TG_DOCS = {
   'tg.md/auth.md': '# Auth\n\nHow login works.\n\n## Login\n\nCredentials are checked.\n',
 };
 
+// @tg: verifies:: [[tests/cli-core#Project root discovery#tg.md project]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/cli-core#Project root discovery#tg.md project]]
 // @tg: verifies:: [[openspec:tg-cli#Project root discovery#tg.md project]]
 it('finds the root of a tg.md project from a subdirectory', async () => {
@@ -49,6 +50,7 @@ it('finds the root of a tg.md project from a subdirectory', async () => {
   expect(r.code).toBe(0);
 });
 
+// @tg: verifies:: [[tests/cli-core#Docs folder#tg.md sections]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/cli-core#Docs folder#tg.md sections]]
 // @tg: verifies:: [[openspec:tg-cli#Docs folder#tg.md sections]]
 it('reads sections, ids, index and annotations from tg.md', async () => {
@@ -61,6 +63,7 @@ it('reads sections, ids, index and annotations from tg.md', async () => {
   expect((await tg(dir, ['check'])).out).toContain('"tg.md" is missing entries');
 });
 
+// @tg: verifies:: [[tests/cli-core#Docs folder#lat.md wins]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/cli-core#Docs folder#lat.md wins]]
 // @tg: verifies:: [[openspec:tg-cli#Docs folder#lat.md wins]]
 it('reads lat.md and ignores tg.md when both exist', async () => {
@@ -69,6 +72,7 @@ it('reads lat.md and ignores tg.md when both exist', async () => {
   expect((await tg(dir, ['section', 'auth#Login'])).code).not.toBe(0);
 });
 
+// @tg: verifies:: [[tests/cli-core#Docs folder#Hook names the folder]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/cli-core#Docs folder#Hook names the folder]]
 it('names the tg.md folder in hook messages', async () => {
   const dir = project(TG_DOCS);
@@ -77,6 +81,7 @@ it('names the tg.md folder in hook messages', async () => {
   expect(r.out).not.toContain('lat.md/');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Docs folder choice#Asked in a terminal]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Docs folder choice#Asked in a terminal]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Docs folder choice#Asked in a terminal]]
 it('asks which docs folder to create and installs files for tg.md', async () => {
@@ -92,6 +97,7 @@ it('asks which docs folder to create and installs files for tg.md', async () => 
   expect(check.out).toContain('All checks passed');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Docs folder choice#Flag for scripts]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Docs folder choice#Flag for scripts]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Docs folder choice#Flag for scripts]]
 it('creates tg.md with --docs tg.md and rejects an unknown folder', async () => {
@@ -103,6 +109,7 @@ it('creates tg.md with --docs tg.md and rejects an unknown folder', async () => 
   expect((await tg(project(), ['init', '--docs', 'docs'])).code).toBe(2);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Docs folder choice#Existing lat.md kept]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Docs folder choice#Existing lat.md kept]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Docs folder choice#Existing lat.md kept]]
 it('keeps an existing lat.md folder and says so when --docs asks for tg.md', async () => {
@@ -116,6 +123,7 @@ it('keeps an existing lat.md folder and says so when --docs asks for tg.md', asy
   expect(again.asked).toEqual([]);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Docs folder choice#Default without a terminal]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Docs folder choice#Default without a terminal]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Docs folder choice#Default without a terminal]]
 it('plans lat.md without asking outside a terminal', async () => {
@@ -125,6 +133,7 @@ it('plans lat.md without asking outside a terminal', async () => {
   expect(plan.changes.map((c) => c.path)).toContain('lat.md/lat.md');
 });
 
+// @tg: verifies:: [[tests/cli-core#Project root discovery#Repository named lat.md]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/cli-core#Project root discovery#Repository named lat.md]]
 // @tg: verifies:: [[openspec:tg-cli#Project root discovery#Repository named lat.md]]
 it('does not take a git clone named lat.md for a docs folder', async () => {
@@ -134,6 +143,7 @@ it('does not take a git clone named lat.md for a docs folder', async () => {
   expect(r.out).toContain('no lat.md/, tg.md/ or .tg/ found');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Safe init#Own folder, not a parent]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Safe init#Own folder, not a parent]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Own folder, not a parent]]
 it('sets up the folder it runs in, never a parent project', async () => {

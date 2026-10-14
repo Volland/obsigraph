@@ -35,6 +35,7 @@ const vec = (t: string, dim = 768) => Array.from({ length: dim }, (_, i) => (i =
 const ollamaOk = (s: Seen) => ({ status: 200, body: { model: s.body.model, embeddings: s.body.input.map((t) => vec(t)) } });
 
 describe('embedding provider', () => {
+  // @tg: verifies:: [[tests/embedding-provider#Local Ollama by default]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Local Ollama by default]]
   // @tg: verifies:: [[openspec:embedding-provider#Local default provider#Default configuration]]
   it('defaults to local Ollama with nomic-embed-text and 768 dimensions', async () => {
@@ -48,6 +49,7 @@ describe('embedding provider', () => {
     expect(fake.seen[0]).toMatchObject({ path: '/api/embed', body: { model: 'nomic-embed-text', input: ['hello'] } });
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Never hosted by default]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Never hosted by default]]
   // @tg: verifies:: [[openspec:embedding-provider#Local default provider#Default is never hosted]]
   it('sends nothing to a non-local host with a fresh configuration', async () => {
@@ -60,6 +62,7 @@ describe('embedding provider', () => {
     expect(hosts).toEqual(['localhost']);
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#OpenAI-compatible endpoint]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#OpenAI-compatible endpoint]]
   // @tg: verifies:: [[openspec:embedding-provider#OpenAI-compatible endpoints#Custom endpoint]]
   it('uses a configured OpenAI-compatible endpoint with model and key, in input order', async () => {
@@ -74,6 +77,7 @@ describe('embedding provider', () => {
     expect((await p.identity()).provider).toBe('openai');
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Batches keep order]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Batches keep order]]
   // @tg: verifies:: [[openspec:embedding-provider#Batch embedding#Batch of three]]
   it('returns one vector per text in order across batches and concurrency', async () => {
@@ -85,6 +89,7 @@ describe('embedding provider', () => {
     expect(await new OllamaProvider({ url: fake.url }).embed([])).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Unreachable endpoint named]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Unreachable endpoint named]]
   // @tg: verifies:: [[openspec:embedding-provider#Provider failure reporting#Ollama not running]]
   it('names the endpoint when the server is not running', async () => {
@@ -94,6 +99,7 @@ describe('embedding provider', () => {
     expect((err as Error).message).toMatch(/Cannot reach the embedding endpoint http:\/\/127\.0\.0\.1:1\/api\/embed/);
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Missing model explained]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Missing model explained]]
   // @tg: verifies:: [[openspec:embedding-provider#Provider failure reporting#Model not installed]]
   it('names a missing model and how to install it without pulling', async () => {
@@ -106,6 +112,7 @@ describe('embedding provider', () => {
     expect(await new OllamaProvider({ url: bad.url }).embed(['x']).catch((e: EmbeddingError) => e.kind)).toBe('bad-response');
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Empty and uneven vectors rejected]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/embedding-provider#Empty and uneven vectors rejected]]
   it('rejects empty vectors and vectors of different lengths as a bad response naming the endpoint', async () => {
     const empty = await fakeServer((s) => ({ status: 200, body: { embeddings: s.body.input.map(() => []) } }));
@@ -116,6 +123,7 @@ describe('embedding provider', () => {
     expect(e2).toMatchObject({ kind: 'bad-response', message: `The embedding endpoint ${ragged.url}/embeddings returned vectors of different lengths` });
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Unresponsive endpoint times out]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/embedding-provider#Unresponsive endpoint times out]]
   it('fails an unanswered request after the timeout as an unreachable endpoint', async () => {
     const server = createServer(() => {});
@@ -132,6 +140,7 @@ describe('embedding provider', () => {
     }
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Identity reported]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Identity reported]]
   // @tg: verifies:: [[openspec:embedding-provider#Model identity is recorded#Identity reported]]
   it('reports model name and dimension', async () => {
@@ -139,6 +148,7 @@ describe('embedding provider', () => {
     expect(await new OllamaProvider({ url: fake.url }).identity()).toEqual({ provider: 'ollama', model: 'nomic-embed-text', dimension: 768 });
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Model change detected]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Model change detected]]
   // @tg: verifies:: [[openspec:embedding-provider#Mismatch never mixes vectors#Same model]]
   it('reports a mismatch when the model or dimension changes, never for the same model', () => {
@@ -148,6 +158,7 @@ describe('embedding provider', () => {
     expect(identityMismatch(nomic, { provider: 'ollama', model: 'mxbai-embed-large', dimension: 1024 })).toMatch(/rebuild the index/);
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Key from environment only]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Key from environment only]]
   it('reads API keys from the environment or a key file only', () => {
     const p = providerFromEnv({ OBSIGRAPH_EMBED_PROVIDER: 'openai', OBSIGRAPH_EMBED_URL: 'https://api.example/v1', OBSIGRAPH_EMBED_KEY_FILE: '/run/secrets/k' }, (f) => (f === '/run/secrets/k' ? 'sk-file\n' : ''));
@@ -156,6 +167,7 @@ describe('embedding provider', () => {
     expect(() => providerFromEnv({ OBSIGRAPH_EMBED_PROVIDER: 'cohere' })).toThrow(/Unknown embedding provider/);
   });
 
+  // @tg: verifies:: [[tests/embedding-provider#Real Ollama round trip]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/embedding-provider#Real Ollama round trip]]
   it('embeds with the real local Ollama when it is running', async () => {
     const p = new OllamaProvider();

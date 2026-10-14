@@ -3,6 +3,7 @@ import { parseBlock, parseStylePairs } from '../src/query/block';
 import { sameElementSet } from '../src/render/elements';
 
 describe('block header styles', () => {
+  // @tg: verifies:: [[tests/visualization-config#Header style scoped to block]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Header style scoped to block]]
   // @tg: verifies:: [[openspec:visualization-config#Block header style entries#Header style scoped to one block]]
   it('parses node.<Type> and edge.<type> entries scoped to the block', () => {
@@ -18,6 +19,7 @@ describe('block header styles', () => {
     expect(parseBlock('node.Project: oops\nMATCH (n) RETURN n').errors[0]).toMatchObject({ line: 0 });
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Restyle keeps layout]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Restyle keeps layout]]
   it('detects an unchanged element set so live updates restyle in place', () => {
     const shown = new Set(['a', 'b', 'e']);

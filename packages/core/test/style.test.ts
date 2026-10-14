@@ -26,6 +26,7 @@ const block = (nodes: Record<string, unknown>, edges: Record<string, unknown> = 
   styleSource('block header', null, nodes, edges).source;
 
 describe('visualization config', () => {
+  // @tg: verifies:: [[tests/visualization-config#Block header beats schema note]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Block header beats schema note]]
   // @tg: verifies:: [[openspec:visualization-config#Precedence of style sources#Block header beats schema note]]
   it('lets a block header override the schema note only where it is used', () => {
@@ -34,6 +35,7 @@ describe('visualization config', () => {
     expect(resolveNodeStyle(['Person'], schema).color).toBe('blue');
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Schema note beats settings]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Schema note beats settings]]
   // @tg: verifies:: [[openspec:visualization-config#Precedence of style sources#Schema note beats settings]]
   it('ranks schema notes above plugin settings', () => {
@@ -42,6 +44,7 @@ describe('visualization config', () => {
     expect(s.origin.color).toBe('schema Types/Person.md');
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Attributes fall through independently]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Attributes fall through independently]]
   // @tg: verifies:: [[openspec:visualization-config#Precedence of style sources#Attributes fall through independently]]
   it('resolves each attribute independently', () => {
@@ -52,6 +55,7 @@ describe('visualization config', () => {
     expect([none.color, none.shape, none.icon]).toEqual([colorFor('Thing'), 'ellipse', null]);
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Schema visualization applied]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Schema visualization applied]]
   // @tg: verifies:: [[openspec:visualization-config#Schema visualization block#Declared visualization applied]]
   it('reads color, shape and icon from the schema visualization block', () => {
@@ -60,6 +64,7 @@ describe('visualization config', () => {
     expect(resolveNodeStyle(['Person'], sources)).toMatchObject({ color: '#3b82f6', shape: 'ellipse', icon: 'user' });
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Label property]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Label property]]
   // @tg: verifies:: [[openspec:visualization-config#Schema visualization block#Label property]]
   it('labels nodes by the declared property, falling back to the title', () => {
@@ -69,6 +74,7 @@ describe('visualization config', () => {
     expect(nodeLabelText({}, 'alice-note', s.label)).toBe('alice-note');
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Edge type color]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Edge type color]]
   // @tg: verifies:: [[openspec:visualization-config#Edge type styling#Edge type color]]
   it('styles edge types from schema notes and settings', () => {
@@ -80,6 +86,7 @@ describe('visualization config', () => {
     });
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Negative sign default]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Negative sign default]]
   // @tg: verifies:: [[openspec:visualization-config#Edge type styling#Sign rendering default]]
   it('renders negative edges dashed red unless a source sets the attribute', () => {
@@ -88,6 +95,7 @@ describe('visualization config', () => {
     expect(resolveEdgeStyle('distrusts', -1, [settings({}, { distrusts: { line: 'dotted' } })])).toMatchObject({ color: '#d94848', line: 'dotted' });
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Bad value falls through]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Bad value falls through]]
   // @tg: verifies:: [[openspec:visualization-config#Invalid style values are ignored visibly#Bad color in schema note]]
   it('ignores an invalid value, falls through and reports the source and attribute', () => {
@@ -102,6 +110,7 @@ describe('visualization config', () => {
     expect(['#abcde', 'rgb(1,2)', 'bluish', ''].some(isCssColor)).toBe(false);
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Second label supplies shape]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Second label supplies shape]]
   // @tg: verifies:: [[openspec:visualization-config#Multi-label nodes#Second label supplies shape]]
   it('takes each attribute from the first label that supplies it', () => {
@@ -109,6 +118,7 @@ describe('visualization config', () => {
     expect(resolveNodeStyle(['Person', 'Employee'], sources)).toMatchObject({ color: 'blue', shape: 'hexagon' });
   });
 
+  // @tg: verifies:: [[tests/visualization-config#Schema edit restyles]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/visualization-config#Schema edit restyles]]
   // @tg: verifies:: [[openspec:visualization-config#Live style updates#Color edit refreshes open graphs]]
   it('picks up a color edit in a schema note on the next resolution', () => {

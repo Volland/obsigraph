@@ -47,6 +47,7 @@ async function tg(cwd: string, args: string[], script?: Script) {
 const planned = (out: string) => (JSON.parse(out) as { changes: { path: string }[] }).changes.map((c) => c.path);
 const SKILL_NAMES = ['tg-docs', 'tg-graph', 'tg-trace', 'tg-impact', 'tg-audit'];
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Several agents]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Several agents]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent selection#Several agents]]
 it('sets up every agent in a comma-separated --agent list', async () => {
@@ -61,6 +62,7 @@ it('sets up every agent in a comma-separated --agent list', async () => {
   }
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Checklist in a terminal]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Checklist in a terminal]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent selection#Checklist in a terminal]]
 it('shows a checklist with detected agents ticked and sets up the ones left ticked', async () => {
@@ -72,6 +74,7 @@ it('shows a checklist with detected agents ticked and sets up the ones left tick
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#No terminal]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#No terminal]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent selection#No terminal]]
 it('asks nothing without a terminal and defaults to Claude Code', async () => {
@@ -82,6 +85,7 @@ it('asks nothing without a terminal and defaults to Claude Code', async () => {
   expect(planned(r.out)).toContain('CLAUDE.md');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Unknown agent]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Unknown agent]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent selection#Unknown agent]]
 it('rejects an unknown agent and writes nothing', async () => {
@@ -92,6 +96,7 @@ it('rejects an unknown agent and writes nothing', async () => {
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Detected from OpenSpec]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Detected from OpenSpec]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent detection#OpenSpec set up Codex]]
 it('detects agents from the skill folders OpenSpec created', async () => {
@@ -106,6 +111,7 @@ it('detects agents from the skill folders OpenSpec created', async () => {
   expect(paths.filter((p) => p === 'AGENTS.md')).toHaveLength(1);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Codex skills]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Codex skills]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Skills per agent#Codex skills]]
 it('installs skills for Codex under .agents/skills with an AGENTS.md block', async () => {
@@ -116,6 +122,7 @@ it('installs skills for Codex under .agents/skills with an AGENTS.md block', asy
   expect(existsSync(join(dir, '.claude'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec skill patching#Other agent's skill]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec skill patching#Other agent's skill]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec skill patching#Other agent's OpenSpec skill]]
 it("patches OpenSpec skills in another agent's skills folder", async () => {
@@ -127,6 +134,7 @@ it("patches OpenSpec skills in another agent's skills folder", async () => {
   expect(text).toContain('implements');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Setup parts#Only the OpenSpec config]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Setup parts#Only the OpenSpec config]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Setup parts#Only the OpenSpec config]]
 it('updates only OpenSpec files with --only openspec', async () => {
@@ -137,6 +145,7 @@ it('updates only OpenSpec files with --only openspec', async () => {
   expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Setup parts#Skip instructions]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Setup parts#Skip instructions]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Setup parts#Skip instructions]]
 it('skips instruction files with --skip instructions', async () => {
@@ -148,6 +157,7 @@ it('skips instruction files with --skip instructions', async () => {
   expect((await tg(dir, ['init', '--skip', 'nope'])).code).toBe(2);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Setup parts#Parts checklist]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Setup parts#Parts checklist]]
 it('offers the parts as a checklist, with OpenSpec unticked when the project has none', async () => {
   const dir = project();
@@ -160,6 +170,7 @@ it('offers the parts as a checklist, with OpenSpec unticked when the project has
   expect(existsSync(join(dir, 'lat.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Interactive setup#Confirmed]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Interactive setup#Confirmed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Confirmed]]
 it('writes and lists the files after the checklists, asking no further question', async () => {
@@ -170,6 +181,7 @@ it('writes and lists the files after the checklists, asking no further question'
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(true);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Interactive setup#Dry run in a terminal]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Interactive setup#Dry run in a terminal]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Dry run in a terminal]]
 it('prints the diff after the checklists with --dry-run', async () => {
@@ -180,6 +192,7 @@ it('prints the diff after the checklists with --dry-run', async () => {
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Interactive setup#Declined]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Interactive setup#Declined]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Declined]]
 it('writes nothing when every agent is unticked, and never asks with --yes', async () => {
@@ -192,6 +205,7 @@ it('writes nothing when every agent is unticked, and never asks with --yes', asy
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(true);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Pi detected]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Pi detected]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent detection#Pi detected]]
 it('detects Pi from its folder', async () => {
@@ -201,6 +215,7 @@ it('detects Pi from its folder', async () => {
   expect(planned(r.out)).toContain('.pi/skills/tg-docs/SKILL.md');
 });
 
+// @tg: verifies:: [[tests/tg-agent#Agent selection#Kilo Code and Oh My Pi skills]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Agent selection#Kilo Code and Oh My Pi skills]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Skills per agent#Kilo Code and Oh My Pi skills]]
 it('installs skills for Kilo Code and Oh My Pi with an AGENTS.md block', async () => {
@@ -213,6 +228,7 @@ it('installs skills for Kilo Code and Oh My Pi with an AGENTS.md block', async (
   expect(read(dir, 'AGENTS.md')).toContain('%% tg:begin %%');
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec config rules#Rules added]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec config rules#Rules added]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec config rules#Rules added]]
 it('adds tg rules to openspec/config.yaml and keeps the project rules and comments', async () => {
@@ -233,6 +249,7 @@ it('adds tg rules to openspec/config.yaml and keeps the project rules and commen
   expect(checked.code).toBe(0);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec config rules#Rules re-run is stable]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec config rules#Rules re-run is stable]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec config rules#Re-run is stable]]
 it('leaves openspec/config.yaml unchanged on a second run and replaces stale tg rules', async () => {
@@ -248,6 +265,7 @@ it('leaves openspec/config.yaml unchanged on a second run and replaces stale tg 
   expect(refreshed).toBe(first);
 });
 
+// @tg: verifies:: [[tests/tg-agent#OpenSpec config rules#No OpenSpec]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#OpenSpec config rules#No OpenSpec]]
 // @tg: verifies:: [[openspec:tg-agent-integration#OpenSpec config rules#No OpenSpec]]
 it('creates no openspec files in a project without OpenSpec', async () => {
@@ -256,6 +274,7 @@ it('creates no openspec files in a project without OpenSpec', async () => {
   expect(existsSync(join(dir, 'openspec'))).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-agent#Code ontology#Old ontology folder noted]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-agent#Code ontology#Old ontology folder noted]]
 it('notes an ontology/code-types.md left by an older tg init', async () => {
   const dir = project({ 'ontology/code-types.md': '---\nschemas: {}\n---\n' });

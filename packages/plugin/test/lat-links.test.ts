@@ -7,6 +7,7 @@ const index = new LatIndex([
   { path: 'lat.md/architecture.md', text: '# Architecture\n\nOverview.\n\n## Monorepo layout\n\nPackages.\n\n### core\n\nThe core package, see [[nowhere#x]].\n' },
 ]);
 
+// @tg: verifies:: [[tests/tg-vault#Read in place#Nested heading link]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Read in place#Nested heading link]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Read in place#Nested heading link]]
 it('resolves nested heading and short ids to the section line', () => {
@@ -19,6 +20,7 @@ it('resolves nested heading and short ids to the section line', () => {
   expect(inLatFolder('notes/a.md')).toBe(false);
 });
 
+// @tg: verifies:: [[tests/tg-vault#Read in place#Code link]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/tg-vault#Read in place#Code link]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Read in place#Code link]]
 it('reports source links instead of opening them, and surfaces broken links as diagnostics', () => {
@@ -28,6 +30,7 @@ it('reports source links instead of opening them, and surfaces broken links as d
   expect(d[0]).toMatchObject({ path: 'lat.md/architecture.md', line: 10 });
 });
 
+// @tg: verifies:: [[tests/tg-vault#Read in place#tg.md folder]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-vault#Read in place#tg.md folder]]
 // @tg: verifies:: [[openspec:lat-vault-integration#Read in place#tg.md folder]]
 it('reads a tg.md folder in place like a lat.md one', () => {

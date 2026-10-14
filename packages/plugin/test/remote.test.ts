@@ -17,6 +17,7 @@ const fake = (status: number, json: unknown): Fetcher => async () => ({ status, 
 const cfg = { url: 'http://sidecar:8765/', token: 't' };
 
 describe('ladybug backend in the plugin', () => {
+  // @tg: verifies:: [[tests/ladybug-backend#Backend selection]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Backend selection]]
   // @tg: verifies:: [[openspec:ladybug-backend#Backend selection#Unknown value]]
   it('picks the backend from the header, else the default, and rejects unknown values', () => {
@@ -26,6 +27,7 @@ describe('ladybug backend in the plugin', () => {
     expect(bad.errors).toEqual([{ line: 0, message: "Invalid backend 'neo4j' (expected builtin or ladybug)" }]);
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Sidecar not configured or unreachable]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Sidecar not configured or unreachable]]
   // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Sidecar not configured]]
   it('explains a missing or unreachable sidecar and a rejected token', async () => {
@@ -37,6 +39,7 @@ describe('ladybug backend in the plugin', () => {
     expect(await runRemote(fake(401, { error: {} }), cfg, 'q')).toMatchObject({ message: expect.stringMatching(/rejected the token/) });
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Ladybug unavailable on sidecar]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Ladybug unavailable on sidecar]]
   // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Ladybug unavailable on the sidecar]]
   it('says how to enable Ladybug when the sidecar reports it unavailable', async () => {
@@ -44,6 +47,7 @@ describe('ladybug backend in the plugin', () => {
     expect(r).toMatchObject({ kind: 'error', message: expect.stringMatching(/not available on the sidecar: .*Install @ladybugdb\/core/) });
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Mirror rebuilding retries]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Mirror rebuilding retries]]
   // @tg: verifies:: [[openspec:ladybug-backend#Clear error when unavailable#Mirror rebuilding]]
   it('asks to retry while the mirror is still building', async () => {
@@ -51,12 +55,14 @@ describe('ladybug backend in the plugin', () => {
     expect(r).toEqual({ kind: 'retry', message: 'The Ladybug mirror is still building; try again shortly.', afterMs: 3000 });
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Remote errors keep position]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Remote errors keep position]]
   it('passes query errors through with their position', async () => {
     const r = await runRemote(fake(400, { error: { kind: 'syntax', message: "Expected ')' but found 'RETURN'", line: 1, column: 10 } }), cfg, 'MATCH (a RETURN a');
     expect(r).toEqual({ kind: 'error', message: "Expected ')' but found 'RETURN'", line: 1, column: 10 });
   });
 
+  // @tg: verifies:: [[tests/ladybug-backend#Renderer unchanged]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/ladybug-backend#Renderer unchanged]]
   // @tg: verifies:: [[openspec:ladybug-backend#Same interface and result contract#Renderer unchanged]]
   it('renders a Ladybug result from a real sidecar exactly like a built-in one', async () => {

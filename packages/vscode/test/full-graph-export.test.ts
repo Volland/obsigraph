@@ -36,6 +36,7 @@ const SCENE: Scene = {
 };
 const META = { scope: 'project' as const, omitted: 0, limit: 2000, date: new Date('2026-10-14T12:00:00Z') };
 
+// @tg: verifies:: [[tests/vscode-extension#Whole project graph#Full graph and toggle]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Whole project graph#Full graph and toggle]]
 // @tg: verifies:: [[openspec:vscode-extension#Whole project graph#Open the full graph]]
 // @tg: verifies:: [[openspec:vscode-extension#Whole project graph#Toggle scope]]
@@ -56,6 +57,7 @@ it('draws every node and edge in the project scope, ignoring the active file, an
   expect(session.view('notes/Carol.md').elements.nodes.map((n) => n.id).sort()).toEqual(['notes/Bob.md', 'notes/Carol.md']);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Whole project graph#Limit keeps the most connected]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Whole project graph#Limit keeps the most connected]]
 // @tg: verifies:: [[openspec:vscode-extension#Whole project graph#Large graph is capped]]
 it('keeps the most connected nodes up to the limit, only edges among them, and counts what was left out', async () => {
@@ -70,6 +72,7 @@ it('keeps the most connected nodes up to the limit, only edges among them, and c
   expect(session.view(null).elements.nodes.map((n) => n.id)).toEqual(v.elements.nodes.map((n) => n.id));
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Whole project graph#Full graph stays current]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Whole project graph#Full graph stays current]]
 // @tg: verifies:: [[openspec:vscode-extension#Whole project graph#Full graph stays current]]
 it('shows a new edge in the project scope after the file is saved', async () => {
@@ -82,6 +85,7 @@ it('shows a new edge in the project scope after the file is saved', async () => 
   expect(session.view(null).elements.edges).toHaveLength(4);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#Standalone HTML]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#Standalone HTML]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as standalone HTML#Self-contained file]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as standalone HTML#Same layout as the panel]]
@@ -104,6 +108,7 @@ it('builds one HTML page that loads nothing, keeps positions and cannot be broke
   expect(exportFileName('project', 'html', META.date)).toBe('typegraph-project-2026-10-14.html');
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#Inspect a node]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#Inspect a node]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as standalone HTML#Reader can inspect a node]]
 it('ships a viewer that lists a selected node through text content only', () => {
@@ -120,6 +125,7 @@ function xrefOffsetsMatch(pdf: string): boolean {
   return rows.length > 0 && rows.every((off, i) => pdf.startsWith(`${i + 1} 0 obj`, off));
 }
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#Valid vector PDF]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#Valid vector PDF]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as PDF#Valid PDF]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as PDF#Vector output]]
@@ -140,6 +146,7 @@ it('writes a valid one-page PDF of paths and text with no image, and labels can 
   expect(pdf.slice(pdf.indexOf('stream\n') + 7).indexOf('\nendstream')).toBe(length);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#PDF size metadata]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#PDF size metadata]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as PDF#Size metadata]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as PDF#Capped graph says so]]
@@ -152,6 +159,7 @@ it('states the scope and counts in the caption and Subject, and what a capped gr
   expect(sizeSummary(1, 1, { scope: 'file', omitted: 0, limit: 10 })).toBe('Active file: 1 node, 1 edge');
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#PDF page limit]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#PDF page limit]]
 // @tg: verifies:: [[openspec:graph-export#Export the graph as PDF#Print-friendly colors in a dark theme]]
 it('paints a white page with black labels from element colors alone, and scales a huge graph under the page limit', () => {
@@ -165,6 +173,7 @@ it('paints a white page with black labels from element colors alone, and scales 
   expect(xrefOffsetsMatch(big)).toBe(true);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph export#Commands and buttons]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/vscode-extension#Graph export#Commands and buttons]]
 // @tg: verifies:: [[openspec:graph-export#Export commands from the editor and the panel#Buttons in the title bar]]
 it('contributes the three commands, their title-bar buttons and the limit setting', () => {

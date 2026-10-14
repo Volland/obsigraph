@@ -36,6 +36,7 @@ async function index(roots = ['.'], files = FILES) {
   return { dir, idx };
 }
 
+// @tg: verifies:: [[tests/vscode-extension#Indexer#Roots and ignores]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Indexer#Roots and ignores]]
 // @tg: verifies:: [[openspec:vscode-extension#Configurable roots#Monorepo noise]]
 // @tg: verifies:: [[openspec:vscode-extension#Configurable roots#Nested vault]]
@@ -51,6 +52,7 @@ it('indexes only the roots and never dot or ignored folders', async () => {
   expect(idx.accepts('docs/x.md')).toBe(false);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Indexer#Live update]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Indexer#Live update]]
 // @tg: verifies:: [[openspec:vscode-extension#Index the workspace in process#Live update]]
 it('reflects a saved edge and a deleted note without reloading', async () => {
@@ -74,6 +76,7 @@ const snapshot = (dir: string): string[] =>
     })
     .sort();
 
+// @tg: verifies:: [[tests/vscode-extension#Indexer#Read-only]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Indexer#Read-only]]
 it('leaves the workspace byte-identical', async () => {
   const dir = workspace(FILES);
@@ -84,6 +87,7 @@ it('leaves the workspace byte-identical', async () => {
   expect(snapshot(dir)).toEqual(before);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Grouped by type]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Grouped by type]]
 // @tg: verifies:: [[openspec:vscode-extension#Typed backlinks for notes#Grouped by type]]
 it('groups incoming edges by type with source and line', async () => {
@@ -97,6 +101,7 @@ it('groups incoming edges by type with source and line', async () => {
   expect(r.groups[1]!.items[1]).toMatchObject({ label: 'Alice', line: 1, sign: 1, props: { since: 2020 } });
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Negative edge sign]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Negative edge sign]]
 // @tg: verifies:: [[openspec:vscode-extension#Typed backlinks for notes#Negative edge]]
 it('marks a negative incoming edge', async () => {
@@ -106,6 +111,7 @@ it('marks a negative incoming edge', async () => {
   expect(g.items[0]).toMatchObject({ path: 'notes/Alice.md', sign: -1 });
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Code to spec]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Code to spec]]
 // @tg: verifies:: [[openspec:vscode-extension#Backlinks for source files#Code to spec]]
 it('lists the notes an active source file annotates, with the heading as written', async () => {
@@ -115,6 +121,7 @@ it('lists the notes an active source file annotates, with the heading as written
   expect(r.groups[0]!.items).toEqual([expect.objectContaining({ path: 'lat.md/architecture.md', target: 'architecture#Monorepo layout' })]);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Spec to code]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Spec to code]]
 // @tg: verifies:: [[openspec:vscode-extension#Backlinks for source files#Spec to code]]
 it('lists annotating source files for an active note, apart from note edges', async () => {
@@ -124,6 +131,7 @@ it('lists annotating source files for an active note, apart from note edges', as
   expect(r.groups[0]!.items[0]).toMatchObject({ path: 'src/auth.ts', line: 1, target: 'architecture#Monorepo layout' });
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Empty states]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Empty states]]
 // @tg: verifies:: [[openspec:vscode-extension#Empty and unsupported states#No edges]]
 it('returns an empty result for files without edges, outside the roots or unknown', async () => {
@@ -134,6 +142,7 @@ it('returns an empty result for files without edges, outside the roots or unknow
   expect(backlinksFor(idx, 'nope.md')).toEqual({ kind: 'empty', groups: [] });
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph session#Expanded nodes survive refresh]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/vscode-extension#Graph session#Expanded nodes survive refresh]]
 // @tg: verifies:: [[openspec:graph-ui#Neighborhood view-state#Expanded nodes kept]]
 it('keeps expanded neighborhoods across refreshes and drops removed nodes', async () => {
@@ -151,6 +160,7 @@ it('keeps expanded neighborhoods across refreshes and drops removed nodes', asyn
   expect(ids('notes/Carol.md')).not.toContain('notes/Alice.md');
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Outside the roots]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Outside the roots]]
 // @tg: verifies:: [[openspec:vscode-extension#Empty and unsupported states#Outside the roots]]
 it('says a file is outside the configured roots, apart from the no-edges message', async () => {
@@ -160,6 +170,7 @@ it('says a file is outside the configured roots, apart from the no-edges message
   expect(panelRows(idx, { path: 'docs/outside.md', inWorkspace: true }, false)).toEqual([{ kind: 'message', text: 'No typed edges for outside.md.' }]);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Backlinks#Setup offer]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/vscode-extension#Backlinks#Setup offer]]
 // @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#Value first]]
 it('leaves the view empty for the welcome content and appends the setup offer to backlinks', async () => {
@@ -171,6 +182,7 @@ it('leaves the view empty for the welcome content and appends the setup offer to
   expect(panelRows(idx, { path: 'notes/Eve.md', inWorkspace: true }, false).map((r) => r.kind)).toEqual(['group']);
 });
 
+// @tg: verifies:: [[tests/vscode-extension#Graph session#Expansions reset on file switch]] {since: "2026-10-08", level: unit}
 // @lat: [[tests/vscode-extension#Graph session#Expansions reset on file switch]]
 // @tg: verifies:: [[openspec:vscode-extension#Graph webview#Expansions reset on file switch]]
 it('clears expanded nodes when the active file changes and keeps the last file without one', async () => {

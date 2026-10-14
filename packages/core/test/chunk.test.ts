@@ -11,6 +11,7 @@ function graphOf(notes: (NoteInput & { type?: string })[]) {
 }
 
 describe('chunking', () => {
+  // @tg: verifies:: [[tests/chunking#One chunk per short section]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#One chunk per short section]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Heading-aware chunking#Two sections]]
   it('produces one chunk per short section', () => {
@@ -21,6 +22,7 @@ describe('chunking', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/chunking#Oversized section split on boundaries]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Oversized section split on boundaries]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Heading-aware chunking#Oversized section]]
   it('splits an oversized section within the limit without cutting words', () => {
@@ -34,6 +36,7 @@ describe('chunking', () => {
     expect(chunks.map((c) => c.body).join(' ')).toBe(words(400));
   });
 
+  // @tg: verifies:: [[tests/chunking#Context prefixed to every chunk]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Context prefixed to every chunk]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Context prepended to every chunk#Chunk carries context]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Context prepended to every chunk#No frontmatter]]
@@ -47,6 +50,7 @@ describe('chunking', () => {
     expect(chunkNote({ path: 'Plain.md', text: 'just text' })[0]!.text).toBe('Plain\n\njust text');
   });
 
+  // @tg: verifies:: [[tests/chunking#Chunk provenance recorded]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Chunk provenance recorded]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Chunk provenance#Chunk under a heading]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Chunk provenance#Text before any heading]]
@@ -58,6 +62,7 @@ describe('chunking', () => {
     ]);
   });
 
+  // @tg: verifies:: [[tests/chunking#Stable chunk ids]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Stable chunk ids]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Deterministic chunk identity#Edited chunk]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Deterministic chunk identity#Re-chunk unchanged note]]
@@ -70,6 +75,7 @@ describe('chunking', () => {
     expect(new Set(a.map((c) => c.id)).size).toBe(3);
   });
 
+  // @tg: verifies:: [[tests/chunking#Node score best or pooled]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Node score best or pooled]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Node score aggregation#Best chunk]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Node score aggregation#Pooled]]
@@ -82,6 +88,7 @@ describe('chunking', () => {
     expect(nodeScore(q, [])).toBe(0);
   });
 
+  // @tg: verifies:: [[tests/chunking#Cosine refuses mixed dimensions]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/chunking#Cosine refuses mixed dimensions]]
   // @tg: verifies:: [[openspec:vector-index#Mismatch blocks writes and offers rebuild#Dimension changed]]
   it('throws instead of returning NaN for vectors of different length', () => {
@@ -101,30 +108,35 @@ describe('edge verbalization', () => {
   ]);
   const say = (type: string) => verbalizeEdge(g.outEdges('Alice.md').find((e) => e.type === type)!, g);
 
+  // @tg: verifies:: [[tests/chunking#Edge sentence with properties]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Edge sentence with properties]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Edge verbalization#Edge with properties]]
   it('renders type, endpoints and properties, with label bare and id omitted', () => {
     expect(say('knows').text).toBe('Alice (Person) knows Bob (Person) - since 2020, met at conf');
   });
 
+  // @tg: verifies:: [[tests/chunking#Edge sentence without properties]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Edge sentence without properties]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Edge verbalization#Edge without properties]]
   it('turns the type name into a verb when there are no properties', () => {
     expect(say('works_at').text).toBe('Alice (Person) works at Acme (Company)');
   });
 
+  // @tg: verifies:: [[tests/chunking#Untyped endpoint has no parentheses]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Untyped endpoint has no parentheses]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Edge verbalization#Untyped endpoint]]
   it('omits parentheses for an untyped endpoint', () => {
     expect(say('helps').text).toBe('Alice (Person) helps Plain');
   });
 
+  // @tg: verifies:: [[tests/chunking#Negative edges say so]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Negative edges say so]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Negative edges are verbalized as negative#Negative edge]]
   it('marks negative edges as negative', () => {
     expect(say('trusts').text).toBe('Alice (Person) trusts (negative) Eve (Person)');
   });
 
+  // @tg: verifies:: [[tests/chunking#Edge sentence provenance]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/chunking#Edge sentence provenance]]
   // @tg: verifies:: [[openspec:chunking-verbalization#Edge sentence provenance#Edge under a heading]]
   it('records edge id, source path and heading', () => {

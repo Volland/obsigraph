@@ -28,6 +28,7 @@ const probe: Command = {
 };
 register(probe);
 
+// @tg: verifies:: [[tests/cli-core#Project root discovery#Run from a subdirectory]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Project root discovery#Run from a subdirectory]]
 // @tg: verifies:: [[openspec:tg-cli#Project root discovery#Run from a subdirectory]]
 it('finds the root from a subdirectory', () => {
@@ -35,6 +36,7 @@ it('finds the root from a subdirectory', () => {
   expect(findRoot(join(dir, 'src', 'auth'))).toBe(dir);
 });
 
+// @tg: verifies:: [[tests/cli-core#Project root discovery#Explicit directory]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Project root discovery#Explicit directory]]
 // @tg: verifies:: [[openspec:tg-cli#Project root discovery#Explicit directory]]
 it('--dir overrides the working directory', async () => {
@@ -46,6 +48,7 @@ it('--dir overrides the working directory', async () => {
   expect(h.outs.join('')).toContain(b);
 });
 
+// @tg: verifies:: [[tests/cli-core#Project root discovery#No project found]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Project root discovery#No project found]]
 // @tg: verifies:: [[openspec:tg-cli#Project root discovery#No project found]]
 it('exits 2 with an init hint when no project exists', async () => {
@@ -56,6 +59,7 @@ it('exits 2 with an init hint when no project exists', async () => {
   expect(h.errs.join('')).toContain('tg init');
 });
 
+// @tg: verifies:: [[tests/cli-core#Output and exit codes#Findings]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Output and exit codes#Findings]]
 // @tg: verifies:: [[openspec:tg-cli#Output and exit codes#Findings]]
 it('a command reporting findings exits 1', async () => {
@@ -63,6 +67,7 @@ it('a command reporting findings exits 1', async () => {
   expect(await run(['probe', 'bad'], io(dir))).toBe(1);
 });
 
+// @tg: verifies:: [[tests/cli-core#Output and exit codes#JSON output]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Output and exit codes#JSON output]]
 // @tg: verifies:: [[openspec:tg-cli#Output and exit codes#JSON output]]
 it('--json prints one JSON document and nothing else', async () => {
@@ -73,6 +78,7 @@ it('--json prints one JSON document and nothing else', async () => {
   expect(JSON.parse(h.outs[0]!)).toEqual({ root: dir, args: ['x'] });
 });
 
+// @tg: verifies:: [[tests/cli-core#Single bundled package#Clean install]] {since: "2026-10-04", level: unit}
 // @lat: [[tests/cli-core#Single bundled package#Clean install]]
 // @tg: verifies:: [[openspec:tg-cli#Single bundled package#Clean install]]
 it('the bundle has no runtime dependencies on other packages', async () => {

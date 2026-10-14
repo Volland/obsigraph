@@ -27,6 +27,7 @@ function fixture() {
 const THEME = { text: '#000', muted: '#999', background: '#fff' };
 
 describe('graph-query block', () => {
+  // @tg: verifies:: [[tests/graph-query-block#Header and query split]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Header and query split]]
   // @tg: verifies:: [[openspec:graph-query-block#Block structure#Header and query]]
   it('splits the header from the query and maps the query start line', () => {
@@ -37,6 +38,7 @@ describe('graph-query block', () => {
     expect(b.errors).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Query without header]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Query without header]]
   // @tg: verifies:: [[openspec:graph-query-block#Block structure#No header]]
   it('uses defaults when there is no header', () => {
@@ -46,6 +48,7 @@ describe('graph-query block', () => {
     expect(b.queryLine).toBe(0);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Header errors reported]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Header errors reported]]
   it('reports unknown options and invalid values with their line', () => {
     const b = parseBlock('view: pie\ncolour: red\nheight: 5\nMATCH (n) RETURN n');
@@ -54,6 +57,7 @@ describe('graph-query block', () => {
     expect(b.errors[1]!.message).toMatch(/Unknown option 'colour'/);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Graph for nodes and edges]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Graph for nodes and edges]]
   // @tg: verifies:: [[openspec:graph-query-block#Renderer chosen by result shape#Nodes and edges]]
   it('renders a graph when the result holds nodes or relationships, with edge endpoints added', () => {
@@ -65,6 +69,7 @@ describe('graph-query block', () => {
     expect(p.elements.nodes.map((n) => n.label).sort()).toEqual(['Alice', 'Bob', 'Carol', 'Eve']);
   });
 
+  // @tg: verifies:: [[tests/cypher-extensions#Paths render as graphs]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/cypher-extensions#Paths render as graphs]]
   // @tg: verifies:: [[openspec:cypher-extensions#Variable-length paths#Path result]]
   it('draws path results as graphs and summarizes them in tables', () => {
@@ -81,6 +86,7 @@ describe('graph-query block', () => {
     expect(capped.kind === 'graph' && capped.notices).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Table for scalars]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Table for scalars]]
   // @tg: verifies:: [[openspec:graph-query-block#Renderer chosen by result shape#Scalars only]]
   it('renders a table when the result holds only scalars', () => {
@@ -89,6 +95,7 @@ describe('graph-query block', () => {
     expect(chooseView(engine.run('MATCH (a) RETURN a'), 'auto')).toBe('graph');
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#View and columns override]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#View and columns override]]
   it('honors view: table and selects and orders columns', () => {
     const { plan } = fixture();
@@ -99,6 +106,7 @@ describe('graph-query block', () => {
     if (bad.kind === 'error') expect(bad.messages[0]).toMatch(/Unknown column 'nope' \(available: t\)/);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Element cap falls back to table]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Element cap falls back to table]]
   // @tg: verifies:: [[openspec:graph-query-block#Large results are bounded#Result exceeds limit]]
   it('falls back to a table with a notice above the element cap', () => {
@@ -108,6 +116,7 @@ describe('graph-query block', () => {
     if (p.kind === 'table') expect(p.notice).toMatch(/7 elements, above the limit of 3/);
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Signed and typed styling]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Signed and typed styling]]
   // @tg: verifies:: [[openspec:graph-view#Edge presentation#Signed edges]]
   // @tg: verifies:: [[openspec:graph-view#Node type styling#Typed and stub nodes]]
@@ -127,6 +136,7 @@ describe('graph-query block', () => {
     expect(styler.edge({ ...e, sign: 1 })).toEqual({ color: '#8a8a8a', line: 'solid' });
   });
 
+  // @tg: verifies:: [[tests/graph-query-block#Type style settings validated]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-query-block#Type style settings validated]]
   it('validates type style settings', () => {
     expect(parseTypeStyles('{"Person": {"color": "red", "shape": "star"}}')).toEqual({ Person: { color: 'red', shape: 'star' } });

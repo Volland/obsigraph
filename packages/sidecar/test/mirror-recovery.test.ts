@@ -28,6 +28,7 @@ const query = async (sc: Sidecar, q: string, backend = 'builtin') =>
   fetch(`http://127.0.0.1:${sc.port}/query`, { method: 'POST', headers: { authorization: 'Bearer x' }, body: JSON.stringify({ query: q, backend }) });
 
 describe('mirror recovery at startup', () => {
+  // @tg: verifies:: [[tests/mirror-sync#Corrupt database rebuilt]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mirror-sync#Corrupt database rebuilt]]
   // @tg: verifies:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt#Corrupt database]]
   it.skipIf(!available)('discards a database that cannot be opened, rebuilds it and keeps serving', async () => {
@@ -53,6 +54,7 @@ describe('mirror recovery at startup', () => {
     expect(((await l.json()) as { rows: unknown }).rows).toEqual([['Bob']]);
   });
 
+  // @tg: verifies:: [[tests/mirror-sync#Unopenable mirror leaves sidecar serving]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/mirror-sync#Unopenable mirror leaves sidecar serving]]
   it('keeps serving with the mirror unavailable when the store cannot be opened or rebuilt', async () => {
     class Broken extends MemoryStore {

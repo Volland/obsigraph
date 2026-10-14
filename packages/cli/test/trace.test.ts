@@ -69,6 +69,7 @@ function project(files: Record<string, string>): string {
 const withSpecs = (extra: Record<string, string> = {}) => project({ 'openspec/specs/auth/spec.md': AUTH_SPEC, ...extra });
 
 describe('OpenSpec reader', () => {
+  // @tg: verifies:: [[tests/tg-trace#OpenSpec reader#Main spec]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#OpenSpec reader#Main spec]]
   // @tg: verifies:: [[openspec:tg-trace#OpenSpec reader#Main spec]]
   it('reads requirements, their SHALL text and scenarios from a main spec', () => {
@@ -80,6 +81,7 @@ describe('OpenSpec reader', () => {
     expect(logout!.scenarios).toEqual([]);
   });
 
+  // @tg: verifies:: [[tests/tg-trace#OpenSpec reader#Active change]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#OpenSpec reader#Active change]]
   // @tg: verifies:: [[openspec:tg-trace#OpenSpec reader#Active change]]
   it('reads pending requirements from active changes and ignores the archive', () => {
@@ -95,6 +97,7 @@ describe('OpenSpec reader', () => {
     expect(idx.resolve('openspec:auth#Archived').kind).toBe('missing');
   });
 
+  // @tg: verifies:: [[tests/tg-trace#OpenSpec reader#No openspec folder]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#OpenSpec reader#No openspec folder]]
   // @tg: verifies:: [[openspec:tg-trace#OpenSpec reader#No openspec folder]]
   it('works without an openspec folder', async () => {
@@ -109,6 +112,7 @@ describe('OpenSpec reader', () => {
 describe('Requirement ids', () => {
   const idx = new SpecIndex([{ path: 'openspec/specs/auth/spec.md', text: AUTH_SPEC }]);
 
+  // @tg: verifies:: [[tests/tg-trace#Requirement ids#Scenario id]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Requirement ids#Scenario id]]
   // @tg: verifies:: [[openspec:tg-trace#Requirement ids#Scenario id]]
   it('resolves scenario ids ignoring case and extra whitespace', () => {
@@ -116,6 +120,7 @@ describe('Requirement ids', () => {
     expect(r).toMatchObject({ kind: 'scenario', scenario: { id: 'openspec:auth#Login#Expired token' } });
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Requirement ids#Misspelled requirement]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Requirement ids#Misspelled requirement]]
   // @tg: verifies:: [[openspec:tg-trace#Requirement ids#Misspelled requirement]]
   it('suggests the nearest id for an unknown target', () => {
@@ -126,6 +131,7 @@ describe('Requirement ids', () => {
 });
 
 describe('Annotations on tests', () => {
+  // @tg: verifies:: [[tests/tg-trace#Annotations on tests#Test call]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Annotations on tests#Test call]]
   // @tg: verifies:: [[openspec:tg-annotations#Edge source#Test call]]
   it('attaches an annotation above a test call to the file with the test name', () => {
@@ -139,6 +145,7 @@ describe('Annotations on tests', () => {
 });
 
 describe('Docs frontmatter and check', () => {
+  // @tg: verifies:: [[tests/tg-trace#Docs frontmatter#Capability entry]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Docs frontmatter#Capability entry]]
   // @tg: verifies:: [[openspec:tg-trace#Docs frontmatter#Capability entry]]
   it('turns openspec frontmatter into references from the root section', async () => {
@@ -150,6 +157,7 @@ describe('Docs frontmatter and check', () => {
     expect(JSON.parse(t.out)[0].documentedIn).toEqual(['lat.md/auth.md']);
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Check#Broken requirement target]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Check#Broken requirement target]]
   // @tg: verifies:: [[openspec:tg-annotations#Annotation validation#Broken requirement target]]
   it('reports a misspelled requirement target with a suggestion', async () => {
@@ -159,6 +167,7 @@ describe('Docs frontmatter and check', () => {
     expect(r.out).toContain("src/a.ts:1: @tg: [[openspec:auth#Logn]] — no requirement \"Logn\" in capability \"auth\" — did you mean '[[openspec:auth#Login]]'?");
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Check#Unknown frontmatter capability]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Check#Unknown frontmatter capability]]
   // @tg: verifies:: [[openspec:tg-check#Check#Unknown frontmatter capability]]
   it('reports an unknown capability in openspec frontmatter', async () => {
@@ -168,6 +177,7 @@ describe('Docs frontmatter and check', () => {
     expect(r.out).toContain('lat.md/auth.md:2: openspec: "auht" — no OpenSpec capability "auht"');
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Check#Untraced requirement]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Check#Untraced requirement]]
   // @tg: verifies:: [[openspec:tg-check#Check#Untraced requirement]]
   it('does not report requirements without annotations', async () => {
@@ -182,6 +192,7 @@ describe('Trace command', () => {
       'test/auth.test.ts': `// ${TG} verifies:: [[openspec:auth#Login#Valid password]]\nit('accepts a valid password', () => {});\n// ${TG} verifies:: [[openspec:auth#Login#Expired token]]\nit('rejects expired tokens', () => {});\n`,
     });
 
+  // @tg: verifies:: [[tests/tg-trace#Trace command#Full trace]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Trace command#Full trace]]
   // @tg: verifies:: [[openspec:tg-trace#Trace command#Full trace]]
   it('lists implementing code and verifying tests', async () => {
@@ -193,6 +204,7 @@ describe('Trace command', () => {
     expect(r.out).toContain('✗ Logout  — unimplemented, unverified, undocumented');
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Trace command#Strict gap]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Trace command#Strict gap]]
   // @tg: verifies:: [[openspec:tg-trace#Trace command#Strict gap]]
   it('fails under --strict while gaps remain and filters with --gaps', async () => {
@@ -204,6 +216,7 @@ describe('Trace command', () => {
     expect(gaps.out).not.toContain('✓ Login');
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Trace command#Unknown capability]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Trace command#Unknown capability]]
   // @tg: verifies:: [[openspec:tg-trace#Trace command#Unknown capability]]
   it('rejects an unknown capability', async () => {
@@ -213,6 +226,7 @@ describe('Trace command', () => {
     expect(r.err).toContain('known: auth');
   });
 
+  // @tg: verifies:: [[tests/tg-trace#Requirement nodes#Cypher over requirements]] {since: "2026-10-08", level: unit}
   // @lat: [[tests/tg-trace#Requirement nodes#Cypher over requirements]]
   // @tg: verifies:: [[openspec:tg-trace#Requirement nodes#Cypher over requirements]]
   it('exposes requirement nodes to cypher', async () => {

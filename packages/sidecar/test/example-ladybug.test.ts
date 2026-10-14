@@ -41,6 +41,7 @@ describe.skipIf(!available)('example vault on LadybugDB', () => {
     expect(examples.length).toBeGreaterThanOrEqual(4);
   });
 
+  // @tg: verifies:: [[tests/example-vault#Ladybug examples run]] {since: "2026-10-04", level: unit}
   // @lat: [[tests/example-vault#Ladybug examples run]]
   // @tg: verifies:: [[openspec:example-vault#Ladybug examples run#Pass-through examples match the mirror]]
   it.each(examples.map((e) => [e.name, e] as const))('%s returns rows on LadybugDB', async (_, e) => {
