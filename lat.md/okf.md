@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [okf-compat]
 ---
 # OKF

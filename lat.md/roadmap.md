@@ -1,3 +1,6 @@
+---
+type: Change
+---
 # Roadmap
 
 Delivery is phased as thin end-to-end slices. v0.1 to v0.11 are shipped; from 0.12 the plan narrows to one wedge and moves through three gated phases.

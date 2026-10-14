@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [ladybug-backend, ladybug-mirror]
 ---
 # Ladybug Mirror

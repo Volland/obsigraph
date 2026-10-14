@@ -1,4 +1,5 @@
 ---
+type: Concept
 openspec: [edge-embeds, edge-parsing, graph-model]
 ---
 # Edge Syntax

@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [shacl-interop, tgs-spec]
 ---
 # SHACL

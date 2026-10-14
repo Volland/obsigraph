@@ -1,3 +1,6 @@
+---
+type: Concept
+---
 # Code Ontology
 
 A small shared vocabulary for what the code is meant to do: six kinds of intent and eleven kinds of typed link between intent, requirements and code. Use these names instead of inventing synonyms, so a query means the same thing for everyone.

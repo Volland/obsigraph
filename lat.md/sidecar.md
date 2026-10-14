@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [sidecar-mcp-graphrag, sidecar-service]
 ---
 # Sidecar

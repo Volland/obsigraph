@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [node-vault-loader]
 ---
 # Architecture

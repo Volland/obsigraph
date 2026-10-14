@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [graph-query-block, graph-ui, graph-view, visualization-config]
 ---
 # Visualization

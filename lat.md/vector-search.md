@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [chunking-verbalization, embedding-provider, sidecar-service, vector-index]
 ---
 # Vector Search

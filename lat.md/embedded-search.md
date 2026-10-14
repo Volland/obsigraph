@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [graph-store, store-sync, local-embedding, vector-pack, hybrid-ranking, tg-retrieve, plugin-search, model-setup]
 ---
 # Embedded Search

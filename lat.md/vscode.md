@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [vscode-extension, graph-export]
 ---
 # VS Code Extension

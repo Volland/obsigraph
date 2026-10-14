@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [example-vault, ontology-gallery, plugin-install]
 ---
 # Publishing

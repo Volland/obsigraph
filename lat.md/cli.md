@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [code-layer, lat-resolver, lat-vault-integration, symbol-provider, tg-agent-integration, tg-annotations, tg-check, tg-cli, tg-search, tg-trace, tg-validate]
 ---
 # CLI

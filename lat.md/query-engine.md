@@ -1,4 +1,5 @@
 ---
+type: Decision
 openspec: [cypher-extensions, cypher-query, engine-conformance, graph-query-block, ladybug-backend]
 ---
 # Query Engine

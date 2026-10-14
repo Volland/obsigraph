@@ -1,4 +1,5 @@
 ---
+type: Concept
 openspec: [graph-model, schema-notes, typed-note-creation]
 ---
 # Graph Model
