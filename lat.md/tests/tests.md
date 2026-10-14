@@ -6,6 +6,7 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[graph-store]] — store behaviors from the graph-model spec
 - [[edge-notes]] — notes that declare an edge instead of a node
 - [[tg-ontology]] — typed edges in docs, tg ontology and its check, ontology-aware guidance
+- [[tg-migrate]] — tg migrate, the lat.md to typed graph migration
 - [[frontmatter-edges]] — links in frontmatter properties read as typed edges
 - [[cypher-query]] — query behaviors from the cypher-query spec
 - [[graph-query-block]] — block pipeline behaviors from the graph-query-block spec

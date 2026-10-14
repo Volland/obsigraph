@@ -2,6 +2,13 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **`tg migrate`** turns a lat.md project into an ontology-aware tg project in one pass. It swaps the agent setup like `tg init --migrate`, types docs files whose path names their kind (`decisions.md` → Decision, `constraints.md` → Constraint, `tests/` → Scenario, ...) or whose sections are SHALL statements, and turns each plain link whose sentence names the relation into a typed edge line: the candidates come from the project ontology, the choice from cue words in the sentence (`because` → `motivated_by`, `replaces` → `supersedes`, MUST → `constrains`). Edges get the metadata their type declares: `since` from `git blame`, `strength` from MUST or should, `level` from test paths. `@lat:` comments become `@tg: implements::` or `verifies::` by the target's type (`--keep-lat` keeps them). It never guesses: links it cannot decide are reported with their sentence and candidates (`--infer` applies single candidates without a cue). It writes by default, `--dry-run` previews, files with uncommitted changes are refused unless `--force`, and a second run changes nothing.
+- **`tg-migrate` skill**, installed by `tg init` for every agent: runs the deterministic pass, then has the agent type the remaining files and resolve each leftover link by reading its sentence, choosing the relation and its properties from the text, and finishing with `tg check`, `tg ontology check` and `tg trace`.
+
 ## 0.17.0 — 2026-10-14
 
 ### Added

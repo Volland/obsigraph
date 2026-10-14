@@ -5,6 +5,7 @@ import graphSkill from '../../templates/skills/tg-graph/SKILL.md';
 import traceSkill from '../../templates/skills/tg-trace/SKILL.md';
 import impactSkill from '../../templates/skills/tg-impact/SKILL.md';
 import auditSkill from '../../templates/skills/tg-audit/SKILL.md';
+import migrateSkill from '../../templates/skills/tg-migrate/SKILL.md';
 import openspecPropose from '../../templates/openspec/propose.md';
 import openspecApply from '../../templates/openspec/apply.md';
 import openspecArchive from '../../templates/openspec/archive.md';
@@ -25,7 +26,7 @@ export const TEMPLATES = { agents, cursor, docsSkill, graphSkill, traceSkill, im
 
 /** Skills installed for Claude Code, by folder name under `.claude/skills/`. */
 // @tg: implements:: [[openspec:tg-agent-integration#Bundled skills]]
-export const SKILLS: Record<string, string> = { 'tg-docs': docsSkill, 'tg-graph': graphSkill, 'tg-trace': traceSkill, 'tg-impact': impactSkill, 'tg-audit': auditSkill };
+export const SKILLS: Record<string, string> = { 'tg-docs': docsSkill, 'tg-graph': graphSkill, 'tg-trace': traceSkill, 'tg-impact': impactSkill, 'tg-audit': auditSkill, 'tg-migrate': migrateSkill };
 
 /** Blocks appended to OpenSpec's skills and commands, by workflow stage. */
 /** Template notes for the code ontology's types, by type name; `tg init` writes them to `Templates/<Type>.md`. */
@@ -51,6 +52,7 @@ const TARGETS: Record<string, string> = {
   'trace-skill.md': traceSkill,
   'impact-skill.md': impactSkill,
   'audit-skill.md': auditSkill,
+  'migrate-skill.md': migrateSkill,
   'openspec-propose.md': openspecPropose,
   'openspec-apply.md': openspecApply,
   'openspec-archive.md': openspecArchive,

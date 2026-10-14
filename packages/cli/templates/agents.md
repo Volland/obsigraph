@@ -32,6 +32,7 @@ tg ontology check             # typed edges in docs and code that the ontology d
 tg cypher "MATCH (d:Decision)-[r:motivated_by]->(c) RETURN d.title, c.title, r.since"   # query docs and code
 tg edges --type implements    # typed edges written from code
 tg check                      # validate links, code refs, indexes and annotations
+tg migrate --dry-run          # from plain lat.md: type files, turn links into typed edges (see the tg-migrate skill)
 ```
 
 Run `tg --help` when in doubt about available commands or options.

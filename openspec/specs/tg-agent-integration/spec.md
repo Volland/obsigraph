@@ -69,11 +69,11 @@ The system SHALL serve the tools `tg_locate`, `tg_section`, `tg_refs`, `tg_searc
 - **THEN** every tool name starts with `tg_` and the list includes `tg_locate`, `tg_section`, `tg_refs`, `tg_search`, `tg_expand`, `tg_check`, `tg_cypher` and `tg_edges`
 
 ### Requirement: Bundled skills
-The system SHALL ship the skills `tg-docs` (docs maintenance), `tg-graph` (graph queries), `tg-trace` (OpenSpec traceability), `tg-impact` (change impact) and `tg-audit` (spec audit) and install all of them with `tg init --write` into the skills folder of every selected agent.
+The system SHALL ship the skills `tg-docs` (docs maintenance), `tg-graph` (graph queries), `tg-trace` (OpenSpec traceability), `tg-impact` (change impact), `tg-audit` (spec audit) and `tg-migrate` (lat.md to typed graph migration) and install all of them with `tg init --write` into the skills folder of every selected agent.
 
 #### Scenario: Skills installed
 - **WHEN** `tg init --write` runs for Claude Code
-- **THEN** all five skills exist under the project's skills directory
+- **THEN** all six skills exist under the project's skills directory
 
 ### Requirement: Code ontology install
 `tg init --write` SHALL install the code ontology guide `lat.md/code-ontology.md`, its schema `Types/code-types.md` and one template note per type under `Templates/`, each only when absent, SHALL link each type to its template, SHALL list the guide in the `lat.md` index so `tg check` stays clean, SHALL note an `ontology/code-types.md` left by an older version, and SHALL skip all of them when the `ontology` part is not selected.

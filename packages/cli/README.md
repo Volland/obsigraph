@@ -76,7 +76,7 @@ tg cypher "MATCH (c:CodeSymbol)-[:implements]->(s:Section)
 | Oh My Pi | `AGENTS.md` | `.omp/skills` |
 | Any other agent | `AGENTS.md` | `.agents/skills` |
 
-Five skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query the graph), `tg-trace` (link requirements to code and tests), `tg-impact` (what a change touches, before and after the edit) and `tg-audit` (find where specs and code disagree). Re-running `tg init` only replaces its own marked blocks, and `tg init --dry-run` shows the diff without writing.
+Six skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query the graph), `tg-trace` (link requirements to code and tests), `tg-impact` (what a change touches, before and after the edit), `tg-audit` (find where specs and code disagree) and `tg-migrate` (finish a migration from lat.md). Re-running `tg init` only replaces its own marked blocks, and `tg init --dry-run` shows the diff without writing.
 
 **Search that needs nothing.** `tg search "how are tokens refreshed"` ranks sections lexically with no model to download and no key. Point it at Ollama or an OpenAI-compatible endpoint and it becomes hybrid lexical plus vector search.
 
@@ -97,6 +97,7 @@ Five skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query t
 | Query language | Locate, refs, search | All of those, plus openCypher over docs and code |
 | OpenSpec requirement tracing | — | `tg trace`, gap reports, OpenSpec rules and skill patches |
 | Agent setup | Claude Code, Cursor, Pi, OpenCode | Nine agents, chosen in a setup checklist |
+| Migration from the other | — | `tg migrate`: typed files, typed links with metadata, typed code edges |
 | MCP tools | 6 | 10 (adds `tg_cypher`, `tg_edges`, `tg_trace`, `tg_ontology`) |
 | Search | Semantic, local model or API key | Lexical with no setup; hybrid with embeddings |
 | Obsidian | Folder opens as plain Markdown | Plugin resolves ids on click, shows findings, draws the graph |
@@ -105,7 +106,23 @@ Five skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query t
 
 Where lat.md is stronger, honestly: it parses code with real grammars, so unusual syntax and macros are found more reliably; it has semantic search without running anything else; and it is the original, with far more real-world use. When the two disagree on the format, lat.md is right by definition. The full comparison is in **[tg and lat.md compared](https://typedgraph.org/blog-tg-vs-lat-md.html)**.
 
-**Moving from lat.md** takes one command: `tg init --migrate` replaces the lat block in `CLAUDE.md`, the `lat hook` commands and the `lat` MCP entry, and leaves everything else in your files byte for byte.
+**Moving from lat.md** is one command, and it brings the typed graph with it:
+
+```bash
+tg migrate --dry-run   # see the diff and the links it will leave plain
+tg migrate             # do it
+```
+
+`tg migrate` swaps the lat block, `lat hook` commands and `lat` MCP entry for tg's (leaving everything else in your files untouched), types docs files whose path names their kind (`decisions.md` → Decision, `constraints.md` → Constraint, `tests/` → Scenario, ...), turns each plain link whose sentence names the relation into a typed edge with metadata, and upgrades `@lat:` comments to `@tg: implements::` and `verifies::`:
+
+```markdown
+Access tokens live 15 minutes because of [[constraints#Session limit]]. This replaces [[decisions#Long sessions]].
+
+- motivated_by:: [[constraints#Session limit]] {since: "2026-03-02"}
+- supersedes:: [[decisions#Long sessions]] {since: "2026-03-02"}
+```
+
+The relations come from your ontology, the cue words from the sentence (`because` → `motivated_by`, `replaces` → `supersedes`, MUST → `constrains {strength: must}`), the dates from `git blame`. It never guesses: links it cannot decide are listed with their sentence and candidates, and the `tg-migrate` skill lets Claude Code resolve them by reading the text. It refuses files with uncommitted changes, and a second run changes nothing. `--keep-lat` keeps your `@lat:` lines if you still run `lat check`.
 
 ## Commands
 
@@ -117,6 +134,7 @@ Where lat.md is stronger, honestly: it parses code with real grammars, so unusua
 | `tg section <id>` / `locate` / `refs` / `expand` | Read a section, find one by name, find what points at it, resolve `[[refs]]` in text |
 | `tg cypher <query>` | Read-only openCypher over sections, code files and symbols |
 | `tg edges` | List `@lat:` and `@tg:` annotation edges with type, sign and properties |
+| `tg migrate` | Migrate a lat.md project: setup swap, typed files, typed links with metadata, `@lat:` → `@tg:` |
 | `tg ontology` / `ontology check` | List the project's types and edge types from `Types/`; check written typed edges against them |
 | `tg trace [capability] --gaps` | Which code implements, which tests verify and which docs explain each OpenSpec requirement |
 | `tg validate` | Check a notes vault against its schema notes, with JSON or SARIF for CI |

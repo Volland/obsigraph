@@ -83,11 +83,12 @@
       <div class="wrap two-col">
         <div>
           <h2>Switching from lat.md</h2>
-          <p class="section-lead">Your <code>lat.md/</code> folder and <code>@lat:</code> comments stay as they are.</p>
+          <p class="section-lead">Your <code>lat.md/</code> folder stays; <code>tg migrate</code> types its files, turns links into typed edges with metadata, and upgrades <code>@lat:</code> comments.</p>
 <pre>npm install -g @typedgraph/cli
 tg check                       # should match lat check
-tg init --dry-run --migrate    # optional: see the diff
-tg init --migrate              # swap the lat block, hooks and MCP entry</pre>
+tg migrate --dry-run           # optional: see the diff and what stays plain
+tg migrate                     # swap the setup, type files, turn links into typed edges with metadata
+tg ontology check              # every new edge fits the ontology</pre>
         </div>
         <div>
           <h2>Not affiliated</h2>
