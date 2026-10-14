@@ -1,3 +1,4 @@
+import { parseEdges, type ParsedEdge } from '../edges/parse.js';
 import { toPosix } from './links.js';
 
 export interface Section {
@@ -40,6 +41,8 @@ export interface ParsedMarkdown {
   flat: Section[];
   refs: WikiRef[];
   frontmatter: Frontmatter;
+  /** Typed edge lines (`type:: [[target]] {props}`) outside code; `line` is 0-based as in `parseEdges`. */
+  edges: ParsedEdge[];
 }
 
 // @tg: implements:: [[openspec:tg-trace#Docs frontmatter]]
@@ -294,7 +297,7 @@ export function parseMarkdown(filePath: string, text: string): ParsedMarkdown {
   }
   refs.sort((x, y) => x.line - y.line);
 
-  return { roots, flat, refs, frontmatter };
+  return { roots, flat, refs, frontmatter, edges: parseEdges(text, filePath).edges };
 }
 
 // @tg: implements:: [[openspec:lat-resolver#Section tree]]

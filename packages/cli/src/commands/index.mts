@@ -11,3 +11,4 @@ import './okf.mjs';
 import './schema.mjs';
 import './trace.mjs';
 import './validate.mjs';
+import './ontology.mjs';

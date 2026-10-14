@@ -155,7 +155,7 @@ it('serves the tools over MCP and tg_cypher returns the tagged result contract',
   const client = new Client({ name: 't', version: '0' });
   await Promise.all([server.connect(a), client.connect(b)]);
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  expect(tools).toEqual(['tg_check', 'tg_cypher', 'tg_edges', 'tg_expand', 'tg_locate', 'tg_refs', 'tg_search', 'tg_section', 'tg_trace']);
+  expect(tools).toEqual(['tg_check', 'tg_cypher', 'tg_edges', 'tg_expand', 'tg_locate', 'tg_ontology', 'tg_refs', 'tg_search', 'tg_section', 'tg_trace']);
   const res = (await client.callTool({ name: 'tg_cypher', arguments: { query: 'MATCH (a:Section {title: \"Login\"})-[:references]->(b:Section) RETURN a, b.title' } })) as { content: { text: string }[] };
   const json = JSON.parse(res.content[0]!.text) as { columns: unknown[]; rows: Record<string, unknown>[][] };
   expect(json.rows).toHaveLength(1);

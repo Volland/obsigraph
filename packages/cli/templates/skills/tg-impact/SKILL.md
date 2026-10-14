@@ -44,6 +44,22 @@ MATCH (c:CodeSymbol)-[:implements]->(r:Requirement {requirement: 'openspec:auth#
 RETURN c.path, c.symbol
 ```
 
+Decisions and constraints that bind this code. These are the rules a refactor most often breaks, because no test names them:
+
+```cypher
+MATCH (x)-[r:constrains|contradicts]-(c:CodeSymbol {path: 'src/auth/token.ts'})
+RETURN type(r), r.sign, x.title, x.section, r.strength, r.ticket, r.until
+```
+
+and the decisions behind the requirements it implements, with their reasons:
+
+```cypher
+MATCH (c:CodeSymbol {path: 'src/auth/token.ts'})-[:implements]->(q)<-[:constrains]-(k:Constraint)
+RETURN q.title, k.title
+```
+
+Edge names come from the project ontology: run `tg ontology` to see which relations this project records (it may add its own, such as `owned_by` or `mitigates`), and include them in the queries above.
+
 Read the requirement text itself in `openspec/specs/<capability>/spec.md` (the `file` and `line` properties of the node point at it). If the change you were asked for contradicts it, stop and say so: either the spec changes first (an OpenSpec change) or the code change is wrong.
 
 ## 2. Make the edit
@@ -51,11 +67,13 @@ Read the requirement text itself in `openspec/specs/<capability>/spec.md` (the `
 - Keep `@tg: implements::` and `@tg: verifies::` lines attached to the declaration or test they describe when you move or rename code.
 - A new function that realizes a requirement gets its own `implements` line; a new test gets `verifies` for the scenario it proves.
 - Deleting the last implementer of a requirement is a spec decision, not a refactor. Flag it.
+- Code that now knowingly breaks a decision or constraint gets `// @tg: -contradicts:: [[decisions#...]] {ticket: "...", until: "..."}` instead of silence.
+- If the edit changes a decision, record it in `lat.md/`: a new `Decision` section with `- supersedes:: [[decisions#<old>]] {since: "<version>", reason: "..."}` and its `motivated_by::` edges, not an edited paragraph.
 
 ## 3. After the edit: prove nothing broke
 
 1. Run the tests listed in step 1, then the wider suite.
-2. `tg check`: every annotation still resolves.
+2. `tg check`: every annotation still resolves. `tg ontology check`: every typed edge you added uses a declared name, direction and properties.
 3. `tg trace <capability> --gaps`: nothing became unimplemented or unverified.
 4. If behavior a requirement describes changed on purpose, update the spec in an OpenSpec change and the lat.md section from step 1.
 

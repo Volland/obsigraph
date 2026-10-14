@@ -40,7 +40,18 @@ We used it on this repository: [239 OpenSpec requirements traced to the code tha
 
 **Docs that stay true.** `tg check` validates every `[[wiki link]]`, every `@lat:` and `@tg:` reference from code (down to the function or class), the index file of each folder and the structure of each section. Run it in CI, in a pre-commit hook, or let the agent's stop hook run it before it says "done".
 
-**Typed, signed links from code.** `@tg: implements::`, `verifies::`, `-contradicts::` (negative), `depends_on::` with properties such as `{since: 2}`. The same one-line grammar works in notes, docs and code. Plain `@lat:` comments keep working unchanged.
+**Typed, signed links — in code and in docs.** `@tg: implements::`, `verifies::`, `-contradicts::` (negative), `depends_on::` with properties such as `{since: 2}` above a declaration; and the same line in a doc section, so decisions, constraints and requirements link to each other with names:
+
+```markdown
+## Short-lived access tokens
+
+Access tokens expire after 15 minutes and refresh tokens rotate on every use.
+
+- motivated_by:: [[constraints#Session limit]] {weight: primary}
+- supersedes:: [[decisions#Long-lived sessions]] {since: "2.3", reason: "audit finding"}
+```
+
+Each line is still an ordinary wiki link for lat.md, and a named edge with properties for `tg cypher`. Plain `@lat:` comments keep working unchanged.
 
 **A query language over docs and code.** Sections, files and code symbols are graph nodes, so questions become openCypher:
 
@@ -69,7 +80,7 @@ Five skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query t
 
 **Search that needs nothing.** `tg search "how are tokens refreshed"` ranks sections lexically with no model to download and no key. Point it at Ollama or an OpenAI-compatible endpoint and it becomes hybrid lexical plus vector search.
 
-**A shared vocabulary.** `tg init` installs a small code ontology (Decision, Requirement, Scenario, Constraint, Concept, Change, and edge types such as `implements` and `constrains`) as a schema in `Types/`, with a template per type in `Templates/`, so people and agents name things the same way. It exports to W3C SHACL with `tg schema export`.
+**An ontology agents can read.** `tg init` installs a small code ontology (Decision, Requirement, Scenario, Constraint, Concept, Change, and edge types such as `implements`, `motivated_by` and `constrains`, each with its properties) as a schema in `Types/`, with a template per type in `Templates/`. `tg ontology` prints it, including any types your project adds, so agents use your names instead of inventing synonyms; `tg ontology check` flags edges with an unknown name (and suggests the right one), a wrong direction or an undeclared property. The instructions, skills and OpenSpec rules `tg init` installs teach agents this loop. It exports to W3C SHACL with `tg schema export`.
 
 **Your choice of folder.** Keep docs in `lat.md/` to stay compatible with the `lat` command, or in `tg.md/` if lat.md means nothing to your team. An existing `lat.md/` always wins.
 
@@ -81,11 +92,12 @@ Five skills come with it: `tg-docs` (keep the docs in sync), `tg-graph` (query t
 | --- | --- | --- |
 | Folder format, section ids, wiki links, `@lat:` comments | ✓ | Same |
 | `check` verdicts | Reference | Same findings, checked by a parity suite in CI |
-| Typed, signed links from code with properties | — | `@tg: implements:: [[…]] {since: 2}` |
+| Typed, signed links with properties | — | From code (`@tg: implements:: [[…]] {since: 2}`) and between doc sections (`- motivated_by:: [[…]]`) |
+| Ontology | — | `tg ontology` lists types and edge types; `tg ontology check` validates written edges |
 | Query language | Locate, refs, search | All of those, plus openCypher over docs and code |
 | OpenSpec requirement tracing | — | `tg trace`, gap reports, OpenSpec rules and skill patches |
 | Agent setup | Claude Code, Cursor, Pi, OpenCode | Nine agents, chosen in a setup checklist |
-| MCP tools | 6 | 9 (adds `tg_cypher`, `tg_edges`, `tg_trace`) |
+| MCP tools | 6 | 10 (adds `tg_cypher`, `tg_edges`, `tg_trace`, `tg_ontology`) |
 | Search | Semantic, local model or API key | Lexical with no setup; hybrid with embeddings |
 | Obsidian | Folder opens as plain Markdown | Plugin resolves ids on click, shows findings, draws the graph |
 | Install | npm package with native grammars and a database client | One bundled file, no runtime dependencies |
@@ -105,6 +117,7 @@ Where lat.md is stronger, honestly: it parses code with real grammars, so unusua
 | `tg section <id>` / `locate` / `refs` / `expand` | Read a section, find one by name, find what points at it, resolve `[[refs]]` in text |
 | `tg cypher <query>` | Read-only openCypher over sections, code files and symbols |
 | `tg edges` | List `@lat:` and `@tg:` annotation edges with type, sign and properties |
+| `tg ontology` / `ontology check` | List the project's types and edge types from `Types/`; check written typed edges against them |
 | `tg trace [capability] --gaps` | Which code implements, which tests verify and which docs explain each OpenSpec requirement |
 | `tg validate` | Check a notes vault against its schema notes, with JSON or SARIF for CI |
 | `tg schema export` / `import` | Exchange schemas with RDF tools as SHACL |

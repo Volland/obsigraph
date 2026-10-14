@@ -11,7 +11,7 @@ const USAGE = [
 ].join('\n       tg ');
 
 /** Markdown notes directly in the schema folder, with parsed frontmatter. */
-function readSchemaNotes(vault: string, folder: string): ExistingNote[] {
+export function readSchemaNotes(vault: string, folder: string): ExistingNote[] {
   const dir = join(vault, folder);
   if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
   return readdirSync(dir)

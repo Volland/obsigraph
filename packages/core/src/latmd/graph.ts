@@ -24,12 +24,15 @@ function edge(type: string, target: string, line: number): ParsedEdge {
  * `CodeFile` and `CodeSymbol` nodes and the `@lat:` and `@tg:` edges join in.
  * With specs, `Requirement` and `Scenario` nodes join too: `@tg:` edges to
  * `openspec:` ids end at them, and a file's `openspec:` frontmatter becomes
- * `references` edges from its root section.
+ * `references` edges from its root section. A typed edge line in a section
+ * (`motivated_by:: [[decisions#Why]] {since: 2}`) becomes an edge of that type,
+ * sign and properties from the section, instead of a plain `references`.
  */
 // @lat: [[cli#Agent integration]]
 // @tg: implements:: [[openspec:code-layer#Link and node identity agree]]
 // @tg: implements:: [[openspec:tg-trace#Requirement nodes]]
 // @tg: implements:: [[openspec:tg-trace#Docs frontmatter]]
+// @tg: implements:: [[openspec:tg-cli#Typed edges in docs]]
 export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): { graph: Graph; code: CodeLayer } {
   const known = new Set<string>(index.sections().map((s) => s.id));
   const specs = options.specs ?? null;
@@ -54,6 +57,16 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
     (link, sub) => (known.has(`${link}#${sub}`) ? `${link}#${sub}` : null),
   );
 
+  /** A link target written in a doc: a section, an OpenSpec requirement or scenario, or a code node in the graph. */
+  const resolveTarget = (target: string): string | null => {
+    const sec = resolveSection(target);
+    if (sec) return sec;
+    const res = index.resolve(target);
+    if (res.kind !== 'code') return null;
+    const id = res.symbol ? `${res.file}#${res.symbol}` : res.file;
+    return known.has(id) ? id : null;
+  };
+
   // Section links, including links from prose to code nodes.
   const linksBySection = new Map<string, Map<string, number>>();
   for (const ref of index.refs()) {
@@ -68,8 +81,26 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
     linksBySection.set(ref.fromSection, m);
   }
 
+  // Typed edge lines in a section's own text become typed edges from that section.
+  const typedBySection = new Map<string, ParsedEdge[]>();
+  for (const file of index.files.values()) {
+    for (const e of file.edges) {
+      const line = e.line + 1;
+      const owner = file.flat.filter((s) => s.startLine <= line && line <= s.endLine).sort((a, b) => b.depth - a.depth)[0];
+      if (!owner) continue;
+      const target = resolveTarget(e.subpath ? `${e.target}#${e.subpath}` : e.target);
+      if (!target || target === owner.id) continue;
+      const list = typedBySection.get(owner.id) ?? [];
+      list.push({ type: e.type, sign: e.sign, target, subpath: null, alias: null, props: e.props, line, heading: null });
+      typedBySection.set(owner.id, list);
+    }
+  }
+
   for (const s of index.sections()) {
     const edges: ParsedEdge[] = s.children.map((c) => edge('contains', c.id, c.startLine));
+    const typed = typedBySection.get(s.id) ?? [];
+    edges.push(...typed);
+    const typedTargets = new Set(typed.map((e) => e.target));
     const fm = index.files.get(s.filePath)?.frontmatter;
     if (specs && s.depth === 1 && fm?.openspec) {
       for (const entry of fm.openspec) {
@@ -77,7 +108,8 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
         for (const id of reqs) edges.push(edge('references', id, s.startLine));
       }
     }
-    for (const [target, line] of linksBySection.get(s.id) ?? []) if (target !== s.id) edges.push(edge('references', target, line));
+    // A link written as a typed edge is that edge, not also a plain reference.
+    for (const [target, line] of linksBySection.get(s.id) ?? []) if (target !== s.id && !typedTargets.has(target)) edges.push(edge('references', target, line));
     graph.upsertNote({
       path: s.id,
       text: '',

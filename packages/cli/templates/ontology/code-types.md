@@ -61,38 +61,65 @@ edgeTypes:
     properties:
       since: text
       confidence: {values: [full, partial]}
+      note: text
   verifies:
     from: [CodeSymbol, CodeFile]
     to: [Requirement, Scenario]
-    properties: {since: text}
+    properties:
+      since: text
+      level: {values: [unit, integration, e2e, manual]}
   contradicts:
     from: [CodeSymbol, CodeFile, Requirement, Decision]
     to: [Decision, Requirement, Constraint]
     properties:
       until: text
       ticket: text
+      reason: text
     visualization: {color: "#e5484d", line: dashed}
   supersedes:
     from: Decision
     to: Decision
+    properties:
+      since: text
+      reason: text
   motivated_by:
     from: Decision
     to: [Constraint, Concept, Decision]
+    properties:
+      since: text
+      weight: {values: [primary, secondary]}
+      note: text
   constrains:
     from: Constraint
     to: [Requirement, Decision, CodeSymbol, CodeFile]
+    properties:
+      strength: {values: [must, should]}
+      source: text
+      note: text
   refines:
     from: [Requirement, Scenario]
     to: Requirement
+    properties:
+      note: text
   depends_on:
     from: [Requirement, CodeSymbol]
     to: Requirement
+    properties:
+      strength: {values: [hard, soft]}
+      note: text
   defines:
     from: Concept
+    properties:
+      note: text
   introduced_by:
     to: Change
+    properties:
+      date: date
   changed_by:
     to: Change
+    properties:
+      date: date
+      note: text
 ---
 # Code Ontology Schema
 

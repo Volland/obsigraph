@@ -32,6 +32,9 @@ Verify claims by reading code and tests, not file names. Note behavior the code 
 - **Code bug**: the spec states the right behavior and the code is wrong. Keep the spec; add a task to fix the code with a test.
 - **Both**: fix the wording and the code.
 - **Open decision**: neither side is clearly right. Write both options down and ask; do not guess.
+- **Known debt**: the code is knowingly wrong and will stay so for now. Keep the spec, and mark the code with `// @tg: -contradicts:: [[openspec:<cap>#<Requirement>]] {ticket: "...", until: "...", reason: "..."}` so the debt is queryable instead of forgotten.
+
+Record what the audit learns in the typed graph, using the names `tg ontology` lists: a decision taken to resolve a mismatch becomes a `Decision` section in `lat.md/` with `- motivated_by::` edges to its reasons, an external rule that explains odd code becomes a `Constraint` section with `- constrains::` edges to what it binds (`{strength: must}` or `should`), and a superseded rule gets `- supersedes::` from its replacement.
 
 ## 4. Write the change
 
@@ -49,9 +52,10 @@ From the recorded `code` and `scenarios`, add `// @tg: implements::` above each 
 
 ```bash
 tg check            # every new link resolves
+tg ontology check   # every typed edge fits the ontology
 tg trace --gaps     # what is left, honestly
 ```
 
 ## 6. Report
 
-Counts by status and verdict, each code bug in one line with its location, the open decisions with both options, and the remaining gaps from `tg trace`. Gaps are information, not failure.
+Counts by status and verdict, each code bug in one line with its location, the open decisions with both options, the known debt as `contradicts` edges with tickets, and the remaining gaps from `tg trace`. Gaps are information, not failure.

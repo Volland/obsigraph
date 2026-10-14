@@ -2,6 +2,18 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **Typed edges in docs.** A line `- motivated_by:: [[constraints#GDPR]] {since: 2}` after a section's leading paragraph is now a named edge with its sign and properties in `tg cypher`, from that section to a section, an OpenSpec requirement or scenario, or code. Before, it was reduced to a plain `references` link. The line is still an ordinary wiki link, so `tg check` and lat.md see no difference.
+- **`tg ontology`** lists the project's ontology from `Types/`: types with their properties and allowed edges, edge types with endpoints and properties. **`tg ontology check`** reports typed edges in docs and code with an undeclared name (suggesting the closest one), a disallowed source or target type, or an undeclared or out-of-range property. Both are also the MCP tool `tg_ontology`.
+- The bundled code ontology declares properties on every edge type: `since`, `confidence` and `note` on `implements`, `level` on `verifies`, `reason` on `contradicts` and `supersedes`, `weight` on `motivated_by`, `strength` and `source` on `constrains`, `strength` on `depends_on`, `date` on provenance edges. Projects set up earlier keep their own `Types/code-types.md`; copy the new properties from `tg gen ontology-schema.md` if you want them.
+
+### Changed
+
+- **Agents now write the docs as a typed graph.** The instruction block in `CLAUDE.md`/`AGENTS.md`, the Cursor rules, all five skills, the ontology guide and the OpenSpec skill patches teach one loop: run `tg ontology` to learn the project's types and edge names (including ones the project added), type each docs file, write relations as typed edge lines with properties, record decisions and constraints as `Decision` and `Constraint` sections, and finish with `tg check` and `tg ontology check`. The OpenSpec config rules ask for the same in every proposal, design and task list.
+
 ## 0.16.2 — 2026-10-14
 
 ### Changed

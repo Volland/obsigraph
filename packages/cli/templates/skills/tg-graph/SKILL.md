@@ -1,17 +1,17 @@
 ---
 name: tg-graph
-description: Query the lat.md section graph with openCypher through tg. Use when you need relationships between sections, such as what links to what, what is nested where, or which sections nothing references.
+description: Query the typed graph of docs, requirements and code with openCypher through tg - typed sections (Decision, Requirement, Constraint, ...), named edges with properties, OpenSpec requirements and annotated code - using the project ontology from tg ontology. Use when you need relationships, such as why a decision exists, what constrains a piece of code, what is unimplemented, or which sections nothing references.
 ---
 
-# Querying the section graph
+# Querying the typed graph
 
-`tg cypher "<query>"` runs read-only openCypher over the documentation graph. The same query is available to MCP clients as the `tg_cypher` tool.
+`tg cypher "<query>"` runs read-only openCypher over the documentation graph. The same query is available to MCP clients as the `tg_cypher` tool. Before writing a query, run `tg ontology` (MCP: `tg_ontology`): it lists the node types and edge types that exist in this project and the properties each edge carries, so you query real labels and real property names.
 
 ## Model
 
 - Nodes: label `Section` (plus the file's `type:` frontmatter, e.g. `Decision` or `Requirement`, on sections below the title), properties `section` (the lat id), `title`, `file`, `depth`, `startLine`, `endLine`, `summary`.
-- Edges: `contains` (parent section to child section) and `references` (a wiki link that resolves to a section).
-- Edge properties: `r.sign` (+1 or -1) and `r.id`.
+- Edges: `contains` (parent section to child section), `references` (a plain wiki link that resolves to a section), and **typed edges written in docs**: a line `- motivated_by:: [[constraints#Session limit]] {weight: primary}` in a section is an edge of type `motivated_by` from that section, carrying its properties (`r.weight`). Its target may be a section, a `Requirement` or `Scenario`, or a code node.
+- Edge properties: `r.sign` (+1 or -1), `r.id`, and every property written in the edge's `{...}` block (`r.since`, `r.ticket`, `r.confidence`, ...). `type(r)` gives the edge name.
 - With an `openspec/` folder: `Requirement` nodes (`requirement` id, `capability`, `name`, `text`, `file`, `line`, `status` active or pending, `change`) and `Scenario` nodes (`scenario` id, `requirement`, `name`), joined by `contains`. A lat.md file's `openspec:` frontmatter adds `references` from its root section to each requirement it names.
 - With `--code annotated` or `all`: `CodeFile` and `CodeSymbol` nodes (`path`, `symbol`, `kind`, `lang`, `startLine`), and `@tg:` annotations as edges of their own type (`implements`, `verifies`, ...) to sections, requirements or scenarios; a test's annotation starts at its file and carries `test`.
 
@@ -30,7 +30,7 @@ MATCH (s:Section)<-[r:references]-() RETURN s.section, count(r) AS n ORDER BY n 
 
 ## Ontology queries
 
-With the vocabulary in `lat.md/code-ontology.md` and `tg cypher --code annotated`:
+Use the names `tg ontology` prints (the bundled ones are below; a project may add its own) with `tg cypher --code annotated`:
 
 ```cypher
 // Requirements nothing implements
@@ -38,6 +38,21 @@ MATCH (s:Requirement) OPTIONAL MATCH (c)-[r:implements]->(s) WITH s, count(r) AS
 
 // Knowing contradictions, with their expiry
 MATCH (c)-[r:contradicts]->(d) RETURN c.symbol, d.section, r.until, r.ticket
+
+// Why a decision exists, and what it replaced
+MATCH (d:Decision {title: "Short-lived access tokens"})-[r:motivated_by|supersedes]->(x) RETURN type(r), x.title, r.weight, r.reason
+
+// Hard constraints and everything they bind, down to code
+MATCH (c:Constraint)-[r:constrains]->(x) WHERE r.strength = "must" RETURN c.title, x.title, x.symbol
+
+// Everything around one section, in both directions
+MATCH (s:Section {title: "Session limit"})-[r]-(x) RETURN type(r), r.sign, x.title, x.symbol
+
+// Decisions with no recorded reason
+MATCH (d:Decision) OPTIONAL MATCH (d)-[r:motivated_by]->() WITH d, count(r) AS n WHERE n = 0 RETURN d.section
+
+// Edge names in use, to compare with tg ontology
+MATCH ()-[r]->() RETURN type(r) AS edge, count(*) AS n ORDER BY n DESC
 ```
 
 ## Requirement queries
@@ -58,6 +73,10 @@ MATCH (r:Requirement {status: "pending"}) RETURN r.change, r.requirement
 ## Typed code edges
 
 `tg edges --type implements` lists `@tg:` annotation edges (code to section) with their properties, signs and sources.
+
+## Checking edges against the ontology
+
+`tg ontology check` (MCP: `tg_ontology` with `check: true`) lists typed edges in docs and code whose name the ontology does not declare (with the closest declared name), whose source or target type the edge type does not allow, or whose properties are undeclared or out of range. Run it after writing edges.
 
 ## Limits
 
