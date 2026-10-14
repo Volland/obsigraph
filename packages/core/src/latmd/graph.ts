@@ -3,7 +3,7 @@ import { buildCodeLayer, upsertCodeNode, type CodeLayer, type CodeMode, type Cod
 import { noteFormat, parseAsciidoc } from '../asciidoc/parse.js';
 import type { YamlParser } from '../asciidoc/meta.js';
 import { Graph } from '../graph/graph.js';
-import { isSourceTarget, splitTarget } from './links.js';
+import { isSourceTarget } from './links.js';
 import { isSpecTarget, type SpecIndex } from '../openspec/index.js';
 import type { LatIndex } from './index.js';
 

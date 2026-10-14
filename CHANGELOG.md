@@ -2,6 +2,12 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.19.1 — 2026-10-14
+
+### Fixed
+
+- The exported graph page opens its details panel with a CSS class instead of assigning styles, which the Obsidian community review reported as an error; an unused import was removed.
+
 ## 0.19.0 — 2026-10-14
 
 ### Added

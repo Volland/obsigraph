@@ -23,7 +23,7 @@ const show = (title: string, rows: [string, string][]) => {
     dl.append(dt, dd);
   }
   details.append(h, dl);
-  details.style.display = 'block';
+  details.classList.add('open');
 };
 
 const renderer = new GraphRenderer(document.getElementById('graph')!, {
@@ -33,7 +33,7 @@ const renderer = new GraphRenderer(document.getElementById('graph')!, {
   positions: data.positions,
   onSelect: (sel) => {
     if (!sel) {
-      details.style.display = 'none';
+      details.classList.remove('open');
       return;
     }
     if (sel.kind === 'node') {

@@ -52,7 +52,7 @@ html,body{margin:0;height:100%;background:${t.background};color:${t.text};font:1
 header{position:absolute;top:0;left:0;right:0;padding:10px 14px;z-index:2;pointer-events:none}
 header b{font-size:15px}header span{color:${t.muted};margin-left:10px}
 #graph{position:absolute;inset:0}
-aside{position:absolute;top:44px;right:12px;width:300px;max-height:calc(100% - 64px);overflow:auto;z-index:2;background:${t.background};border:1px solid ${t.muted};border-radius:6px;padding:10px 12px;display:none}
+aside{position:absolute;top:44px;right:12px;width:300px;max-height:calc(100% - 64px);overflow:auto;z-index:2;background:${t.background};border:1px solid ${t.muted};border-radius:6px;padding:10px 12px;display:none}aside.open{display:block}
 aside h2{margin:0 0 6px;font-size:14px}aside dt{color:${t.muted};font-size:11px;margin-top:6px}aside dd{margin:0;word-break:break-word}
 </style>
 </head>
