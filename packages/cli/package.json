@@ -7,11 +7,11 @@
   "homepage": "https://typedgraph.org/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Volland/obsigraph.git",
+    "url": "git+https://github.com/Volland/typedgraph.git",
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/Volland/obsigraph/issues"
+    "url": "https://github.com/Volland/typedgraph/issues"
   },
   "keywords": [
     "lat.md",

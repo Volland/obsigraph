@@ -217,4 +217,4 @@ If you make one you would like to share, send a pull request to the `ontologies/
 
 ---
 
-*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/). TGS is an open specification and SHACL is a W3C standard.*
+*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [typedgraph.org/](https://typedgraph.org/). TGS is an open specification and SHACL is a W3C standard.*

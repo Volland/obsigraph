@@ -7,7 +7,7 @@
   <meta name="description" content="Typed Graph Schema (TGS) is an open, hand-editable YAML format for the types of a markdown knowledge graph. It maps to and from W3C SHACL, so an ontology kept in your notes can be exchanged with RDF tools.">
   <meta property="og:title" content="An ontology you can edit by hand, and hand to an RDF tool">
   <meta property="og:description" content="Typed Graph Schema: schema notes in plain YAML that export to and import from W3C SHACL, published as an open specification with a JSON Schema and conformance examples.">
-  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:image" content="https://typedgraph.org/assets/og.png">
   <meta property="og:type" content="article">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/style.css">
@@ -26,7 +26,7 @@
         <a href="example.html">Example</a>
         <a href="ontologies.html">Ontologies</a>
         <a href="blog.html" class="active">Blog</a>
-        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <a href="https://github.com/Volland/typedgraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>
       </nav>
     </div>
@@ -125,7 +125,7 @@ Drop report: everything was imported.</pre>
     <p>The format is no longer an internal detail. <a href="spec/tgs/v0.1/">Typed Graph Schema 0.1</a> is published as a standalone document that defines every key, its default and its meaning, the validation diagnostics and the SHACL mapping, without reference to this plugin's code. It comes with:</p>
     <ul>
       <li>a <a href="spec/tgs/v0.1/tgs.schema.json">JSON Schema</a> for the frontmatter, so an editor or a CI job can check a schema note;</li>
-      <li>five <a href="https://github.com/Volland/obsigraph/tree/main/spec/tgs/examples">conformance examples</a>, each a small vault with the declarations and diagnostics a correct implementation must produce;</li>
+      <li>five <a href="https://github.com/Volland/typedgraph/tree/main/spec/tgs/examples">conformance examples</a>, each a small vault with the declarations and diagnostics a correct implementation must produce;</li>
       <li>three conformance levels: reader, validator, and SHACL exchanger;</li>
       <li>a <a href="ns/tgs/">namespace page</a> for the <code>tgs:</code> annotations;</li>
       <li>versioning rules: a published version never changes, minor versions only add optional keys, and a reader reports keys it does not know instead of failing.</li>
@@ -140,13 +140,13 @@ Drop report: everything was imported.</pre>
       <li>Add a few <code>type: Person</code> notes and a <code>worksAt::</code> line or two, then open <em>Show diagnostics</em>.</li>
       <li>Run <code>tg schema export shapes.ttl</code> and open the result, or load it into any SHACL-aware tool.</li>
     </ol>
-    <p>The <a href="docs.html#schemas">docs</a> cover every key, and the <a href="spec/tgs/v0.1/">specification</a> is the reference. Questions and corrections are welcome in the <a href="https://github.com/Volland/obsigraph/issues">issue tracker</a>.</p>
+    <p>The <a href="docs.html#schemas">docs</a> cover every key, and the <a href="spec/tgs/v0.1/">specification</a> is the reference. Questions and corrections are welcome in the <a href="https://github.com/Volland/typedgraph/issues">issue tracker</a>.</p>
   </main>
 
   <footer>
     <div class="wrap">
       <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB, lat.md or Google.</span>
-      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/typedgraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>
   <script src="assets/site.js"></script>

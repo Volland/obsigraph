@@ -8,7 +8,7 @@
   "license": "MIT",
   "type": "module",
   "icon": "media/icon.png",
-  "repository": { "type": "git", "url": "https://github.com/Volland/obsigraph" },
+  "repository": { "type": "git", "url": "https://github.com/Volland/typedgraph" },
   "categories": ["Visualization", "Other"],
   "keywords": ["markdown", "backlinks", "graph", "lat.md", "knowledge graph", "typed links"],
   "engines": { "vscode": "^1.90.0" },

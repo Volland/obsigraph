@@ -1,6 +1,6 @@
 # Typed Graph demo vault
 
-A small Obsidian vault that uses every feature of [Typed Graph](https://volland.github.io/obsigraph/): typed nodes, typed and signed edges with properties, pinned ids, stubs, schema notes, styling, edge embeds, diagnostics and live openCypher blocks. It includes a step-by-step manual.
+A small Obsidian vault that uses every feature of [Typed Graph](https://typedgraph.org/): typed nodes, typed and signed edges with properties, pinned ids, stubs, schema notes, styling, edge embeds, diagnostics and live openCypher blocks. It includes a step-by-step manual.
 
 ## Open it
 

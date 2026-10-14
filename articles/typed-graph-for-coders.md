@@ -339,4 +339,4 @@ Everything else, the structure, the symbols, the call edges, the index and the c
 
 ---
 
-*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/). lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it. OpenSpec is a separate project, and nothing here implies it is affiliated either.*
+*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [typedgraph.org/](https://typedgraph.org/). lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it. OpenSpec is a separate project, and nothing here implies it is affiliated either.*

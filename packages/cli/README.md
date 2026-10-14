@@ -1,7 +1,7 @@
 # tg — your docs, specs and code as one typed graph
 
 [![npm](https://img.shields.io/npm/v/@typedgraph/cli)](https://www.npmjs.com/package/@typedgraph/cli)
-[![license](https://img.shields.io/npm/l/@typedgraph/cli)](https://github.com/Volland/obsigraph/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/@typedgraph/cli)](https://github.com/Volland/typedgraph/blob/main/LICENSE)
 
 **`tg` keeps the design docs of a codebase linked to the code, checked in CI, and queryable by you and by your coding agents.** It is a drop-in replacement for [lat.md](https://www.npmjs.com/package/lat.md): it reads the same `lat.md/` folder and gives the same `check` verdicts, and it adds typed links from code, an openCypher query language, requirement tracing for OpenSpec and a one-command setup for nine coding agents.
 
@@ -157,4 +157,4 @@ Read more:
 - [Using the code ontology](https://typedgraph.org/blog-code-ontology.html)
 - [Install for Claude Code, VS Code, Cursor or Obsidian](https://typedgraph.org/install.html)
 
-Issues and ideas: [github.com/Volland/obsigraph](https://github.com/Volland/obsigraph/issues). MIT licensed.
+Issues and ideas: [github.com/Volland/typedgraph](https://github.com/Volland/typedgraph/issues). MIT licensed.

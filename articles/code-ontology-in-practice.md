@@ -193,4 +193,4 @@ Then:
 
 Want ontologies for other domains, such as books, notes or agents? See the [ontology gallery](ontologies.html) and [how they combine](composable-ontologies.md).
 
-*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/). TGS is an open specification and SHACL is a W3C standard. lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it.*
+*Typed Graph and the `tg` CLI are open source (MIT). Docs and the other articles are at [typedgraph.org/](https://typedgraph.org/). TGS is an open specification and SHACL is a W3C standard. lat.md is a separate project by Yury Selivanov, and Typed Graph is not affiliated with it.*

@@ -618,4 +618,4 @@ Luhmann's cabinet took him decades to fill before it started answering back. You
 
 ---
 
-*Typed Graph, the `tg` CLI and the sidecar are open source (MIT). The ontologies are plain Markdown in the [ontology gallery](ontologies.html), and the Typed Graph Schema is an open specification. Docs and other articles are at [volland.github.io/obsigraph](https://volland.github.io/obsigraph/).*
+*Typed Graph, the `tg` CLI and the sidecar are open source (MIT). The ontologies are plain Markdown in the [ontology gallery](ontologies.html), and the Typed Graph Schema is an open specification. Docs and other articles are at [typedgraph.org/](https://typedgraph.org/).*

@@ -35,7 +35,7 @@ function page({ title, description, depth, body }) {
         <a href="${up}demo.html">Demo</a>
         <a href="${up}example.html">Example</a>
         <a href="${up}blog.html">Blog</a>
-        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <a href="https://github.com/Volland/typedgraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>
       </nav>
     </div>
@@ -48,7 +48,7 @@ ${body}
   <footer>
     <div class="wrap">
       <span>Typed Graph Schema · text CC BY 4.0, JSON Schema and examples MIT · by Volodymyr Pavlyshyn.</span>
-      <span><a href="${up}docs.html">Docs</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="${up}impressum.html">Impressum</a> · <a href="${up}datenschutz.html">Datenschutz</a> · <a href="${up}agb.html">AGB</a></span>
+      <span><a href="${up}docs.html">Docs</a> · <a href="https://github.com/Volland/typedgraph">GitHub</a> · <a href="${up}impressum.html">Impressum</a> · <a href="${up}datenschutz.html">Datenschutz</a> · <a href="${up}agb.html">AGB</a></span>
     </div>
   </footer>
   <script src="${up}assets/site.js"></script>
@@ -84,8 +84,8 @@ function publish(from, to, version, treeUrl) {
   );
 }
 
-publish(src, out, VERSION, 'https://github.com/Volland/obsigraph/tree/main/spec/tgs/examples');
-for (const v of archived) publish(`${src}/archive/${v}`, `site/spec/tgs/${v}`, v.replace(/^v/, ''), `https://github.com/Volland/obsigraph/tree/main/spec/tgs/archive/${v}/examples`);
+publish(src, out, VERSION, 'https://github.com/Volland/typedgraph/tree/main/spec/tgs/examples');
+for (const v of archived) publish(`${src}/archive/${v}`, `site/spec/tgs/${v}`, v.replace(/^v/, ''), `https://github.com/Volland/typedgraph/tree/main/spec/tgs/archive/${v}/examples`);
 
 writeFileSync(
   'site/spec/tgs/index.html',

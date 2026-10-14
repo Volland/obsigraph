@@ -5,7 +5,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEFAULT_REPO = 'Volland/obsigraph';
+export const DEFAULT_REPO = 'Volland/typedgraph';
 /** Release assets the installer downloads; main.js and manifest.json are required, styles.css we always ship. */
 export const ASSETS = ['main.js', 'manifest.json', 'styles.css'];
 

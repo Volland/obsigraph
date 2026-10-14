@@ -64,24 +64,24 @@ All notable changes to the Typed Graph plugin, the `tg` CLI, the core library an
 
 ## 0.15.0 — 2026-10-13
 
-Thanks again to [@ma-be](https://github.com/ma-be) (Martin Bergner), who contributed both changes in this release: [#5](https://github.com/Volland/obsigraph/pull/5) and [#4](https://github.com/Volland/obsigraph/pull/4).
+Thanks again to [@ma-be](https://github.com/ma-be) (Martin Bergner), who contributed both changes in this release: [#5](https://github.com/Volland/typedgraph/pull/5) and [#4](https://github.com/Volland/typedgraph/pull/4).
 
 ### Added
 
-- **Frontmatter links as edges.** With the new `frontmatterEdges` graph option, a wikilink or markdown link in a frontmatter property becomes an edge typed by the property name, so `requirement: "[[Login]]"` reads as `requirement:: [[Login]]` and schema `edgeTypes` check it. Text, numbers, `[[]]` placeholders and `tags`, `aliases`, `cssclasses`, `type` and `types` give no edges. Off by default; the plugin has a "Frontmatter links as edges" setting that re-indexes the vault, and `tg validate --frontmatter-edges` applies it to validation. ([#5](https://github.com/Volland/obsigraph/pull/5), by @ma-be)
+- **Frontmatter links as edges.** With the new `frontmatterEdges` graph option, a wikilink or markdown link in a frontmatter property becomes an edge typed by the property name, so `requirement: "[[Login]]"` reads as `requirement:: [[Login]]` and schema `edgeTypes` check it. Text, numbers, `[[]]` placeholders and `tags`, `aliases`, `cssclasses`, `type` and `types` give no edges. Off by default; the plugin has a "Frontmatter links as edges" setting that re-indexes the vault, and `tg validate --frontmatter-edges` applies it to validation. ([#5](https://github.com/Volland/typedgraph/pull/5), by @ma-be)
 - Core: `frontmatterEdges()`, `FRONTMATTER_EDGE_SKIP`, `ParseOptions.frontmatterEdges` and `ValidateOptions.frontmatterEdges` are exported.
 
 ### Fixed
 
-- **`view: graph` blocks crashed on every render** with "Cannot read properties of undefined" (#3). The block rendered before its container was attached and sized, so Cytoscape ran its default layout on an empty graph in a zero-width container. The renderer now starts with the `null` layout and the block's first render waits one animation frame, cancelled if the block unloads first. ([#4](https://github.com/Volland/obsigraph/pull/4), by @ma-be)
+- **`view: graph` blocks crashed on every render** with "Cannot read properties of undefined" (#3). The block rendered before its container was attached and sized, so Cytoscape ran its default layout on an empty graph in a zero-width container. The renderer now starts with the `null` layout and the block's first render waits one animation frame, cancelled if the block unloads first. ([#4](https://github.com/Volland/typedgraph/pull/4), by @ma-be)
 
 ## 0.14.0 — 2026-10-13
 
-Thanks to [@ma-be](https://github.com/ma-be) (Martin Bergner) for the details panel work in [#6](https://github.com/Volland/obsigraph/pull/6), the first outside contribution.
+Thanks to [@ma-be](https://github.com/ma-be) (Martin Bergner) for the details panel work in [#6](https://github.com/Volland/typedgraph/pull/6), the first outside contribution.
 
 ### Added
 
-- **Graph view details panel.** Drag the handle between the graph and the panel to set its width (remembered per device); long values wrap. Rows are split into the note's own properties, listed first, and technical rows (labels, stub, path, style, edge sign, id and heading, and properties the schema does not declare), which a Technical toggle shows. Wikilinks and markdown links in values are clickable and open the note, one list item per line, with a Links toggle for the old plain text. ([#6](https://github.com/Volland/obsigraph/pull/6), by @ma-be)
+- **Graph view details panel.** Drag the handle between the graph and the panel to set its width (remembered per device); long values wrap. Rows are split into the note's own properties, listed first, and technical rows (labels, stub, path, style, edge sign, id and heading, and properties the schema does not declare), which a Technical toggle shows. Wikilinks and markdown links in values are clickable and open the note, one list item per line, with a Links toggle for the old plain text. ([#6](https://github.com/Volland/typedgraph/pull/6), by @ma-be)
 - Graph UI: `Details` gains `technical`, `values` and `source`, `nodeDetails` and `edgeDetails` accept the declared property names, and `valueLines` splits a value into text and link parts.
 
 ## 0.13.0 — 2026-10-11
@@ -180,7 +180,7 @@ Fixes for the community review of 0.7.0.
 
 ## 0.7.0 — 2026-10-06
 
-Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by hand](https://volland.github.io/obsigraph/blog-typed-graph-schema.html) and the [specification](https://volland.github.io/obsigraph/spec/tgs/v0.1/).
+Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by hand](https://typedgraph.org/blog-typed-graph-schema.html) and the [specification](https://typedgraph.org/spec/tgs/v0.1/).
 
 ### Added
 
@@ -189,7 +189,7 @@ Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by
 - **Richer edges and properties.** `edges` accepts a map (`worksAt: Company`, or `{target, many, required}`); properties gain `many`, `values` and `uri`, and the kinds `datetime` and `list`. IRIs and CURIEs with built-in and declared prefixes, and a `tgs:` version key.
 - **Templates.** A type can link a template note with `template:`; a type with no template gets one generated from its schema.
 - **SHACL.** `tg schema export <out.ttl>` and `tg schema import <file.ttl>`, and the plugin commands *Export schemas as SHACL* and *Import SHACL shapes*. Export is deterministic and round-trips losslessly; import reports every construct outside the supported subset and never deletes notes. New setting: Schema base IRI.
-- **An open specification.** [TGS 0.1](https://volland.github.io/obsigraph/spec/tgs/v0.1/) with a JSON Schema, conformance examples and the `tgs:` namespace page.
+- **An open specification.** [TGS 0.1](https://typedgraph.org/spec/tgs/v0.1/) with a JSON Schema, conformance examples and the `tgs:` namespace page.
 
 ### Changed
 
@@ -198,7 +198,7 @@ Typed Graph Schema (TGS) 0.1 and SHACL interop. See [An ontology you can edit by
 
 ## 0.6.0 — 2026-10-06
 
-Open Knowledge Format (OKF v0.2) compatibility. See [Getting your vault OKF-ready](https://volland.github.io/obsigraph/blog-okf-ready.html).
+Open Knowledge Format (OKF v0.2) compatibility. See [Getting your vault OKF-ready](https://typedgraph.org/blog-okf-ready.html).
 
 ### Added
 

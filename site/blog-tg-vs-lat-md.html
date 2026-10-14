@@ -7,7 +7,7 @@
   <meta name="description" content="An honest comparison of the tg CLI with lat.md: same folder format and the same check verdicts, plus typed code edges, openCypher, offline search, export and Obsidian integration, and where lat.md is stronger.">
   <meta property="og:title" content="tg and lat.md: what is the same, what differs">
   <meta property="og:description" content="An honest comparison of the tg CLI with lat.md: same folder format and the same check verdicts, plus typed code edges, openCypher, offline search, export and Obsidian integration, and where lat.md is stronger.">
-  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:image" content="https://typedgraph.org/assets/og.png">
   <meta property="og:type" content="article">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/style.css">
@@ -26,7 +26,7 @@
         <a href="example.html">Example</a>
         <a href="ontologies.html">Ontologies</a>
         <a href="blog.html" class="active">Blog</a>
-        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <a href="https://github.com/Volland/typedgraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>
       </nav>
     </div>
@@ -116,7 +116,7 @@ tg check                       # should match lat check
 tg migrate --dry-run           # optional: see the diff and what stays plain
 tg migrate                     # swap the setup, type files, turn links into typed edges with metadata
 tg ontology check              # every new edge fits the ontology</pre>
-    <p><code>tg migrate</code> keeps your prose and your links: it adds a <code>type:</code> to files whose path names their kind (decisions, constraints, requirements, glossary, tests), writes a typed edge line next to each link whose sentence names the relation ("because of" → <code>motivated_by</code>, "replaces" → <code>supersedes</code>, MUST → <code>constrains</code>), adds the dates and strengths the text and git history give, and upgrades <code>@lat:</code> comments to <code>@tg: implements::</code> and <code>verifies::</code>. Links it cannot decide are listed with their sentences; the <code>tg-migrate</code> skill lets Claude Code resolve them. <code>--keep-lat</code> keeps the <code>@lat:</code> lines if you still run <code>lat check</code>. If something differs from lat.md that is not on the list above, that is a bug, and the <a href="https://github.com/Volland/obsigraph/issues">issue tracker</a> is the place for it.</p>
+    <p><code>tg migrate</code> keeps your prose and your links: it adds a <code>type:</code> to files whose path names their kind (decisions, constraints, requirements, glossary, tests), writes a typed edge line next to each link whose sentence names the relation ("because of" → <code>motivated_by</code>, "replaces" → <code>supersedes</code>, MUST → <code>constrains</code>), adds the dates and strengths the text and git history give, and upgrades <code>@lat:</code> comments to <code>@tg: implements::</code> and <code>verifies::</code>. Links it cannot decide are listed with their sentences; the <code>tg-migrate</code> skill lets Claude Code resolve them. <code>--keep-lat</code> keeps the <code>@lat:</code> lines if you still run <code>lat check</code>. If something differs from lat.md that is not on the list above, that is a bug, and the <a href="https://github.com/Volland/typedgraph/issues">issue tracker</a> is the place for it.</p>
 
     <div class="next">Previous: <a href="blog-tg-cli.html">← tg: your docs and your code as one typed graph</a><br>Next: <a href="blog-why-typed-graph-for-code.html">Why a typed graph for your codebase →</a></div>
   </main>
@@ -124,7 +124,7 @@ tg ontology check              # every new edge fits the ontology</pre>
   <footer>
     <div class="wrap">
       <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
-      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/typedgraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>
   <script src="assets/site.js"></script>

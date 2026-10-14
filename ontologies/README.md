@@ -1,6 +1,6 @@
 # Ontology gallery
 
-Ready-made Typed Graph ontologies. Each one is a folder of plain Markdown: schema notes in `Types/` that declare node types, edge types and their properties in the open [Typed Graph Schema](https://volland.github.io/obsigraph/spec/tgs/v0.1/) format, and a few example notes so the graph is not empty on first open.
+Ready-made Typed Graph ontologies. Each one is a folder of plain Markdown: schema notes in `Types/` that declare node types, edge types and their properties in the open [Typed Graph Schema](https://typedgraph.org/spec/tgs/v0.1/) format, and a few example notes so the graph is not empty on first open.
 
 | Folder | For |
 |---|---|

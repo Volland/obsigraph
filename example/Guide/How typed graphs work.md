@@ -133,7 +133,7 @@ edgeTypes:
       since: number
 ```
 
-An edge pointing at the wrong type of note, or missing a required edge property, is reported like any other schema issue. *Export schemas as SHACL* turns all of this into W3C SHACL shapes for RDF tools, and *Import SHACL shapes* reads shapes back into schema notes. The format is the open [Typed Graph Schema](https://volland.github.io/obsigraph/spec/tgs/v0.1/) specification.
+An edge pointing at the wrong type of note, or missing a required edge property, is reported like any other schema issue. *Export schemas as SHACL* turns all of this into W3C SHACL shapes for RDF tools, and *Import SHACL shapes* reads shapes back into schema notes. The format is the open [Typed Graph Schema](https://typedgraph.org/spec/tgs/v0.1/) specification.
 
 Schemas are optional and **advisory**. A missing required property ([[Dave]]) or an edge type the schema does not list ([[Mallory]]'s `sells_to`) appears in the status bar and in *Show diagnostics*, but the note and edge still work.
 

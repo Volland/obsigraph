@@ -21,7 +21,7 @@ The plugin is listed as **Typed Graph** (id `typed-graph`): directory rules forb
 
 ## Website
 
-`site/` is a static site (home, docs, live demo) published to GitHub Pages by `.github/workflows/pages.yml` at https://volland.github.io/obsigraph/.
+`site/` is a static site (home, docs, live demo) published to GitHub Pages by `.github/workflows/pages.yml` at https://typedgraph.org/.
 
 The demo bundles the real core engine, schema styling and the plugin's pure rendering modules (`site/src/demo.ts`, built by `npm run site:build`) over an editable sample vault, with a seeded force layout so screenshots are stable. Screenshots in `site/assets/screenshots/` are taken from the demo with headless Chrome (`?example=N&theme=light|dark`). The logo, a crystal of graph facets with a ladybug, is `site/assets/logo.svg`.
 

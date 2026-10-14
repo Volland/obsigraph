@@ -8,7 +8,7 @@
 | **JSON Schema** | `https://volland.github.io/obsigraph/spec/tgs/v0.2/tgs.schema.json` |
 | **Namespace** | `https://volland.github.io/obsigraph/ns/tgs#` (prefix `tgs:`) |
 | **Editor** | Volodymyr Pavlyshyn |
-| **Source** | `spec/tgs/` in [github.com/Volland/obsigraph](https://github.com/Volland/obsigraph) |
+| **Source** | `spec/tgs/` in [github.com/Volland/typedgraph](https://github.com/Volland/typedgraph) |
 | **License** | Text: CC BY 4.0. JSON Schema and examples: MIT. |
 
 TGS describes the types of a knowledge graph kept as markdown notes: what properties a note of a type has, which typed links it may have to which other types, and what properties those links carry. A schema is ordinary YAML frontmatter in ordinary notes, so people can write and review it by hand, and it maps to and from W3C SHACL so the same ontology can be exchanged with RDF tools.

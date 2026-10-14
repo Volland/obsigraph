@@ -94,7 +94,7 @@ for (const p of POSTS) {
   <meta name="description" content="${escape(p.description)}">
   <meta property="og:title" content="${escape(heading)}">
   <meta property="og:description" content="${escape(p.description)}">
-  <meta property="og:image" content="https://volland.github.io/obsigraph/assets/og.png">
+  <meta property="og:image" content="https://typedgraph.org/assets/og.png">
   <meta property="og:type" content="article">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/style.css">
@@ -113,7 +113,7 @@ for (const p of POSTS) {
         <a href="example.html">Example</a>
         <a href="ontologies.html">Ontologies</a>
         <a href="blog.html" class="active">Blog</a>
-        <a href="https://github.com/Volland/obsigraph">GitHub</a>
+        <a href="https://github.com/Volland/typedgraph">GitHub</a>
         <button class="theme-toggle" aria-label="Toggle theme">☾</button>
       </nav>
     </div>
@@ -131,7 +131,7 @@ ${html}
   <footer>
     <div class="wrap">
       <span>Typed Graph · MIT · by Volodymyr Pavlyshyn. Not affiliated with Obsidian, LadybugDB or lat.md.</span>
-      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/obsigraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
+      <span><a href="docs.html">Docs</a> · <a href="blog.html">Blog</a> · <a href="https://github.com/Volland/typedgraph">GitHub</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="agb.html">AGB</a></span>
     </div>
   </footer>
   <script src="assets/site.js"></script>

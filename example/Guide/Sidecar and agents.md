@@ -15,7 +15,7 @@ Embeddings are local by default, through Ollama:
 
 ```bash
 ollama pull nomic-embed-text
-git clone https://github.com/Volland/obsigraph && cd obsigraph
+git clone https://github.com/Volland/typedgraph && cd typedgraph
 npm install && npm run build:sidecar
 mkdir -p ~/.typed-graph-demo
 OBSIGRAPH_VAULT=./example OBSIGRAPH_DATA=~/.typed-graph-demo OBSIGRAPH_TOKEN=change-me \
@@ -100,4 +100,4 @@ claude mcp add typed-graph \
 
 Then ask questions such as "Which projects does Acme fund, and who contributes to them?". The agent can answer with Cypher, vector search or GraphRAG.
 
-See the [full documentation](https://volland.github.io/obsigraph/docs.html#sidecar) for every option.
+See the [full documentation](https://typedgraph.org/docs.html#sidecar) for every option.

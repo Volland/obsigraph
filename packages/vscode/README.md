@@ -46,4 +46,4 @@ The extension reads files in your workspace and never writes to them. It collect
 
 ## Edge syntax
 
-Typed edges look like `knows:: [[Bob]] {since: 2020}`; a leading `-` makes an edge negative. A note with `type: edge`, `from`, `to` and `edgeType` frontmatter is an edge note: it shows as an edge between its endpoints, not as a node. See the [project README](https://github.com/Volland/obsigraph) for the full syntax, the `tg` CLI and the Obsidian plugin.
+Typed edges look like `knows:: [[Bob]] {since: 2020}`; a leading `-` makes an edge negative. A note with `type: edge`, `from`, `to` and `edgeType` frontmatter is an edge note: it shows as an edge between its endpoints, not as a node. See the [project README](https://github.com/Volland/typedgraph) for the full syntax, the `tg` CLI and the Obsidian plugin.
