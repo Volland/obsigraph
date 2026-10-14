@@ -138,6 +138,8 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.reveal();
       return postGraph();
     }
+    // The new panel takes focus, so no text editor is active when it reports ready; let the session see the file now.
+    session.view(activePath());
     const dist = vscode.Uri.joinPath(context.extensionUri, 'dist');
     panel = vscode.window.createWebviewPanel('typegraph.graph', 'TypeGraph', vscode.ViewColumn.Beside, { enableScripts: true, localResourceRoots: [dist], retainContextWhenHidden: true });
     const script = panel.webview.asWebviewUri(vscode.Uri.joinPath(dist, 'webview.js'));

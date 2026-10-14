@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1
+
+- **Fixed an empty graph on first open.** The new panel takes focus before it reports ready, so no file was active and the *Active file* graph stayed empty until you switched editors. It now starts from the file you had open, and an empty graph says why in the toolbar.
+
 ## 0.10.0
 
 - **Whole project graph.** The new command `TypeGraph: Open Full Graph`, a button in the Backlinks title bar and a *Whole project* toggle in the graph panel draw every node and edge. The setting `typegraph.fullGraphLimit` (default 2000) caps it, keeping the most connected nodes and saying how many were left out.

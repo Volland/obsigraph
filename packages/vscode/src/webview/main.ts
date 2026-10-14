@@ -61,7 +61,8 @@ const showView = (v: View) => {
   fileBtn.classList.toggle('on', v.scope === 'file');
   projectBtn.classList.toggle('on', v.scope === 'project');
   const { nodes, edges } = v.elements;
-  note.textContent = v.omitted > 0 ? `${nodes.length} of ${v.total} nodes shown (most connected; limit ${v.limit}), ${edges.length} edges` : `${nodes.length} nodes, ${edges.length} edges`;
+  if (nodes.length === 0) note.textContent = v.scope === 'file' ? 'Nothing to show: open a markdown or annotated source file in the workspace, or choose Whole project.' : 'The project has no notes or annotated source yet.';
+  else note.textContent = v.omitted > 0 ? `${nodes.length} of ${v.total} nodes shown (most connected; limit ${v.limit}), ${edges.length} edges` : `${nodes.length} nodes, ${edges.length} edges`;
   renderer.setElements(v.elements);
 };
 

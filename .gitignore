@@ -17,3 +17,4 @@ packages/vscode/*.vsix
 articles/*.html
 articles/*_files/
 site/assets/ontology-map.js
+.gstack/
