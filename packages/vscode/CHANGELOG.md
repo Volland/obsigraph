@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+- **Set up TypeGraph** lists the new `tg-migrate` skill among the files `tg init` installs. With `tg` 0.18 or later, `tg migrate` turns a lat.md project into a typed graph: typed files, typed links with metadata, and `@tg:` code edges.
+
 ## 0.9.1
 
 - The README describes the current `tg init`: it sets up Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, Kilo Code, Pi, Oh My Pi or any `AGENTS.md` agent, writes the files, and prints only the diff with `--dry-run`.
