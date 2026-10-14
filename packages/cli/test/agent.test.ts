@@ -28,15 +28,29 @@ const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 
 // @lat: [[tests/tg-agent#Safe init#Dry run]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Dry run]]
-it('prints a diff and changes nothing without --write', async () => {
+it('prints a diff and changes nothing with --dry-run', async () => {
   const dir = project();
-  const r = await tg(dir, ['init']);
+  const r = await tg(dir, ['init', '--dry-run']);
   expect(r.code).toBe(0);
   expect(r.out).toContain('+++ b/CLAUDE.md');
   expect(r.out).toContain('+++ b/.claude/settings.json');
   expect(r.out).toContain('Dry run');
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
   expect(existsSync(join(dir, '.claude'))).toBe(false);
+});
+
+// @lat: [[tests/tg-agent#Safe init#Writes by default]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Writes by default]]
+it('writes and lists the files by default, and accepts --write as a no-op', async () => {
+  const dir = project();
+  const r = await tg(dir, ['init']);
+  expect(r.code).toBe(0);
+  expect(r.out).toContain('+ created CLAUDE.md');
+  expect(r.out).toContain('Wrote ');
+  expect(r.out).not.toContain('+++ b/');
+  expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(true);
+  const again = await tg(project(), ['init', '--write']);
+  expect(again.out).toContain('Wrote ');
 });
 
 // @lat: [[tests/tg-agent#Safe init#Idempotent write]]

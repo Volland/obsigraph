@@ -21,6 +21,9 @@ export const AGENTS: readonly Agent[] = [
   { id: 'cursor', name: 'Cursor', instructions: '.cursor/rules/tg.mdc', skills: '.cursor/skills', markers: ['.cursor'] },
   { id: 'github-copilot', name: 'GitHub Copilot', instructions: 'AGENTS.md', skills: '.github/skills', markers: ['.github/skills', '.github/copilot-instructions.md'] },
   { id: 'opencode', name: 'OpenCode', instructions: 'AGENTS.md', skills: '.opencode/skills', markers: ['.opencode'] },
+  { id: 'kilocode', name: 'Kilo Code', instructions: 'AGENTS.md', skills: '.kilocode/skills', markers: ['.kilocode'] },
+  { id: 'pi', name: 'Pi', instructions: 'AGENTS.md', skills: '.pi/skills', markers: ['.pi'] },
+  { id: 'oh-my-pi', name: 'Oh My Pi', instructions: 'AGENTS.md', skills: '.omp/skills', markers: ['.omp'] },
   { id: 'agents', name: 'Other agents (AGENTS.md, .agents/skills)', instructions: 'AGENTS.md', skills: '.agents/skills', markers: ['.agents', 'AGENTS.md'] },
 ];
 

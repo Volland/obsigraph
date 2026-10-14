@@ -26,6 +26,10 @@ With no `lat.md/` or `.tg/` above the working directory a command exits 2 and su
 
 A project whose root holds `tg.md/` and no `lat.md/` is found from a subdirectory and checks clean.
 
+### Repository named lat.md
+
+A `lat.md/` folder that is its own git clone does not make its parent a project, so a run beside it finds no project.
+
 ## Output and exit codes
 
 The contract hooks and CI rely on.

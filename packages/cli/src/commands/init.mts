@@ -175,7 +175,7 @@ export function planInit(root: string, agents: readonly Agent[], migrate: boolea
         continue;
       }
       const r = withBlock(read(join(root, doc)), migrate, docs);
-      if (r.hadLat && !migrate && !(read(join(root, doc)) ?? '').includes(BEGIN)) notes.push(`${doc} has a lat.md block; it is left in place. Re-run with --migrate --write to replace it with the tg block.`);
+      if (r.hadLat && !migrate && !(read(join(root, doc)) ?? '').includes(BEGIN)) notes.push(`${doc} has a lat.md block; it is left in place. Re-run with --migrate to replace it with the tg block.`);
       add(doc, r.text);
     }
   }
@@ -300,14 +300,16 @@ async function chooseDocs(ctx: Ctx, root: string, flag: string | true | undefine
 
 // @tg: implements:: [[openspec:tg-agent-integration#Safe init]]
 // @tg: implements:: [[openspec:tg-agent-integration#Interactive setup]]
+// @tg: implements:: [[openspec:tg-agent-integration#Migration from lat]]
 export const init: Command = {
   name: 'init',
-  summary: 'Set up the docs folder (lat.md/ or tg.md/), the code ontology, agent instructions, hooks, MCP, skills and OpenSpec rules for your coding agents (asks in a terminal; dry run unless --write)',
-  usage: `init [dir] [--agent ${AGENT_IDS.join('|')}[,...]] [--only|--skip ${PART_IDS.join('|')}[,...]] [--docs ${DOCS_DIRS.join('|')}] [--write] [--yes] [--migrate] [--no-ontology] [--no-openspec] [--skills-only]`,
-  flags: { docs: 'string', write: 'bool', yes: 'bool', migrate: 'bool', agent: 'string', only: 'string', skip: 'string', 'no-ontology': 'bool', 'no-openspec': 'bool', 'skills-only': 'bool' },
+  summary: 'Set up the docs folder (lat.md/ or tg.md/), the code ontology, agent instructions, hooks, MCP, skills and OpenSpec rules for your coding agents (asks in a terminal; --dry-run only prints the diff)',
+  usage: `init [dir] [--agent ${AGENT_IDS.join('|')}[,...]] [--only|--skip ${PART_IDS.join('|')}[,...]] [--docs ${DOCS_DIRS.join('|')}] [--dry-run] [--yes] [--migrate] [--no-ontology] [--no-openspec] [--skills-only]`,
+  flags: { docs: 'string', 'dry-run': 'bool', write: 'bool', yes: 'bool', migrate: 'bool', agent: 'string', only: 'string', skip: 'string', 'no-ontology': 'bool', 'no-openspec': 'bool', 'skills-only': 'bool' },
   noProject: true,
   async run(ctx, args, flags) {
-    const root = resolve(ctx.cwd, args[0] ?? ctx.root);
+    // Init sets up the folder it is pointed at, never a parent: a stray docs folder higher up must not capture it.
+    const root = resolve(ctx.cwd, args[0] ?? (flags.has('dir') ? ctx.root : '.'));
     // `--yes` and `--json` are for scripts: no checklist, no confirmation.
     const interactive = !!ctx.choose && !!ctx.select && !ctx.json && !flags.has('yes');
     const agents = await chooseAgents(ctx, root, flags.get('agent'), interactive);
@@ -322,22 +324,23 @@ export const init: Command = {
     if (!docs) return EXIT_ERROR;
     const { changes, notes } = planInit(root, agents, flags.has('migrate'), { parts, docs: docs.dir });
     notes.unshift(...docs.notes);
-    let write = flags.has('write');
+    // Writing is the default; `--dry-run` only prints the diff. `--write` is accepted for older scripts and changes nothing.
+    const write = !flags.has('dry-run');
     const files = `${changes.length} file${changes.length === 1 ? '' : 's'}`;
     if (ctx.json) {
       ctx.out(`${JSON.stringify({ root, write, agents: agents.map((a) => a.id), parts, docs: docs.dir, changes: changes.map((c) => ({ path: c.path, created: c.before === null })), notes })}\n`);
     } else if (!changes.length) {
       ctx.out(`${basename(root)} is already set up; nothing to change.\n`);
-    } else if (interactive) {
-      // A person reads a file list and confirms; diffs are for dry runs and scripts.
-      for (const c of changes) ctx.out(`  ${c.before === null ? '\x1b[32m+ create\x1b[0m' : '\x1b[33m~ update\x1b[0m'} ${c.path}\n`);
-      for (const n of notes) ctx.out(`Note: ${n}\n`);
-      if (!write) write = /^(y|yes|)$/i.test((await ctx.ask!(`Write ${files}? [Y/n] `)).trim());
-      ctx.out(write ? `Wrote ${files}.\n` : 'Nothing written.\n');
-    } else {
+    } else if (!write) {
       for (const c of changes) ctx.out(`${unifiedDiff(c.path, c.before, c.after)}\n\n`);
       for (const n of notes) ctx.out(`Note: ${n}\n`);
-      ctx.out(write ? `Wrote ${files}.\n` : `Dry run: ${files} would change. Re-run with --write to apply.\n`);
+      ctx.out(`Dry run: ${files} would change. Run tg init without --dry-run to apply.\n`);
+    } else {
+      // Colors only for a person at a terminal; scripts get plain lines.
+      const [created, updated] = interactive ? ['\x1b[32m+ created\x1b[0m', '\x1b[33m~ updated\x1b[0m'] : ['+ created', '~ updated'];
+      for (const c of changes) ctx.out(`  ${c.before === null ? created : updated} ${c.path}\n`);
+      for (const n of notes) ctx.out(`Note: ${n}\n`);
+      ctx.out(`Wrote ${files}.\n`);
     }
     if (write) {
       for (const c of changes) {

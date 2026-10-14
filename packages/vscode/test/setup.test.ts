@@ -47,7 +47,7 @@ it('lists exactly the files tg init plans for a fresh project', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'tgvs-init-'));
   let out = '';
   const io: Io = { cwd: dir, out: (t) => (out += t), err: () => {}, env: {}, stdin: () => '' };
-  expect(await run(['init', '--json'], io)).toBe(0);
+  expect(await run(['init', '--json', '--dry-run'], io)).toBe(0);
   const planned = (JSON.parse(out) as { changes: { path: string }[] }).changes.map((c) => c.path).sort();
   expect(planned).toEqual([...SETUP_FILES].sort());
   expect(readdirSync(dir)).toEqual([]);

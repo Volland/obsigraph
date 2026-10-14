@@ -87,8 +87,8 @@ The full guide covers edge syntax, schema notes, styling precedence, the Cypher 
 `@typedgraph/cli` is a standalone command line, a drop-in replacement for [lat.md](https://www.npmjs.com/package/lat.md) that also links code into the typed graph. It reads the same `lat.md/` folder and gives the same `check` verdicts (a test compares it with `lat check` on real projects).
 
 ```bash
-npx @typedgraph/cli init            # dry run: shows the CLAUDE.md block, hooks, MCP entry and skills it would add
-npx @typedgraph/cli init --write
+npx @typedgraph/cli init            # set up: pick agents, parts and docs folder in a terminal, then it writes
+npx @typedgraph/cli init --dry-run  # only print the diff of what it would change
 tg check                            # links, code refs, annotations, index files, section structure
 tg search "how are edges signed"    # lexical by default; hybrid with TG_EMBED_PROVIDER or a key
 tg section "edge-syntax#Sign"

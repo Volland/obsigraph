@@ -22,7 +22,7 @@ The extension reads the same files as [`tg`](https://www.npmjs.com/package/@type
 
 ## Built for agentic flows
 
-`tg init` (or the **Set up TypeGraph** button) prepares a project for coding agents: Claude Code, Codex, Cursor, GitHub Copilot, OpenCode or any `AGENTS.md`-based agent. In a terminal it asks which agents you use and what to set up or update (`CLAUDE.md`/`AGENTS.md`/Cursor rules, hooks and MCP, skills, OpenSpec, code ontology), lists the files and asks before writing. In scripts it prints a diff and writes only with `--write`.
+`tg init` (or the **Set up TypeGraph** button) prepares a project for coding agents: Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, Kilo Code, Pi, Oh My Pi or any `AGENTS.md`-based agent. In a terminal it asks which agents you use and what to set up or update (`CLAUDE.md`/`AGENTS.md`/Cursor rules, hooks and MCP, skills, OpenSpec, code ontology), then writes and lists the files. `tg init --dry-run` only prints the diff.
 
 - **Instructions and hooks.** A managed block in `CLAUDE.md` or `AGENTS.md`, plus prompt and stop hooks that point the agent at relevant sections and flag docs left stale by code changes.
 - **MCP server.** `tg mcp` gives agents the same commands as tools: locate, section, search, refs, check, Cypher, edges and trace.

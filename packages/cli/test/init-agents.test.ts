@@ -76,7 +76,7 @@ it('shows a checklist with detected agents ticked and sets up the ones left tick
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent selection#No terminal]]
 it('asks nothing without a terminal and defaults to Claude Code', async () => {
   const dir = project();
-  const r = await tg(dir, ['init', '--json'], { pick: { 'Coding agents to set up': ['codex'] } });
+  const r = await tg(dir, ['init', '--json', '--dry-run'], { pick: { 'Coding agents to set up': ['codex'] } });
   expect(r.shown).toEqual({});
   expect(JSON.parse(r.out)).toMatchObject({ agents: ['claude'], write: false });
   expect(planned(r.out)).toContain('CLAUDE.md');
@@ -88,7 +88,7 @@ it('rejects an unknown agent and writes nothing', async () => {
   const dir = project();
   const r = await tg(dir, ['init', '--agent', 'vim', '--write']);
   expect(r.code).toBe(2);
-  expect(r.out).toContain('expected one or more of claude, codex, cursor, github-copilot, opencode, agents');
+  expect(r.out).toContain('expected one or more of claude, codex, cursor, github-copilot, opencode, kilocode, pi, oh-my-pi, agents');
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
 });
 
@@ -162,24 +162,55 @@ it('offers the parts as a checklist, with OpenSpec unticked when the project has
 
 // @lat: [[tests/tg-agent#Interactive setup#Confirmed]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Confirmed]]
-it('lists the files and writes them when the person confirms', async () => {
+it('writes and lists the files after the checklists, asking no further question', async () => {
   const dir = project();
-  const r = await tg(dir, ['init'], { answers: [''] });
-  expect(r.out).toContain('+ create\x1b[0m CLAUDE.md');
+  const r = await tg(dir, ['init'], { answers: ['n'] });
+  expect(r.out).toContain('+ created\x1b[0m CLAUDE.md');
   expect(r.out).toContain('Wrote ');
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(true);
 });
 
+// @lat: [[tests/tg-agent#Interactive setup#Dry run in a terminal]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Dry run in a terminal]]
+it('prints the diff after the checklists with --dry-run', async () => {
+  const dir = project();
+  const r = await tg(dir, ['init', '--dry-run'], {});
+  expect(Object.keys(r.shown)).toContain('Coding agents to set up');
+  expect(r.out).toContain('+++ b/CLAUDE.md');
+  expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
+});
+
 // @lat: [[tests/tg-agent#Interactive setup#Declined]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Interactive setup#Declined]]
-it('writes nothing when the person declines, and never prompts with --yes', async () => {
+it('writes nothing when every agent is unticked, and never asks with --yes', async () => {
   const dir = project();
-  const r = await tg(dir, ['init'], { answers: ['n'] });
-  expect(r.out).toContain('Nothing written.');
+  const r = await tg(dir, ['init'], { pick: { 'Coding agents to set up': [] } });
+  expect(r.out).toContain('Nothing selected');
   expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(false);
-  const yes = await tg(dir, ['init', '--yes'], { answers: ['y'] });
+  const yes = await tg(dir, ['init', '--yes'], { pick: { 'Coding agents to set up': [] } });
   expect(yes.shown).toEqual({});
-  expect(yes.out).toContain('Dry run:');
+  expect(existsSync(join(dir, 'CLAUDE.md'))).toBe(true);
+});
+
+// @lat: [[tests/tg-agent#Agent selection#Pi detected]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Agent detection#Pi detected]]
+it('detects Pi from its folder', async () => {
+  const dir = project({ '.pi/settings.json': '{}' });
+  const r = await tg(dir, ['init', '--json', '--dry-run']);
+  expect(JSON.parse(r.out).agents).toEqual(['pi']);
+  expect(planned(r.out)).toContain('.pi/skills/tg-docs/SKILL.md');
+});
+
+// @lat: [[tests/tg-agent#Agent selection#Kilo Code and Oh My Pi skills]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Skills per agent#Kilo Code and Oh My Pi skills]]
+it('installs skills for Kilo Code and Oh My Pi with an AGENTS.md block', async () => {
+  const dir = project();
+  await tg(dir, ['init', '--agent', 'kilocode,oh-my-pi']);
+  for (const n of SKILL_NAMES) {
+    expect(existsSync(join(dir, `.kilocode/skills/${n}/SKILL.md`))).toBe(true);
+    expect(existsSync(join(dir, `.omp/skills/${n}/SKILL.md`))).toBe(true);
+  }
+  expect(read(dir, 'AGENTS.md')).toContain('%% tg:begin %%');
 });
 
 // @lat: [[tests/tg-agent#OpenSpec config rules#Rules added]]

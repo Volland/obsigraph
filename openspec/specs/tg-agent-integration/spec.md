@@ -6,25 +6,33 @@ Defines how `tg` plugs into coding agents: setup, instruction generation, hooks,
 ## Requirements
 
 ### Requirement: Safe init
-The system SHALL print a diff of every file a non-interactive `tg init` would create or change and SHALL apply changes only when `--write` is given or, in an interactive run, when the person confirms.
+`tg init` SHALL set up the directory it is given, or the working directory, and never a parent project found above it. It SHALL write the files it plans unless `--dry-run` is given, in which case it SHALL print a diff of every file it would create or change and modify none. `--write` SHALL be accepted and change nothing. Re-running `tg init` SHALL change only what is out of date.
 
 #### Scenario: Dry run
-- **WHEN** `tg init` runs without `--write` and without a terminal
+- **WHEN** `tg init --dry-run` runs
 - **THEN** a diff is printed and no file is modified
 
+#### Scenario: Writes by default
+- **WHEN** `tg init` runs without a terminal in a new project
+- **THEN** the planned files are written and listed
+
+#### Scenario: Own folder, not a parent
+- **WHEN** `tg init` runs in `~/work/app/` and `~/work/` holds a docs folder
+- **THEN** the files are written under `~/work/app/` and nothing under `~/work/` changes
+
 #### Scenario: Idempotent write
-- **WHEN** `tg init --write` runs twice
+- **WHEN** `tg init` runs twice
 - **THEN** the second run changes nothing
 
 ### Requirement: Migration from lat
-The system SHALL detect an existing lat.md instruction block and, only with `--write --migrate`, replace it with a tg block that uses `tg` command names.
+The system SHALL detect an existing lat.md instruction block and, only with `--migrate`, replace it with a tg block that uses `tg` command names.
 
 #### Scenario: Existing block detected
 - **WHEN** `CLAUDE.md` contains a `lat:begin` block
 - **THEN** `tg init` reports it and states how to migrate
 
 #### Scenario: Migration applied
-- **WHEN** `tg init --write --migrate` runs
+- **WHEN** `tg init --migrate` runs
 - **THEN** the lat block is replaced by a tg block and text outside the markers is untouched
 
 ### Requirement: Instruction generation
@@ -134,7 +142,7 @@ When OpenSpec skills exist in a selected agent's skills folder, or OpenSpec comm
 - **THEN** it prints the block that `tg init` appends to the apply skill
 
 ### Requirement: Agent selection
-`tg init` SHALL set up one or more coding agents chosen from `claude`, `codex`, `cursor`, `github-copilot`, `opencode` and `agents`, given as a comma-separated `--agent` list, and SHALL exit with an error for an unknown id. Without `--agent`, in an interactive setup it SHALL show a checklist of every agent with the detected ones ticked. Otherwise it SHALL use the detected agents, or `claude` when none is detected.
+`tg init` SHALL set up one or more coding agents chosen from `claude`, `codex`, `cursor`, `github-copilot`, `opencode`, `kilocode`, `pi`, `oh-my-pi` and `agents`, given as a comma-separated `--agent` list, and SHALL exit with an error for an unknown id. Without `--agent`, in an interactive setup it SHALL show a checklist of every agent with the detected ones ticked. Otherwise it SHALL use the detected agents, or `claude` when none is detected.
 
 #### Scenario: Several agents
 - **WHEN** `tg init --agent claude,codex --write` runs
@@ -164,29 +172,41 @@ When OpenSpec skills exist in a selected agent's skills folder, or OpenSpec comm
 - **THEN** no `CLAUDE.md` or `AGENTS.md` is created and the skills are installed
 
 ### Requirement: Interactive setup
-`tg init` SHALL treat a run as interactive when it has a terminal on standard input and output and neither `--json` nor `--yes` is given. An interactive run SHALL list the files it will create or update and, without `--write`, SHALL ask for confirmation and write them only when the answer is empty or yes. A non-interactive run SHALL never prompt.
+`tg init` SHALL treat a run as interactive when it has a terminal on standard input and output and neither `--json` nor `--yes` is given. An interactive run SHALL show its checklists, then write the files and list each one as created or updated, without a further question, and write nothing when every agent or every part is left unticked; with `--dry-run` it SHALL print the diff instead. A non-interactive run SHALL never prompt.
 
 #### Scenario: Confirmed
-- **WHEN** an interactive `tg init` is confirmed with an empty answer
-- **THEN** the listed files are written
+- **WHEN** an interactive `tg init` finishes its checklists with at least one agent and one part ticked
+- **THEN** the files are written and each is listed as created or updated
 
 #### Scenario: Declined
-- **WHEN** an interactive `tg init` is answered with `n`
-- **THEN** no file is written
+- **WHEN** the person leaves every agent or every part unticked
+- **THEN** nothing is written
+
+#### Scenario: Dry run in a terminal
+- **WHEN** an interactive `tg init --dry-run` finishes its checklists
+- **THEN** a diff is printed and no file is written
 
 ### Requirement: Agent detection
-`tg init` SHALL detect an agent as in use when its own folder or instruction file exists or when OpenSpec skills exist in its skills folder: `.claude` or `CLAUDE.md` for Claude Code, `.codex` for Codex, `.cursor` for Cursor, `.github/skills` or `.github/copilot-instructions.md` for GitHub Copilot, `.opencode` for OpenCode, and `.agents` or `AGENTS.md` for generic agents.
+`tg init` SHALL detect an agent as in use when its own folder or instruction file exists or when OpenSpec skills exist in its skills folder: `.claude` or `CLAUDE.md` for Claude Code, `.codex` for Codex, `.cursor` for Cursor, `.github/skills` or `.github/copilot-instructions.md` for GitHub Copilot, `.opencode` for OpenCode, `.kilocode` for Kilo Code, `.pi` for Pi, `.omp` for Oh My Pi, and `.agents` or `AGENTS.md` for generic agents.
 
 #### Scenario: OpenSpec set up Codex
 - **WHEN** `.agents/skills/openspec-propose/SKILL.md` exists and `tg init --json` runs without `--agent`
 - **THEN** generic agents are detected and the tg skills are planned under `.agents/skills/`
 
+#### Scenario: Pi detected
+- **WHEN** a project has a `.pi` folder and `tg init --json` runs without `--agent`
+- **THEN** Pi is detected and the tg skills are planned under `.pi/skills/`
+
 ### Requirement: Skills per agent
-`tg init --write` SHALL install every bundled skill as `<skills folder>/<name>/SKILL.md` for each selected agent, where the skills folder is `.claude/skills` for Claude Code, `.agents/skills` for Codex and generic agents, `.cursor/skills` for Cursor, `.github/skills` for GitHub Copilot and `.opencode/skills` for OpenCode, writing a folder shared by two agents once.
+`tg init --write` SHALL install every bundled skill as `<skills folder>/<name>/SKILL.md` for each selected agent, where the skills folder is `.claude/skills` for Claude Code, `.agents/skills` for Codex and generic agents, `.cursor/skills` for Cursor, `.github/skills` for GitHub Copilot and `.opencode/skills` for OpenCode, `.kilocode/skills` for Kilo Code, `.pi/skills` for Pi, `.omp/skills` for Oh My Pi, writing a folder shared by two agents once.
 
 #### Scenario: Codex skills
 - **WHEN** `tg init --agent codex --write` runs
 - **THEN** the five tg skills exist under `.agents/skills/` and `AGENTS.md` holds the tg block
+
+#### Scenario: Kilo Code and Oh My Pi skills
+- **WHEN** `tg init --agent kilocode,oh-my-pi` runs
+- **THEN** the five tg skills exist under `.kilocode/skills/` and `.omp/skills/` and `AGENTS.md` holds the tg block
 
 ### Requirement: OpenSpec config rules
 When `openspec/config.yaml` exists, `tg init` SHALL add tg rules to its `rules` mapping for the `proposal`, `specs`, `design` and `tasks` artifacts, each rule starting with `tg:`, SHALL on later runs replace only rules starting with `tg:`, SHALL keep every other rule, key and comment, SHALL NOT create the file when it is absent, and SHALL skip it with `--no-openspec`. The rules SHALL teach OpenSpec to annotate what it generates: `specs` rules keep requirement and scenario names citable, and `tasks` rules ask for an `implements` annotation on the code of each requirement, a `verifies` annotation on the test of each scenario, the capability in the `openspec:` frontmatter of the lat.md file that explains it, and a final `tg check` and `tg trace` step.

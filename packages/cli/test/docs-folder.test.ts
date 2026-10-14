@@ -124,3 +124,24 @@ it('plans lat.md without asking outside a terminal', async () => {
   expect(plan.docs).toBe('lat.md');
   expect(plan.changes.map((c) => c.path)).toContain('lat.md/lat.md');
 });
+
+// @lat: [[tests/cli-core#Project root discovery#Repository named lat.md]]
+// @tg: verifies:: [[openspec:tg-cli#Project root discovery#Repository named lat.md]]
+it('does not take a git clone named lat.md for a docs folder', async () => {
+  const work = project({ 'lat.md/.git/HEAD': 'ref: refs/heads/main\n', 'lat.md/README.md': '# lat.md tool\n', 'app/src/a.ts': 'export const a = 1;\n' });
+  const r = await tg(join(work, 'app'), ['check']);
+  expect(r.code).toBe(2);
+  expect(r.out).toContain('no lat.md/, tg.md/ or .tg/ found');
+});
+
+// @lat: [[tests/tg-agent#Safe init#Own folder, not a parent]]
+// @tg: verifies:: [[openspec:tg-agent-integration#Safe init#Own folder, not a parent]]
+it('sets up the folder it runs in, never a parent project', async () => {
+  const work = project({ 'lat.md/lat.md': '# Work\n\nIndex.\n', 'app/src/a.ts': 'export const a = 1;\n' });
+  const r = await tg(join(work, 'app'), ['init']);
+  expect(r.code).toBe(0);
+  expect(existsSync(join(work, 'app/CLAUDE.md'))).toBe(true);
+  expect(existsSync(join(work, 'app/lat.md/lat.md'))).toBe(true);
+  expect(existsSync(join(work, 'CLAUDE.md'))).toBe(false);
+  expect(existsSync(join(work, 'Types'))).toBe(false);
+});

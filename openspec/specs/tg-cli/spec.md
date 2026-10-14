@@ -6,7 +6,7 @@ Defines the `tg` executable: how it finds a project, how it reports results, and
 ## Requirements
 
 ### Requirement: Project root discovery
-The system SHALL locate the project root by walking upward from the working directory to the nearest directory containing `lat.md/`, `tg.md/` or `.tg/`, unless `--dir` is given.
+The system SHALL locate the project root by walking upward from the working directory to the nearest directory containing `lat.md/`, `tg.md/` or `.tg/`, unless `--dir` is given. A `lat.md/` or `tg.md/` directory that is itself a git repository (it holds `.git`) SHALL NOT count, so a clone of another project named `lat.md` does not make its parent a project.
 
 #### Scenario: Run from a subdirectory
 - **WHEN** `tg check` runs in `src/auth/` of a project whose root holds `lat.md/`
@@ -23,6 +23,10 @@ The system SHALL locate the project root by walking upward from the working dire
 #### Scenario: No project found
 - **WHEN** no ancestor contains `lat.md/`, `tg.md/` or `.tg/`
 - **THEN** the command exits with code 2 and a message suggesting `tg init`
+
+#### Scenario: Repository named lat.md
+- **WHEN** `~/work/lat.md/` is a git clone and `tg check` runs in `~/work/app/`, which has no docs folder
+- **THEN** no project is found and `~/work/` is not used as the root
 
 ### Requirement: Output and exit codes
 The system SHALL exit 0 on success, 1 when a command reports findings or, for `locate`, `section`, `refs`, `search` and `edges`, when nothing matches, and 2 on usage or internal errors, and SHALL print exactly one machine-readable JSON document instead of text when `--json` is given, including when nothing matches.

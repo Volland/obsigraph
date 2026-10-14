@@ -2,6 +2,21 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+- **`tg init` writes by default.** It writes its files and lists each one it created or updated; `--dry-run` prints the diff instead and writes nothing. In a terminal the checklists are the review, so there is no extra "Write N files?" question. `--write` is still accepted and changes nothing, so existing scripts and the VS Code setup button keep working, and `--migrate` no longer needs it.
+
+### Fixed
+
+- **`tg init` wrote into a parent folder.** It looked upward for an existing project and set that one up instead of the folder you ran it in, so a `lat.md/` anywhere above (for example a clone of the lat.md tool's own repository next to your projects) received `CLAUDE.md`, `.claude/`, `Types/` and `Templates/`. `tg init` now always sets up the folder it runs in, or the folder you pass.
+- A `lat.md/` or `tg.md/` folder that is its own git repository no longer counts as a project's docs folder for any command.
+
+### Added
+
+- `tg init` sets up three more coding agents: Kilo Code (`--agent kilocode`, skills in `.kilocode/skills`), Pi (`pi`, `.pi/skills`) and Oh My Pi (`oh-my-pi`, `.omp/skills`), each detected from its folder and given the `AGENTS.md` block.
+
 ## 0.16.0 — 2026-10-14
 
 ### Added

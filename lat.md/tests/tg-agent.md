@@ -12,11 +12,19 @@ Nothing is written without consent.
 
 ### Dry run
 
-`tg init` without `--write` prints a diff for every file it would create and leaves the project untouched.
+`tg init --dry-run` prints a diff for every file it would create and leaves the project untouched.
+
+### Own folder, not a parent
+
+`tg init` in a subfolder of a folder with `lat.md/` sets up the subfolder and leaves the parent untouched.
+
+### Writes by default
+
+`tg init` writes its files and lists each as created, with no diff; `--write` is still accepted and changes nothing.
 
 ### Idempotent write
 
-Running `tg init --write` twice changes nothing the second time, and the hook entries are not duplicated.
+Running `tg init` twice changes nothing the second time, and the hook entries are not duplicated.
 
 ## Migration from lat
 
@@ -28,7 +36,7 @@ A `lat:begin` block in `CLAUDE.md` is reported with the flag to migrate it, and 
 
 ### Migration applied
 
-`--write --migrate` replaces the lat block with the tg block, swaps lat hooks and the lat MCP entry for tg ones, and leaves everything outside the markers byte-identical.
+`--migrate` replaces the lat block with the tg block, swaps lat hooks and the lat MCP entry for tg ones, and leaves everything outside the markers byte-identical.
 
 ## Instruction generation
 
@@ -152,6 +160,14 @@ OpenSpec skills under `.agents/skills/` make Codex and generic agents detected; 
 
 `--agent codex` writes the five skills under `.agents/skills/` and an `AGENTS.md` block, and nothing for Claude Code.
 
+### Pi detected
+
+A `.pi` folder makes Pi the detected agent, with skills planned under `.pi/skills/`.
+
+### Kilo Code and Oh My Pi skills
+
+`--agent kilocode,oh-my-pi` writes the five skills under `.kilocode/skills/` and `.omp/skills/` and an `AGENTS.md` block.
+
 ## Setup parts
 
 Choosing which parts `tg init` sets up or updates.
@@ -174,11 +190,15 @@ The confirmation step of `tg init` in a terminal.
 
 ### Confirmed
 
-A terminal run lists each file as create or update and writes them after an empty answer.
+After the checklists a terminal run writes the files and lists each as created or updated, asking nothing more.
 
 ### Declined
 
-Answering `n` writes nothing; `--yes` skips every prompt and stays a dry run without `--write`.
+Unticking every agent writes nothing; `--yes` skips the checklists and writes with the defaults.
+
+### Dry run in a terminal
+
+With `--dry-run` a terminal run still shows the checklists, then prints the diff and writes nothing.
 
 ## OpenSpec config rules
 
