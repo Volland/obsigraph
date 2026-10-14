@@ -45,6 +45,7 @@ export interface TraceDoc {
  * and verified when every scenario has a `verifies` edge (or, with no
  * scenarios, the requirement has one). Negative edges are ignored.
  */
+// @tg: implements:: [[cli#Requirement trace]] {since: "2026-10-08"}
 // @lat: [[cli#Requirement trace]]
 // @tg: implements:: [[openspec:tg-trace#Trace command]]
 export function traceRequirements(specs: SpecIndex, annotations: Annotation[], docs: TraceDoc[]): RequirementTrace[] {

@@ -292,6 +292,7 @@ it('refuses to write through a symlink that leads outside the project, even with
   expect(read(outside, 'decisions.md')).toBe(before);
 });
 
+// @tg: verifies:: [[tests/tg-migrate#Link typing#Clause scope]] {since: "2026-10-14", level: unit}
 // @lat: [[tests/tg-migrate#Link typing#Clause scope]]
 // @tg: verifies:: [[openspec:tg-migrate#Link typing#Clause scope]]
 it('reads cue words only from the clause around the link', async () => {

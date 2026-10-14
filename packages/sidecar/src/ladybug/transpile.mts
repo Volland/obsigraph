@@ -37,6 +37,7 @@ function str(s: string): string {
  * to base columns, and functions map to Ladybug equivalents. The query keeps
  * the plugin's semantics and column names.
  */
+// @tg: implements:: [[ladybug-mirror#Storage layout]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#Storage layout]]
 // @tg: implements:: [[openspec:ladybug-backend#Same interface and result contract]]
 // @tg: implements:: [[openspec:ladybug-backend#Sign, id and stub properties]]

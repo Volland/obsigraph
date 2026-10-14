@@ -15,6 +15,7 @@ const fail = (msg: string, t: Token, kind: 'readonly' | 'syntax' = 'readonly') =
  * and labels (`:Create`) are ignored because the lexer classifies them.
  * The database is also opened read-only, so this is the first of two walls.
  */
+// @tg: implements:: [[ladybug-mirror#One-way mirror]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#One-way mirror]]
 // @tg: implements:: [[openspec:engine-conformance#Write rejection conformance]]
 // @tg: implements:: [[openspec:ladybug-backend#Full Cypher for reads]]

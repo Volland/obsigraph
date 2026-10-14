@@ -53,7 +53,7 @@ A link with two candidates and no cue is reported with its file, line, section, 
 
 ### Clause scope
 
-In a long sentence, a "because" outside the parenthesized group around a link is not its cue, while "(because of [[x]])" still is.
+In a long sentence, a "because" outside the parenthesized group around a link is not its cue, while `(because of [[x]])` still is.
 
 ### No cue without infer
 

@@ -39,6 +39,7 @@ const baseName = (p: string): string => p.slice(p.lastIndexOf('/') + 1).toLowerC
  * Broken links, wikilinks, missing descriptions and the v0.1 `timestamp` key
  * are warnings, because consumers must tolerate them.
  */
+// @tg: implements:: [[okf#Conformance check]] {since: "2026-10-06"}
 // @lat: [[okf#Conformance check]]
 // @tg: implements:: [[openspec:okf-compat#OKF conformance check]]
 export function checkOkf(files: OkfNote[]): OkfFinding[] {

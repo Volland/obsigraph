@@ -8,6 +8,7 @@ export interface QueryEngine {
 }
 
 /** The in-plugin engine over the live in-memory graph. */
+// @tg: implements:: [[query-engine#Two backends]] {since: "2026-10-03"}
 // @lat: [[query-engine#Two backends]]
 export class BuiltinEngine implements QueryEngine {
   constructor(

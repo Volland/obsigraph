@@ -231,6 +231,7 @@ export interface ResolvedEdgeStyle {
  * Resolve each attribute independently: precedence levels in order, and
  * within a level the node's labels in label order; first value wins.
  */
+// @tg: implements:: [[visualization#Styling]] {since: "2026-10-03"}
 // @lat: [[visualization#Styling]]
 // @tg: implements:: [[openspec:graph-view#Node type styling]]
 // @tg: implements:: [[openspec:visualization-config#Multi-label nodes]]
@@ -266,6 +267,7 @@ export function resolveNodeStyle(labels: string[], sources: StyleSource[]): Reso
 }
 
 /** Negative edges default to a dashed red line unless a source sets the attribute. */
+// @tg: implements:: [[visualization#Styling]] {since: "2026-10-03"}
 // @lat: [[visualization#Styling]]
 // @tg: implements:: [[openspec:visualization-config#Edge type styling]]
 // @tg: implements:: [[openspec:visualization-config#Precedence of style sources]]

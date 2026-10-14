@@ -84,6 +84,7 @@ const fileFor = (path: string) => `vectors/notes/${hash(path)}.json`;
  * text; a model change blocks writes until an explicit rebuild; an unreachable
  * provider leaves old vectors searchable and queues the note.
  */
+// @tg: implements:: [[vector-search#Vector index]] {since: "2026-10-03"}
 // @lat: [[vector-search#Vector index]]
 export class VectorIndex implements Processor {
   readonly name = 'vector-index';
@@ -178,6 +179,7 @@ export class VectorIndex implements Processor {
   // ---- search ---------------------------------------------------------------
 
   /** Top-k nodes by best chunk (or pooled) similarity, optionally filtered by type. */
+  // @tg: implements:: [[vector-search#Node chunks]] {since: "2026-10-03"}
   // @lat: [[vector-search#Node chunks]]
   // @tg: implements:: [[openspec:vector-index#Vector search over nodes]]
   async searchNodes(query: string, k: number, opts: { types?: string[]; mode?: ScoreMode } = {}): Promise<NodeHit[]> {
@@ -224,6 +226,7 @@ export class VectorIndex implements Processor {
   }
 
   /** Top-k edges by similarity of their verbalized sentence. */
+  // @tg: implements:: [[vector-search#Edge verbalization]] {since: "2026-10-03"}
   // @lat: [[vector-search#Edge verbalization]]
   // @tg: implements:: [[openspec:vector-index#Vector search over edges]]
   async searchEdges(query: string, k: number): Promise<EdgeHit[]> {

@@ -15,6 +15,7 @@ export function inLatFolder(path: string): boolean {
  * reported rather than opened. Plain note links return null so Obsidian's own
  * handling stays in charge.
  */
+// @tg: implements:: [[cli#Vault integration]] {since: "2026-10-04"}
 // @lat: [[cli#Vault integration]]
 // @tg: implements:: [[openspec:lat-vault-integration#Read in place]]
 export function latLinkTarget(index: LatIndex, href: string): LatLinkTarget {

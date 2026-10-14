@@ -43,6 +43,7 @@ function edge(type: string, sign: 1 | -1, target: string, props: ParsedEdge['pro
  * annotation edges written in comments. `resolveTarget` maps a non-code link
  * target (e.g. `auth#Login`) to the node key it should point at, or null.
  */
+// @tg: implements:: [[cli#Code layer]] {since: "2026-10-04"}
 // @lat: [[cli#Code layer]]
 // @tg: implements:: [[openspec:code-layer#Code mode setting]]
 // @tg: implements:: [[openspec:code-layer#Derived code nodes]]

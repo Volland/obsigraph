@@ -14,6 +14,7 @@ async function call(root: string, io: Io, args: string[]): Promise<{ text: strin
 }
 
 /** MCP server exposing the lattice and its graph; every tool wraps the matching `tg` command. */
+// @tg: implements:: [[cli#Agent integration]] {since: "2026-10-04"}
 // @lat: [[cli#Agent integration]]
 // @tg: implements:: [[openspec:tg-agent-integration#MCP server]]
 export function createTgMcpServer(root: string, io: Io): McpServer {

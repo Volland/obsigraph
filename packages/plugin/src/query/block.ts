@@ -43,6 +43,7 @@ export const DEFAULT_OPTIONS: BlockOptions = { view: 'auto', columns: null, heig
  * Split a `graph-query` block into its `key: value` header and Cypher body.
  * The header is every leading line of that form; a blank line may separate it.
  */
+// @tg: implements:: [[query-engine#Query block]] {since: "2026-10-03"}
 // @lat: [[query-engine#Query block]]
 // @tg: implements:: [[openspec:graph-query-block#Block structure]]
 // @tg: implements:: [[openspec:graph-query-block#View override and columns]]
@@ -62,6 +63,7 @@ export function parseBlock(source: string): ParsedBlock {
     const value = m[2]!;
     const scoped = /^(node|edge)\.(.+)$/i.exec(m[1]!);
     if (scoped) {
+      // @tg: implements:: [[visualization#Styling]] {since: "2026-10-03"}
       // @lat: [[visualization#Styling]]
       const pairs = parseStylePairs(value);
       if (typeof pairs === 'string') errors.push({ line: i, message: pairs });
@@ -81,6 +83,7 @@ export function parseBlock(source: string): ParsedBlock {
       if (cols.length === 0) errors.push({ line: i, message: 'columns needs at least one column name' });
       else options.columns = cols;
     } else if (key === 'backend') {
+      // @tg: implements:: [[ladybug-mirror#Hosted by the sidecar]] {since: "2026-10-03"}
       // @lat: [[ladybug-mirror#Hosted by the sidecar]]
       const b = value.toLowerCase();
       if (b === 'builtin' || b === 'ladybug') options.backend = b;

@@ -37,6 +37,7 @@ function fromEdge(e: GraphEdge, graph: Graph): BacklinkItem {
  * type, plus the source files that annotate it; a source file lists the notes
  * its annotations point at. Whole-file granularity.
  */
+// @tg: implements:: [[vscode#Backlinks]] {since: "2026-10-04"}
 // @lat: [[vscode#Backlinks]]
 // @tg: implements:: [[openspec:vscode-extension#Backlinks for source files]]
 // @tg: implements:: [[openspec:vscode-extension#Empty and unsupported states]]

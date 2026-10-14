@@ -34,6 +34,7 @@ const int = (o: Obj, k: string, def: number, min: number, max: number): number =
  * The read-only operations behind both REST and MCP, so both surfaces give
  * identical results: Cypher on either backend, vector search, GraphRAG retrieve.
  */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 export class Ops {
   readonly engine: BuiltinEngine;
@@ -101,6 +102,7 @@ export class Ops {
   }
 
   /** Vector search over nodes or edges, optionally followed by Cypher with `$hits`. */
+  // @tg: implements:: [[vector-search#Vector index]] {since: "2026-10-03"}
   // @lat: [[vector-search#Vector index]]
   // @tg: implements:: [[openspec:sidecar-mcp-graphrag#Degraded retrieval without vectors]]
   // @tg: implements:: [[openspec:sidecar-mcp-graphrag#Vector search tool]]

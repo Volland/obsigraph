@@ -23,6 +23,7 @@ export interface RendererOptions {
  * element looks the same everywhere. Visual attributes come from a styler and
  * are stored as element data, so restyling never moves nodes.
  */
+// @tg: implements:: [[visualization#Surfaces]] {since: "2026-10-04"}
 // @lat: [[visualization#Surfaces]]
 // @tg: implements:: [[openspec:graph-ui#Host-independent rendering]]
 // @tg: implements:: [[openspec:graph-view#Edge presentation]]

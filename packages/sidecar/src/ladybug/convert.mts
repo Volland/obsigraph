@@ -31,6 +31,7 @@ function rel(r: Raw): JsonRelationship {
 }
 
 /** Convert a LadybugDB value into the plugin's JSON wire form. */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 export function fromLadybug(v: unknown): JsonValue {
   if (v === null || v === undefined) return null;

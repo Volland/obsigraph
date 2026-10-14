@@ -125,6 +125,7 @@ function json(x: unknown): string {
 }
 
 /** Rows for every node and edge in the graph, each with a content signature. */
+// @tg: implements:: [[ladybug-mirror#Storage layout]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#Storage layout]]
 // @tg: implements:: [[openspec:ladybug-backend#Sign, id and stub properties]]
 // @tg: implements:: [[openspec:ladybug-mirror#Fidelity of labels and properties]]
@@ -155,6 +156,7 @@ export function graphRows(graph: Graph): { nodes: Map<string, NodeRow>; edges: M
  * order delete edges, delete nodes, upsert nodes, insert edges keeps every
  * edge's endpoints present.
  */
+// @tg: implements:: [[ladybug-mirror#One-way mirror]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#One-way mirror]]
 // @tg: implements:: [[openspec:ladybug-mirror#Incremental sync per changed file]]
 // @tg: implements:: [[openspec:ladybug-mirror#One-way sync from vault to database]]

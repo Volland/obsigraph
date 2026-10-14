@@ -114,6 +114,7 @@ function testCallAfter(lines: string[], runEnd1: number): string | null {
  * project-relative. Annotations attach to the declaration that follows the
  * comment within {@link ATTACH_WINDOW} lines, else to the file with a warning.
  */
+// @tg: implements:: [[cli#Annotations]] {since: "2026-10-04"}
 // @lat: [[cli#Annotations]]
 // @tg: implements:: [[openspec:tg-annotations#lat annotations]]
 // @tg: implements:: [[openspec:tg-annotations#tg annotations]]

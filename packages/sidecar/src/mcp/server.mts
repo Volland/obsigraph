@@ -25,6 +25,7 @@ async function answer(fn: () => Promise<unknown>) {
  * MCP server exposing the vault as three read-only tools. A fresh server is
  * built per HTTP request (stateless) or once for stdio.
  */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 // @tg: implements:: [[openspec:sidecar-mcp-graphrag#Cypher query tool]]
 // @tg: implements:: [[openspec:sidecar-mcp-graphrag#MCP server with three tools]]

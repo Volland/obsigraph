@@ -76,6 +76,7 @@ function indexField(texts: string[]): FieldIndex {
 }
 
 /** BM25 over title, summary and body with field weights; rebuilt per query batch since docs corpora are small. */
+// @tg: implements:: [[cli#Search]] {since: "2026-10-04"}
 // @lat: [[cli#Search]]
 // @tg: implements:: [[openspec:tg-search#Lexical default]]
 export class LexicalIndex {

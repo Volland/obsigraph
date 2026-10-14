@@ -89,6 +89,7 @@ async function rowsOf(conn: Conn, statement: string): Promise<Record<string, unk
  * (`p_<name>_<kind>`), added on first use. An always-empty
  * `obsigraph_none` relationship table keeps impossible patterns valid.
  */
+// @tg: implements:: [[ladybug-mirror#Storage layout]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#Storage layout]]
 // @tg: implements:: [[openspec:ladybug-mirror#Fidelity of labels and properties]]
 export class LadybugStore implements MirrorStore {

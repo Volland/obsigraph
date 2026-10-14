@@ -47,6 +47,7 @@ function int(env: NodeJS.ProcessEnv, name: string, fallback: number, min = 0): n
  * Read configuration from the environment and validate the directories:
  * the vault must be readable, the data directory must exist and be writable.
  */
+// @tg: implements:: [[sidecar#Security]] {since: "2026-10-03"}
 // @lat: [[sidecar#Security]]
 // @tg: implements:: [[openspec:sidecar-service#Read-only vault access]]
 // @tg: implements:: [[openspec:sidecar-service#Safe default network binding]]

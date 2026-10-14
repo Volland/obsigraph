@@ -46,6 +46,7 @@ const SCHEMA_KEYS = ['prefixes', 'schema', 'schemas', 'edgeTypes'] as const;
  * updated where they live; a note is only rewritten in its schema keys, and
  * one that declares types missing from the import is left alone unless forced.
  */
+// @tg: implements:: [[shacl#Import]] {since: "2026-10-06"}
 // @lat: [[shacl#Import]]
 // @tg: implements:: [[openspec:shacl-interop#Import SHACL into schema notes]]
 // @tg: implements:: [[openspec:shacl-interop#Imports never clobber silently]]

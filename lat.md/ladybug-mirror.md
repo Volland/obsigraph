@@ -12,6 +12,8 @@ Sync flows only from vault to Ladybug; the database is a disposable cache that c
 
 `LadybugMirror` (`packages/sidecar/src/mirror/mirror.mts`) keeps a content signature per mirrored node and edge; each sync diffs the whole graph against them (`diffMirror` (`packages/sidecar/src/mirror/rows.mts`)) and applies only the difference in one transaction, so incremental sync equals a rebuild by construction and edges in untouched files whose targets re-resolved are covered. A manifest (format version, in-progress or complete) makes any missing, stale, interrupted or failed state rebuild on next open. Syncs run in the background and coalesce bursts. User queries against the mirror are read-only: `CREATE`, `SET` and `DELETE` are rejected, because nothing would write them back to notes and the next sync would erase or diverge from them.
 
+- motivated_by:: [[architecture#Source of truth]] {since: "2026-10-03", note: "markdown is the only source of truth, so the database is a rebuildable cache"}
+
 ## Deferred two-way sync
 
 Translating Cypher writes into markdown edits is a possible future feature, not part of v1.

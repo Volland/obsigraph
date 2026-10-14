@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
  * The only place the sidecar writes. Every write is checked to land inside
  * the data directory and never inside the vault.
  */
+// @tg: implements:: [[sidecar#Security]] {since: "2026-10-03"}
 // @lat: [[sidecar#Security]]
 export class DataDir {
   constructor(

@@ -41,6 +41,7 @@ const STATE_FILE = 'sync-state.json';
  * content hash, debounced watching with a polling fallback, and per-file
  * hand-off to processors. Never writes to the vault.
  */
+// @tg: implements:: [[sidecar#Shared core]] {since: "2026-10-03"}
 // @lat: [[sidecar#Shared core]]
 // @tg: implements:: [[openspec:sidecar-service#Same semantics as the plugin]]
 export class VaultSync {

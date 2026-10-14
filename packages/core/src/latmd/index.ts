@@ -55,6 +55,7 @@ const MAX_DISTANCE_RATIO = 0.4;
  * id lookup (full and short ids, case-insensitive), link resolution and
  * fuzzy locate.
  */
+// @tg: implements:: [[cli#Compatibility contract]] {since: "2026-10-04"}
 // @lat: [[cli#Compatibility contract]]
 export class LatIndex {
   readonly files = new Map<string, ParsedMarkdown>();

@@ -25,6 +25,7 @@ const BATCH = 100;
  * Keeps the core graph in sync with the vault. Reads note text and frontmatter
  * through Obsidian, resolves links with the metadata cache, never writes notes.
  */
+// @tg: implements:: [[architecture#Source of truth]] {since: "2026-10-03"}
 // @lat: [[architecture#Source of truth]]
 export class VaultIndex {
   readonly graph: Graph;
@@ -100,6 +101,7 @@ export class VaultIndex {
    * Style sources below the block header, in precedence order: one per schema
    * note, then plugin settings. Invalid values become diagnostics.
    */
+  // @tg: implements:: [[visualization#Styling]] {since: "2026-10-03"}
   // @lat: [[visualization#Styling]]
   styleSources(): { sources: StyleSource[]; diagnostics: Diagnostic[] } {
     if (!this.styleCache) {

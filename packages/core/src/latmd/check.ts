@@ -131,6 +131,7 @@ function specTargetError(specs: SpecIndex | null, target: string): string | null
 }
 
 /** `openspec:` frontmatter in lattice files: every entry must name a capability or `capability#requirement`. */
+// @tg: implements:: [[cli#Requirement trace]] {since: "2026-10-08"}
 // @lat: [[cli#Requirement trace]]
 // @tg: implements:: [[openspec:tg-check#Check]]
 function checkSpecFrontmatter(input: CheckInput): Finding[] {

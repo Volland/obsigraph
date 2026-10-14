@@ -20,6 +20,7 @@ export interface SessionView {
  * webview itself) the last file is kept. In the "project" scope: every node and edge, capped
  * at the limit, regardless of the active file.
  */
+// @tg: implements:: [[vscode#Graph webview]] {since: "2026-10-04"}
 // @lat: [[vscode#Graph webview]]
 // @tg: implements:: [[openspec:vscode-extension#Graph webview]]
 // @tg: implements:: [[openspec:vscode-extension#Whole project graph]]

@@ -11,6 +11,7 @@ export type RenderPlan =
  * Decide how to show a query result: graph or table by result shape and the
  * `view` option, with a table fallback when the graph exceeds the element cap.
  */
+// @tg: implements:: [[query-engine#Query block]] {since: "2026-10-03"}
 // @lat: [[query-engine#Query block]]
 // @tg: implements:: [[openspec:code-layer#Visible on demand]]
 // @tg: implements:: [[openspec:graph-query-block#Large results are bounded]]

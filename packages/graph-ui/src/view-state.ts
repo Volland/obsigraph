@@ -2,6 +2,7 @@ import { markdownTarget, type Graph, type GraphEdge, type GraphNode, type Resolv
 import { nodeElement, type EdgeElement, type GraphElements } from './elements';
 
 /** A node, its incident edges in both directions, and its direct neighbors. */
+// @tg: implements:: [[visualization#Surfaces]] {since: "2026-10-04"}
 // @lat: [[visualization#Surfaces]]
 // @tg: implements:: [[openspec:graph-ui#Neighborhood view-state]]
 export function neighborhood(graph: Graph, id: string): GraphElements {
@@ -31,6 +32,7 @@ export interface ProjectElements {
  * Every node and edge of the graph. Over `limit` nodes it keeps the most connected ones
  * (ties by id, so the choice is stable) and only the edges between them.
  */
+// @tg: implements:: [[vscode#Whole project graph]] {since: "2026-10-14"}
 // @lat: [[vscode#Whole project graph]]
 // @tg: implements:: [[openspec:vscode-extension#Whole project graph]]
 export function projectElements(graph: Graph, limit: number): ProjectElements {
@@ -104,8 +106,9 @@ const VALUE_LINK = /\[\[([^\]|#\r\n]*)(?:#([^\]|\r\n]*))?(?:\|([^\]\r\n]*))?\]\]
  * string with links gives text and link parts, anything else gives its plain text. An empty
  * `[[]]` and a markdown link that is not a note stay text.
  */
+// @tg: implements:: [[visualization#Details panel]] {since: "2026-10-13"}
 // @lat: [[visualization#Details panel]]
-// @tg: implements:: [[openspec:graph-view#Details panel#Links in values]]
+// @tg: implements:: [[openspec:graph-view#Details panel]]
 export function valueLines(value: unknown, source: string | null = null): ValuePart[][] {
   if (Array.isArray(value)) return value.length ? value.flat(Infinity).map((v) => valueParts(v, source)) : [[{ text: '[]' }]];
   return [valueParts(value, source)];
@@ -140,6 +143,7 @@ const NOTE_KEYS = new Set(['type', 'types']);
 const isTechnical = (key: string, declared: ReadonlySet<string> | undefined): boolean => !!declared && !declared.has(key) && !NOTE_KEYS.has(key);
 
 /** Rows naming each resolved style attribute and the source that supplied it. */
+// @tg: implements:: [[visualization#Styling]] {since: "2026-10-04"}
 // @lat: [[visualization#Styling]]
 export function styleRows(style: ResolvedNodeStyle | ResolvedEdgeStyle): [string, string][] {
   return Object.entries(style.origin).map(([attr, origin]) => {

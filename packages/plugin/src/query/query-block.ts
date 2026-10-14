@@ -13,6 +13,7 @@ import { planRender } from './plan';
  * One rendered `graph-query` block. Re-runs on vault changes while visible;
  * changes that arrive while hidden are applied when it scrolls back into view.
  */
+// @tg: implements:: [[query-engine#Query block]] {since: "2026-10-03"}
 // @lat: [[query-engine#Query block]]
 export class QueryBlock extends MarkdownRenderChild {
   private renderer: GraphRenderer | null = null;

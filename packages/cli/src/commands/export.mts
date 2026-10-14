@@ -32,6 +32,7 @@ function verify(out: string): Finding[] {
 const USAGE = 'export <outDir> [--format lat|okf] [--vault dir] [--folder sub] [--default-type T] [--title T] [--force]';
 
 /** Write an OKF v0.2 bundle into `out`, copy embedded attachments, then verify it with the OKF check. */
+// @tg: implements:: [[okf#Export]] {since: "2026-10-06"}
 // @lat: [[okf#Export]]
 // @tg: implements:: [[openspec:okf-compat#OKF change report]]
 function exportOkfBundle(ctx: Ctx, base: string, out: string, flags: Map<string, string | true>): number {

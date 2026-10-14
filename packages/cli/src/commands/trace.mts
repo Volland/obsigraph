@@ -12,6 +12,7 @@ function gaps(r: RequirementTrace): string[] {
   return out;
 }
 
+// @tg: implements:: [[cli#Requirement trace]] {since: "2026-10-08"}
 // @lat: [[cli#Requirement trace]]
 // @tg: implements:: [[openspec:tg-trace#Trace command]]
 export const trace: Command = {

@@ -47,6 +47,7 @@ const PROP_KNOWN = new Set([`${RDF}type`, `${SH}path`, `${SH}name`, `${SH}dataty
  * target class become types; shapes constraining `rdf:predicate` with
  * `sh:hasValue` become edge types; everything else is reported as dropped.
  */
+// @tg: implements:: [[shacl#Import]] {since: "2026-10-06"}
 // @lat: [[shacl#Import]]
 // @tg: implements:: [[openspec:shacl-interop#Drop report]]
 // @tg: implements:: [[openspec:shacl-interop#Import SHACL into schema notes]]

@@ -56,6 +56,8 @@ One bundled package `@typedgraph/cli` exposes the `tg` binary, built with esbuil
 
 The public product name is Typed Graph (see [[publishing#Plugin releases]]), so the npm scope is `@typedgraph`. Ownership of that scope was not verifiable during design and must be confirmed before the first publish. A layered library (`@typedgraph/core`) is deferred until the parser API settles.
 
+- motivated_by:: [[publishing#Plugin releases]] {since: "2026-10-04", note: "the npm scope follows the public product name Typed Graph"}
+
 ## Annotations
 
 Code points at docs with `@lat: [[section]]`, a plain `references` link, or `@tg:` followed by the existing inline edge grammar, e.g. `// @tg: implements:: [[auth#Login]] {since: 2}`.

@@ -8,6 +8,7 @@ const MAX_BYTES = 1_500_000;
  * (read-only), turns annotated or all symbols into `CodeFile` and `CodeSymbol`
  * nodes and keeps them current as files change. Nothing is ever written.
  */
+// @tg: implements:: [[cli#Code layer]] {since: "2026-10-04"}
 // @lat: [[cli#Code layer]]
 export class CodeLayer {
   private readonly texts = new Map<string, string>();

@@ -30,6 +30,7 @@ export interface MirrorStatus {
  * against stored signatures and applies the difference in one transaction,
  * so incremental sync always equals a rebuild. Never touches notes.
  */
+// @tg: implements:: [[ladybug-mirror#One-way mirror]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#One-way mirror]]
 // @tg: implements:: [[openspec:ladybug-mirror#One-way sync from vault to database]]
 export class LadybugMirror implements Processor {

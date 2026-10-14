@@ -16,6 +16,7 @@ type Entry = [predicate: string, object: Obj];
  * Export a schema set as one SHACL document in Turtle. Output is
  * deterministic: shapes are ordered by name, property shapes by `sh:order`.
  */
+// @tg: implements:: [[shacl#Export]] {since: "2026-10-06"}
 // @lat: [[shacl#Export]]
 // @tg: implements:: [[openspec:shacl-interop#Edge mapping]]
 // @tg: implements:: [[openspec:shacl-interop#Edge type shapes]]

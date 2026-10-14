@@ -22,6 +22,7 @@ const MIN_DETAILS_WIDTH = 160;
  * Full-pane exploratory graph. With an empty query it shows the active note's
  * neighborhood; right-click or long-press expands a node in place.
  */
+// @tg: implements:: [[visualization#Surfaces]] {since: "2026-10-03"}
 // @lat: [[visualization#Surfaces]]
 // @tg: implements:: [[openspec:code-layer#Visible on demand]]
 // @tg: implements:: [[openspec:graph-view#Graph view leaf]]

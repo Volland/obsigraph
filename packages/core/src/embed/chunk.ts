@@ -90,6 +90,7 @@ function pack(text: string, max: number): string[] {
  * Chunk a note by heading, then by size, prefixing title, type labels and
  * frontmatter to the embedded text and recording path and heading for citations.
  */
+// @tg: implements:: [[vector-search#Node chunks]] {since: "2026-10-03"}
 // @lat: [[vector-search#Node chunks]]
 // @tg: implements:: [[openspec:chunking-verbalization#Chunk provenance]]
 // @tg: implements:: [[openspec:chunking-verbalization#Context prepended to every chunk]]
@@ -155,6 +156,7 @@ export interface EdgeSentence {
  * Render an edge as a sentence for embedding:
  * `Alice (Person) knows Bob (Person) - since 2020, met at conf`.
  */
+// @tg: implements:: [[vector-search#Edge verbalization]] {since: "2026-10-03"}
 // @lat: [[vector-search#Edge verbalization]]
 // @tg: implements:: [[openspec:chunking-verbalization#Edge sentence provenance]]
 // @tg: implements:: [[openspec:chunking-verbalization#Edge verbalization]]
@@ -205,6 +207,7 @@ export function poolVectors(vectors: number[][]): number[] {
 export type ScoreMode = 'best' | 'pooled';
 
 /** Node score from its chunks: best chunk similarity, or similarity of the pooled vector. */
+// @tg: implements:: [[vector-search#Node chunks]] {since: "2026-10-03"}
 // @lat: [[vector-search#Node chunks]]
 // @tg: implements:: [[openspec:chunking-verbalization#Node score aggregation]]
 export function nodeScore(query: number[], chunkVectors: number[][], mode: ScoreMode = 'best'): number {

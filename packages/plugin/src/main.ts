@@ -11,6 +11,7 @@ import { GraphView, VIEW_TYPE_GRAPH } from './view/graph-view';
 import { DiagnosticsModal, registerSchemaCommands } from './schema-commands';
 import { registerTgIcon, TG_ICON } from './icon';
 
+// @tg: implements:: [[architecture#Standalone plugin]] {since: "2026-10-03"}
 // @lat: [[architecture#Standalone plugin]]
 export default class ObsigraphPlugin extends Plugin {
   settings: ObsigraphSettings = DEFAULT_SETTINGS;
@@ -114,6 +115,7 @@ export default class ObsigraphPlugin extends Plugin {
   }
 
   /** Styler over block header (optional), schema notes and settings, in that order. */
+  // @tg: implements:: [[visualization#Styling]] {since: "2026-10-03"}
   // @lat: [[visualization#Styling]]
   makeStyler(blockHeader: StyleSource | null = null): Styler {
     const sources = [...(blockHeader ? [blockHeader] : []), ...this.index.styleSources().sources];

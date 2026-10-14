@@ -21,6 +21,7 @@ const clean = (p: string): string => posix.normalize(p.replace(/\\/g, '/')).repl
  * from annotated source files, kept current per file. Read-only: nothing is
  * ever written into the indexed folders.
  */
+// @tg: implements:: [[vscode#Workspace index]] {since: "2026-10-04"}
 // @lat: [[vscode#Workspace index]]
 // @tg: implements:: [[openspec:vscode-extension#Index the workspace in process]]
 export class WorkspaceIndex {

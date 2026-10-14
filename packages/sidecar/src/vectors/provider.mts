@@ -129,6 +129,7 @@ abstract class BaseProvider implements EmbeddingProvider {
 }
 
 /** Local Ollama via `/api/embed`; the default, never a hosted service. */
+// @tg: implements:: [[vector-search#Embedding provider]] {since: "2026-10-03"}
 // @lat: [[vector-search#Embedding provider]]
 // @tg: implements:: [[openspec:embedding-provider#Local default provider]]
 export class OllamaProvider extends BaseProvider {
@@ -190,6 +191,7 @@ export function providerFromEnv(env: Record<string, string | undefined>, readFil
 }
 
 /** A reason when vectors from `active` must not be written into an index built with `stored`. */
+// @tg: implements:: [[vector-search#Embedding provider]] {since: "2026-10-03"}
 // @lat: [[vector-search#Embedding provider]]
 // @tg: implements:: [[openspec:embedding-provider#Mismatch never mixes vectors]]
 export function identityMismatch(stored: EmbeddingIdentity | null, active: EmbeddingIdentity): string | null {

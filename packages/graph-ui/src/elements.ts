@@ -82,6 +82,7 @@ export function elementCount(g: GraphElements): number {
 const CODE_LABELS = new Set(['CodeFile', 'CodeSymbol']);
 
 /** Remove code nodes and every edge touching them, e.g. for a block with `code: hide`. */
+// @tg: implements:: [[cli#Code layer]] {since: "2026-10-04"}
 // @lat: [[cli#Code layer]]
 export function excludeCode(g: GraphElements): GraphElements {
   const nodes = g.nodes.filter((n) => !n.labels.some((l) => CODE_LABELS.has(l)));

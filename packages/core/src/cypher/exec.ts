@@ -36,6 +36,7 @@ const runtime = (msg: string) => new CypherError('runtime', msg, 0, 0);
 const varExpr = (name: string): Expr => ({ k: 'var', name, line: 0, column: 0 });
 
 /** Execute a parsed query as a pipeline of clauses. Never mutates the graph. */
+// @tg: implements:: [[query-engine#Two backends]] {since: "2026-10-03"}
 // @lat: [[query-engine#Two backends]]
 // @tg: implements:: [[openspec:cypher-extensions#WITH stages a query]]
 // @tg: implements:: [[openspec:cypher-query#Deterministic stub handling]]
@@ -208,6 +209,7 @@ function collectAggs(e: Expr, out: Expr[]): void {
  * Project rows for WITH or RETURN. With aggregates, the non-aggregate items
  * are grouping keys; without grouping keys, zero rows still yield one row.
  */
+// @tg: implements:: [[query-engine#Supported subset]] {since: "2026-10-03"}
 // @lat: [[query-engine#Supported subset]]
 // @tg: implements:: [[openspec:cypher-extensions#Aggregation functions]]
 function project(ctx: Ctx, proj: Projection, items: ReturnItem[], rows: Env[]): { values: Value[]; env: Env }[] {
@@ -358,6 +360,7 @@ function step(ctx: Ctx, env: Env, p: Pattern, ri: number, cur: NodeRef, used: Se
  * Variable-length expansion: depth-first, never reusing a relationship, with
  * unbounded ranges capped at the configured depth (reported as a notice).
  */
+// @tg: implements:: [[query-engine#Supported subset]] {since: "2026-10-03"}
 // @lat: [[query-engine#Supported subset]]
 // @tg: implements:: [[openspec:cypher-extensions#Variable-length paths]]
 function expand(ctx: Ctx, env: Env, p: Pattern, ri: number, start: NodeRef, used: Set<string>, trail: Trail, done: () => void): void {
@@ -536,6 +539,7 @@ class Ctx {
     return props.every(([k, e]) => equals(property(target, k), this.evaluate(e, env)) === true);
   }
 
+  // @tg: implements:: [[query-engine#Supported subset]] {since: "2026-10-03"}
   // @lat: [[query-engine#Supported subset]]
   evaluate(e: Expr, env: Env): Value {
     switch (e.k) {

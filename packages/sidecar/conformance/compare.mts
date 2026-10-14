@@ -44,6 +44,7 @@ const key = (v: unknown) => JSON.stringify(v);
  * same column names and kinds, the same rows as a multiset, and the same row
  * order only when the query has ORDER BY.
  */
+// @tg: implements:: [[query-engine#Two backends]] {since: "2026-10-03"}
 // @lat: [[query-engine#Two backends]]
 // @tg: implements:: [[openspec:engine-conformance#Comparison rules]]
 export function compare(query: string, a: EngineOutcome, b: EngineOutcome): string | null {

@@ -19,6 +19,7 @@ const err = (message: string, line = 0, column = 0): RemoteOutcome => ({ kind: '
  * something a block can show: a result, a positioned error, or "retry later"
  * while the mirror is still building.
  */
+// @tg: implements:: [[ladybug-mirror#Hosted by the sidecar]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#Hosted by the sidecar]]
 // @tg: implements:: [[openspec:ladybug-backend#Clear error when unavailable]]
 // @tg: implements:: [[openspec:ladybug-backend#Errors reported with position]]

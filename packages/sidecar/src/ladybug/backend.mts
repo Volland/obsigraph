@@ -29,6 +29,7 @@ export interface LadybugBackendOptions {
  * queries are translated onto the mirror layout; text outside the built-in
  * parser's subset passes through unchanged after the read-only guard.
  */
+// @tg: implements:: [[ladybug-mirror#Storage layout]] {since: "2026-10-03"}
 // @lat: [[ladybug-mirror#Storage layout]]
 export class LadybugBackend {
   private snapshot: ReturnType<LadybugStore['openReadOnly']> | null = null;

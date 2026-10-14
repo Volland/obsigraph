@@ -59,6 +59,7 @@ function rel(r: RelRef): JsonRelationship {
 }
 
 /** Serialize a query value for HTTP or MCP. */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 export function toJsonValue(v: Value): JsonValue {
   if (v === null || typeof v !== 'object') return v;
@@ -99,6 +100,7 @@ export function fromJsonValue(v: JsonValue): Value {
 }
 
 /** Rebuild a query result received from a remote backend. */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 export function resultFromJson(r: JsonQueryResult): QueryResult {
   const out: QueryResult = { columns: r.columns, rows: r.rows.map((row) => row.map(fromJsonValue)) };

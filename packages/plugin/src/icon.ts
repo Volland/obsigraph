@@ -9,6 +9,7 @@ const TG_SVG = `<g fill="none" stroke="currentColor" stroke-width="7" stroke-lin
   <path d="M74.3 38.7A16 16 0 1 0 79 50H64"/>
 </g>`;
 
+// @tg: implements:: [[visualization#Surfaces]] {since: "2026-10-11"}
 // @lat: [[visualization#Surfaces]]
 export function registerTgIcon(): void {
   addIcon(TG_ICON, TG_SVG);

@@ -33,6 +33,7 @@ export function readSchemaNotes(vault: string, folder: string): ExistingNote[] {
 
 const str = (flags: Map<string, string | true>, k: string) => (typeof flags.get(k) === 'string' ? (flags.get(k) as string) : undefined);
 
+// @tg: implements:: [[shacl#Commands]] {since: "2026-10-06"}
 // @lat: [[shacl#Commands]]
 // @tg: implements:: [[openspec:shacl-interop#Export schemas as SHACL]]
 function runExport(ctx: Ctx, outArg: string, vault: string, folder: string, flags: Map<string, string | true>): number {
@@ -65,6 +66,7 @@ function runExport(ctx: Ctx, outArg: string, vault: string, folder: string, flag
   return EXIT_OK;
 }
 
+// @tg: implements:: [[shacl#Commands]] {since: "2026-10-06"}
 // @lat: [[shacl#Commands]]
 // @tg: implements:: [[openspec:shacl-interop#Drop report]]
 function runImport(ctx: Ctx, fileArg: string, vault: string, folder: string, flags: Map<string, string | true>): number {

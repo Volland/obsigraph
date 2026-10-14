@@ -33,6 +33,7 @@ const color = (c: string, fallback: string) => (/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,
  * One self-contained HTML page: the graph data, the viewer script and its styles all inline,
  * with a policy that allows no network access at all.
  */
+// @tg: implements:: [[vscode#Graph export]] {since: "2026-10-14"}
 // @lat: [[vscode#Graph export]]
 // @tg: implements:: [[openspec:graph-export#Export the graph as standalone HTML]]
 export function buildHtml(x: HtmlExport): string {

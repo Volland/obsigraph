@@ -25,6 +25,7 @@ export interface RunReport {
 }
 
 /** Run every corpus query on both engines over the fixture vault and print the report. */
+// @tg: implements:: [[query-engine#Two backends]] {since: "2026-10-03"}
 // @lat: [[query-engine#Two backends]]
 // @tg: implements:: [[openspec:engine-conformance#Graceful skip when Ladybug is unavailable]]
 // @tg: implements:: [[openspec:engine-conformance#Shared corpus on a fixed fixture]]

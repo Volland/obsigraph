@@ -28,6 +28,7 @@ function edge(type: string, target: string, line: number): ParsedEdge {
  * (`motivated_by:: [[decisions#Why]] {since: 2}`) becomes an edge of that type,
  * sign and properties from the section, instead of a plain `references`.
  */
+// @tg: implements:: [[cli#Agent integration]] {since: "2026-10-04"}
 // @lat: [[cli#Agent integration]]
 // @tg: implements:: [[openspec:code-layer#Link and node identity agree]]
 // @tg: implements:: [[openspec:tg-trace#Requirement nodes]]

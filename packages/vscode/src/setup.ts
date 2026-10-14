@@ -31,6 +31,7 @@ export interface SetupDeps {
 }
 
 /** Ask first, then run in a visible terminal; declining runs nothing. Returns whether a command was started. */
+// @tg: implements:: [[vscode#Set up TypeGraph]] {since: "2026-10-04"}
 // @lat: [[vscode#Set up TypeGraph]]
 // @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
 export async function runSetup(deps: SetupDeps): Promise<boolean> {

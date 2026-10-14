@@ -16,6 +16,7 @@ export interface StyleRule {
  * styles come from element data set by the styler, so the same sheet serves
  * every block and the Graph view. Negative edges always get a tee arrow.
  */
+// @tg: implements:: [[visualization#Styling]] {since: "2026-10-04"}
 // @lat: [[visualization#Styling]]
 // @tg: implements:: [[openspec:graph-ui#Host-independent rendering]]
 // @tg: implements:: [[openspec:graph-view#Edge presentation]]

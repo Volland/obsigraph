@@ -305,6 +305,7 @@ function indexFiles(metas: Map<string, Meta>, title: string): OkfFile[] {
  * renamed, and every directory gets an `index.md`. The report says what changed;
  * the caller verifies the result with `checkOkf`.
  */
+// @tg: implements:: [[okf#Export]] {since: "2026-10-06"}
 // @lat: [[okf#Export]]
 // @tg: implements:: [[openspec:okf-compat#Concept frontmatter]]
 // @tg: implements:: [[openspec:okf-compat#OKF export projection]]

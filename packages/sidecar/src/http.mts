@@ -61,6 +61,7 @@ function send(res: ServerResponse, status: number, body: unknown): void {
  * REST surface: `GET /health` (open), `GET /status` and `POST /query`
  * (bearer token). Errors are JSON without stack traces.
  */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 export interface ApiExtras {
   mirrorStatus?: () => unknown;
@@ -82,6 +83,7 @@ function parse(raw: string, hint: string): Record<string, unknown> {
  * `POST /search`, `POST /retrieve`, `POST /vectors/rebuild` and `POST /mcp`
  * (streamable HTTP, stateless). Everything but health needs the bearer token.
  */
+// @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
 // @lat: [[sidecar#Interfaces]]
 // @tg: implements:: [[openspec:sidecar-mcp-graphrag#MCP authentication]]
 // @tg: implements:: [[openspec:sidecar-mcp-graphrag#REST parity for hybrid retrieve]]
@@ -120,6 +122,7 @@ export function createApi(config: Config, sync: VaultSync, log: Logger = () => {
         });
       }
       case 'POST /query':
+        // @tg: implements:: [[ladybug-mirror#Hosted by the sidecar]] {since: "2026-10-03"}
         // @lat: [[ladybug-mirror#Hosted by the sidecar]]
         return send(res, 200, await ops.cypher(parse(await readBody(req, config.maxBodyBytes), '{"query": "...", "params": {}}')));
       case 'POST /search':

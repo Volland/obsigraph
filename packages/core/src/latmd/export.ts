@@ -223,6 +223,7 @@ function addIndexes(files: ExportFile[], report: Report): ExportFile[] {
  * files are generated. Lossy by design; the report says what was lost. The
  * caller verifies the result with the normal checks.
  */
+// @tg: implements:: [[cli#Vault integration]] {since: "2026-10-04"}
 // @lat: [[cli#Vault integration]]
 // @tg: implements:: [[openspec:lat-vault-integration#Export projection]]
 export function exportLattice(notes: ExportNote[]): ExportResult {

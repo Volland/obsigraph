@@ -52,6 +52,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
   const redact = redactor(config.token);
   const data = new DataDir(config.dataDir, config.vaultDir);
 
+  // @tg: implements:: [[ladybug-mirror#Hosted by the sidecar]] {since: "2026-10-03"}
   // @lat: [[ladybug-mirror#Hosted by the sidecar]]
   let mirror: LadybugMirror | null = null;
   let mirrorUnavailable: string | null = config.ladybug ? null : 'disabled by OBSIGRAPH_LADYBUG=0';
@@ -64,6 +65,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     }
   }
 
+  // @tg: implements:: [[vector-search#Vector index]] {since: "2026-10-03"}
   // @lat: [[vector-search#Vector index]]
   let vectors: VectorIndex | null = null;
   if (config.vectors) {
@@ -137,6 +139,7 @@ const firstLine = (e: unknown) => (e instanceof Error ? e.message : String(e)).s
  * discarded and rebuilt once; when that fails too, or the store cannot be
  * created at all, the reason is returned and the sidecar runs without the mirror.
  */
+// @tg: implements:: [[ladybug-mirror#Hosted by the sidecar]] {since: "2026-10-08"}
 // @lat: [[ladybug-mirror#Hosted by the sidecar]]
 // @tg: implements:: [[openspec:ladybug-mirror#Mirror is optional]]
 // @tg: implements:: [[openspec:ladybug-mirror#Stale or incompatible mirror is rebuilt]]
@@ -186,6 +189,7 @@ if (isEntry) {
   const stdio = process.argv.includes('--stdio');
   startSidecar(process.env, { stdio }).then(
     async (sc) => {
+      // @tg: implements:: [[sidecar#Interfaces]] {since: "2026-10-03"}
       // @lat: [[sidecar#Interfaces]]
       if (stdio) await createMcpServer(sc.ops).connect(new StdioServerTransport());
       const shutdown = () => void sc.stop().then(() => process.exit(0));

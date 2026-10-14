@@ -134,6 +134,7 @@ function locate(path: string): { capability: string; change: string | null } | n
  * `openspec:<capability>#<requirement>[#<scenario>]`. Lookups ignore case and
  * collapse whitespace; a main-spec requirement wins over a pending one.
  */
+// @tg: implements:: [[cli#Requirement trace]] {since: "2026-10-08"}
 // @lat: [[cli#Requirement trace]]
 // @tg: implements:: [[openspec:tg-trace#OpenSpec reader]]
 // @tg: implements:: [[openspec:tg-trace#Requirement ids]]

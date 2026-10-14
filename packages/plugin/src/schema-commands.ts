@@ -261,6 +261,7 @@ async function schemaNotes(plugin: ObsigraphPlugin): Promise<ExistingNote[]> {
   return Promise.all(files.map(async (f) => ({ path: f.path, text: await app.vault.cachedRead(f), frontmatter: app.metadataCache.getFileCache(f)?.frontmatter ?? null })));
 }
 
+// @tg: implements:: [[shacl#Commands]] {since: "2026-10-06"}
 // @lat: [[shacl#Commands]]
 async function exportSchemas(plugin: ObsigraphPlugin, path: string): Promise<void> {
   const { app } = plugin;
@@ -271,6 +272,7 @@ async function exportSchemas(plugin: ObsigraphPlugin, path: string): Promise<voi
   new Notice(`Exported ${set.schemas.size} types and ${set.edgeTypes.size} edge types to ${target}.`);
 }
 
+// @tg: implements:: [[shacl#Commands]] {since: "2026-10-06"}
 // @lat: [[shacl#Commands]]
 async function importShapes(plugin: ObsigraphPlugin, path: string, layout: Layout, into?: string): Promise<void> {
   const { app } = plugin;

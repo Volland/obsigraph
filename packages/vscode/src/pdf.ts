@@ -57,6 +57,7 @@ export function sizeSummary(nodes: number, edges: number, meta: Pick<PdfMeta, 's
  * edges, and Helvetica text for labels, so it stays sharp and its labels can be searched.
  * Written by hand (catalog, page, content stream, base-14 font, info, xref): no library, no browser.
  */
+// @tg: implements:: [[vscode#Graph export]] {since: "2026-10-14"}
 // @lat: [[vscode#Graph export]]
 // @tg: implements:: [[openspec:graph-export#Export the graph as PDF]]
 export function buildGraphPdf(scene: Scene, meta: PdfMeta): Buffer {

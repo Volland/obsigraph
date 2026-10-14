@@ -50,6 +50,7 @@ const unsupported = (what: string, t: Token) =>
 const SUBQUERIES = new Set(['EXISTS', 'COUNT', 'COLLECT']);
 
 /** Parse a query in the supported read-only openCypher subset. */
+// @tg: implements:: [[query-engine#Supported subset]] {since: "2026-10-03"}
 // @lat: [[query-engine#Supported subset]]
 // @tg: implements:: [[openspec:cypher-extensions#Remaining unsupported syntax still fails clearly]]
 // @tg: implements:: [[openspec:cypher-extensions#Variable-length paths]]

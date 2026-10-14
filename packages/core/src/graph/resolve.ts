@@ -5,6 +5,7 @@ import type { LinkResolver } from './graph.js';
  * Obsidian (the sidecar): an exact path wins; otherwise a note whose path ends
  * with the link, preferring the source note's folder, then the shortest path.
  */
+// @tg: implements:: [[sidecar#Shared core]] {since: "2026-10-03"}
 // @lat: [[sidecar#Shared core]]
 export function pathResolver(paths: () => Iterable<string>): LinkResolver {
   return (link, sourcePath) => {

@@ -38,6 +38,7 @@ async function bodyAt(workspace: string, path: string | null): Promise<string | 
  * Plan a note of a declared type: its path in the workspace and its content,
  * with ids and template tokens filled in. Reads templates from disk; writes nothing.
  */
+// @tg: implements:: [[vscode#Creating notes]] {since: "2026-10-08"}
 // @lat: [[vscode#Creating notes]]
 export async function planWorkspaceNote(index: WorkspaceIndex, workspace: string, opts: NewNoteOptions): Promise<NewNotePlan & { path: string }> {
   const schema = schemasFromGraph(index.graph, opts.schemaFolder).schemas.get(opts.type);

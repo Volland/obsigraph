@@ -77,6 +77,7 @@ function sarif(findings: VaultFinding[], vault: string, cwd: string): string {
   return `${JSON.stringify(log, null, 2)}\n`;
 }
 
+// @tg: implements:: [[cli#Vault validation]] {since: "2026-10-09"}
 // @lat: [[cli#Vault validation]]
 // @tg: implements:: [[openspec:tg-validate#Exit codes and strictness]]
 // @tg: implements:: [[openspec:tg-validate#Selecting findings]]
