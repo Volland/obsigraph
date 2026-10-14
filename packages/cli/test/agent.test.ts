@@ -76,6 +76,17 @@ it('reports an existing lat block and leaves it alone without --migrate', async 
   expect(read(dir, 'CLAUDE.md')).toContain('%% lat:begin %%');
 });
 
+it('removes a lat block left next to an existing tg block with --migrate', async () => {
+  const dir = project();
+  writeFileSync(join(dir, 'CLAUDE.md'), '# Mine\n\n%% lat:begin %%\nRun `lat search`.\n%% lat:end %%\n\nMiddle.\n\n%% tg:begin %%\nold\n%% tg:end %%\n');
+  await tg(dir, ['init', '--migrate']);
+  const md = read(dir, 'CLAUDE.md');
+  expect(md).not.toContain('lat:begin');
+  expect(md.match(/%% tg:begin %%/g)).toHaveLength(1);
+  expect(md.startsWith('# Mine\n\nMiddle.\n\n%% tg:begin %%\n')).toBe(true);
+  expect(md).not.toContain('\nold\n');
+});
+
 // @lat: [[tests/tg-agent#Migration from lat#Migration applied]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Migration from lat#Migration applied]]
 it('replaces the lat block, hooks and MCP entry with --write --migrate', async () => {

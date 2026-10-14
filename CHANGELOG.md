@@ -2,6 +2,12 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Fixed
+
+- `tg init --migrate` and `tg migrate` left the lat block in `CLAUDE.md` or `AGENTS.md` when an earlier `tg init` without `--migrate` had already added a tg block next to it. They now remove the stale lat block and keep one tg block.
+
 ## 0.18.0 — 2026-10-14
 
 ### Added

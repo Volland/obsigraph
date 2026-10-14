@@ -39,7 +39,14 @@ export function withBlock(existing: string | null, migrate: boolean, docs: DocsD
   const mine = between(text, BEGIN, END);
   const lat = between(text, LAT_BEGIN, LAT_END);
   const managed = block(docs).trimEnd();
-  if (mine) return { text: `${text.slice(0, mine.start)}${managed}${text.slice(mine.stop)}`, hadLat: lat !== null };
+  if (mine) {
+    const updated = `${text.slice(0, mine.start)}${managed}${text.slice(mine.stop)}`;
+    // A file that already has a tg block (from an earlier init without --migrate) can still hold the lat block: drop it.
+    const stale = migrate ? between(updated, LAT_BEGIN, LAT_END) : null;
+    if (!stale) return { text: updated, hadLat: lat !== null };
+    const after = updated.slice(stale.stop).replace(/^\n+/, '');
+    return { text: `${updated.slice(0, stale.start).replace(/\n+$/, '')}${after ? `\n\n${after}` : '\n'}`, hadLat: true };
+  }
   if (lat && migrate) return { text: `${text.slice(0, lat.start)}${managed}${text.slice(lat.stop)}`, hadLat: true };
   const sep = text === '' ? '' : text.endsWith('\n\n') ? '' : text.endsWith('\n') ? '\n' : '\n\n';
   return { text: `${text}${sep}${managed}\n`, hadLat: lat !== null };
