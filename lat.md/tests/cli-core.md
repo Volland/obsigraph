@@ -22,6 +22,10 @@ Running from `src/auth/` of a project whose root holds `lat.md/` finds that root
 
 With no `lat.md/` or `.tg/` above the working directory a command exits 2 and suggests `tg init`.
 
+### tg.md project
+
+A project whose root holds `tg.md/` and no `lat.md/` is found from a subdirectory and checks clean.
+
 ## Output and exit codes
 
 The contract hooks and CI rely on.
@@ -45,3 +49,19 @@ The package ships as one npm package.
 ### Clean install
 
 `@typedgraph/cli` declares no runtime dependencies and exposes the `tg` binary, so `npx` needs nothing else.
+
+## Docs folder
+
+The project's docs folder is `lat.md/` when it exists, else `tg.md/`.
+
+### tg.md sections
+
+Sections in `tg.md/` get ids starting `tg.md/`, an annotation pointing at one resolves, and the root index `tg.md/tg.md` is checked like `lat.md/lat.md`.
+
+### lat.md wins
+
+With both folders present every command reads `lat.md/`, so a section only in `tg.md/` is not found.
+
+### Hook names the folder
+
+The prompt hook of a `tg.md/` project reminds the agent to keep `tg.md/` in sync and never mentions `lat.md/`.

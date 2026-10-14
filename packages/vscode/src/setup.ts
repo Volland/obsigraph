@@ -1,13 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Files `tg init --agent claude` creates or changes in a fresh project; verified against the CLI by a test. */
-export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', '.claude/skills/tg-trace/SKILL.md', '.claude/skills/tg-impact/SKILL.md', '.claude/skills/tg-audit/SKILL.md', 'lat.md/code-ontology.md', 'ontology/code-types.md'] as const;
+/** Files `tg init` creates or changes in a fresh project with its defaults (Claude Code, every part); verified against the CLI by a test. */
+export const SETUP_FILES = ['lat.md/lat.md', 'CLAUDE.md', '.claude/settings.json', '.mcp.json', '.claude/skills/tg-docs/SKILL.md', '.claude/skills/tg-graph/SKILL.md', '.claude/skills/tg-trace/SKILL.md', '.claude/skills/tg-impact/SKILL.md', '.claude/skills/tg-audit/SKILL.md', 'lat.md/code-ontology.md', 'Types/code-types.md', 'Templates/Decision.md', 'Templates/Requirement.md', 'Templates/Scenario.md', 'Templates/Constraint.md', 'Templates/Concept.md', 'Templates/Change.md'] as const;
 
-/** True when the workspace lacks `lat.md/` or any tg-managed instruction block. */
+/** True when the workspace lacks a docs folder (`lat.md/` or `tg.md/`) or any tg-managed instruction block. */
 // @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
 export function needsSetup(workspace: string): boolean {
-  if (!existsSync(join(workspace, 'lat.md'))) return true;
+  if (!existsSync(join(workspace, 'lat.md')) && !existsSync(join(workspace, 'tg.md'))) return true;
   for (const doc of ['CLAUDE.md', 'AGENTS.md']) {
     try {
       if (readFileSync(join(workspace, doc), 'utf8').includes('%% tg:begin %%')) return false;

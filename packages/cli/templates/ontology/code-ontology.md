@@ -2,7 +2,7 @@
 
 A small shared vocabulary for what the code is meant to do: six kinds of intent and eleven kinds of typed link between intent and code. Use these names instead of inventing synonyms, so a query means the same thing for everyone.
 
-The machine-readable schema is `ontology/code-types.md`. Derive what the code can tell you, write what only people know, and let `tg check` and `tg cypher` tell you when the two disagree.
+The machine-readable schema is `Types/code-types.md`, and `Templates/` holds a starting note for each type. Derive what the code can tell you, write what only people know, and let `tg check` and `tg cypher` tell you when the two disagree.
 
 ## Two layers
 

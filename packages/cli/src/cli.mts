@@ -20,6 +20,12 @@ export interface Io {
   fetch?: typeof fetch;
   /** Whole standard input, for hooks; absent when none is piped. */
   stdin?: () => string;
+  /** Ask the person at the terminal for a line; absent when stdin or stdout is not a terminal, so commands never block. */
+  ask?: (question: string) => Promise<string>;
+  /** Let the person at the terminal tick items in a checklist; absent outside a terminal, like `ask`. */
+  choose?: (title: string, items: { id: string; label: string; checked: boolean }[]) => Promise<string[]>;
+  /** Let the person at the terminal pick one item; absent outside a terminal, like `ask`. */
+  select?: (title: string, items: { id: string; label: string }[]) => Promise<string>;
 }
 
 export interface Ctx extends Io {
@@ -60,7 +66,7 @@ export function helpText(): string {
     'Usage: tg [options] <command> [args]',
     '',
     'Options:',
-    '  --dir <path>   project root (default: nearest lat.md/ or .tg/ above the cwd)',
+    '  --dir <path>   project root (default: nearest lat.md/, tg.md/ or .tg/ above the cwd)',
     '  --json         machine-readable output',
     '  --no-color     disable color',
     '  --verbose      extra diagnostics',
@@ -105,13 +111,13 @@ export async function run(argv: string[], io: Io): Promise<number> {
     if (typeof dirFlag === 'string') {
       root = resolve(io.cwd, dirFlag);
       if (!command.noProject && !hasProject(root)) {
-        io.err(`${root} has no lat.md/ or .tg/; run tg init\n`);
+        io.err(`${root} has no lat.md/, tg.md/ or .tg/; run tg init\n`);
         return EXIT_ERROR;
       }
     } else {
       root = findRoot(io.cwd);
       if (!root && !command.noProject) {
-        io.err('no lat.md/ or .tg/ found here or above; run tg init\n');
+        io.err('no lat.md/, tg.md/ or .tg/ found here or above; run tg init\n');
         return EXIT_ERROR;
       }
     }

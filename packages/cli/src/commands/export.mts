@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { checkLattice, checkOkf, exportLattice, exportOkf, LOSS_DESCRIPTIONS, OKF_CHANGE_DESCRIPTIONS, type ExportFile, type Finding } from '@obsigraph/core';
+import { existingDocsDir } from '../root.mjs';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command, type Ctx } from '../cli.mjs';
 import { readOkfNotes } from '../okf.mjs';
 import { Project } from '../project.mjs';
@@ -22,8 +23,8 @@ function verify(out: string): Finding[] {
     index: project.index(),
     annotations: project.annotations().annotations,
     latEntries: project.latEntries(),
-    latDirName: 'lat.md',
-    readLatFile: (rel) => project.text(`lat.md/${rel}`),
+    latDirName: project.latDirName,
+    readLatFile: (rel) => project.text(`${project.latDirName}/${rel}`),
     checkSourceLink: (f, s) => project.checkSourceLink(f, s),
   });
 }
@@ -147,7 +148,9 @@ export const importCmd: Command = {
       return EXIT_ERROR;
     }
     let src = resolve(ctx.cwd, srcArg);
-    if (existsSync(join(src, 'lat.md')) && statSync(join(src, 'lat.md')).isDirectory()) src = join(src, 'lat.md');
+    // A project directory stands for its docs folder: `lat.md/`, else `tg.md/`.
+    const docs = existingDocsDir(src);
+    if (docs) src = join(src, docs);
     if (!existsSync(src) || !statSync(src).isDirectory()) {
       ctx.err(`${src} is not a lat.md directory\n`);
       return EXIT_ERROR;

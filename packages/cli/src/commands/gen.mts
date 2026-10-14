@@ -11,6 +11,13 @@ import openspecArchive from '../../templates/openspec/archive.md';
 import openspecExplore from '../../templates/openspec/explore.md';
 import ontologyGuide from '../../templates/ontology/code-ontology.md';
 import ontologySchema from '../../templates/ontology/code-types.md';
+import decisionTemplate from '../../templates/ontology/templates/Decision.md';
+import requirementTemplate from '../../templates/ontology/templates/Requirement.md';
+import scenarioTemplate from '../../templates/ontology/templates/Scenario.md';
+import constraintTemplate from '../../templates/ontology/templates/Constraint.md';
+import conceptTemplate from '../../templates/ontology/templates/Concept.md';
+import changeTemplate from '../../templates/ontology/templates/Change.md';
+import openspecRules from '../../templates/openspec/config-rules.md';
 import { EXIT_ERROR, EXIT_OK, register, type Command } from '../cli.mjs';
 
 // @tg: implements:: [[openspec:tg-agent-integration#Bundled skills]]
@@ -21,6 +28,16 @@ export const TEMPLATES = { agents, cursor, docsSkill, graphSkill, traceSkill, im
 export const SKILLS: Record<string, string> = { 'tg-docs': docsSkill, 'tg-graph': graphSkill, 'tg-trace': traceSkill, 'tg-impact': impactSkill, 'tg-audit': auditSkill };
 
 /** Blocks appended to OpenSpec's skills and commands, by workflow stage. */
+/** Template notes for the code ontology's types, by type name; `tg init` writes them to `Templates/<Type>.md`. */
+export const ONTOLOGY_TEMPLATES: Record<string, string> = {
+  Decision: decisionTemplate,
+  Requirement: requirementTemplate,
+  Scenario: scenarioTemplate,
+  Constraint: constraintTemplate,
+  Concept: conceptTemplate,
+  Change: changeTemplate,
+};
+
 export const OPENSPEC_PATCHES = { propose: openspecPropose, apply: openspecApply, archive: openspecArchive, explore: openspecExplore };
 
 // @tg: implements:: [[openspec:tg-agent-integration#Instruction generation]]
@@ -40,6 +57,8 @@ const TARGETS: Record<string, string> = {
   'openspec-explore.md': openspecExplore,
   'ontology.md': ontologyGuide,
   'ontology-schema.md': ontologySchema,
+  'openspec-rules.md': openspecRules,
+  ...Object.fromEntries(Object.entries(ONTOLOGY_TEMPLATES).map(([type, text]) => [`template-${type.toLowerCase()}.md`, text])),
 };
 
 // @tg: implements:: [[openspec:tg-agent-integration#Instruction generation]]

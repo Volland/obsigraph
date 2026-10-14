@@ -2,6 +2,7 @@
 tgs: "0.1"
 schemas:
   Decision:
+    template: "[[Templates/Decision]]"
     properties:
       status: {values: [proposed, accepted, superseded, rejected], default: proposed}
       date: date
@@ -13,6 +14,7 @@ schemas:
       changed_by: Change
     visualization: {color: "#6366f1", shape: hexagon}
   Requirement:
+    template: "[[Templates/Requirement]]"
     properties:
       status: {values: [draft, stable, deprecated], default: draft}
       risk: {values: [low, medium, high]}
@@ -25,12 +27,14 @@ schemas:
       changed_by: Change
     visualization: {color: "#0ea5e9", shape: round-rectangle}
   Scenario:
+    template: "[[Templates/Scenario]]"
     properties:
       status: {values: [draft, stable, deprecated], default: draft}
     edges:
       refines: Requirement
     visualization: {color: "#14b8a6", shape: round-rectangle}
   Constraint:
+    template: "[[Templates/Constraint]]"
     properties:
       source: {kind: text, required: true}
       owner: text
@@ -38,12 +42,14 @@ schemas:
       constrains: [Requirement, Decision]
     visualization: {color: "#f59e0b", shape: diamond}
   Concept:
+    template: "[[Templates/Concept]]"
     properties:
       status: {values: [draft, stable, deprecated], default: draft}
     edges:
       defines:
     visualization: {color: "#a855f7", shape: ellipse}
   Change:
+    template: "[[Templates/Change]]"
     properties:
       status: {values: [proposed, applied, archived], default: proposed}
       date: date
@@ -92,11 +98,11 @@ edgeTypes:
 
 The Typed Graph Schema (TGS) declaration of the code ontology: six intent types and eleven edge types, readable by the Obsidian plugin, `tg schema` and any TGS or SHACL tool.
 
-The vocabulary and its rules of use are in `lat.md/code-ontology.md`; this note is its machine-readable form, so edit both together. It lives outside `lat.md/` because every note directly in a schema folder declares a type.
+The vocabulary and its rules of use are in `lat.md/code-ontology.md`; this note is its machine-readable form, so edit both together. It lives in `Types/`, the schema folder the Obsidian plugin, the VS Code extension and `tg validate` read by default, and outside `lat.md/` because every note directly in a schema folder declares a type. Each type's `template` links a note in `Templates/` that new notes of the type start from.
 
 ## Using it
 
-Export it to RDF tools with `tg schema export shapes.ttl --schema-folder ontology`. In the Obsidian plugin, set the schema folder to `ontology` and open the project as a vault. `CodeSymbol`, `CodeFile` and `Section` are derived by `tg` and need no declaration.
+Export it to RDF tools with `tg schema export shapes.ttl`, and check notes against it with `tg validate`. Open the project as an Obsidian vault, or use **New Typed Note** in VS Code, to create a Decision or Requirement from its template. `CodeSymbol`, `CodeFile` and `Section` are derived by `tg` and need no declaration.
 
 ## Changing it
 

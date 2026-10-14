@@ -27,3 +27,16 @@ it('reports source links instead of opening them, and surfaces broken links as d
   expect(d.map((x) => x.message)).toEqual([expect.stringContaining('broken link [[nowhere#x]]')]);
   expect(d[0]).toMatchObject({ path: 'lat.md/architecture.md', line: 10 });
 });
+
+// @lat: [[tests/tg-vault#Read in place#tg.md folder]]
+// @tg: verifies:: [[openspec:lat-vault-integration#Read in place#tg.md folder]]
+it('reads a tg.md folder in place like a lat.md one', () => {
+  expect(inLatFolder('docs/tg.md/architecture.md')).toBe(true);
+  expect(inLatFolder('tg.md/tg.md')).toBe(true);
+  expect(inLatFolder('docs/xtg.md/a.md')).toBe(false);
+  const tg = new LatIndex([
+    { path: 'docs/tg.md/tg.md', text: '# Docs\n\nIndex.\n\n- [[architecture]] — a\n' },
+    { path: 'docs/tg.md/architecture.md', text: '# Architecture\n\nOverview.\n\n## Monorepo layout\n\nPackages.\n\n### core\n\nThe core package.\n' },
+  ]);
+  expect(latLinkTarget(tg, 'architecture#Monorepo layout#core')).toEqual({ kind: 'open', path: 'docs/tg.md/architecture.md', line: 8 });
+});

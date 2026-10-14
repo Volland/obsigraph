@@ -64,3 +64,13 @@ it('needs setup without lat.md or a tg block and not with both', () => {
   writeFileSync(join(dir, 'CLAUDE.md'), `${readFileSync(join(dir, 'CLAUDE.md'), 'utf8')}\n%% tg:begin %%\nx\n%% tg:end %%\n`);
   expect(needsSetup(dir)).toBe(false);
 });
+
+// @lat: [[tests/vscode-extension#Set up TypeGraph#tg.md counts as set up]]
+// @tg: verifies:: [[openspec:vscode-extension#Set up TypeGraph#tg.md counts as set up]]
+it('treats a tg.md docs folder with a tg block as set up', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'tgvs-tgmd-'));
+  mkdirSync(join(dir, 'tg.md'));
+  expect(needsSetup(dir)).toBe(true);
+  writeFileSync(join(dir, 'CLAUDE.md'), '%% tg:begin %%\nx\n%% tg:end %%\n');
+  expect(needsSetup(dir)).toBe(false);
+});

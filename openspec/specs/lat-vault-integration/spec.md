@@ -6,7 +6,7 @@ Defines how a lat.md folder lives inside a vault and how vault content is export
 ## Requirements
 
 ### Requirement: Read in place
-The system SHALL read a `lat.md/` folder inside the vault, at the vault root or nested below it, without modifying any of its files, and SHALL resolve nested-heading and code links through the lat resolver. A link to a source target SHALL be reported to the user with its file and symbol and SHALL NOT open or create a note.
+The system SHALL read a `lat.md/` or `tg.md/` folder inside the vault, at the vault root or nested below it, without modifying any of its files, and SHALL resolve nested-heading and code links through the lat resolver. A link to a source target SHALL be reported to the user with its file and symbol and SHALL NOT open or create a note.
 
 #### Scenario: Nested heading link
 - **WHEN** a note links `[[architecture#Monorepo layout#core]]`
@@ -19,6 +19,10 @@ The system SHALL read a `lat.md/` folder inside the vault, at the vault root or 
 #### Scenario: Nested lat.md folder
 - **WHEN** the lat.md folder is `docs/lat.md/` inside the vault and a note links `[[architecture#Monorepo layout]]`
 - **THEN** the link opens that section of `docs/lat.md/architecture.md`
+
+#### Scenario: tg.md folder
+- **WHEN** a note in `docs/tg.md/` links a nested heading
+- **THEN** the plugin resolves it through the lat resolver as it does in a `lat.md/` folder
 
 ### Requirement: Export projection
 The system SHALL export a vault subset to a lat-conformant folder, flattening typed edges to plain links, dropping edge properties and normalizing links, and SHALL verify the result with the same rules as `tg check`.

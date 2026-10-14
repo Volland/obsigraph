@@ -3,9 +3,10 @@ import { checkLattice, type Diagnostic, type LatIndex } from '@obsigraph/core';
 /** Where a lat.md link should go when clicked. */
 export type LatLinkTarget = { kind: 'open'; path: string; line: number } | { kind: 'code'; file: string; symbol: string | null } | { kind: 'ambiguous'; candidates: string[] } | null;
 
-/** True for a note inside a lat.md folder, at the vault root or below any folder. */
+/** True for a note inside a `lat.md/` or `tg.md/` docs folder, at the vault root or below any folder. */
+// @tg: implements:: [[openspec:lat-vault-integration#Read in place]]
 export function inLatFolder(path: string): boolean {
-  return path.endsWith('.md') && /(^|\/)lat\.md\//.test(path);
+  return path.endsWith('.md') && /(^|\/)(lat|tg)\.md\//.test(path);
 }
 
 /**

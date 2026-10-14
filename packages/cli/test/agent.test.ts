@@ -120,13 +120,14 @@ it('a hook outside any project exits 0 without blocking', async () => {
 
 // @lat: [[tests/tg-agent#Agent hooks#Cursor init]]
 // @tg: verifies:: [[openspec:tg-agent-integration#Agent hooks#Cursor init]]
-it('writes Cursor rules and no Cursor hook configuration', async () => {
+it('writes Cursor rules and skills and no Cursor hook configuration', async () => {
   const dir = project();
   const r = await tg(dir, ['init', '--agent', 'cursor', '--write', '--json']);
   expect(r.code).toBe(0);
   const paths = (JSON.parse(r.out) as { changes: { path: string }[] }).changes.map((c) => c.path);
   expect(paths).toContain('.cursor/rules/tg.mdc');
-  expect(paths.filter((p) => p.startsWith('.cursor/'))).toEqual(['.cursor/rules/tg.mdc']);
+  expect(paths.filter((p) => p.startsWith('.cursor/') && !p.startsWith('.cursor/skills/'))).toEqual(['.cursor/rules/tg.mdc']);
+  expect(paths).toContain('.cursor/skills/tg-trace/SKILL.md');
   expect(existsSync(join(dir, '.cursor', 'hooks.json'))).toBe(false);
   expect(existsSync(join(dir, '.claude'))).toBe(false);
 });
@@ -240,16 +241,20 @@ it('prints skills and patch blocks with tg gen', async () => {
 });
 
 // @lat: [[tests/tg-agent#Code ontology#Ontology installed]]
-it('installs the ontology note and schema, and the project still checks clean', async () => {
+// @tg: verifies:: [[openspec:tg-agent-integration#Code ontology install#Types and templates]]
+it('installs the ontology note, schema in Types/ and templates, and the project still checks clean', async () => {
   const dir = project();
   await tg(dir, ['init', '--write']);
   expect(read(dir, 'lat.md/code-ontology.md')).toContain('# Code Ontology');
-  expect(read(dir, 'ontology/code-types.md')).toContain('edgeTypes:');
+  expect(read(dir, 'Types/code-types.md')).toContain('edgeTypes:');
+  expect(read(dir, 'Types/code-types.md')).toContain('template: "[[Templates/Decision]]"');
+  for (const t of ['Decision', 'Requirement', 'Scenario', 'Constraint', 'Concept', 'Change']) expect(read(dir, `Templates/${t}.md`)).toContain('# {{title}}');
+  expect(existsSync(join(dir, 'ontology'))).toBe(false);
   expect(read(dir, 'lat.md/lat.md')).toContain('[[code-ontology]]');
   const checked = await tg(dir, ['check']);
   expect(checked.err + checked.out).not.toContain('broken');
   expect(checked.code).toBe(0);
-  const exported = await tg(dir, ['schema', 'export', 'shapes.ttl', '--schema-folder', 'ontology', '--json']);
+  const exported = await tg(dir, ['schema', 'export', 'shapes.ttl', '--json']);
   const report = JSON.parse(exported.out) as { types: number; edgeTypes: number; diagnostics: unknown[] };
   expect(report).toMatchObject({ types: 6, edgeTypes: 11, diagnostics: [] });
 });
@@ -269,5 +274,6 @@ it('leaves the ontology out with --no-ontology', async () => {
   const dir = project();
   await tg(dir, ['init', '--write', '--no-ontology']);
   expect(existsSync(join(dir, 'lat.md/code-ontology.md'))).toBe(false);
-  expect(existsSync(join(dir, 'ontology'))).toBe(false);
+  expect(existsSync(join(dir, 'Types'))).toBe(false);
+  expect(existsSync(join(dir, 'Templates'))).toBe(false);
 });

@@ -146,7 +146,7 @@ export function activate(context: vscode.ExtensionContext): void {
     await runSetup({
       hasGlobalTg: () => spawnSync('tg', ['--version'], { cwd: folder.uri.fsPath, shell: process.platform === 'win32' }).status === 0,
       confirm: async (files, command) => {
-        const pick = await vscode.window.showInformationMessage(`Run "${command}" in a terminal?`, { modal: true, detail: `These files will be created or changed:\n\n${files.join('\n')}\n\ntg init never overwrites other content in them.` }, 'Run');
+        const pick = await vscode.window.showInformationMessage(`Run "${command}" in a terminal?`, { modal: true, detail: `With the defaults (Claude Code, everything), these files will be created or changed:\n\n${files.join('\n')}\n\nThe terminal lets you pick other coding agents and parts first. tg init never overwrites other content in them.` }, 'Run');
         return pick === 'Run';
       },
       runInTerminal: (command) => {

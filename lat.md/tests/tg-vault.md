@@ -22,6 +22,10 @@ A link like `[[src/config.ts#getConfigDir]]` resolves to a code target, which th
 
 Building the plugin's vault index over a vault with a root and a nested lat.md folder reads their sections and leaves every file byte-identical, with any vault write failing the test.
 
+### tg.md folder
+
+Notes in a nested `tg.md/` folder are lattice notes, and nested-heading links in them resolve to the section line as in `lat.md/`.
+
 ## Export projection
 
 What `tg export` produces.

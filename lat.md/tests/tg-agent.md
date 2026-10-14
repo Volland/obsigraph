@@ -52,7 +52,7 @@ Outside a project, or with unreadable input, a hook exits 0 and never blocks the
 
 ### Cursor init
 
-`tg init --agent cursor --write` writes `.cursor/rules/tg.mdc` and no Cursor hook configuration; `tg hook cursor stop` is for manual hook setup.
+`tg init --agent cursor --write` writes `.cursor/rules/tg.mdc` and the tg skills under `.cursor/skills/`, and no Cursor hook configuration; `tg hook cursor stop` is for manual hook setup.
 
 ## MCP server
 
@@ -94,6 +94,10 @@ After OpenSpec rewrites a skill without the block, the next run appends it again
 
 `--skills-only` changes only files under `.claude/skills/` and `.claude/commands/`, leaving a lat.md instruction block, hooks and the ontology alone.
 
+### Other agent's skill
+
+An OpenSpec skill in Cursor's `.cursor/skills/` gets the tg block when Cursor is set up, keeping its original text as a prefix.
+
 ### Patch text printed
 
 `tg gen openspec-apply.md` prints the apply block and `tg gen impact-skill.md` the impact skill.
@@ -104,7 +108,9 @@ The shared vocabulary that `tg init` installs.
 
 ### Ontology installed
 
-`tg init --write` creates `lat.md/code-ontology.md` and the TGS schema `ontology/code-types.md`, lists the note in the lat.md index, `tg check` passes, and the schema exports to SHACL with six types, eleven edge types and no diagnostics.
+`tg init --write` creates `lat.md/code-ontology.md`, the schema `Types/code-types.md` with a `template` link per type and six notes in `Templates/`, and `tg check` still passes.
+
+The note is listed in the lat.md index, and the schema exports to SHACL from the default schema folder with six types, eleven edge types and no diagnostics.
 
 ### Ontology kept on re-run
 
@@ -112,5 +118,100 @@ An ontology note that already exists is never overwritten, so a project can edit
 
 ### Ontology opt-out
 
-`--no-ontology` writes neither the note nor the schema.
+`--no-ontology` writes neither the note, `Types/` nor `Templates/`.
 
+### Old ontology folder noted
+
+An `ontology/code-types.md` from an older `tg init` is left alone and reported in a note pointing to `Types/`.
+
+## Agent selection
+
+Which coding agents `tg init` sets up, and where their skills go.
+
+### Several agents
+
+`--agent claude,codex` writes both `CLAUDE.md` and `AGENTS.md` blocks and the five skills under both `.claude/skills/` and `.agents/skills/`.
+
+### Checklist in a terminal
+
+In a terminal the agent checklist has the detected agents ticked (Cursor, from a `.cursor` folder), and the agents left ticked are set up.
+
+### No terminal
+
+With `--json` nothing is asked and a project with no agent files gets Claude Code.
+
+### Unknown agent
+
+An unknown `--agent` id exits 2 with the accepted ids and writes nothing.
+
+### Detected from OpenSpec
+
+OpenSpec skills under `.agents/skills/` make Codex and generic agents detected; their shared skills folder and `AGENTS.md` are planned once, and the OpenSpec skill there is patched.
+
+### Codex skills
+
+`--agent codex` writes the five skills under `.agents/skills/` and an `AGENTS.md` block, and nothing for Claude Code.
+
+## Setup parts
+
+Choosing which parts `tg init` sets up or updates.
+
+### Only the OpenSpec config
+
+`--only openspec` changes only `openspec/config.yaml` and creates no instruction file.
+
+### Skip instructions
+
+`--skip instructions` installs skills without `CLAUDE.md`; an unknown part name exits 2.
+
+### Parts checklist
+
+In a terminal the parts checklist lists all five parts with OpenSpec unticked when the project has no `openspec/` folder, and only the ticked parts are written.
+
+## Interactive setup
+
+The confirmation step of `tg init` in a terminal.
+
+### Confirmed
+
+A terminal run lists each file as create or update and writes them after an empty answer.
+
+### Declined
+
+Answering `n` writes nothing; `--yes` skips every prompt and stays a dry run without `--write`.
+
+## OpenSpec config rules
+
+The tg rules `tg init` adds to `openspec/config.yaml`.
+
+### Rules added
+
+The project's schema, comment and own task rule survive, `tg:` rules for proposal, specs, design and tasks follow the project's rules, and the task rules ask for `implements`, `verifies` and `openspec:` frontmatter.
+
+### Rules re-run is stable
+
+A second run leaves the config untouched, and a stale `tg:` rule is replaced by the current wording.
+
+### No OpenSpec
+
+A project without `openspec/config.yaml` gets no `openspec/` files.
+
+## Docs folder choice
+
+How `tg init` picks the docs folder it creates.
+
+### Asked in a terminal
+
+With neither folder present, a terminal run asks once; picking `tg.md` creates `tg.md/tg.md` and writes instructions and skills that name `tg.md/`, and `tg check` passes.
+
+### Flag for scripts
+
+`--docs tg.md --write` creates `tg.md/tg.md` and `tg.md/code-ontology.md` and no `lat.md/`; an unknown folder name exits 2.
+
+### Existing lat.md kept
+
+With `lat.md/` present, `--docs tg.md` creates no `tg.md/` and notes that `lat.md/` is used; an existing folder is never asked about.
+
+### Default without a terminal
+
+Outside a terminal init asks nothing and plans `lat.md/lat.md`.

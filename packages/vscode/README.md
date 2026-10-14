@@ -22,12 +22,13 @@ The extension reads the same files as [`tg`](https://www.npmjs.com/package/@type
 
 ## Built for agentic flows
 
-`tg init` (or the **Set up TypeGraph** button) prepares a project for coding agents: Claude Code, `AGENTS.md`-based agents or Cursor. It shows a diff and writes nothing until you pass `--write`.
+`tg init` (or the **Set up TypeGraph** button) prepares a project for coding agents: Claude Code, Codex, Cursor, GitHub Copilot, OpenCode or any `AGENTS.md`-based agent. In a terminal it asks which agents you use and what to set up or update (`CLAUDE.md`/`AGENTS.md`/Cursor rules, hooks and MCP, skills, OpenSpec, code ontology), lists the files and asks before writing. In scripts it prints a diff and writes only with `--write`.
 
 - **Instructions and hooks.** A managed block in `CLAUDE.md` or `AGENTS.md`, plus prompt and stop hooks that point the agent at relevant sections and flag docs left stale by code changes.
 - **MCP server.** `tg mcp` gives agents the same commands as tools: locate, section, search, refs, check, Cypher, edges and trace.
-- **Skills.** `tg-docs` keeps `lat.md/` in sync, `tg-graph` queries the section graph, `tg-trace` links requirements to code and tests, `tg-impact` finds what a change touches before and after the edit, and `tg-audit` turns spec drift into an OpenSpec change.
-- **Shared vocabulary.** A small code ontology (Decision, Requirement, Constraint, `implements`, `verifies`, ...) so people and agents use the same names.
+- **Skills in every agent's folder.** `tg-docs` keeps `lat.md/` in sync, `tg-graph` queries the section graph, `tg-trace` links requirements to code and tests, `tg-impact` finds what a change touches before and after the edit, and `tg-audit` turns spec drift into an OpenSpec change.
+- **OpenSpec that annotates its own output.** tg rules in `openspec/config.yaml` make every generated task list annotate code with `implements`, tests with `verifies`, link the lat.md docs and end with `tg check` and `tg trace`.
+- **Shared vocabulary.** A small code ontology (Decision, Requirement, Constraint, `implements`, `verifies`, ...) in `Types/`, with templates in `Templates/`, so **New Typed Note** creates a ready-to-fill Decision or Requirement.
 
 The backlinks panel and graph view in this extension show what the agent sees.
 

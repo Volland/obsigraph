@@ -1,7 +1,11 @@
 import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-const MARKERS = ['lat.md', '.tg'];
+/** Folders that hold a project's docs, in order of preference: an existing `lat.md/` always wins, for lat.md compatibility. */
+export const DOCS_DIRS = ['lat.md', 'tg.md'] as const;
+export type DocsDir = (typeof DOCS_DIRS)[number];
+
+const MARKERS = [...DOCS_DIRS, '.tg'];
 
 function isDir(p: string): boolean {
   try {
@@ -11,7 +15,7 @@ function isDir(p: string): boolean {
   }
 }
 
-/** Nearest ancestor of `start` (inclusive) holding `lat.md/` or `.tg/`, or null. */
+/** Nearest ancestor of `start` (inclusive) holding `lat.md/`, `tg.md/` or `.tg/`, or null. */
 // @tg: implements:: [[openspec:tg-cli#Project root discovery]]
 export function findRoot(start: string): string | null {
   let dir = resolve(start);
@@ -26,4 +30,10 @@ export function findRoot(start: string): string | null {
 // @tg: implements:: [[openspec:tg-cli#Project root discovery]]
 export function hasProject(dir: string): boolean {
   return existsSync(dir) && MARKERS.some((m) => isDir(join(dir, m)));
+}
+
+/** The docs folder `root` uses: `lat.md` when it exists, else `tg.md` when that exists, else null. */
+// @tg: implements:: [[openspec:tg-cli#Docs folder]]
+export function existingDocsDir(root: string): DocsDir | null {
+  return DOCS_DIRS.find((d) => isDir(join(root, d))) ?? null;
 }

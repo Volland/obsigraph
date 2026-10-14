@@ -2,18 +2,18 @@ import { execSync } from 'node:child_process';
 import { buildSearchDocs, checkLattice, LexicalIndex, SOURCE_EXTENSIONS } from '@obsigraph/core';
 import { run, EXIT_OK, register, type Command, type Ctx, type Io } from '../cli.mjs';
 import { Project } from '../project.mjs';
-import { findRoot } from '../root.mjs';
+import { existingDocsDir, findRoot } from '../root.mjs';
 
-const REMINDER = [
+const reminder = (docs: string): string[] => [
   "Before starting work, run `tg search` with one or more queries describing the user's intent.",
   'ALWAYS do this, even when the task seems straightforward — search results may reveal critical design details, protocols, or constraints.',
   'Use `tg section` to read the full content of relevant matches.',
   'Do not read files, write code, or run commands until you have searched.',
   '',
-  'Remember: `lat.md/` must stay in sync with the codebase. If you change code, update the relevant sections in `lat.md/` and run `tg check` before finishing.',
+  `Remember: \`${docs}/\` must stay in sync with the codebase. If you change code, update the relevant sections in \`${docs}/\` and run \`tg check\` before finishing.`,
 ];
 
-/** Minimum code change (lines) before a missing lat.md/ update is flagged, and the ratio below which it is. */
+/** Minimum code change (lines) before a missing docs update is flagged, and the ratio below which it is. */
 const DIFF_THRESHOLD = 5;
 const LATMD_RATIO = 0.05;
 const LATMD_UPPER = 50;
@@ -25,7 +25,7 @@ function capture(io: Io): { io: Io; text: () => string } {
 
 // @tg: implements:: [[openspec:tg-agent-integration#Agent hooks]]
 async function promptSubmit(ctx: Ctx, root: string | null): Promise<string> {
-  const parts = [...REMINDER];
+  const parts = reminder((root && existingDocsDir(root)) || 'lat.md');
   let prompt = '';
   try {
     const input = JSON.parse(ctx.stdin?.() ?? '{}') as { prompt?: string; user_prompt?: string };
@@ -52,7 +52,7 @@ async function promptSubmit(ctx: Ctx, root: string | null): Promise<string> {
   return JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: parts.join('\n') } });
 }
 
-function diffLines(root: string): { code: number; latmd: number } {
+function diffLines(root: string, docs: string): { code: number; latmd: number } {
   let out: string;
   try {
     out = execSync('git diff HEAD --numstat', { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -65,7 +65,7 @@ function diffLines(root: string): { code: number; latmd: number } {
     const [a, d, file] = line.split('\t');
     if (!file) continue;
     const n = (parseInt(a!, 10) || 0) + (parseInt(d!, 10) || 0);
-    if (file.startsWith('lat.md/')) latmd += n;
+    if (file.startsWith(`${docs}/`)) latmd += n;
     else if (SOURCE_EXTENSIONS.has(file.slice(file.lastIndexOf('.')))) code += n;
   }
   return { code, latmd };
@@ -77,19 +77,20 @@ function stopReason(root: string): { reason: string | null; errors: number } {
     index: project.index(),
     annotations: project.annotations().annotations,
     latEntries: project.latEntries(),
-    latDirName: 'lat.md',
-    readLatFile: (rel) => project.text(`lat.md/${rel}`),
+    latDirName: project.latDirName,
+    readLatFile: (rel) => project.text(`${project.latDirName}/${rel}`),
     checkSourceLink: (f, s) => project.checkSourceLink(f, s),
     specs: project.specIndex(),
   });
-  const { code, latmd } = diffLines(root);
+  const docs = project.latDirName;
+  const { code, latmd } = diffLines(root, docs);
   const needsSync = code >= DIFF_THRESHOLD && latmd < LATMD_UPPER && latmd < code * LATMD_RATIO;
   if (!findings.length && !needsSync) return { reason: null, errors: 0 };
-  const sync = latmd === 0 ? `The codebase has changes (${code} lines) but \`lat.md/\` was not updated.` : `The codebase has changes (${code} lines) but \`lat.md/\` may not be fully in sync (${latmd} lines changed).`;
+  const sync = latmd === 0 ? `The codebase has changes (${code} lines) but \`${docs}/\` was not updated.` : `The codebase has changes (${code} lines) but \`${docs}/\` may not be fully in sync (${latmd} lines changed).`;
   let reason: string;
-  if (findings.length && needsSync) reason = `\`tg check\` found errors. ${sync} Before finishing:\n\n1. Update \`lat.md/\` to reflect your code changes — run \`tg search\` to find relevant sections.\n2. Run \`tg check\` until it passes.`;
+  if (findings.length && needsSync) reason = `\`tg check\` found errors. ${sync} Before finishing:\n\n1. Update \`${docs}/\` to reflect your code changes — run \`tg search\` to find relevant sections.\n2. Run \`tg check\` until it passes.`;
   else if (findings.length) reason = `\`tg check\` found ${findings.length} error(s). Run \`tg check\`, fix the errors, and repeat until it passes.`;
-  else reason = `${sync} Verify \`lat.md/\` is in sync — run \`tg search\` to find relevant sections. Run \`tg check\` at the end.`;
+  else reason = `${sync} Verify \`${docs}/\` is in sync — run \`tg search\` to find relevant sections. Run \`tg check\` at the end.`;
   return { reason, errors: findings.length };
 }
 

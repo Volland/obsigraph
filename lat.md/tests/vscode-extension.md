@@ -86,6 +86,10 @@ The files the confirmation lists are exactly those `tg init` plans for a fresh p
 
 A workspace with `lat.md/` and a tg-managed instruction block needs no setup, and one without either does.
 
+### tg.md counts as set up
+
+A workspace with `tg.md/` needs setup until an instruction file holds a tg block, then it does not.
+
 ## Privacy
 
 Guarantees about what the extension never does.

@@ -27,9 +27,11 @@ The extension host owns the graph and posts plain element data; the webview bund
 
 ## Set up TypeGraph
 
-A welcome-view action runs `tg init --write` in a visible terminal after listing the files it will touch and asking to confirm.
+A welcome-view action runs `tg init --write` in a visible terminal when the workspace lacks a docs folder (`lat.md/` or `tg.md/`) or a tg instruction block.
 
-[[packages/vscode/src/setup.ts#runSetup]] prefers a global `tg` and falls back to `npx @typedgraph/cli init --write`. The extension never writes setup files itself, so `tg` stays the single owner of what init does; [[packages/vscode/src/setup.ts#SETUP_FILES]] is checked against the CLI's own plan by a test. The action shows while the workspace has no `lat.md/` or no tg-managed instruction block, and backlinks work either way. This is the funnel: users see value from backlinks first, then one click leads to agent integration.
+It lists the files the defaults would touch and asks to confirm first; the terminal then shows the checklists for coding agents and parts.
+
+[[packages/vscode/src/setup.ts#runSetup]] prefers a global `tg` and falls back to `npx @typedgraph/cli init --write`. The extension never writes setup files itself, so `tg` stays the single owner of what init does; [[packages/vscode/src/setup.ts#SETUP_FILES]] is checked against the CLI's own plan by a test. The action shows while the workspace has no docs folder or no tg-managed instruction block, and backlinks work either way. This is the funnel: users see value from backlinks first, then one click leads to agent integration.
 
 ## Creating notes
 

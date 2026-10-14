@@ -1,4 +1,17 @@
 schema: spec-driven
+rules:
+  proposal:
+    - "tg: Under Impact, list the lat.md sections this change touches; find them with `tg search`, and name the requirements it adds or modifies as `[[openspec:<capability>#<Requirement>]]`."
+  specs:
+    - "tg: Give every requirement a stable, unique name: code, tests and docs cite it as `[[openspec:<capability>#<Requirement>]]`, and a renamed requirement breaks those links."
+    - "tg: Give every scenario a unique name within its requirement; tests cite it as `[[openspec:<capability>#<Requirement>#<Scenario>]]`."
+  design:
+    - "tg: Link the lat.md sections the design builds on with `[[section]]` references, and name decisions so a lat.md Decision section can record them."
+  tasks:
+    - "tg: For each requirement, include a task to annotate the code that implements it with a comment `@tg: implements:: [[openspec:<capability>#<Requirement>]]` on the line above the function, class or file."
+    - "tg: For each scenario, include a task to annotate the test that proves it with a comment `@tg: verifies:: [[openspec:<capability>#<Requirement>#<Scenario>]]` directly above the test call."
+    - "tg: Include a task to update the lat.md section that explains each capability and list the capability in that file's `openspec:` frontmatter."
+    - "tg: End with a task to run `tg check` and `tg trace <capability> --gaps` and close every gap they report."
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.

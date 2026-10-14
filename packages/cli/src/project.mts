@@ -1,18 +1,22 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { LatIndex, lookupSymbol, scanAnnotations, SpecIndex, type Annotation, type Diagnostic } from '@obsigraph/core';
+import { DOCS_DIRS, existingDocsDir, type DocsDir } from './root.mjs';
 import { walkProject } from './walk.mjs';
 
 const MAX_SOURCE_BYTES = 1_500_000;
 
 export class NoLatDir extends Error {
   constructor(root: string) {
-    super(`${join(root, 'lat.md')} does not exist; run tg init`);
+    super(`${root} has no lat.md/ or tg.md/ docs folder; run tg init`);
   }
 }
 
-/** A project on disk: the lattice (`lat.md/`), the source files around it, and lazily scanned annotations. */
+/** A project on disk: the lattice (`lat.md/` or `tg.md/`), the source files around it, and lazily scanned annotations. */
+// @tg: implements:: [[openspec:tg-cli#Docs folder]]
 export class Project {
+  /** Name of the docs folder: `lat.md`, or `tg.md` when there is no `lat.md/`. */
+  readonly latDirName: DocsDir;
   readonly latDir: string;
   private textCache = new Map<string, string | null>();
   private latEntriesCache: string[] | null = null;
@@ -22,8 +26,10 @@ export class Project {
   private specCache: SpecIndex | null | undefined;
 
   constructor(readonly root: string) {
-    this.latDir = join(root, 'lat.md');
-    if (!existsSync(this.latDir) || !statSync(this.latDir).isDirectory()) throw new NoLatDir(root);
+    const dir = existingDocsDir(root);
+    if (!dir) throw new NoLatDir(root);
+    this.latDirName = dir;
+    this.latDir = join(root, dir);
   }
 
   /** Read a project-relative file; null when unreadable. */
@@ -40,13 +46,13 @@ export class Project {
     return this.textCache.get(rel) ?? null;
   }
 
-  /** Files under lat.md/, relative to it, sorted. */
+  /** Files under the docs folder, relative to it, sorted. */
   latEntries(): string[] {
     return (this.latEntriesCache ??= walkProject(this.latDir).sort());
   }
 
   mdFiles(): string[] {
-    return this.latEntries().filter((e) => e.endsWith('.md')).map((e) => `lat.md/${e}`);
+    return this.latEntries().filter((e) => e.endsWith('.md')).map((e) => `${this.latDirName}/${e}`);
   }
 
   index(): LatIndex {
@@ -80,16 +86,19 @@ export class Project {
     return this.specCache;
   }
 
-  /** Source files outside lat.md/: no markdown, no `.claude/`, no nested projects that have their own lat.md. */
+  /** Source files outside the docs folder: no markdown, no `.claude/`, no nested projects that have their own docs folder. */
   sourceFiles(): string[] {
     if (!this.sourceCache) {
       const all = walkProject(this.root);
       const nested = new Set<string>();
       for (const e of all) {
-        const i = e.indexOf('/lat.md/');
-        if (i !== -1) nested.add(e.slice(0, i + 1));
+        for (const d of DOCS_DIRS) {
+          const i = e.indexOf(`/${d}/`);
+          if (i !== -1) nested.add(e.slice(0, i + 1));
+        }
       }
-      this.sourceCache = all.filter((e) => !e.endsWith('.md') && !e.startsWith('lat.md/') && !e.startsWith('.claude/') && ![...nested].some((p) => e.startsWith(p)));
+      // Both docs folders are skipped: an unused `tg.md/` next to `lat.md/` is docs, not code.
+      this.sourceCache = all.filter((e) => !e.endsWith('.md') && !DOCS_DIRS.some((d) => e.startsWith(`${d}/`)) && !e.startsWith('.claude/') && ![...nested].some((p) => e.startsWith(p)));
     }
     return this.sourceCache;
   }

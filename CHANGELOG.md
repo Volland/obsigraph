@@ -2,6 +2,19 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## Unreleased
+
+### Added
+
+- **`tg init` setup for any coding agent.** In a terminal, `tg init` is now a short setup: tick your coding agents (Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, or any `AGENTS.md` agent; the ones it detects, including those OpenSpec set up, come ticked), tick what to set up or update (agent instructions in `CLAUDE.md`/`AGENTS.md`/Cursor rules, Claude Code hooks and MCP, skills, OpenSpec, code ontology), review the files and confirm. `--agent claude,codex`, `--only`, `--skip` and `--yes` give scripts the same choices; outside a terminal nothing is asked and `--write` is still required.
+- **Skills for every agent.** The five tg skills are installed into each selected agent's skills folder (`.claude/skills`, `.agents/skills`, `.cursor/skills`, `.github/skills`, `.opencode/skills`), and OpenSpec skills in those folders get the tg block.
+- **`tg.md/` as the docs folder.** Teams that don't use lat.md can keep their docs in `tg.md/`. An existing `lat.md/` always wins, so lat.md projects are unchanged; otherwise every command, hook and the MCP server read `tg.md/` (root index `tg.md/tg.md`, ids like `tg.md/auth#Auth#Login`). `tg init` asks which folder to create when there is none, or takes `--docs lat.md|tg.md`, and writes instructions and skills that name it. The Obsidian plugin reads `tg.md/` folders in place, and the VS Code extension treats either folder as set up.
+- **OpenSpec annotates what it generates.** When `openspec/config.yaml` exists, `tg init` adds `tg:` rules for proposals, specs, designs and tasks, so every task list OpenSpec writes includes `implements` annotations on code, `verifies` annotations on tests, the capability in the lat.md docs' `openspec:` frontmatter, and a closing `tg check` and `tg trace`. Your own rules and comments are kept, and re-runs replace only the `tg:` rules.
+
+### Changed
+
+- **Code ontology in `Types/` with templates.** `tg init` writes the code ontology's schema to `Types/code-types.md`, the schema folder the Obsidian plugin, VS Code's New Typed Note and `tg validate` read, instead of `ontology/code-types.md`, and adds a template note per type in `Templates/` (Decision, Requirement, Scenario, Constraint, Concept, Change). An old `ontology/code-types.md` is left alone with a note.
+
 ## 0.15.1 — 2026-10-13
 
 ### Changed
