@@ -7,6 +7,10 @@ Typed backlinks and a graph view for the markdown and code in your workspace, wi
 - **Backlinks panel.** Open a note and see every note that links to it, grouped by edge type (`knows::`, `blocks::`, ...), with the sign (`-distrusts::` shows as a minus) and edge properties. Click to jump to the line.
 - **Code and spec together.** Open a source file and see the `lat.md` sections its `// @lat: [[...]]` annotations point at. Open a section and see the source files that point back at it.
 - **Graph view.** `TypeGraph: Open Graph` shows the active file's neighborhood; right-click or long-press a node to expand it, double-click to open it.
+- **Whole project.** `TypeGraph: Open Full Graph` (or the *Whole project* toggle at the top of the graph panel) draws every node and edge of the index. Past `typegraph.fullGraphLimit` nodes it keeps the most connected ones and says how many it left out. *Active file* switches back.
+- **Export.** `TypeGraph: Export Graph as HTML` saves one self-contained page (pan, zoom, click a node for its properties, same layout as the panel, nothing loaded from the network). `TypeGraph: Export Graph as PDF` saves a one-page vector PDF: sharp at any zoom, labels you can select and search, black on white whatever your theme, with the scope and the node and edge counts in its caption and metadata. Both are also buttons in the panel toolbar. An export writes only the file you choose in the save dialog, and the HTML contains the labels and properties of every node it draws, so check it before sharing. Labels outside Latin-1 (for example Cyrillic) show as `?` in the PDF; the HTML keeps them.
+
+The Backlinks view title bar has buttons for Open Graph, Open Full Graph, Export HTML and Export PDF.
 - **New typed notes.** `TypeGraph: New Typed Note` creates a note from a type in your schema folder with its template and generated ids (UUID, time-ordered UUID, timestamp or Luhmann). `New Child Note` and `New Sibling Note` branch a Luhmann id from the active note. Nothing is written until you run a command, and nothing is overwritten.
 - **Set up TypeGraph.** For projects without `lat.md/` or `tg` agent setup, one button runs `tg init` (a global `tg` if you have one, otherwise `npx @typedgraph/cli init`) in a visible terminal, after listing the files it will create or change and asking you to confirm.
 
@@ -39,6 +43,7 @@ The backlinks panel and graph view in this extension show what the agent sees.
 | `typegraph.schemaFolder` | `Types/` | Folder whose notes declare types, used by the New Typed Note commands. |
 | `typegraph.roots` | `["."]` | Folders, relative to the workspace folder, that form the graph. |
 | `typegraph.ignore` | `["node_modules"]` | Folder names skipped at any depth. Dot folders are always skipped. |
+| `typegraph.fullGraphLimit` | `2000` | Most nodes the Whole project graph draws. |
 
 ## Privacy
 

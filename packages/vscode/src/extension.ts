@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import * as vscode from 'vscode';
 import { panelRows, type ActiveFile, type BacklinkGroup, type BacklinkItem } from './backlinks';
-import { GraphSession } from './graph-session';
+import { buildHtml, exportFileName } from './export';
+import { GraphSession, type GraphScope, type SessionView } from './graph-session';
+import { buildGraphPdf, type Scene } from './pdf';
 import { BAD_TITLE, luhmannParentOf, planWorkspaceNote, typesIn } from './new-note';
 import { needsSetup, runSetup } from './setup';
 import { WorkspaceIndex } from './workspace-index';
@@ -16,6 +19,9 @@ type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: Back
 // @tg: implements:: [[openspec:vscode-extension#Index the workspace in process]]
 // @tg: implements:: [[openspec:vscode-extension#No telemetry]]
 // @tg: implements:: [[openspec:vscode-extension#Set up TypeGraph]]
+// @tg: implements:: [[openspec:vscode-extension#Whole project graph]]
+// @tg: implements:: [[openspec:graph-export#Export commands from the editor and the panel]]
+// @tg: implements:: [[openspec:graph-export#Export the graph as standalone HTML]]
 // @tg: implements:: [[openspec:vscode-extension#Typed backlinks for notes]]
 export function activate(context: vscode.ExtensionContext): void {
   const folder = vscode.workspace.workspaceFolders?.[0];
@@ -23,7 +29,10 @@ export function activate(context: vscode.ExtensionContext): void {
   let index: WorkspaceIndex | null = null;
   let loading: Promise<void> | null = null;
   let panel: vscode.WebviewPanel | null = null;
-  const session = new GraphSession(() => index!.graph);
+  let lastView: SessionView | null = null;
+  let readyWaiters: (() => void)[] = [];
+  const fullGraphLimit = () => Math.max(10, vscode.workspace.getConfiguration('typegraph').get<number>('fullGraphLimit', 2000));
+  const session = new GraphSession(() => index!.graph, fullGraphLimit);
 
   const settings = () => {
     const c = vscode.workspace.getConfiguration('typegraph');
@@ -116,29 +125,78 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const postGraph = () => {
     if (!panel || !index) return;
-    void panel.webview.postMessage({ type: 'elements', elements: session.elements(activePath()) });
+    lastView = session.view(activePath());
+    void panel.webview.postMessage({ type: 'elements', ...lastView });
   };
 
-  const openGraph = async () => {
-    if (!folder) return;
+  /** Open the graph panel, or reveal it; a given scope replaces the panel's current one. */
+  const openGraph = async (scope?: GraphScope) => {
+    if (!folder) return void vscode.window.showInformationMessage('Open a folder to see the graph.');
     await ensureLoaded();
+    if (scope) session.setScope(scope);
     if (panel) {
       panel.reveal();
       return postGraph();
     }
     const dist = vscode.Uri.joinPath(context.extensionUri, 'dist');
-    panel = vscode.window.createWebviewPanel('typegraph.graph', 'TypeGraph', vscode.ViewColumn.Beside, { enableScripts: true, localResourceRoots: [dist] });
+    panel = vscode.window.createWebviewPanel('typegraph.graph', 'TypeGraph', vscode.ViewColumn.Beside, { enableScripts: true, localResourceRoots: [dist], retainContextWhenHidden: true });
     const script = panel.webview.asWebviewUri(vscode.Uri.joinPath(dist, 'webview.js'));
     const nonce = Math.random().toString(36).slice(2);
-    panel.webview.html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"></head><body style="margin:0"><div id="graph" style="height:100vh"></div><script nonce="${nonce}" src="${script}"></script></body></html>`;
-    panel.webview.onDidReceiveMessage((m: { type: string; id?: string; path?: string }) => {
-      if (m.type === 'ready') postGraph();
+    panel.webview.html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"><style>#bar{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;box-sizing:border-box;font:12px var(--vscode-font-family);color:var(--vscode-foreground)}#bar button{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);border:0;padding:3px 9px;border-radius:2px;cursor:pointer}#bar button.on{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}#bar .spacer{flex:1}#bar .note{margin-left:8px;color:var(--vscode-descriptionForeground)}</style></head><body style="margin:0"><div id="bar"></div><div id="graph"></div><script nonce="${nonce}" src="${script}"></script></body></html>`;
+    panel.webview.onDidReceiveMessage((m: { type: string; id?: string; path?: string; scope?: GraphScope; format?: 'html' | 'pdf'; scene?: Scene; positions?: Record<string, { x: number; y: number }>; theme?: { text: string; muted: string; background: string } }) => {
+      if (m.type === 'ready') {
+        postGraph();
+        const waiting = readyWaiters;
+        readyWaiters = [];
+        for (const w of waiting) w();
+      } else if (m.type === 'scope' && (m.scope === 'file' || m.scope === 'project')) {
+        session.setScope(m.scope);
+        postGraph();
+      } else if (m.type === 'export' && m.format) void writeExport(m.format, m);
       else if (m.type === 'expand' && m.id) {
         session.expand(m.id);
         postGraph();
       } else if (m.type === 'open' && m.path) void vscode.commands.executeCommand('vscode.open', vscode.Uri.joinPath(folder.uri, m.path));
     });
     panel.onDidDispose(() => (panel = null));
+  };
+
+  /** Ask where to save, then write only that file. */
+  const save = async (format: 'html' | 'pdf', content: string | Uint8Array) => {
+    if (!folder) return;
+    const name = exportFileName(lastView?.scope ?? 'file', format, new Date());
+    const target = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.joinPath(folder.uri, name), filters: format === 'html' ? { 'HTML page': ['html'] } : { PDF: ['pdf'] }, title: `Export graph as ${format.toUpperCase()}` });
+    if (!target) return;
+    await vscode.workspace.fs.writeFile(target, typeof content === 'string' ? Buffer.from(content, 'utf8') : content);
+    void vscode.window.showInformationMessage(`Graph exported to ${vscode.workspace.asRelativePath(target)}.`);
+  };
+
+  /** Build the file from what the webview captured and the view the host last sent. */
+  const writeExport = async (format: 'html' | 'pdf', m: { scene?: Scene; positions?: Record<string, { x: number; y: number }>; theme?: { text: string; muted: string; background: string } }) => {
+    const view = lastView;
+    if (!view) return;
+    try {
+      const meta = { scope: view.scope, omitted: view.omitted, limit: view.limit, date: new Date() };
+      if (format === 'html') {
+        const viewerScript = readFileSync(vscode.Uri.joinPath(context.extensionUri, 'dist', 'viewer.js').fsPath, 'utf8');
+        await save('html', buildHtml({ ...meta, elements: view.elements, positions: m.positions ?? {}, theme: m.theme ?? { text: '#1f1f1f', muted: '#6b6b6b', background: '#ffffff' }, viewerScript }));
+      } else if (m.scene) await save('pdf', buildGraphPdf(m.scene, meta));
+    } catch (e) {
+      void vscode.window.showErrorMessage(`Export failed: ${(e as Error).message}`);
+    }
+  };
+
+  /** Run an export from a command or title-bar button: open the panel if needed, wait for its first draw, then capture. */
+  const exportGraph = async (format: 'html' | 'pdf') => {
+    if (!folder) return void vscode.window.showInformationMessage('Open a folder to export the graph.');
+    const wasOpen = !!panel;
+    await openGraph();
+    if (!panel) return;
+    if (!wasOpen) {
+      const ready = await Promise.race([new Promise<boolean>((r) => readyWaiters.push(() => r(true))), new Promise<boolean>((r) => setTimeout(() => r(false), 10000))]);
+      if (!ready) return void vscode.window.showErrorMessage('The graph panel did not load; nothing was exported.');
+    }
+    void panel.webview.postMessage({ type: 'capture', format });
   };
 
   const setup = async () => {
@@ -223,7 +281,10 @@ export function activate(context: vscode.ExtensionContext): void {
       postGraph();
     }),
     vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('typegraph') && reload()),
-    vscode.commands.registerCommand('typegraph.openGraph', openGraph),
+    vscode.commands.registerCommand('typegraph.openGraph', () => openGraph('file')),
+    vscode.commands.registerCommand('typegraph.openFullGraph', () => openGraph('project')),
+    vscode.commands.registerCommand('typegraph.exportGraphHtml', () => exportGraph('html')),
+    vscode.commands.registerCommand('typegraph.exportGraphPdf', () => exportGraph('pdf')),
     vscode.commands.registerCommand('typegraph.setup', setup),
     vscode.commands.registerCommand('typegraph.refresh', reload),
     vscode.commands.registerCommand('typegraph.newNote', newNote),

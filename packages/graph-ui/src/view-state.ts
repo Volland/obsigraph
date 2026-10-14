@@ -19,6 +19,37 @@ export function neighborhood(graph: Graph, id: string): GraphElements {
   return { nodes: [...nodes.values()], edges };
 }
 
+export interface ProjectElements {
+  elements: GraphElements;
+  /** Nodes in the graph, whether drawn or not. */
+  total: number;
+  /** Nodes left out by the limit. */
+  omitted: number;
+}
+
+/**
+ * Every node and edge of the graph. Over `limit` nodes it keeps the most connected ones
+ * (ties by id, so the choice is stable) and only the edges between them.
+ */
+// @lat: [[vscode#Whole project graph]]
+// @tg: implements:: [[openspec:vscode-extension#Whole project graph]]
+export function projectElements(graph: Graph, limit: number): ProjectElements {
+  const all = [...graph.nodes()];
+  let kept = all;
+  if (all.length > limit) {
+    const degree = new Map(all.map((n) => [n.id, 0]));
+    for (const e of graph.edges()) {
+      if (degree.has(e.source)) degree.set(e.source, degree.get(e.source)! + 1);
+      if (degree.has(e.target)) degree.set(e.target, degree.get(e.target)! + 1);
+    }
+    kept = [...all].sort((a, b) => degree.get(b.id)! - degree.get(a.id)! || (a.id < b.id ? -1 : 1)).slice(0, Math.max(0, limit));
+  }
+  const ids = new Set(kept.map((n) => n.id));
+  const edges: EdgeElement[] = [];
+  for (const e of graph.edges()) if (ids.has(e.source) && ids.has(e.target)) edges.push(edgeElement(e));
+  return { elements: { nodes: kept.map(nodeElement), edges }, total: all.length, omitted: all.length - kept.length };
+}
+
 /** An edge note is drawn as the edge it declares, between its endpoints. */
 // @lat: [[edge-syntax#Edge notes]]
 // @tg: implements:: [[openspec:graph-ui#Edge note neighborhood]]

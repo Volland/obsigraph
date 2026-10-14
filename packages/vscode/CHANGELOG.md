@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0
+
+- **Whole project graph.** The new command `TypeGraph: Open Full Graph`, a button in the Backlinks title bar and a *Whole project* toggle in the graph panel draw every node and edge. The setting `typegraph.fullGraphLimit` (default 2000) caps it, keeping the most connected nodes and saying how many were left out.
+- **Export as HTML.** `TypeGraph: Export Graph as HTML` saves a single self-contained page with the panel's layout, pan, zoom and a details panel; it loads nothing from the network.
+- **Export as PDF.** `TypeGraph: Export Graph as PDF` saves a one-page vector PDF with selectable labels, a white background, and the scope and node and edge counts in its caption and metadata.
+- The graph panel has a toolbar with the scope toggle and Export HTML and Export PDF buttons.
+
 ## 0.9.2
 
 - **Set up TypeGraph** lists the new `tg-migrate` skill among the files `tg init` installs. With `tg` 0.18 or later, `tg migrate` turns a lat.md project into a typed graph: typed files, typed links with metadata, and `@tg:` code edges.

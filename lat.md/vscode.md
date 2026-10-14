@@ -1,5 +1,5 @@
 ---
-openspec: [vscode-extension]
+openspec: [vscode-extension, graph-export]
 ---
 # VS Code Extension
 
@@ -21,9 +21,21 @@ The Backlinks view lists, for the active file, what points at it, grouped by edg
 
 ## Graph webview
 
-A webview renders the active file's neighborhood with the shared renderer, using VS Code theme colors.
+A webview renders the active file's neighborhood, or the whole project, with the shared renderer, using VS Code theme colors.
 
 The extension host owns the graph and posts plain element data; the webview bundle runs `graph-ui`, because Cytoscape needs a DOM. [[packages/vscode/src/graph-session.ts#GraphSession]] merges the active file's neighborhood with the neighborhoods of expanded nodes, so expansions survive refreshes of the same file and vanish when their nodes do. Switching the active file clears them, as Obsidian does; when no text editor is active, for example while the webview has focus, the session keeps the last file and its expansions. Nodes use the built-in type styles only: the webview passes no schema-note or settings styles to the styler. Expand is right-click or long-press, open is double-click, the same as the Obsidian leaf.
+
+## Whole project graph
+
+The graph panel can draw every node and edge of the index instead of the active file's neighborhood, so a project's shape is visible at once.
+
+[[packages/graph-ui/src/view-state.ts#projectElements]] returns all nodes and edges, or, past `typegraph.fullGraphLimit` (default 2000), the most connected nodes (ties broken by id, so the choice is stable) with only the edges among them and a count of what was left out. [[packages/vscode/src/graph-session.ts#GraphSession]] has a scope: `file` (the default, and what `typegraph.openGraph` selects) or `project`, which ignores the active file and expansions and refreshes with file changes like the neighborhood does. `typegraph.openFullGraph` selects `project`; a toolbar at the top of the webview (Active file, Whole project, a size note that says when nodes were left out, and the export buttons) switches it by posting a `scope` message. The panel keeps its context while hidden, so layout survives tab switches.
+
+## Graph export
+
+The graph in the panel can be saved as one standalone HTML page or as a one-page vector PDF, from commands, title-bar buttons or the panel toolbar.
+
+Commands and buttons all take one path: the host posts `capture` to the webview, which reads what the file needs from Cytoscape and answers with an `export` message; the host builds the file and writes only the path chosen in a save dialog, so the extension still writes nowhere else. With no panel open the command opens one (active-file scope) and waits for it to load, for up to ten seconds. [[packages/vscode/src/export.ts#buildHtml]] inlines the data (with `<` escaped, so a note title cannot close the script), the node positions, the theme colors and the viewer bundle `dist/viewer.js` (built from `src/webview/viewer.ts`, the same renderer plus a details panel) into one page whose policy allows no network, so the page shows the panel's layout without running a new one. [[packages/vscode/src/pdf.ts#buildGraphPdf]] writes PDF 1.4 by hand from a scene read from the renderer (positions, size, shape, color, labels): paths, arrowheads and Helvetica text, so it stays sharp and searchable, with the scope, node and edge counts and any nodes left out in a caption and in the Subject metadata. The page is the drawing's bounding box, scaled down only past the PDF limit of 14400 units. It is always black on white, since colors come from the styler and not the theme. Characters outside Latin-1 are drawn as `?` in the PDF; the HTML keeps them.
 
 ## Set up TypeGraph
 

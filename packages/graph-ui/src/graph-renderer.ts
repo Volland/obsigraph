@@ -14,6 +14,8 @@ export interface RendererOptions {
   onSelect?: (sel: { kind: 'node' | 'edge'; id: string } | null) => void;
   /** Called when a node's expand action fires (right-click / long-press). */
   onExpand?: (id: string) => void;
+  /** Saved node positions. When every node has one the layout is skipped and they are used as given. */
+  positions?: Record<string, { x: number; y: number }>;
 }
 
 /**
@@ -122,6 +124,11 @@ export class GraphRenderer {
 
   private layout(eles: cytoscape.Collection, animate = false): void {
     if (eles.empty()) return;
+    const saved = this.opts.positions;
+    if (saved && eles.nodes().toArray().every((n) => !!saved[n.id()])) {
+      eles.layout({ name: 'preset', positions: (n: cytoscape.NodeSingular) => saved[n.id()], padding: 24, fit: true } as cytoscape.LayoutOptions).run();
+      return;
+    }
     const options: cytoscape.CoseLayoutOptions = { name: 'cose', animate, padding: 24, nodeRepulsion: () => 9000, idealEdgeLength: () => 90 };
     eles.layout(options).run();
   }

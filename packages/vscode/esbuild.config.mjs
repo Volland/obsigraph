@@ -7,3 +7,5 @@ const common = { bundle: true, sourcemap: false, logLevel: 'info', minify: !watc
 await build({ ...common, entryPoints: ['src/extension.ts'], platform: 'node', format: 'cjs', target: 'node20', outfile: 'dist/extension.cjs', external: ['vscode'] });
 // Webview: the shared Cytoscape renderer in a browser context.
 await build({ ...common, entryPoints: ['src/webview/main.ts'], platform: 'browser', format: 'iife', target: 'es2022', outfile: 'dist/webview.js' });
+// Standalone viewer inlined into exported HTML pages: the same renderer, with its data embedded in the page.
+await build({ ...common, entryPoints: ['src/webview/viewer.ts'], platform: 'browser', format: 'iife', target: 'es2022', outfile: 'dist/viewer.js' });

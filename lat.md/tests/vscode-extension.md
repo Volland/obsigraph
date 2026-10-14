@@ -66,6 +66,50 @@ Expanding a node adds its neighborhood to the active file's, and a later refresh
 
 Switching the active file clears the expanded nodes, while losing the active editor keeps the last file and its expansions.
 
+## Whole project graph
+
+The graph panel's whole-project scope, tested through the session without VS Code.
+
+### Full graph and toggle
+
+The project scope returns every node and edge whatever the active file is, and switching back to the file scope returns the active file's neighborhood.
+
+### Limit keeps the most connected
+
+Over the limit the scope keeps the most connected nodes, only the edges among them, and reports how many nodes it left out, the same on every call.
+
+### Full graph stays current
+
+Saving a note with a new typed edge changes the project scope's edges without reopening it.
+
+## Graph export
+
+The HTML and PDF builders and the manifest entries that expose them, tested as pure functions.
+
+### Standalone HTML
+
+The page loads nothing from the network, carries the panel's node positions, and a note title containing a closing script tag cannot break out of the embedded data.
+
+### Inspect a node
+
+The viewer lists a selected node's labels and properties using text content only, never HTML strings.
+
+### Valid vector PDF
+
+The PDF has a header, trailer and cross-reference offsets that match its objects, draws paths and text with no embedded image, and its labels, including escaped parentheses and Latin-1 letters, appear as text.
+
+### PDF size metadata
+
+The caption and the Subject metadata state the scope and the node and edge counts, and a capped graph also says how many nodes were left out and the limit.
+
+### PDF page limit
+
+The page is white with black labels from element colors alone, and a graph wider than the PDF page limit is scaled down to fit it.
+
+### Commands and buttons
+
+The manifest contributes the full-graph and both export commands, a title-bar button for each, the limit setting, and ships the viewer bundle in the package.
+
 ## Set up TypeGraph
 
 The funnel to `tg init`.

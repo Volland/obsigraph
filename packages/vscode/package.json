@@ -2,7 +2,7 @@
   "name": "typegraph-vscode",
   "displayName": "TypeGraph",
   "description": "Typed backlinks and a graph view for your markdown and code, with no Obsidian required.",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
   "publisher": "pavlyshyn",
   "license": "MIT",
@@ -34,6 +34,12 @@
           "type": "string",
           "default": "Types/",
           "markdownDescription": "Folder, relative to the workspace folder, whose notes declare types (TGS). Used by the **New Typed Note** commands."
+        },
+        "typegraph.fullGraphLimit": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 10,
+          "markdownDescription": "Most nodes the **Whole project** graph draws. Over the limit it keeps the most connected nodes and says how many it left out."
         }
       }
     },
@@ -54,6 +60,9 @@
     ],
     "commands": [
       { "command": "typegraph.openGraph", "title": "TypeGraph: Open Graph", "icon": "$(graph)" },
+      { "command": "typegraph.openFullGraph", "title": "TypeGraph: Open Full Graph", "icon": "$(type-hierarchy)" },
+      { "command": "typegraph.exportGraphHtml", "title": "TypeGraph: Export Graph as HTML", "icon": "$(file-code)" },
+      { "command": "typegraph.exportGraphPdf", "title": "TypeGraph: Export Graph as PDF", "icon": "$(file-pdf)" },
       { "command": "typegraph.setup", "title": "TypeGraph: Set Up TypeGraph" },
       { "command": "typegraph.refresh", "title": "TypeGraph: Refresh Index", "icon": "$(refresh)" },
       { "command": "typegraph.newNote", "title": "TypeGraph: New Typed Note", "icon": "$(new-file)" },
@@ -62,9 +71,12 @@
     ],
     "menus": {
       "view/title": [
-        { "command": "typegraph.openGraph", "when": "view == typegraph.backlinks", "group": "navigation" },
-        { "command": "typegraph.newNote", "when": "view == typegraph.backlinks", "group": "navigation" },
-        { "command": "typegraph.refresh", "when": "view == typegraph.backlinks", "group": "navigation" }
+        { "command": "typegraph.openGraph", "when": "view == typegraph.backlinks", "group": "navigation@1" },
+        { "command": "typegraph.openFullGraph", "when": "view == typegraph.backlinks", "group": "navigation@2" },
+        { "command": "typegraph.exportGraphHtml", "when": "view == typegraph.backlinks", "group": "navigation@3" },
+        { "command": "typegraph.exportGraphPdf", "when": "view == typegraph.backlinks", "group": "navigation@4" },
+        { "command": "typegraph.newNote", "when": "view == typegraph.backlinks", "group": "navigation@5" },
+        { "command": "typegraph.refresh", "when": "view == typegraph.backlinks", "group": "navigation@6" }
       ],
       "explorer/context": [
         { "command": "typegraph.newNote", "when": "explorerResourceIsFolder", "group": "2_workspace@9" }
