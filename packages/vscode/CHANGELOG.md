@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- The README describes the current `tg init`: it sets up Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, Kilo Code, Pi, Oh My Pi or any `AGENTS.md` agent, writes the files, and prints only the diff with `--dry-run`.
+
 ## 0.9.0
 
 - **Set up TypeGraph** now opens the new `tg init` setup in the terminal: pick your coding agents (Claude Code, Codex, Cursor, GitHub Copilot, OpenCode or any `AGENTS.md` agent), what to set up or update, and whether docs live in `lat.md/` or `tg.md/`. The confirmation lists the default files, including the code ontology's `Types/code-types.md` and its templates in `Templates/`.
