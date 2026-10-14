@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { OllamaProvider, OpenAIProvider, type EmbeddingProvider } from '../../sidecar/src/vectors/provider.mjs';
 import type { SearchDoc } from '@obsigraph/core';
+import { TG_GITIGNORE } from './config.mjs';
 
 export interface EmbedConfig {
   provider: EmbeddingProvider;
@@ -109,7 +110,7 @@ export class VectorCache {
     const dimension = vectors[0]?.length ?? 0;
     if (dimension && (missing.length || !cached || Object.keys(cached.meta.items).length !== unique.length)) {
       mkdirSync(this.dir, { recursive: true });
-      if (!existsSync(join(this.dir, '.gitignore'))) writeFileSync(join(this.dir, '.gitignore'), '*\n');
+      if (!existsSync(join(this.dir, '.gitignore'))) writeFileSync(join(this.dir, '.gitignore'), TG_GITIGNORE);
       const floats = new Float32Array(unique.length * dimension);
       const items: Record<string, number> = {};
       unique.forEach((k, i) => {

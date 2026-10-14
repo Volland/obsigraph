@@ -1,5 +1,6 @@
 import { checkLattice, type CheckScope } from '@obsigraph/core';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command } from '../cli.mjs';
+import { checkNotes } from '../notes.mjs';
 import { countByExt, NoLatDir, Project } from '../project.mjs';
 
 const SCOPES: Record<string, CheckScope> = { md: 'md', 'code-refs': 'code-refs', index: 'index', sections: 'sections' };
@@ -30,7 +31,7 @@ export const check: Command = {
     const scopes = scope ? [SCOPES[scope]!] : undefined;
     const needsCode = !scope || scope === 'code-refs';
     const annotations = needsCode ? project.annotations() : { annotations: [], diagnostics: [] };
-    const findings = checkLattice(
+    const lattice = checkLattice(
       {
         index: project.index(),
         annotations: annotations.annotations,
@@ -42,9 +43,12 @@ export const check: Command = {
       },
       scopes,
     );
-    const files = countByExt([...project.mdFiles(), ...(needsCode ? project.sourceFiles() : [])]);
+    // AsciiDoc notes and `.adoc` files in the docs folder are checked with the links.
+    const notes = !scope || scope === 'md' ? checkNotes(project) : { findings: [], warnings: [] };
+    const findings = [...lattice, ...notes.findings];
+    const files = countByExt([...project.mdFiles(), ...project.noteFiles(), ...(needsCode ? project.sourceFiles() : [])]);
     const elapsed = Date.now() - started;
-    const warnings = annotations.diagnostics;
+    const warnings = [...annotations.diagnostics, ...notes.warnings];
     if (ctx.json) {
       ctx.out(`${JSON.stringify({ ok: findings.length === 0, findings, warnings, files, elapsedMs: elapsed }, null, 2)}\n`);
       return findings.length ? EXIT_FINDINGS : EXIT_OK;
@@ -55,7 +59,9 @@ export const check: Command = {
       const [first, ...rest] = f.message.split('\n');
       lines.push('', `- ${f.file}${f.line ? `:${f.line}` : ''}: ${first}`, ...rest.map((l) => `  ${l}`));
     }
-    if (ctx.verbose) for (const w of warnings) lines.push('', `warning ${w.path ?? ''}:${w.line}: ${w.message}`);
+    // Note warnings tell the author what will not become an edge, so they always print; annotation warnings need --verbose.
+    for (const w of notes.warnings) lines.push('', `warning ${w.path ?? ''}${w.line > 0 ? `:${w.line + 1}` : ''}: ${w.message}`);
+    if (ctx.verbose) for (const w of annotations.diagnostics) lines.push('', `warning ${w.path ?? ''}:${w.line}: ${w.message}`);
     if (findings.length) {
       lines.push('', `${findings.length} error${findings.length === 1 ? '' : 's'} found`);
       ctx.out(`${lines.join('\n')}\n`);

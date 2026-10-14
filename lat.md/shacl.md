@@ -10,9 +10,9 @@ The schema format is described in [[graph-model#Schema notes]]; this file covers
 
 ## Typed Graph Schema
 
-TGS 0.2 is the current schema-note YAML format, published as an open specification so other tools can read and write the same ontologies without this project's code.
+TGS 0.3 is the current schema-note YAML format, published as an open specification so other tools can read and write the same ontologies without this project's code.
 
-Sources live in `spec/tgs/`: `SPEC.md`, a JSON Schema `tgs.schema.json` for the frontmatter keys, `namespace.json` (the `tgs:` annotation terms) and `examples/` conformance cases, each a `vault/` with an `expected.json` of declarations and diagnostics. `site/build-spec.mjs` renders them to `site/spec/tgs/v0.2/` and `site/ns/tgs/`, which GitHub Pages serves at `https://typedgraph.org/spec/tgs/v0.2/`, with `spec/tgs/` redirecting to the latest version. TGS 0.1 is archived unchanged in `spec/tgs/archive/v0.1/` and still rendered to `site/spec/tgs/v0.1/`; a note without a `tgs` version key is read as 0.1. Published versions never change; minor versions only add optional keys, and a reader reports keys it does not know. Tests run every example through the reader and the JSON Schema, see [[tests/tgs-spec]].
+Sources live in `spec/tgs/`: `SPEC.md`, a JSON Schema `tgs.schema.json` for the frontmatter keys, `namespace.json` (the `tgs:` annotation terms) and `examples/` conformance cases, each a `vault/` with an `expected.json` of declarations and diagnostics. `site/build-spec.mjs` renders them to `site/spec/tgs/v0.3/` and `site/ns/tgs/`, which GitHub Pages serves at `https://typedgraph.org/spec/tgs/v0.3/`, with `spec/tgs/` redirecting to the latest version. TGS 0.1 and 0.2 are archived unchanged in `spec/tgs/archive/` and still rendered to `site/spec/tgs/v0.1/` and `v0.2/`; TGS 0.3 defines a note as a Markdown or AsciiDoc file ([[asciidoc]]) and adds no schema key; a note without a `tgs` version key is read as 0.1. Published versions never change; minor versions only add optional keys, and a reader reports keys it does not know. Tests run every example through the reader and the JSON Schema, see [[tests/tgs-spec]].
 
 ## Export
 

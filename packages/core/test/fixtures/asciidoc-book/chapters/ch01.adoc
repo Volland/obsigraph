@@ -1,0 +1,54 @@
+////
+type: Chapter
+status: draft
+////
+= Chapter 1. Metagraphs
+:tg-status: final
+:tg-pages: 12
+
+Intro paragraph with xref:ch02.adoc[the next chapter] and <<hyper-def,hypergraph definition>>.
+
+// @tg: defines:: [[Metagraph]]
+[#metagraphs]
+== Metagraphs
+
+A metagraph generalizes a hypergraph.
+
+=== Definition
+
+// @tg: refines:: [[Hypergraph]] {strength: strong}
+The definition lives here.
+
+[[hyper-def]]
+== Hypergraphs
+
+Text before the comment.
+
+// @tg: extends:: [[Graph]]
+
+Text after the comment.
+
+////
+@tg
+extends:: [[Hypergraph]]
+-contrasts_with:: [[Property graph]]
+////
+
+== Typed Links
+
+[discrete]
+== Aside
+
+Not a section.
+
+----
+== Fake heading
+// @tg: defines:: [[Nothing]]
+include::never.adoc[]
+----
+
+====
+== Also not a section
+====
+
+include::../src/graph.ts[tags=upsert]

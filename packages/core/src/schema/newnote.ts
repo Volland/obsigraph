@@ -1,6 +1,8 @@
+import { noteFormat } from '../asciidoc/parse.js';
 import type { Graph } from '../graph/graph.js';
+import { renderAdocNote } from './adocnote.js';
 import { dateParts, generateId, type IdRule, type RandomBytes } from './ids.js';
-import { chooseTemplate, renderNoteFromType, templatePath, type SchemaSet, type TypeSchema } from './schema.js';
+import { chooseTemplate, newNoteProperties, renderNoteFromType, templatePath, type SchemaSet, type TypeSchema } from './schema.js';
 
 /** The note a new Luhmann-style note attaches to. */
 export interface LuhmannParent {
@@ -76,6 +78,8 @@ export interface NewNoteRequest {
   title: string;
   /** Body of the type's linked template note, or null when it has none or it is missing. */
   linkedBody: string | null;
+  /** Vault path of the linked template note; its extension decides the format of the new note (`.adoc` makes an AsciiDoc note). */
+  templatePath?: string | null;
   /** Body of the type's schema note. */
   schemaBody: string;
   graph: Graph;
@@ -88,7 +92,7 @@ export interface NewNoteRequest {
 }
 
 export interface NewNotePlan {
-  /** File name without folder, ending in `.md`. */
+  /** File name without folder, ending in `.md`, or `.adoc` when the type's template is an AsciiDoc file. */
   fileName: string;
   content: string;
   /** Generated ids by property. */
@@ -130,8 +134,12 @@ export function planNewNote(req: NewNoteRequest): NewNotePlan {
     vars['parent-link'] = `[[${req.parent.title}]]`;
     vars['parent-id'] = req.parent.id;
   }
-  const content = renderNoteFromType(schema, expandTokens(body, vars), { placeholders: generated, ids });
-  return { fileName: `${filenameId ? `${filenameId} ` : ''}${title}.md`, content, ids };
+  const adoc = req.linkedBody !== null && !!req.templatePath && noteFormat(req.templatePath) === 'adoc';
+  const expanded = expandTokens(body, vars);
+  const content = adoc
+    ? renderAdocNote(newNoteProperties(schema, { placeholders: generated, ids }), expanded)
+    : renderNoteFromType(schema, expanded, { placeholders: generated, ids });
+  return { fileName: `${filenameId ? `${filenameId} ` : ''}${title}.${adoc ? 'adoc' : 'md'}`, content, ids };
 }
 
 /** The vault path of a type's linked template note, resolved the way the host resolves links. */

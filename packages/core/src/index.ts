@@ -3,7 +3,7 @@ export type { ParsedEdge, Diagnostic, ParseOptions, ParseResult, Sign } from './
 export { parseProps, PropsSyntaxError } from './edges/props.js';
 export type { Props, PropValue } from './edges/props.js';
 export { Graph, isEdgeNote, labelsOf, titleOf } from './graph/graph.js';
-export type { GraphNode, GraphEdge, NoteInput, LinkResolver, SubpathResolver } from './graph/graph.js';
+export type { GraphNode, GraphEdge, GraphOptions, NoteInput, LinkResolver, SubpathResolver } from './graph/graph.js';
 export { BuiltinEngine } from './cypher/engine.js';
 export type { QueryEngine } from './cypher/engine.js';
 export { AGGREGATE_FUNCTIONS, BINARY_OPERATORS, CLAUSES, containsAgg, FUNCTIONS, parseQuery, PATTERN_FEATURES, queryConstructs, UNARY_OPERATORS } from './cypher/parser.js';
@@ -26,6 +26,7 @@ export {
   iriOf,
   isSchemaPath,
   mergeSchemas,
+  newNoteProperties,
   normalizeFolder,
   PROPERTY_KINDS,
   readSchema,
@@ -88,3 +89,4 @@ export * from './okf.js';
 export * from './openspec.js';
 export { severityOf, toFindings, validateVault, vaultDiagnostics } from './validate/validate.js';
 export type { DiagnosticSources, Severity, ValidateOptions, VaultFinding } from './validate/validate.js';
+export * from './asciidoc/index.js';

@@ -1,4 +1,5 @@
 import { flattenSections, parseMarkdown, type ParsedMarkdown, type Section, type WikiRef } from './markdown.js';
+import { adocSections } from './adoc.js';
 import { extOf, isSourceTarget, splitTarget, toPosix } from './links.js';
 
 /** One markdown file of the lattice: project-relative posix path (with `.md`) and text. */
@@ -60,6 +61,9 @@ const MAX_DISTANCE_RATIO = 0.4;
 export class LatIndex {
   readonly files = new Map<string, ParsedMarkdown>();
   private flatCache: Section[] = [];
+  /** Sections of AsciiDoc notes outside the lattice: found by locate, section and search, never checked as lat.md. */
+  private noteSections: Section[] = [];
+  private allCache: Section[] = [];
   private ids = new Set<string>();
   private byId = new Map<string, Section>();
   private fileIdx = new Map<string, string[]>();
@@ -77,19 +81,38 @@ export class LatIndex {
     this.reindex();
   }
 
+  /** Add AsciiDoc notes (project-relative `.adoc` paths and text), replacing earlier ones; the lattice and its checks are unchanged. */
+  // @tg: implements:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes]] {confidence: partial}
+  setNotes(files: LatFile[]): void {
+    this.noteSections = files.flatMap((f) => adocSections(toPosix(f.path), f.text).flat);
+    this.reindex();
+  }
+
+  /** Every section a lookup can reach: the lattice's, then those of added notes. */
+  searchSections(): Section[] {
+    return this.allCache;
+  }
+
   private reindex(): void {
     this.flatCache = [...this.files.values()].flatMap((p) => flattenSections(p.roots));
-    this.ids = new Set(this.flatCache.map((s) => s.id.toLowerCase()));
+    this.allCache = [...this.flatCache, ...this.noteSections];
+    this.ids = new Set(this.allCache.map((s) => s.id.toLowerCase()));
     this.byId = new Map();
-    for (const s of this.flatCache) if (!this.byId.has(s.id.toLowerCase())) this.byId.set(s.id.toLowerCase(), s);
+    for (const s of this.allCache) if (!this.byId.has(s.id.toLowerCase())) this.byId.set(s.id.toLowerCase(), s);
     // Index every trailing path suffix, so `lat.md/guides/setup` is also `guides/setup` and `setup`.
     const index = new Map<string, Set<string>>();
-    for (const s of this.flatCache) {
+    for (const s of this.allCache) {
       const parts = s.file.split('/');
       for (let i = 1; i < parts.length; i++) {
         const suffix = parts.slice(i).join('/').toLowerCase();
         if (!index.has(suffix)) index.set(suffix, new Set());
         index.get(suffix)!.add(s.file);
+        // A note's file is also found by its name without `.adoc`, as a lattice file is without `.md`.
+        if (/\.adoc$/i.test(suffix)) {
+          const bare = suffix.replace(/\.adoc$/i, '');
+          if (!index.has(bare)) index.set(bare, new Set());
+          index.get(bare)!.add(s.file);
+        }
       }
     }
     this.fileIdx = new Map([...index].map(([k, v]) => [k, [...v]]));
@@ -162,7 +185,7 @@ export class LatIndex {
 
   /** lat.md's tiered locate: exact id, file stem, trailing segments, path subsequence, then fuzzy. */
   find(query: string): FindMatch[] {
-    const flat = this.flatCache;
+    const flat = this.allCache;
     const normalized = normalizeRefFilePath(query.startsWith('#') ? query.slice(1) : query);
     const q = normalized.toLowerCase();
     const isFullPath = normalized.includes('#');

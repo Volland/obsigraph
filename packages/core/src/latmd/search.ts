@@ -42,7 +42,7 @@ export function buildSearchDocs(index: LatIndex, readText: (filePath: string) =>
     if (!cache.has(p)) cache.set(p, (readText(p) ?? '').split('\n'));
     return cache.get(p)!;
   };
-  return index.sections().map((s) => {
+  return index.searchSections().map((s) => {
     const body = linesOf(s.filePath).slice(s.startLine, s.endLine).join('\n');
     const tail = s.id.split('#').slice(1).join(' ');
     return { id: s.id, file: s.filePath, startLine: s.startLine, endLine: s.endLine, title: `${s.heading} ${tail}`, summary: s.firstParagraph, body };

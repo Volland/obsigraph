@@ -1,3 +1,4 @@
+import { noteFormat } from '../asciidoc/parse.js';
 import type { Diagnostic, Sign } from '../edges/parse.js';
 import type { PropValue } from '../edges/props.js';
 import { titleOf, type Graph, type GraphEdge } from '../graph/graph.js';
@@ -127,7 +128,8 @@ export class EmbedIndex {
   private readonly byPath = new Map<string, EmbedOccurrence[]>();
 
   upsert(path: string, text: string): void {
-    const found = findEmbeds(text);
+    // Edge embeds are a Markdown feature; AsciiDoc notes are not scanned for them.
+    const found = noteFormat(path) === 'adoc' ? [] : findEmbeds(text);
     if (found.length > 0) this.byPath.set(path, found);
     else this.byPath.delete(path);
   }

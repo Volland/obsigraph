@@ -1,3 +1,4 @@
+import type { YamlParser } from '../asciidoc/meta.js';
 import type { Diagnostic } from '../edges/parse.js';
 import { EmbedIndex } from '../embeds/embeds.js';
 import { Graph, type NoteInput } from '../graph/graph.js';
@@ -22,7 +23,7 @@ export interface VaultFinding {
 const ERROR_CODES = new Set(['invalid-declaration', 'unsupported-version', 'duplicate-declaration']);
 
 /** Codes whose line always points into the note body, even line 0. */
-const LINE_CODES = new Set(['edge-syntax', 'embed', 'annotation', 'lat-link']);
+const LINE_CODES = new Set(['edge-syntax', 'embed', 'annotation', 'lat-link', 'ambiguous-link', 'adoc-include', 'adoc-visible-edge']);
 
 /** Severity of a finding code; unknown codes are warnings. */
 // @tg: implements:: [[openspec:tg-validate#Finding codes and severities]]
@@ -71,6 +72,8 @@ export interface ValidateOptions {
   /** Check only the schema notes' declarations. */
   schemaOnly?: boolean;
   iconExists?: IconCheck;
+  /** YAML parser for AsciiDoc property blocks; without one a small flat reader is used. */
+  parseYaml?: YamlParser;
 }
 
 /** Validate parsed vault notes against their schema notes; never changes them. */
@@ -83,7 +86,7 @@ export function validateVault(notes: readonly NoteInput[], options: ValidateOpti
     return toFindings(schemaSetFromNotes(schemaNotes).diagnostics);
   }
   const paths = notes.map((n) => n.path);
-  const graph = new Graph(pathResolver(() => paths), undefined, { linkEdges: options.linkEdges ?? false, frontmatterEdges: options.frontmatterEdges ?? false });
+  const graph = new Graph(pathResolver(() => paths), undefined, { linkEdges: options.linkEdges ?? false, frontmatterEdges: options.frontmatterEdges ?? false, parseYaml: options.parseYaml });
   const embeds = new EmbedIndex();
   for (const n of notes) {
     embeds.upsert(n.path, n.text);

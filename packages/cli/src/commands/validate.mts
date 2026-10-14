@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { DEFAULT_SCHEMA_FOLDER, normalizeFolder, validateVault, type VaultFinding, type NoteInput } from '@obsigraph/core';
-import { listMarkdown, readNote } from '@obsigraph/node-vault';
+import { listNotes, parseYaml, readNote } from '@obsigraph/node-vault';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, VERSION, type Command, type Ctx } from '../cli.mjs';
 
 const USAGE = 'validate [--vault dir] [--schema-folder Types] [--only codes] [--ignore codes] [--schema-only] [--frontmatter-edges] [--strict] [--format text|json|sarif]';
@@ -27,16 +27,21 @@ const RULES: Record<string, string> = {
   'edge-syntax': 'A malformed edge line, property block or duplicate edge id',
   style: 'An invalid visualization value',
   embed: 'A malformed, ambiguous or unpinned edge embed',
+  'ambiguous-link': 'A bare link matches both a Markdown and an AsciiDoc note; write the extension',
+  'adoc-include': 'An AsciiDoc include path uses an attribute the file does not set',
+  'adoc-visible-edge': 'Edge syntax in AsciiDoc outside a comment renders as a description list',
+  'adoc-meta-conflict': 'A property is set by both the leading block and a :tg-*: attribute',
+  'frontmatter-yaml': 'The leading comment block of an AsciiDoc note is not valid YAML',
 };
 
 const str = (flags: Map<string, string | true>, k: string) => (typeof flags.get(k) === 'string' ? (flags.get(k) as string) : undefined);
 const codes = (v: string | undefined) => (v === undefined ? null : new Set(v.split(',').map((c) => c.trim()).filter(Boolean)));
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-/** Every markdown note under the vault (dot folders skipped), read-only, with parsed frontmatter. */
+/** Every markdown and AsciiDoc note under the vault (dot folders skipped), read-only, with parsed frontmatter. */
 // @tg: implements:: [[openspec:tg-validate#Validate a vault]]
 async function readVault(vault: string): Promise<NoteInput[]> {
-  const files = await listMarkdown(vault);
+  const files = await listNotes(vault);
   return Promise.all(files.map(async (f) => (await readNote(vault, f.path)).note));
 }
 
@@ -101,6 +106,7 @@ async function runValidate(ctx: Ctx, flags: Map<string, string | true>): Promise
     schemaFolder: normalizeFolder(str(flags, 'schema-folder') ?? DEFAULT_SCHEMA_FOLDER),
     schemaOnly: flags.has('schema-only'),
     frontmatterEdges: flags.has('frontmatter-edges'),
+    parseYaml,
   }).filter((f) => (!only || only.has(f.code)) && !ignore.has(f.code));
   const errors = findings.filter((f) => f.severity === 'error').length;
   const warnings = findings.length - errors;

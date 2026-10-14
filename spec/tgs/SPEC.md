@@ -1,17 +1,17 @@
-# Typed Graph Schema (TGS) 0.2
+# Typed Graph Schema (TGS) 0.3
 
 | | |
 |---|---|
-| **Version** | 0.2 (published 2026-10-08; immutable) |
-| **Previous** | [0.1](../v0.1/) |
-| **This version** | `https://volland.github.io/obsigraph/spec/tgs/v0.2/` |
-| **JSON Schema** | `https://volland.github.io/obsigraph/spec/tgs/v0.2/tgs.schema.json` |
+| **Version** | 0.3 (published 2026-10-14; immutable) |
+| **Previous** | [0.2](../v0.2/) |
+| **This version** | `https://volland.github.io/obsigraph/spec/tgs/v0.3/` |
+| **JSON Schema** | `https://volland.github.io/obsigraph/spec/tgs/v0.3/tgs.schema.json` |
 | **Namespace** | `https://volland.github.io/obsigraph/ns/tgs#` (prefix `tgs:`) |
 | **Editor** | Volodymyr Pavlyshyn |
 | **Source** | `spec/tgs/` in [github.com/Volland/typedgraph](https://github.com/Volland/typedgraph) |
 | **License** | Text: CC BY 4.0. JSON Schema and examples: MIT. |
 
-TGS describes the types of a knowledge graph kept as markdown notes: what properties a note of a type has, which typed links it may have to which other types, and what properties those links carry. A schema is ordinary YAML frontmatter in ordinary notes, so people can write and review it by hand, and it maps to and from W3C SHACL so the same ontology can be exchanged with RDF tools.
+TGS describes the types of a knowledge graph kept as markdown or AsciiDoc notes: what properties a note of a type has, which typed links it may have to which other types, and what properties those links carry. A schema is ordinary YAML frontmatter in ordinary notes, so people can write and review it by hand, and it maps to and from W3C SHACL so the same ontology can be exchanged with RDF tools.
 
 TGS is independent of any one application. Typed Graph (an Obsidian plugin and CLI) is the reference implementation.
 
@@ -19,9 +19,9 @@ TGS is independent of any one application. Typed Graph (an Obsidian plugin and C
 
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT and MAY are to be read as described in RFC 2119 when they appear in capitals.
 
-- A **vault** is a folder of markdown files. Paths are vault-relative and use `/`.
-- A **note** is a markdown file. Its **title** is its file name without the `.md` extension.
-- **Frontmatter** is a YAML 1.2 mapping between a first line `---` and the next line `---` or `...`.
+- A **vault** is a folder of notes. Paths are vault-relative and use `/`.
+- A **note** is a Markdown (`.md`) or an AsciiDoc (`.adoc`) file. Its **title** is its file name without the extension; the document title of an AsciiDoc note takes its place when it has one (section 2.1).
+- **Frontmatter** is a YAML 1.2 mapping between a first line `---` and the next line `---` or `...`. An AsciiDoc note has no frontmatter; section 2.1 says where its properties come from.
 - A **data note** is any note that is described by a schema. A **schema note** is a note that declares schemas.
 - A **reader** is a program that reads schema notes. Section 14 defines conformance levels.
 
@@ -32,6 +32,47 @@ TGS types a labelled property graph built from notes:
 - Each note is a **node**. Its **labels** are the type names in its frontmatter `type` (a string or a list of strings), followed by those in `types`, without duplicates. Its **properties** are its frontmatter keys.
 - An **edge** has a source note, a target note, an **edge type** (a name) and properties (a mapping of scalars or lists). How edges are written in markdown is up to the host. In the reference implementation an edge is one line, `worksAt:: [[Acme]] {since: 2020}`.
 - A link to a note that does not exist creates a **stub** node with no labels.
+
+### 2.1 AsciiDoc notes
+
+A reader MAY read `.adoc` files as notes. An AsciiDoc note is ordinary AsciiDoc: every form below hides in a comment or a header attribute, so a standard AsciiDoc processor renders the file exactly as it would without the graph metadata.
+
+- **Properties.** If the first block of the file, before the document title, is a `////` comment block, its content is read as YAML with the same meaning as frontmatter, including `type` and `types`. The content MAY be wrapped in `---` lines. Content that is not a YAML mapping yields no properties and one error, as for broken frontmatter. A later `////` block never holds properties. Header attributes named `:tg-<key>: <value>` set property `<key>`, the value read as one-line YAML; attributes without the `tg-` prefix are not properties. When both set a key, the comment block wins and a validator SHOULD report the conflict.
+- **Title.** The title of the note is its document title (`= Title`), else its file name without `.adoc`.
+- **Edges.** Edges are read only from line comments `// @tg: <edge line>` and from `////` blocks whose first content line is `@tg` and whose other non-blank lines are edge lines, in the syntax of section 2. Edge syntax outside a comment is not an edge, and a comment inside a verbatim block (listing, literal, passthrough, table) is not read.
+- **Anchoring.** An edge written in a comment records the canonical id of its section as property `section`. A comment followed, before the next heading, only by blank lines, block attribute lines, anchors or other comments belongs to that heading's section; any other comment belongs to the section containing it; a comment before the first section heading belongs to the note and has no `section`.
+- **Sections.** Headings `==` to `======` form sections with heading-path ids, `<path>#<Heading>#<Sub>`. Explicit ids and the ids a processor generates (honouring `:idprefix:` and `:idseparator:`) resolve to the same section. `[discrete]` headings and heading-like lines inside delimited blocks are not sections.
+- **Links.** `xref:` and `<<...>>` references MAY be read as plain link edges, resolved relative to the file, with a `#id` fragment naming a section. `include::` directives are edges of type `includes` with an `order` property and the `leveloffset`, `tags` and `lines` attributes when present; included text is not merged into the including note.
+- **Resolution across formats.** A link without an extension matches notes of both formats. When it matches both `X.md` and `X.adoc` it is ambiguous: a reader MUST report it and MUST NOT resolve it. A link with an extension matches that file only.
+- **Limits.** Schema notes are Markdown. A template that is an `.adoc` file creates `.adoc` notes, with the leading block and the `:tg-*:` attributes filled in.
+
+A chapter with properties and comment edges:
+
+```asciidoc
+////
+type: Chapter
+status: draft
+////
+= Metagraphs
+:tg-pages: 12
+
+// @tg: cites:: [[Pavlyshyn 2024]] {page: 12}
+[#definition]
+== Definition
+
+A metagraph generalizes a hypergraph.
+
+// @tg: defines:: [[Metagraph]]
+```
+
+reads as a node `book/ch03.adoc` with label `Chapter`, title `Metagraphs` and properties `status: draft` and `pages: 12`, and two edges:
+
+| Type | Target | Properties |
+|---|---|---|
+| `cites` | `Pavlyshyn 2024` | `page: 12`, `section: book/ch03.adoc#Definition` |
+| `defines` | `Metagraph` | `section: book/ch03.adoc#Definition` |
+
+The id `definition` resolves to the section `book/ch03.adoc#Definition`.
 
 ## 3. Schema notes
 
@@ -259,7 +300,7 @@ A schema note MAY declare `tgs: "<major>.<minor>"`. A reader implementing versio
 - MUST report a note that declares another major version as `unsupported-version` and MUST NOT use its declarations;
 - MUST read notes without `tgs` as version 0.1.
 
-TGS 0.2 adds the `id` key (section 8.1) and the template tokens. Every 0.1 note is a valid 0.2 note.
+TGS 0.2 adds the `id` key (section 8.1) and the template tokens. TGS 0.3 adds AsciiDoc notes (section 2.1) and adds no schema key. Every 0.1 note is a valid 0.2 note, and every 0.2 note is a valid 0.3 note.
 
 Minor versions only add optional keys. A published version never changes.
 
@@ -355,7 +396,7 @@ For schemas written in TGS, export followed by import MUST reproduce the same ty
 
 | Level | Requirements |
 |---|---|
-| **Reader** | sections 3 to 8 and 12: reads every key, applies defaults, expands identifiers, reports declaration diagnostics |
+| **Reader** | sections 3 to 8 and 12: reads every key, applies defaults, expands identifiers, reports declaration diagnostics; a reader that reads `.adoc` notes also implements section 2.1 |
 | **Validator** | Reader, plus section 9 |
 | **SHACL exchanger** | Validator, plus section 13 |
 
@@ -369,7 +410,7 @@ SHACL cases also have a `shapes.ttl` that an exporter's output must be isomorphi
 
 ## 15. JSON Schema
 
-`tgs.schema.json` (JSON Schema draft 2020-12) validates the TGS keys of a schema note's frontmatter. It is strict about TGS 0.2 keys and leaves `visualization` and all non-TGS keys open. Notes declaring a newer minor version may not validate against it.
+`tgs.schema.json` (JSON Schema draft 2020-12) validates the TGS keys of a schema note's frontmatter. It is strict about TGS 0.3 keys and leaves `visualization` and all non-TGS keys open. Notes declaring a newer minor version may not validate against it.
 
 ## 16. References
 

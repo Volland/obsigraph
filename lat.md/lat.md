@@ -10,6 +10,7 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[sidecar]] — headless Docker service exposing REST and MCP for RAG
 - [[embedded-search]] — planned: embedded Ladybug graph store, bundled local model and hybrid ranking on every host
 - [[cli]] — `tg` CLI: lat.md replacement, annotations, code layer, OpenSpec trace, vault integration
+- [[asciidoc]] — AsciiDoc notes: properties in comments, typed edges, sections, links and host support
 - [[okf]] — Open Knowledge Format: reading bundles, OKF export and conformance check
 - [[shacl]] — SHACL export and import of schema notes and the open Typed Graph Schema spec
 - [[vscode]] — VS Code extension: typed backlinks, graph webview, tg init funnel

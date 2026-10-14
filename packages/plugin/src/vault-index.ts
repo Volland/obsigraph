@@ -3,6 +3,8 @@ import {
   EmbedIndex,
   Graph,
   LatIndex,
+  noteFormat,
+  noteFrontmatter,
   schemasFromGraph,
   styleSource,
   styleSourcesFromSchemas,
@@ -11,9 +13,11 @@ import {
   type Diagnostic,
   type ExecOptions,
   type IconCheck,
+  type LinkResolver,
   type NoteInput,
   type SchemaSet,
   type StyleSource,
+  type YamlParser,
 } from '@obsigraph/core';
 import { TFile, type App, type EventRef } from 'obsidian';
 import { CodeLayer } from './code-layer';
@@ -39,6 +43,9 @@ export class VaultIndex {
   private readonly listeners = new Set<() => void>();
   private timer: number | null = null;
   private readonly refs: EventRef[] = [];
+  /** AsciiDoc notes in the graph, so turning the setting off can remove them. */
+  private readonly adocPaths = new Set<string>();
+  private readonly adocTimers = new Map<string, number>();
   private schemaCache: SchemaSet | null = null;
   private diagnosticCache: Diagnostic[] | null = null;
   private styleCache: { sources: StyleSource[]; diagnostics: Diagnostic[] } | null = null;
@@ -53,12 +60,13 @@ export class VaultIndex {
     codeMode: () => CodeMode = () => 'off',
     codeRoot: () => string = () => '',
     frontmatterEdges: () => boolean = () => false,
+    /** Index `.adoc` files as notes; read at each use, so the setting applies live. */
+    private readonly asciidoc: () => boolean = () => true,
+    /** YAML parser for AsciiDoc property blocks; Obsidian's own in the plugin. */
+    private readonly parseYaml?: YamlParser,
   ) {
     this.graph = new Graph(
-      (link, source) => {
-        const f = this.app.metadataCache.getFirstLinkpathDest(link, source);
-        return f && f.extension === 'md' ? f.path : null;
-      },
+      this.resolver(),
       // `[[src/auth.ts#login]]` ends at the code node when the code layer has it.
       (link, sub) => (this.graph.node(`${link}#${sub}`) ? `${link}#${sub}` : null),
       // Read at each upsert, so the setting applies to notes indexed after it changes.
@@ -66,6 +74,7 @@ export class VaultIndex {
         get frontmatterEdges() {
           return frontmatterEdges();
         },
+        parseYaml: this.parseYaml,
       },
     );
     this.code = new CodeLayer(app, this.graph, codeMode, codeRoot);
@@ -74,6 +83,43 @@ export class VaultIndex {
       this.invalidate();
       this.schedule();
     });
+  }
+
+  /**
+   * Link resolution for notes of both formats. The metadata cache resolves `.md` notes by bare name and
+   * any file by its extension, so a bare link also tries `<link>.adoc`; a link that matches both is ambiguous.
+   */
+  // @tg: implements:: [[openspec:asciidoc-notes#Link resolution across formats]]
+  private resolver(): LinkResolver {
+    const find = (link: string, source: string): string[] => {
+      const cache = this.app.metadataCache;
+      const explicit = /\.(?:md|adoc)$/i.test(link.trim());
+      const hit = cache.getFirstLinkpathDest(link, source);
+      const first = hit && this.isNote(hit) ? [hit.path] : [];
+      if (explicit || !this.asciidoc()) return first;
+      const sibling = cache.getFirstLinkpathDest(`${link.trim()}.adoc`, source);
+      return sibling && sibling.extension === 'adoc' && !first.includes(sibling.path) ? [...first, sibling.path] : first;
+    };
+    const resolve: LinkResolver = (link, source) => {
+      const found = find(link, source);
+      return found.length === 1 ? found[0]! : null;
+    };
+    resolve.ambiguous = (link, source) => {
+      const found = find(link, source);
+      return found.length > 1 ? found : null;
+    };
+    return resolve;
+  }
+
+  /** A Markdown note, or an AsciiDoc note while AsciiDoc indexing is on. */
+  private isNote(file: { extension: string }): boolean {
+    return file.extension === 'md' || (file.extension === 'adoc' && this.asciidoc());
+  }
+
+  /** Every file indexed as a note: Markdown through the metadata cache, AsciiDoc straight from the vault. */
+  private noteFiles(): TFile[] {
+    const { vault } = this.app;
+    return this.asciidoc() ? [...vault.getMarkdownFiles(), ...vault.getFiles().filter((f) => f.extension === 'adoc')] : vault.getMarkdownFiles();
   }
 
   /** Type schemas from the schema folder, cached until the next vault change. */
@@ -129,7 +175,7 @@ export class VaultIndex {
   async build(onProgress?: (done: number, total: number) => void): Promise<void> {
     // Code first, so notes linking to symbols resolve to them at once.
     await this.code.load();
-    const files = this.app.vault.getMarkdownFiles();
+    const files = this.noteFiles();
     for (let i = 0; i < files.length; i += BATCH) {
       for (const f of files.slice(i, i + BATCH)) this.upsert(await this.read(f));
       onProgress?.(Math.min(i + BATCH, files.length), files.length);
@@ -141,7 +187,16 @@ export class VaultIndex {
 
   /** Re-read every note, e.g. after a setting that changes how notes become edges. */
   async reindex(): Promise<void> {
-    for (const f of this.app.vault.getMarkdownFiles()) this.upsert(await this.read(f));
+    const files = this.noteFiles();
+    // AsciiDoc indexing switched off: its notes leave the graph.
+    const keep = new Set(files.map((f) => f.path));
+    for (const path of [...this.adocPaths]) {
+      if (keep.has(path)) continue;
+      this.adocPaths.delete(path);
+      this.embeds.remove(path);
+      this.graph.removeNote(path);
+    }
+    for (const f of files) this.upsert(await this.read(f));
     this.flush();
   }
 
@@ -150,22 +205,30 @@ export class VaultIndex {
     const { metadataCache, vault } = this.app;
     this.refs.push(
       vault.on('modify', (file) => {
-        if (file instanceof TFile && file.extension !== 'md') void this.code.update(file);
+        if (!(file instanceof TFile)) return;
+        // The metadata cache has nothing for AsciiDoc, so its edits are re-read here, debounced.
+        if (file.extension === 'adoc') return this.scheduleAdoc(file);
+        if (file.extension !== 'md') void this.code.update(file);
+      }),
+      vault.on('create', (file) => {
+        if (file instanceof TFile && file.extension === 'adoc') this.scheduleAdoc(file);
       }),
       metadataCache.on('changed', (file, data, cache) => {
         if (file.extension !== 'md') return;
         this.upsert({ path: file.path, text: data, frontmatter: cache.frontmatter ?? null });
       }),
       vault.on('delete', (file) => {
-        if (file instanceof TFile && file.extension !== 'md') this.code.remove(file.path);
-        if (!(file instanceof TFile) || file.extension !== 'md') return;
+        if (file instanceof TFile && file.extension !== 'md' && file.extension !== 'adoc') this.code.remove(file.path);
+        if (!(file instanceof TFile) || (file.extension !== 'md' && file.extension !== 'adoc')) return;
         this.embeds.remove(file.path);
         if (inLatFolder(file.path)) this.lat.update(file.path, null);
+        this.adocPaths.delete(file.path);
         this.graph.removeNote(file.path);
       }),
       vault.on('rename', async (file, oldPath) => {
-        if (file instanceof TFile && file.extension !== 'md') this.code.rename(file, oldPath);
-        if (!(file instanceof TFile) || file.extension !== 'md') return;
+        if (file instanceof TFile && file.extension !== 'md' && file.extension !== 'adoc') this.code.rename(file, oldPath);
+        if (!(file instanceof TFile) || !this.isNote(file)) return;
+        this.adocPaths.delete(oldPath);
         const note = await this.read(file);
         if (inLatFolder(oldPath)) this.lat.update(oldPath, null);
         this.embeds.remove(oldPath);
@@ -188,19 +251,31 @@ export class VaultIndex {
     this.listeners.clear();
   }
 
+  private scheduleAdoc(file: TFile): void {
+    if (!this.asciidoc()) return;
+    const prev = this.adocTimers.get(file.path);
+    if (prev !== undefined) window.clearTimeout(prev);
+    this.adocTimers.set(
+      file.path,
+      window.setTimeout(() => {
+        this.adocTimers.delete(file.path);
+        void this.read(file).then((note) => this.upsert(note));
+      }, 150),
+    );
+  }
+
   /** Embeds first, so the graph change notification sees current embeds. */
   private upsert(note: NoteInput): void {
+    if (noteFormat(note.path) === 'adoc') this.adocPaths.add(note.path);
     if (inLatFolder(note.path)) this.lat.update(note.path, note.text);
     this.embeds.upsert(note.path, note.text);
     this.graph.upsertNote(note);
   }
 
   private async read(file: TFile): Promise<NoteInput> {
-    return {
-      path: file.path,
-      text: await this.app.vault.cachedRead(file),
-      frontmatter: this.app.metadataCache.getFileCache(file)?.frontmatter ?? null,
-    };
+    const text = await this.app.vault.cachedRead(file);
+    if (noteFormat(file.path) === 'adoc') return { path: file.path, text, frontmatter: noteFrontmatter(file.path, text, this.parseYaml).frontmatter };
+    return { path: file.path, text, frontmatter: this.app.metadataCache.getFileCache(file)?.frontmatter ?? null };
   }
 
   private schedule(): void {

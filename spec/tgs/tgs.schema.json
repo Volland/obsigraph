@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://volland.github.io/obsigraph/spec/tgs/v0.2/tgs.schema.json",
-  "title": "Typed Graph Schema (TGS) 0.2 schema note frontmatter",
+  "$id": "https://volland.github.io/obsigraph/spec/tgs/v0.3/tgs.schema.json",
+  "title": "Typed Graph Schema (TGS) 0.3 schema note frontmatter",
   "description": "Validates the TGS keys of a schema note's YAML frontmatter, parsed to JSON. Other frontmatter keys are allowed. License: MIT.",
   "type": "object",
   "properties": {
@@ -11,7 +11,7 @@
         "number"
       ],
       "pattern": "^0\\.[0-9]+$",
-      "description": "TGS version the note is written for, e.g. \"0.2\"."
+      "description": "TGS version the note is written for, e.g. \"0.3\"."
     },
     "schema": {
       "$ref": "#/$defs/typeDeclaration",

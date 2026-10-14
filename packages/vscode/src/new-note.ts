@@ -44,9 +44,10 @@ export async function planWorkspaceNote(index: WorkspaceIndex, workspace: string
   const schema = schemasFromGraph(index.graph, opts.schemaFolder).schemas.get(opts.type);
   if (!schema) throw new Error(`No type '${opts.type}' in ${opts.schemaFolder}`);
   if (!opts.title.trim() || BAD_TITLE.test(opts.title)) throw new Error(`"${opts.title}" cannot be used as a note title`);
-  const linkedBody = await bodyAt(workspace, schema.template ? templatePath(schema.template, schema.path, (link, from) => index.graph.resolveLink(link, from)) : null);
+  const linked = schema.template ? templatePath(schema.template, schema.path, (link, from) => index.graph.resolveLink(link, from)) : null;
+  const linkedBody = await bodyAt(workspace, linked);
   const schemaBody = (await bodyAt(workspace, schema.path)) ?? '';
-  const plan = planNewNote({ schema, title: opts.title.trim(), linkedBody, schemaBody, graph: index.graph, parent: opts.parent, luhmann: opts.luhmann, now: opts.now });
+  const plan = planNewNote({ schema, title: opts.title.trim(), linkedBody, templatePath: linked, schemaBody, graph: index.graph, parent: opts.parent, luhmann: opts.luhmann, now: opts.now });
   const folder = opts.folder.replace(/^\/+|\/+$/g, '');
   return { ...plan, path: folder ? `${folder}/${plan.fileName}` : plan.fileName };
 }

@@ -1,5 +1,7 @@
 import { frontmatterEdges, markdownTarget, parseEdges, type Diagnostic, type ParsedEdge, type ParseOptions, type Sign } from '../edges/parse.js';
 import type { Props } from '../edges/props.js';
+import { noteFormat, parseAsciidoc, type AsciidocSection } from '../asciidoc/parse.js';
+import type { YamlParser } from '../asciidoc/meta.js';
 
 export interface GraphNode {
   /** Note path for real nodes, link text for stubs. */
@@ -30,8 +32,16 @@ export interface NoteInput {
   edges?: ParsedEdge[];
 }
 
+export interface GraphOptions extends ParseOptions {
+  /** YAML parser for AsciiDoc property blocks and `:tg-*:` values; without one a small flat reader is used. */
+  parseYaml?: YamlParser;
+}
+
 /** Resolve link text written in `sourcePath` to an existing note path, or null. */
-export type LinkResolver = (link: string, sourcePath: string) => string | null;
+export type LinkResolver = ((link: string, sourcePath: string) => string | null) & {
+  /** The note paths a link matches when it matches more than one format (`X.md` and `X.adoc`); such a link resolves to nothing. */
+  ambiguous?: (link: string, sourcePath: string) => string[] | null;
+};
 
 /** Resolve a link with a `#subpath` (e.g. `src/a.ts#login`) to a node id, or null to fall back to the plain resolver. */
 export type SubpathResolver = (link: string, subpath: string, sourcePath: string) => string | null;
@@ -64,12 +74,14 @@ export class Graph {
   private readonly listeners = new Set<(paths: string[]) => void>();
   /** Edge notes missing a field: no edge, no node, but still not a link target. */
   private readonly incompleteEdgeNotes = new Set<string>();
+  /** AsciiDoc notes' sections, for resolving `#id` fragments of cross references. */
+  private readonly adocSections = new Map<string, AsciidocSection[]>();
 
   constructor(
     private readonly resolve: LinkResolver,
     private readonly resolveSub?: SubpathResolver,
     /** `linkEdges` also turns plain links in prose into `links_to` edges; `frontmatterEdges` turns links in frontmatter properties into edges. */
-    private readonly options: ParseOptions = {},
+    private readonly options: GraphOptions = {},
   ) {}
 
   // ---- queries -----------------------------------------------------------
@@ -100,8 +112,27 @@ export class Graph {
     const target = link.trim();
     const resolved = this.resolve(target, sourcePath);
     if (resolved && this.nodeMap.has(resolved)) return resolved;
-    const stub = target.replace(/\.md$/, '');
+    const stub = stubId(target);
     return this.nodeMap.get(stub)?.stub ? stub : null;
+  }
+
+  /**
+   * The section of an AsciiDoc note that an id or heading path names: an explicit or generated id
+   * (`_typed_links`), a heading path (`Metagraphs#Definition`) or a lone heading. Returns its canonical
+   * id (`book/ch03.adoc#Metagraphs`), or null.
+   */
+  // @tg: implements:: [[openspec:asciidoc-notes#Sections and id aliases]] {confidence: partial}
+  resolveSection(path: string, fragment: string): string | null {
+    const sections = this.adocSections.get(path);
+    if (!sections) return null;
+    const f = fragment.trim();
+    const byAlias = sections.find((s) => s.aliases.includes(f));
+    if (byAlias) return byAlias.id;
+    const lower = f.toLowerCase();
+    const byPath = sections.find((s) => s.headingPath.join('#').toLowerCase() === lower);
+    if (byPath) return byPath.id;
+    const byHeading = sections.filter((s) => s.heading.toLowerCase() === lower);
+    return byHeading.length === 1 ? byHeading[0]!.id : null;
   }
 
   /** Edges written in the note at `path`, including the one an edge note declares. */
@@ -136,15 +167,20 @@ export class Graph {
       return;
     }
     this.incompleteEdgeNotes.delete(note.path);
+    const adoc = noteFormat(note.path) === 'adoc' ? parseAsciidoc(note.text, note.path, { parseYaml: this.options.parseYaml, linkEdges: this.options.linkEdges }) : null;
+    if (adoc) this.adocSections.set(note.path, adoc.sections);
+    else this.adocSections.delete(note.path);
+    // A host that cannot read AsciiDoc metadata hands none; the parsed properties stand in.
+    const frontmatter = note.frontmatter ?? adoc?.meta ?? null;
     this.nodeMap.set(note.path, {
       id: note.path,
-      labels: labelsOf(note.frontmatter),
-      // A frontmatter `title` (OKF's display name) wins over the file name.
-      props: { ...(note.frontmatter ?? {}), path: note.path, title: frontmatterTitle(note.frontmatter) ?? titleOf(note.path) },
+      labels: labelsOf(frontmatter),
+      // A frontmatter `title` (OKF's display name) wins over the document title and the file name.
+      props: { ...(frontmatter ?? {}), path: note.path, title: frontmatterTitle(frontmatter) ?? adoc?.title ?? titleOf(note.path) },
       stub: false,
     });
-    const { edges: parsed, diagnostics } = parseEdges(note.text, note.path, this.options);
-    const fromFrontmatter = this.options.frontmatterEdges ? frontmatterEdges(note.frontmatter, note.path) : [];
+    const { edges: parsed, diagnostics } = adoc ? { edges: adoc.edges, diagnostics: adoc.warnings } : parseEdges(note.text, note.path, this.options);
+    const fromFrontmatter = this.options.frontmatterEdges ? frontmatterEdges(frontmatter, note.path) : [];
     const edges = fromFrontmatter.length || note.edges?.length ? [...parsed, ...fromFrontmatter, ...(note.edges ?? [])] : parsed;
     this.files.set(note.path, { parsed: edges, diagnostics, edgeIds: [], skipped: [] });
     this.addEdges(note.path);
@@ -201,6 +237,7 @@ export class Graph {
     this.files.delete(path);
     this.nodeMap.delete(path);
     this.incompleteEdgeNotes.delete(path);
+    this.adocSections.delete(path);
     const touched = new Set([path]);
     // Edges that pointed at the removed note now resolve to stubs.
     this.reresolve(new Set(this.incoming.get(path) ?? []), touched);
@@ -287,6 +324,10 @@ export class Graph {
   private endpoint(link: string, subpath: string | null, path: string, line: number, file: FileState): string | null {
     const sub = subpath ? this.resolveSub?.(link, subpath, path) : null;
     const resolved = sub && this.nodeMap.has(sub) ? sub : this.resolve(link, path);
+    const ambiguous = resolved ? null : this.resolve.ambiguous?.(link, path);
+    if (ambiguous) {
+      file.diagnostics.push({ path, line, column: 0, message: `Ambiguous link '${link}' matches ${ambiguous.join(' and ')}; write the extension, e.g. [[${ambiguous[0]}]]`, code: 'ambiguous-link' });
+    }
     if (resolved && (this.files.get(resolved)?.from !== undefined || this.incompleteEdgeNotes.has(resolved))) {
       file.diagnostics.push({ path, line, column: 0, message: `'${link}' is an edge note, not a node; no edge is created`, code: 'edge-note' });
       file.skipped.push(resolved);
@@ -305,7 +346,7 @@ export class Graph {
     const file = this.files.get(path);
     if (!file) return;
     // Diagnostics added during edge building (duplicate ids, refused links) are rebuilt with the edges.
-    file.diagnostics = file.diagnostics.filter((d) => !d.message.startsWith('Duplicate edge id') && !(d.code === 'edge-note' && d.message.includes('is an edge note')));
+    file.diagnostics = file.diagnostics.filter((d) => !d.message.startsWith('Duplicate edge id') && !(d.code === 'edge-note' && d.message.includes('is an edge note')) && d.code !== 'ambiguous-link');
     for (const t of file.skipped) setDel(this.incoming, t, path);
     file.skipped = [];
     for (const id of file.edgeIds) {
@@ -327,7 +368,7 @@ export class Graph {
   // @lat: [[graph-model#Nodes]]
   // @tg: implements:: [[openspec:graph-model#Stub nodes for unresolved links]]
   private ensureStub(link: string): string {
-    const id = link.replace(/\.md$/, '');
+    const id = stubId(link);
     this.stubRefs.set(id, (this.stubRefs.get(id) ?? 0) + 1);
     if (!this.nodeMap.has(id)) {
       this.nodeMap.set(id, { id, labels: [], props: { title: titleOf(id), path: null }, stub: true });
@@ -397,7 +438,12 @@ function frontmatterTitle(frontmatter: Record<string, unknown> | null | undefine
 
 export function titleOf(path: string): string {
   const base = path.split('/').pop() ?? path;
-  return base.replace(/\.md$/, '');
+  return base.replace(/\.(?:md|adoc)$/, '');
+}
+
+/** Node id of a stub: the link text without a note extension. */
+function stubId(link: string): string {
+  return link.replace(/\.(?:md|adoc)$/, '');
 }
 
 function setAdd<K, V>(m: Map<K, Set<V>>, k: K, v: V): void {

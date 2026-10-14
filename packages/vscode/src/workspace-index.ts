@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import { buildCodeLayer, Graph, langOfFile, pathResolver, scanAnnotations, splitTarget, upsertCodeNode, type Annotation } from '@obsigraph/core';
-import { listFiles, listMarkdown, readNote } from '@obsigraph/node-vault';
+import { isNotePath, listFiles, listNotes, parseYaml, readNote } from '@obsigraph/node-vault';
 
 const MAX_SOURCE_BYTES = 1_500_000;
 
@@ -12,6 +12,8 @@ export interface IndexOptions {
   roots: string[];
   /** Folder names skipped at any depth, in addition to dot folders. */
   ignore: string[];
+  /** Index `.adoc` files as notes beside Markdown; on by default. */
+  asciidoc?: boolean;
 }
 
 const clean = (p: string): string => posix.normalize(p.replace(/\\/g, '/')).replace(/^\.\/?/, '').replace(/\/+$/, '');
@@ -31,10 +33,12 @@ export class WorkspaceIndex {
   private readonly annotations = new Map<string, Annotation[]>();
   private inserted = new Set<string>();
   private readonly roots: string[];
+  private readonly asciidoc: boolean;
 
   constructor(private readonly opts: IndexOptions) {
+    this.asciidoc = opts.asciidoc ?? true;
     this.roots = [...new Set((opts.roots.length ? opts.roots : ['.']).map(clean))];
-    this.graph = new Graph(pathResolver(() => this.notes), (link, sub) => (this.inserted.has(`${link}#${sub}`) ? `${link}#${sub}` : null));
+    this.graph = new Graph(pathResolver(() => this.notes), (link, sub) => (this.inserted.has(`${link}#${sub}`) ? `${link}#${sub}` : null), { parseYaml });
   }
 
   /** True when a workspace-relative path lies under a root and outside dot and ignored folders. */
@@ -52,7 +56,7 @@ export class WorkspaceIndex {
     for (const root of this.roots) {
       const dir = join(this.opts.workspace, root);
       const prefix = root === '' ? '' : `${root}/`;
-      for (const f of await listMarkdown(dir, { ignore: this.opts.ignore }).catch(() => [])) seenMd.add(prefix + f.path);
+      for (const f of await listNotes(dir, { ignore: this.opts.ignore, asciidoc: this.asciidoc }).catch(() => [])) seenMd.add(prefix + f.path);
       const src = await listFiles(dir, { ignore: this.opts.ignore, accept: (n) => langOfFile(n) !== null, maxBytes: MAX_SOURCE_BYTES }).catch(() => []);
       for (const f of src) seenSrc.add(prefix + f.path);
     }
@@ -68,7 +72,7 @@ export class WorkspaceIndex {
     if (!this.accepts(p)) return;
     const exists = await stat(join(this.opts.workspace, p)).then((s) => s.isFile(), () => false);
     if (!exists) return this.remove(p);
-    if (p.toLowerCase().endsWith('.md')) {
+    if (isNotePath(p, [], this.asciidoc)) {
       this.notes.add(p);
       await this.readMarkdown(p);
     } else if (langOfFile(p)) {

@@ -48,7 +48,13 @@ function edge(type: string, sign: 1 | -1, target: string, props: ParsedEdge['pro
 // @tg: implements:: [[openspec:code-layer#Code mode setting]]
 // @tg: implements:: [[openspec:code-layer#Derived code nodes]]
 // @tg: implements:: [[openspec:code-layer#Queryable code nodes]]
-export function buildCodeLayer(files: CodeSource[], mode: CodeMode, resolveTarget: (target: string, sourceFile: string) => string | null): CodeLayer {
+export function buildCodeLayer(
+  files: CodeSource[],
+  mode: CodeMode,
+  resolveTarget: (target: string, sourceFile: string) => string | null,
+  /** Links written outside source files (`src/a.ts`, `src/a.ts#login`), such as an AsciiDoc include; their files and symbols get nodes too. */
+  extraTargets: readonly string[] = [],
+): CodeLayer {
   if (mode === 'off') return { nodes: [], unresolved: [] };
   interface Scanned {
     file: CodeSource;
@@ -85,6 +91,15 @@ export function buildCodeLayer(files: CodeSource[], mode: CodeMode, resolveTarge
           wantSymbol.add(symbolKey(ct.file, ct.symbol));
         }
       }
+    }
+  }
+
+  if (mode === 'annotated') {
+    for (const t of extraTargets) {
+      const { file, rest } = splitTarget(t);
+      if (!scanned.has(file)) continue;
+      wantFile.add(file);
+      if (rest && codeTarget(t)) wantSymbol.add(symbolKey(file, rest));
     }
   }
 

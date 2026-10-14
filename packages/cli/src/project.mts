@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { LatIndex, lookupSymbol, scanAnnotations, SpecIndex, type Annotation, type Diagnostic } from '@obsigraph/core';
+import { compileIgnore, LatIndex, lookupSymbol, scanAnnotations, SpecIndex, type Annotation, type Diagnostic } from '@obsigraph/core';
+import { readConfig, type TgConfig } from './config.mjs';
 import { DOCS_DIRS, existingDocsDir, type DocsDir } from './root.mjs';
 import { walkProject } from './walk.mjs';
 
@@ -24,6 +25,8 @@ export class Project {
   private sourceCache: string[] | null = null;
   private annCache: { annotations: Annotation[]; diagnostics: Diagnostic[] } | null = null;
   private specCache: SpecIndex | null | undefined;
+  private configCache: { config: TgConfig; error: string | null } | null = null;
+  private noteCache: string[] | null = null;
 
   constructor(readonly root: string) {
     const dir = existingDocsDir(root);
@@ -58,8 +61,32 @@ export class Project {
   index(): LatIndex {
     if (!this.indexCache) {
       this.indexCache = new LatIndex(this.mdFiles().map((path) => ({ path, text: this.text(path) ?? '' })));
+      // AsciiDoc notes are found by locate, section and search; they are never checked as lat.md files.
+      this.indexCache.setNotes(this.noteFiles().map((path) => ({ path, text: this.text(path) ?? '' })));
     }
     return this.indexCache;
+  }
+
+  /** The committed `.tg/config.json`, or the empty config when it is missing or broken (`error` says which). */
+  config(): { config: TgConfig; error: string | null } {
+    return (this.configCache ??= readConfig(this.root));
+  }
+
+  /** `.adoc` files outside the docs folders that match a `notes` glob of the config: read as notes, never as code. */
+  // @tg: implements:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes]] {confidence: partial}
+  noteFiles(): string[] {
+    if (!this.noteCache) {
+      const globs = this.config().config.notes;
+      if (!globs.length) return (this.noteCache = []);
+      const rules = compileIgnore(globs.join('\n'));
+      this.noteCache = walkProject(this.root).filter((e) => e.toLowerCase().endsWith('.adoc') && !DOCS_DIRS.some((d) => e.startsWith(`${d}/`)) && rules.test(e, false) === true);
+    }
+    return this.noteCache;
+  }
+
+  /** `.adoc` files under the docs folder: they are not lat.md sections, and `tg check` says so. */
+  latAdocFiles(): string[] {
+    return this.latEntries().filter((e) => e.toLowerCase().endsWith('.adoc')).map((e) => `${this.latDirName}/${e}`);
   }
 
   /** OpenSpec requirements from `openspec/specs/` and active changes; null when there is no `openspec/` folder. */
@@ -86,7 +113,7 @@ export class Project {
     return this.specCache;
   }
 
-  /** Source files outside the docs folder: no markdown, no `.claude/`, no nested projects that have their own docs folder. */
+  /** Source files outside the docs folder: no markdown or AsciiDoc, no `.claude/`, no nested projects that have their own docs folder. */
   sourceFiles(): string[] {
     if (!this.sourceCache) {
       const all = walkProject(this.root);
@@ -98,7 +125,7 @@ export class Project {
         }
       }
       // Both docs folders are skipped: an unused `tg.md/` next to `lat.md/` is docs, not code.
-      this.sourceCache = all.filter((e) => !e.endsWith('.md') && !DOCS_DIRS.some((d) => e.startsWith(`${d}/`)) && !e.startsWith('.claude/') && ![...nested].some((p) => e.startsWith(p)));
+      this.sourceCache = all.filter((e) => !e.endsWith('.md') && !e.toLowerCase().endsWith('.adoc') && !DOCS_DIRS.some((d) => e.startsWith(`${d}/`)) && !e.startsWith('.claude/') && ![...nested].some((p) => e.startsWith(p)));
     }
     return this.sourceCache;
   }

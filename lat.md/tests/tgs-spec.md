@@ -22,3 +22,11 @@ Malformed declarations such as `edges: 5`, an unknown kind or an unknown key fai
 ## Namespace terms documented
 
 Every `tgs:` term the SHACL export or import uses is listed in `namespace.json`, and no listed term is unused.
+
+## AsciiDoc example reads as documented
+
+The AsciiDoc chapter in `SPEC.md` section 2.1 produces the node, properties, edges with their `section` and the id alias that the table below it lists.
+
+## Version 0.3 published beside 0.2
+
+The specification, JSON Schema `$id` and site build name 0.3 as the current version, and 0.2 stays in `spec/tgs/archive/v0.2/` with its text unchanged.

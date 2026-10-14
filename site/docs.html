@@ -160,6 +160,31 @@ edgeTypes:
       </ul>
       <p>The format is an open specification, <a href="spec/tgs/v0.2/">Typed Graph Schema (TGS) 0.2</a>, with a JSON Schema and conformance examples; <a href="spec/tgs/v0.1/">0.1</a> stays published, and every 0.1 schema note is valid 0.2.</p>
 
+      <h2 id="asciidoc">AsciiDoc notes</h2>
+      <p>An <code>.adoc</code> file is a note like a Markdown one. Everything the graph reads hides in a comment or a header attribute, so Asciidoctor renders the file exactly as it would without it.</p>
+<pre>////
+type: Chapter
+status: draft
+////
+= Metagraphs
+:tg-pages: 12
+
+// @<span></span>tg: cites:: [[Pavlyshyn 2024]] {page: 12}
+[#definition]
+== Definition
+
+A metagraph generalizes a hypergraph.</pre>
+      <table>
+        <tr><th>Form</th><th>Meaning</th></tr>
+        <tr><td>leading <code>////</code> block</td><td>YAML properties, as frontmatter; <code>type</code> gives labels. A block that is not YAML is reported.</td></tr>
+        <tr><td><code>:tg-key: value</code></td><td>A property with a one-line YAML value. The leading block wins when both set a key.</td></tr>
+        <tr><td><code>// @<span></span>tg: type:: [[X]]</code></td><td>A typed edge. A <code>////</code> block starting with <code>@tg</code> holds one edge per line. Edge syntax outside a comment is not an edge.</td></tr>
+        <tr><td>anchoring</td><td>A comment above a heading belongs to that section; elsewhere to the section it sits in. The edge records it as <code>section</code>.</td></tr>
+        <tr><td><code>xref:</code>, <code>&lt;&lt;…&gt;&gt;</code></td><td>Plain links when link edges are on.</td></tr>
+        <tr><td><code>include::</code></td><td>An ordered <code>includes</code> edge with <code>leveloffset</code>, <code>tags</code> and <code>lines</code>; a source file include ends at its code node.</td></tr>
+      </table>
+      <p>A link without an extension matches <code>.md</code> and <code>.adoc</code> notes; when both exist it is reported as ambiguous. Obsidian, VS Code and the sidecar index <code>.adoc</code> files by default (a setting turns it off); <code>tg</code> reads the files matched by <code>notes</code> in <code>.tg/config.json</code>, for example <code>{ "notes": ["book/**/*.adoc"] }</code>, which <code>tg init</code> proposes. The OKF export skips AsciiDoc notes. Details are in <a href="spec/tgs/v0.3/#2-1-asciidoc-notes">TGS 0.3</a>.</p>
+
       <h2 id="embeds">Edge property embeds</h2>
 <pre>We met in {{edge: Alice -knows-> Bob . since}}.
 {{edge: met-2020 . since}}
@@ -368,6 +393,7 @@ RETURN p.title AS person, proj.title AS project,
         <tr><td>Type styles, Edge styles</td><td>JSON style defaults.</td></tr>
         <tr><td>Refresh delay</td><td>Debounce before blocks re-run.</td></tr>
         <tr><td>Code in the graph, Code folder</td><td>Show source symbols as nodes (off, annotated, all) and which vault folder to scan.</td></tr>
+        <tr><td>AsciiDoc notes</td><td>Index <code>.adoc</code> files as notes (on by default).</td></tr>
       </table>
 
       <h2 id="faq">FAQ</h2>

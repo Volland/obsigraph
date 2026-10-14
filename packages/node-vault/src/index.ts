@@ -1,8 +1,11 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { splitFrontmatter, type NoteInput } from '@obsigraph/core';
+import { noteFormat, noteFrontmatter, splitFrontmatter, type NoteInput } from '@obsigraph/core';
 import { parse as parseYaml } from 'yaml';
+
+/** The YAML parser node hosts hand to the graph for AsciiDoc property blocks. */
+export { parseYaml };
 
 export interface FileInfo {
   /** Vault-relative path with `/` separators, as Obsidian uses. */
@@ -14,6 +17,11 @@ export interface FileInfo {
 export interface ListOptions {
   /** Folder names to skip at any depth, in addition to dot folders. */
   ignore?: readonly string[];
+}
+
+export interface ListNotesOptions extends ListOptions {
+  /** Also list `.adoc` notes; on by default. */
+  asciidoc?: boolean;
 }
 
 export interface ListFilesOptions extends ListOptions {
@@ -45,18 +53,35 @@ export async function listFiles(dir: string, options: ListFilesOptions): Promise
   return out.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-/** List markdown files, skipping dot folders such as `.obsidian` and `.trash` and any `ignore`d folder name. */
+/**
+ * List note files (`.md` and, unless `asciidoc` is false, `.adoc`), skipping dot folders such as `.obsidian`
+ * and `.trash` and any `ignore`d folder name.
+ */
+// @tg: implements:: [[openspec:node-vault-loader#List markdown files]]
+export function listNotes(vaultDir: string, options: ListNotesOptions = {}): Promise<FileInfo[]> {
+  const { asciidoc = true, ...rest } = options;
+  return listFiles(vaultDir, { ...rest, accept: (name) => isNoteName(name, asciidoc) });
+}
+
+/** List markdown files only. */
+/** @deprecated Use `listNotes`, which also lists AsciiDoc notes. */
 // @tg: implements:: [[openspec:node-vault-loader#List markdown files]]
 export function listMarkdown(vaultDir: string, options: ListOptions = {}): Promise<FileInfo[]> {
-  return listFiles(vaultDir, { ...options, accept: (name) => name.toLowerCase().endsWith('.md') });
+  return listNotes(vaultDir, { ...options, asciidoc: false });
+}
+
+function isNoteName(name: string, asciidoc: boolean): boolean {
+  const n = name.toLowerCase();
+  return n.endsWith('.md') || (asciidoc && n.endsWith('.adoc'));
 }
 
 export function toVaultPath(vaultDir: string, full: string): string {
   return relative(vaultDir, full).split(sep).join('/');
 }
 
-export function isNotePath(path: string, ignore: readonly string[] = []): boolean {
-  return path.toLowerCase().endsWith('.md') && !path.split('/').some((seg) => seg.startsWith('.') || ignore.includes(seg));
+/** True for a note path outside dot folders and ignored folders; `.adoc` counts unless `asciidoc` is false. */
+export function isNotePath(path: string, ignore: readonly string[] = [], asciidoc = true): boolean {
+  return isNoteName(path, asciidoc) && !path.split('/').some((seg) => seg.startsWith('.') || ignore.includes(seg));
 }
 
 export interface ReadNote {
@@ -65,12 +90,19 @@ export interface ReadNote {
   frontmatterError: string | null;
 }
 
-/** Read a note (read-only) and parse its YAML frontmatter like Obsidian does. */
+/**
+ * Read a note (read-only) and parse its YAML frontmatter like Obsidian does. For an `.adoc` note the
+ * frontmatter is the merged properties of its leading comment block and `:tg-*:` attributes.
+ */
 // @tg: implements:: [[openspec:node-vault-loader#No host dependencies]]
 // @tg: implements:: [[openspec:node-vault-loader#Read a note read-only]]
 export async function readNote(vaultDir: string, path: string): Promise<ReadNote> {
   const text = await readFile(join(vaultDir, ...path.split('/')), 'utf8');
   const hash = createHash('sha256').update(text).digest('hex');
+  if (noteFormat(path) === 'adoc') {
+    const r = noteFrontmatter(path, text, parseYaml);
+    return { note: { path, text, frontmatter: r.frontmatter }, hash, frontmatterError: r.error };
+  }
   const { yaml } = splitFrontmatter(text);
   let frontmatter: Record<string, unknown> | null = null;
   let frontmatterError: string | null = null;

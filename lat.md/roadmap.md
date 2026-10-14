@@ -101,7 +101,7 @@ Planned for 0.17 and later. Once the developer wedge works, it brings in Obsidia
 | --- | --- | --- |
 | Dataview, Breadcrumbs and Juggl import | Converts their fields and queries to typed edges and Cypher, with a report of what did not convert | Dataview already uses `key:: value`: "Dataview fields with meaning" |
 | Embeddings in the plugin | On demand after a first CLI iteration, see below | Semantic search on mobile without the [[sidecar]] |
-| AsciiDoc notes | The open OpenSpec change asciidoc-notes | Parked until an outside user asks for it |
+| AsciiDoc notes | `.adoc` files as typed notes in every host, see [[asciidoc]] | Implemented on request (Oct 14, 2026), release pending |
 
 Gate: the GitHub Action has steady outside users before anything under Later starts.
 

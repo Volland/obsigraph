@@ -9,7 +9,7 @@ import { BAD_TITLE, luhmannParentOf, planWorkspaceNote, typesIn } from './new-no
 import { needsSetup, runSetup } from './setup';
 import { WorkspaceIndex } from './workspace-index';
 
-const SOURCE_GLOB = '**/*.{md,ts,tsx,js,jsx,py,rs,go,c,h,mts,cts,mjs,cjs}';
+const SOURCE_GLOB = '**/*.{md,adoc,ts,tsx,js,jsx,py,rs,go,c,h,mts,cts,mjs,cjs}';
 
 type Node = { kind: 'group'; group: BacklinkGroup } | { kind: 'item'; item: BacklinkItem; folder: string } | { kind: 'message'; text: string } | { kind: 'setup' };
 
@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const settings = () => {
     const c = vscode.workspace.getConfiguration('typegraph');
-    return { roots: c.get<string[]>('roots', ['.']), ignore: c.get<string[]>('ignore', ['node_modules']) };
+    return { roots: c.get<string[]>('roots', ['.']), ignore: c.get<string[]>('ignore', ['node_modules']), asciidoc: c.get<boolean>('asciidoc', true) };
   };
   const schemaFolder = () => vscode.workspace.getConfiguration('typegraph').get<string>('schemaFolder', 'Types/');
 

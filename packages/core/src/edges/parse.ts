@@ -218,7 +218,7 @@ export function markdownTarget(dest: string, sourcePath: string | null): { targe
   }
   const base = decoded.slice(decoded.lastIndexOf('/') + 1);
   const dot = base.lastIndexOf('.');
-  if (dot > 0 && base.slice(dot).toLowerCase() !== '.md') return null;
+  if (dot > 0 && !['.md', '.adoc'].includes(base.slice(dot).toLowerCase())) return null;
   const segments: string[] = [];
   if (!decoded.startsWith('/') && sourcePath?.includes('/')) segments.push(...sourcePath.slice(0, sourcePath.lastIndexOf('/')).split('/'));
   for (const seg of decoded.split('/')) {

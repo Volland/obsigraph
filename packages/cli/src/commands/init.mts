@@ -1,5 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
+import { CONFIG_FILE, readConfig, TG_GITIGNORE } from '../config.mjs';
+import { walkProject } from '../walk.mjs';
 import { EXIT_ERROR, EXIT_OK, register, type Command, type Ctx } from '../cli.mjs';
 import { unifiedDiff } from '../diff.mjs';
 import { DOCS_DIRS, existingDocsDir, type DocsDir } from '../root.mjs';
@@ -209,7 +211,31 @@ export function planInit(root: string, agents: readonly Agent[], migrate: boolea
       else add(OPENSPEC_CONFIG, next);
     }
   }
+  planNotes(root, add, notes);
   return { changes, notes };
+}
+
+/**
+ * AsciiDoc notes: when the project holds `.adoc` files outside the docs folder and has no `notes` globs yet,
+ * propose them in `.tg/config.json`, and keep the derived caches in `.tg/` out of git without ignoring the config.
+ * Projects without `.adoc` files are left exactly as they were.
+ */
+// @tg: implements:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes]] {confidence: partial}
+function planNotes(root: string, add: (rel: string, after: string) => void, notes: string[]): void {
+  const adoc = walkProject(root).filter((e) => e.toLowerCase().endsWith('.adoc') && !DOCS_DIRS.some((d) => e.startsWith(`${d}/`)));
+  if (!adoc.length) return;
+  const { config, error } = readConfig(root);
+  if (error) {
+    notes.push(`${error}; its notes globs were not changed.`);
+  } else if (!config.notes.length && !existsSync(join(root, CONFIG_FILE))) {
+    const folders = [...new Set(adoc.map((e) => (e.includes('/') ? e.slice(0, e.indexOf('/')) : '')))].sort();
+    const globs = folders.map((f) => (f ? `${f}/**/*.adoc` : '*.adoc'));
+    add(CONFIG_FILE, `${JSON.stringify({ notes: globs }, null, 2)}\n`);
+    notes.push(`${adoc.length} .adoc file${adoc.length === 1 ? '' : 's'} found; ${CONFIG_FILE} proposes ${globs.join(', ')} as notes. Edit the globs to taste.`);
+  }
+  const ignore = read(join(root, '.tg/.gitignore'));
+  // An earlier `*` would hide the committed config, so it is replaced by the list of derived files.
+  if (ignore === null || ignore.split('\n').some((l) => l.trim() === '*')) add('.tg/.gitignore', TG_GITIGNORE);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { noteFormat, parseAsciidoc } from '../asciidoc/parse.js';
 import { splitFrontmatter } from '../schema/frontmatter.js';
 import type { Graph, GraphEdge } from '../graph/graph.js';
 import { titleOf } from '../graph/graph.js';
@@ -96,24 +97,32 @@ function pack(text: string, max: number): string[] {
 // @tg: implements:: [[openspec:chunking-verbalization#Context prepended to every chunk]]
 // @tg: implements:: [[openspec:chunking-verbalization#Deterministic chunk identity]]
 // @tg: implements:: [[openspec:chunking-verbalization#Heading-aware chunking]]
+// @tg: implements:: [[openspec:chunking-verbalization#AsciiDoc chunks hold visible text]]
 // @tg: implements:: [[openspec:vector-index#Index covers nodes and edges]]
 export function chunkNote(note: ChunkInput, maxChars = DEFAULT_CHUNK_CHARS): Chunk[] {
-  const { body } = splitFrontmatter(note.text);
-  const context = chunkContext(titleOf(note.path), note.labels ?? [], note.frontmatter);
-  const sections: { headingPath: string[]; lines: string[] }[] = [{ headingPath: [], lines: [] }];
-  const stack: { level: number; text: string }[] = [];
-  let fence: string | null = null;
-  for (const line of body.split(/\r?\n/)) {
-    const f = /^\s*(```|~~~)/.exec(line);
-    if (f) fence = fence === null ? f[1]! : f[1] === fence ? null : fence;
-    const h = fence === null && !f ? /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line) : null;
-    if (h) {
-      const level = h[1]!.length;
-      while (stack.length && stack[stack.length - 1]!.level >= level) stack.pop();
-      stack.push({ level, text: h[2]! });
-      sections.push({ headingPath: stack.map((s) => s.text), lines: [] });
-    } else {
-      sections[sections.length - 1]!.lines.push(line);
+  const adoc = noteFormat(note.path) === 'adoc' ? parseAsciidoc(note.text, note.path) : null;
+  const frontmatter = note.frontmatter ?? adoc?.meta ?? null;
+  const fmTitle = frontmatter?.title;
+  const title = adoc ? (typeof fmTitle === 'string' && fmTitle.trim() ? fmTitle.trim() : adoc.title ?? titleOf(note.path)) : titleOf(note.path);
+  const context = chunkContext(title, note.labels ?? [], frontmatter);
+  // AsciiDoc sections come with only their reader-visible text; Markdown is split on `#` headings here.
+  const sections: { headingPath: string[]; lines: string[] }[] = adoc ? adoc.chunks.map((c) => ({ headingPath: c.headingPath, lines: [c.text] })) : [{ headingPath: [], lines: [] }];
+  if (!adoc) {
+    const { body } = splitFrontmatter(note.text);
+    const stack: { level: number; text: string }[] = [];
+    let fence: string | null = null;
+    for (const line of body.split(/\r?\n/)) {
+      const f = /^\s*(```|~~~)/.exec(line);
+      if (f) fence = fence === null ? f[1]! : f[1] === fence ? null : fence;
+      const h = fence === null && !f ? /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line) : null;
+      if (h) {
+        const level = h[1]!.length;
+        while (stack.length && stack[stack.length - 1]!.level >= level) stack.pop();
+        stack.push({ level, text: h[2]! });
+        sections.push({ headingPath: stack.map((s) => s.text), lines: [] });
+      } else {
+        sections[sections.length - 1]!.lines.push(line);
+      }
     }
   }
   const chunks: Chunk[] = [];

@@ -132,6 +132,12 @@ A `@tg:` comment directly above a test call (`it`, `test`, `describe`, with `.ea
 
 `tg check` passes the index to [[packages/core/src/latmd/check.ts#checkLattice]], which reports unresolved `openspec:` annotation targets and unknown frontmatter entries; hosts that pass no index (plugin, export) skip these checks. Missing traceability is never a check finding. [[packages/core/src/openspec/trace.ts#traceRequirements]] builds the matrix for `tg trace [capability...] [--gaps] [--strict] [--json]` (`packages/cli/src/commands/trace.mts`): a requirement is implemented when an `implements` edge reaches it or a scenario, verified when every scenario has a `verifies` edge, and documented when frontmatter names it. `--strict` exits 1 on any unimplemented or unverified requirement. [[packages/core/src/latmd/graph.ts#buildLatGraph]] adds `Requirement` and `Scenario` nodes linked by `contains`, so `tg cypher`, `tg edges` and the `tg_trace` MCP tool see the same links.
 
+## AsciiDoc notes
+
+`.adoc` files matched by the `notes` globs of the committed `.tg/config.json` are read as notes: checked by `tg check`, found by locate, section and search, and queryable with `tg cypher`; they are never scanned as code.
+
+`packages/cli/src/config.mts` reads `{ "notes": ["book/**/*.adoc"] }` (a broken file is an error). `checkNotes` in `packages/cli/src/notes.mts` reports broken includes and cross references, ambiguous links, source links to a missing file or symbol and unreadable property blocks as errors, and edge syntax that would render, property conflicts and `.adoc` files in the docs folder as warnings that always print. `tg init` proposes the globs when it finds `.adoc` files and writes a `.tg/.gitignore` that ignores only the vector cache, so the config can be committed. See [[asciidoc#Hosts route by extension]].
+
 ## Vault integration
 
 A `lat.md/` folder inside a vault is read in place through the lat resolver, so nested-heading and short-id links work in Obsidian without rewriting files; `tg export` and `tg import` cover interchange.

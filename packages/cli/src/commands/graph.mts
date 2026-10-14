@@ -1,4 +1,5 @@
 import { BuiltinEngine, buildLatGraph, CypherError, isSpecTarget, resultToJson, type CodeMode, type QueryResult, type Value } from '@obsigraph/core';
+import { parseYaml } from '@obsigraph/node-vault';
 import { EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, register, type Command } from '../cli.mjs';
 import { NoLatDir, Project } from '../project.mjs';
 
@@ -44,7 +45,7 @@ export const cypher: Command = {
     try {
       const mode = codeMode(flags.get('code'), ctx.env.TG_CODE);
       const files = mode === 'off' ? [] : project.codeSources();
-      result = new BuiltinEngine(buildLatGraph(project.index(), { code: { mode, files }, specs: project.specIndex() }).graph, () => ({ timeoutMs: 10_000 })).run(query);
+      result = new BuiltinEngine(buildLatGraph(project.index(), { code: { mode, files }, specs: project.specIndex(), notes: project.noteFiles().map((path) => ({ path, text: project.text(path) ?? '' })), parseYaml }).graph, () => ({ timeoutMs: 10_000 })).run(query);
     } catch (e) {
       if (e instanceof CypherError) {
         ctx.err(`${e.message}${e.line > 0 ? ` (line ${e.line}, column ${e.column})` : ''}\n`);

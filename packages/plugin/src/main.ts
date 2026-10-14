@@ -1,5 +1,5 @@
 import type { CodeMode, StyleSource } from '@obsigraph/core';
-import { getIcon, Keymap, Notice, Plugin } from 'obsidian';
+import { getIcon, Keymap, Notice, parseYaml, Plugin } from 'obsidian';
 import { latLinkTarget } from './lat-links';
 import { makeStyler, type Styler } from './render/styler';
 import type { EditorView } from '@codemirror/view';
@@ -33,6 +33,8 @@ export default class ObsigraphPlugin extends Plugin {
       () => this.settings.codeMode,
       () => this.settings.codeRoot,
       () => this.settings.frontmatterEdges,
+      () => this.settings.asciidoc,
+      parseYaml,
     );
     this.addSettingTab(new ObsigraphSettingTab(this.app, this));
 

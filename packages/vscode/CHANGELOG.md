@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0
+
+- **AsciiDoc notes.** `.adoc` files are indexed as notes beside markdown: properties from a leading `////` block and `:tg-*:` attributes, edges from `// @tg:` comments, with backlinks and the graph for `.adoc` editors. The setting `typegraph.asciidoc` (default on) turns it off, and the file watcher and activation cover `.adoc`.
+- **New typed notes** keep the format of the type's template: an `.adoc` template creates an `.adoc` note with its properties filled in.
+
 ## 0.10.1
 
 - **Fixed an empty graph on first open.** The new panel takes focus before it reports ready, so no file was active and the *Active file* graph stayed empty until you switched editors. It now starts from the file you had open, and an empty graph says why in the toolbar.

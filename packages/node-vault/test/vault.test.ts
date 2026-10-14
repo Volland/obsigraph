@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { isNotePath, listMarkdown, readNote } from '../src/index';
+import { isNotePath, listMarkdown, listNotes, readNote } from '../src/index';
 
 function vault(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'nv-'));
@@ -58,4 +58,37 @@ it('keeps the text and reports a one-line error for invalid YAML', async () => {
   expect(r.frontmatterError).toMatch(/\S/);
   expect(r.frontmatterError).not.toContain('\n');
   expect(r.note.text).toContain('body');
+});
+
+// @tg: verifies:: [[openspec:node-vault-loader#List markdown files#AsciiDoc listed]] {level: unit}
+// @lat: [[tests/asciidoc-notes#Hosts#Node vault lists notes]]
+it('lists AsciiDoc notes beside Markdown unless turned off', async () => {
+  const dir = vault({ 'a.md': '', 'book/ch01.adoc': '', 'book/notes.txt': '', '.obsidian/x.adoc': '' });
+  expect((await listNotes(dir)).map((f) => f.path)).toEqual(['a.md', 'book/ch01.adoc']);
+  expect((await listNotes(dir, { asciidoc: false })).map((f) => f.path)).toEqual(['a.md']);
+  expect((await listMarkdown(dir)).map((f) => f.path)).toEqual(['a.md']);
+  expect(isNotePath('book/ch01.adoc')).toBe(true);
+  expect(isNotePath('book/ch01.adoc', [], false)).toBe(false);
+  expect(isNotePath('.obsidian/x.adoc')).toBe(false);
+});
+
+// @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#AsciiDoc metadata]] {level: unit}
+// @lat: [[tests/asciidoc-notes#Hosts#Node vault reads properties]]
+it('reads the merged properties of an AsciiDoc note', async () => {
+  const text = '////\ntype: Chapter\n////\n= Metagraphs\n:tg-status: draft\n\nBody.\n';
+  const dir = vault({ 'ch.adoc': text });
+  const r = await readNote(dir, 'ch.adoc');
+  expect(r.note.frontmatter).toEqual({ type: 'Chapter', status: 'draft' });
+  expect(r.frontmatterError).toBeNull();
+  expect(r.note.text).toBe(text);
+});
+
+// @tg: verifies:: [[openspec:node-vault-loader#Read a note read-only#Broken frontmatter]] {level: unit}
+// @lat: [[tests/asciidoc-notes#Hosts#Node vault block error]]
+it('reports a leading AsciiDoc block that is not YAML as a one-line error', async () => {
+  const dir = vault({ 'ch.adoc': '////\nCopyright 2024 Someone\n////\n= T\n' });
+  const r = await readNote(dir, 'ch.adoc');
+  expect(r.note.frontmatter).toBeNull();
+  expect(r.frontmatterError).toMatch(/\S/);
+  expect(r.frontmatterError).not.toContain('\n');
 });

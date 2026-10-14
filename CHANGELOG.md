@@ -2,6 +2,22 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.19.0 — 2026-10-14
+
+### Added
+
+- **AsciiDoc notes.** `.adoc` files are typed notes in every host. Properties come from a leading `////` comment block (YAML, as frontmatter) and `:tg-*:` header attributes, with the block winning; typed edges are written only in comments, as `// @tg: cites:: [[Source]] {page: 12}` lines or in `////` blocks that start with `@tg`, so Asciidoctor renders each file exactly as before. A comment above a heading belongs to that section and the edge records it as `section`. `xref:` and `<<…>>` become `links_to` edges when link edges are on, `include::` becomes an ordered `includes` edge (with `leveloffset`, `tags` and `lines`; a source file include ends at its code node), and sections get heading-path ids with the explicit and generated AsciiDoc ids as aliases. A test-only oracle (`@asciidoctor/core`) pins render safety, ids and section trees.
+- **Hosts.** Obsidian, the VS Code extension and the sidecar index `.adoc` files by default, with a setting (`typegraph.asciidoc`, the plugin's *AsciiDoc notes*, `OBSIGRAPH_ASCIIDOC=0`) to turn it off; the plugin reads them through the vault and does not register itself as their editor. `tg` reads the files matched by `notes` in the new committed `.tg/config.json`: `tg check` reports broken includes, cross references and source links, ambiguous links and unreadable property blocks, warns about edge syntax that would render and about `.adoc` files in `lat.md/`; `tg locate`, `section`, `search` and `cypher` reach them. `tg init` proposes the globs when it finds `.adoc` files and writes a `.tg/.gitignore` that ignores only the vector cache.
+- A bare link now matches `.md` and `.adoc` notes; when both exist it is reported as ambiguous and resolves to neither, and a link with an extension names that file. New typed notes take the format of their type's template, so an `.adoc` template creates an `.adoc` note.
+- **TGS 0.3** defines a note as a Markdown or AsciiDoc file and documents the AsciiDoc forms; it adds no schema key. TGS 0.2 is archived unchanged.
+
+### Changed
+
+- `.adoc` files are no longer scanned as source code by `tg`. Only `@tg:` comments in them were read before; with a `notes` glob those comments now make edges with section anchoring, and without one they are ignored.
+- The OKF export skips `.adoc` notes, lists each in the report and writes links to them as plain text. Schema notes stay Markdown and `{{edge:}}` embeds are not expanded in `.adoc`.
+- The vector cache's `.tg/.gitignore` now ignores `vectors.json` and `vectors.f32` instead of everything, so `.tg/config.json` can be committed.
+- `listMarkdown` in `node-vault` is deprecated in favor of `listNotes`, which also lists `.adoc` files.
+
 ## 0.18.1 — 2026-10-14
 
 ### Fixed

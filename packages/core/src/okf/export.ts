@@ -1,3 +1,4 @@
+import { noteFormat } from '../asciidoc/parse.js';
 import { Graph } from '../graph/graph.js';
 import { pathResolver } from '../graph/resolve.js';
 import { expandEmbeds, mapProse, outsideCode, Report } from '../latmd/export.js';
@@ -44,7 +45,9 @@ export type OkfChangeKind =
   | 'edge-embed'
   | 'renamed-reserved'
   | 'generated-index'
-  | 'invalid-frontmatter';
+  | 'invalid-frontmatter'
+  | 'skipped-asciidoc'
+  | 'asciidoc-link';
 
 export interface OkfChange {
   kind: OkfChangeKind;
@@ -75,6 +78,8 @@ export const OKF_CHANGE_DESCRIPTIONS: Record<OkfChangeKind, string> = {
   'renamed-reserved': 'notes named index.md or log.md renamed, links follow',
   'generated-index': 'directory index.md files generated',
   'invalid-frontmatter': 'notes with unparseable frontmatter left as written (not conformant)',
+  'skipped-asciidoc': 'AsciiDoc notes left out of the bundle (OKF concepts are Markdown)',
+  'asciidoc-link': 'links to AsciiDoc notes written as plain text, with the edge type kept',
 };
 
 const RESERVED = new Set(['index.md', 'log.md']);
@@ -232,6 +237,7 @@ function rewriteLinks(
   resolveAttachment: (link: string) => string | null,
   usedAttachments: Set<string>,
   report: Report<OkfChangeKind>,
+  skipped: ReadonlySet<string>,
 ): string {
   return mapProse(text, (line, n) =>
     outsideCode(line, (part) =>
@@ -246,6 +252,10 @@ function rewriteLinks(
           return `[${label}](${anchor || '#'})`;
         }
         const note = resolveNote(filePart);
+        if (note && skipped.has(note)) {
+          report.add('asciidoc-link', where);
+          return label;
+        }
         if (bang) {
           if (note) {
             report.add('transclusion', where);
@@ -310,13 +320,18 @@ function indexFiles(metas: Map<string, Meta>, title: string): OkfFile[] {
 // @tg: implements:: [[openspec:okf-compat#Concept frontmatter]]
 // @tg: implements:: [[openspec:okf-compat#OKF export projection]]
 // @tg: implements:: [[openspec:okf-compat#Reserved filenames and index files]]
-export function exportOkf(notes: OkfNote[], options: OkfExportOptions = {}): OkfExportResult {
+// @tg: implements:: [[openspec:okf-compat#AsciiDoc notes skipped in OKF export]]
+export function exportOkf(allNotes: OkfNote[], options: OkfExportOptions = {}): OkfExportResult {
   const report = new Report<OkfChangeKind>();
   const defaultType = options.defaultType?.trim() || 'Note';
+  const skipped = new Set(allNotes.filter((n) => noteFormat(n.path) === 'adoc').map((n) => n.path));
+  for (const p of [...skipped].sort()) report.add('skipped-asciidoc', p);
+  const notes = allNotes.filter((n) => !skipped.has(n.path));
   const paths = notes.map((n) => n.path);
   const renames = reservedRenames(paths, report);
   const mapped = (p: string): string => renames.get(p) ?? p;
-  const noteResolver = pathResolver(() => paths);
+  // Links resolve over every note, so a link to a skipped chapter is recognized and not taken for a broken one.
+  const noteResolver = pathResolver(() => [...paths, ...skipped]);
   const attachmentPaths = options.attachments ?? [];
   const graph = new Graph(noteResolver);
   for (const n of notes) graph.upsertNote({ path: n.path, text: n.text, frontmatter: null });
@@ -337,7 +352,7 @@ export function exportOkf(notes: OkfNote[], options: OkfExportOptions = {}): Okf
     };
     let text = note.text.replace(/\r\n/g, '\n');
     text = expandEmbeds(note.path, text, graph, report);
-    text = rewriteLinks(note.path, text, resolveNote, resolveAttachment, used, report);
+    text = rewriteLinks(note.path, text, resolveNote, resolveAttachment, used, report, skipped);
     const fixed = conceptFrontmatter({ ...note, text }, splitFrontmatter(text).body, defaultType, report);
     const out = mapped(note.path);
     metas.set(out, fixed.meta);

@@ -79,7 +79,8 @@ export interface SchemaSet {
 export const DEFAULT_SCHEMA_FOLDER = 'Types/';
 /** The Typed Graph Schema version this reader implements. */
 // @tg: implements:: [[openspec:tgs-spec#Versioning]]
-export const TGS_VERSION = '0.2';
+// @tg: implements:: [[openspec:tgs-spec#AsciiDoc notes in TGS 0.3]] {confidence: partial}
+export const TGS_VERSION = '0.3';
 // @tg: implements:: [[openspec:tgs-spec#Namespace IRI]]
 export const TGS_NAMESPACE = 'https://volland.github.io/obsigraph/ns/tgs#';
 export const DEFAULT_BASE_IRI = 'urn:tgs:';
@@ -540,18 +541,24 @@ export function chooseTemplate(schema: TypeSchema, sources: { linkedBody: string
   return { body: generateTemplateBody(schema), generated: true };
 }
 
-/**
- * Content for a new note created from a type: `type`, defaults, then the
- * template body. With `placeholders`, every declared property gets a key.
- */
-// @lat: [[graph-model#Schema notes]]
-export function renderNoteFromType(schema: TypeSchema, templateBody: string, opts: { placeholders?: boolean; ids?: Record<string, string> } = {}): string {
+/** The properties a new note of a type starts with: `type`, generated ids, defaults and, with `placeholders`, an empty key for each declared property. */
+export function newNoteProperties(schema: TypeSchema, opts: { placeholders?: boolean; ids?: Record<string, string> } = {}): Record<string, unknown> {
   const fm: Record<string, unknown> = { type: schema.type, ...opts.ids };
   for (const p of schema.properties) {
     if (p.name in fm) continue;
     if (p.default !== null && p.default !== undefined) fm[p.name] = p.default;
     else if (opts.placeholders) fm[p.name] = p.many ? [] : null;
   }
+  return fm;
+}
+
+/**
+ * Content for a new note created from a type: `type`, defaults, then the
+ * template body. With `placeholders`, every declared property gets a key.
+ */
+// @lat: [[graph-model#Schema notes]]
+export function renderNoteFromType(schema: TypeSchema, templateBody: string, opts: { placeholders?: boolean; ids?: Record<string, string> } = {}): string {
+  const fm = newNoteProperties(schema, opts);
   const body = templateBody.trim();
   return `---\n${toYaml(fm, { emptyNull: true })}\n---\n${body ? `\n${body}\n` : ''}`;
 }

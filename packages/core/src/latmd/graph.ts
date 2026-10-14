@@ -1,6 +1,9 @@
 import type { ParsedEdge } from '../edges/parse.js';
 import { buildCodeLayer, upsertCodeNode, type CodeLayer, type CodeMode, type CodeSource } from '../code/layer.js';
+import { noteFormat, parseAsciidoc } from '../asciidoc/parse.js';
+import type { YamlParser } from '../asciidoc/meta.js';
 import { Graph } from '../graph/graph.js';
+import { isSourceTarget, splitTarget } from './links.js';
 import { isSpecTarget, type SpecIndex } from '../openspec/index.js';
 import type { LatIndex } from './index.js';
 
@@ -9,6 +12,10 @@ export interface LatGraphOptions {
   code?: { mode: CodeMode; files: CodeSource[] };
   /** OpenSpec requirements to add as `Requirement` and `Scenario` nodes. */
   specs?: SpecIndex | null;
+  /** AsciiDoc notes (project-relative path and text): one node each with its properties, comment edges, includes and cross references. */
+  notes?: { path: string; text: string }[];
+  /** YAML parser for the notes' property blocks. */
+  parseYaml?: YamlParser;
 }
 
 function edge(type: string, target: string, line: number): ParsedEdge {
@@ -46,16 +53,30 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
     const r = index.resolve(target);
     return r.kind === 'section' ? r.id : null;
   };
-  const code = options.code ? buildCodeLayer(options.code.files, options.code.mode, resolveSection) : { nodes: [], unresolved: [] };
+  const notes = (options.notes ?? []).filter((n) => noteFormat(n.path) === 'adoc');
+  const parsedNotes = notes.map((n) => ({ ...n, parsed: parseAsciidoc(n.text, n.path, { parseYaml: options.parseYaml, linkEdges: true }) }));
+  // Source files a note includes or links get code nodes, so an include ends at the file it names.
+  const noteCodeTargets = parsedNotes.flatMap((n) => n.parsed.edges.filter((e) => isSourceTarget(e.target)).map((e) => (e.subpath ? `${e.target}#${e.subpath}` : e.target)));
+  const code = options.code ? buildCodeLayer(options.code.files, options.code.mode, resolveSection, noteCodeTargets) : { nodes: [], unresolved: [] };
   for (const n of code.nodes) known.add(n.path);
+  // A note is reached by its path, or by its name when that is unambiguous, as in a vault.
+  const noteNames = new Map<string, string | null>();
+  for (const n of notes) {
+    known.add(n.path);
+    const base = n.path.slice(n.path.lastIndexOf('/') + 1);
+    for (const key of [n.path, n.path.replace(/\.adoc$/i, ''), base, base.replace(/\.adoc$/i, '')].map((k) => k.toLowerCase())) {
+      noteNames.set(key, noteNames.has(key) && noteNames.get(key) !== n.path ? null : n.path);
+    }
+  }
   for (const r of specs?.requirements() ?? []) {
     known.add(r.id);
     for (const sc of r.scenarios) known.add(sc.id);
   }
 
   const graph = new Graph(
-    (link) => (known.has(link) ? link : null),
+    (link) => (known.has(link) ? link : noteNames.get(link.toLowerCase()) ?? null),
     (link, sub) => (known.has(`${link}#${sub}`) ? `${link}#${sub}` : null),
+    { linkEdges: true, parseYaml: options.parseYaml },
   );
 
   /** A link target written in a doc: a section, an OpenSpec requirement or scenario, or a code node in the graph. */
@@ -136,5 +157,7 @@ export function buildLatGraph(index: LatIndex, options: LatGraphOptions = {}): {
   }
 
   for (const n of code.nodes) upsertCodeNode(graph, n);
+  // Notes last, so their includes and links end at the code and section nodes already there.
+  for (const n of parsedNotes) graph.upsertNote({ path: n.path, text: n.text, frontmatter: n.parsed.meta });
   return { graph, code };
 }

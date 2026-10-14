@@ -7,6 +7,7 @@ import {
   DEFAULT_BASE_IRI,
   Graph,
   iriOf,
+  parseAsciidoc,
   readSchemaNote,
   scaffoldSchemaNote,
   schemasFromGraph,
@@ -131,5 +132,33 @@ describe('TGS JSON Schema', () => {
     for (const m of src.matchAll(/\$\{TGS\}(\w+)/g)) used.add(m[1]!);
     expect([...used].sort()).toEqual(ns.terms.map((t) => t.term).sort());
     expect(ns.namespace).toBe('https://volland.github.io/obsigraph/ns/tgs#');
+  });
+});
+
+describe('TGS AsciiDoc notes', () => {
+  // @tg: verifies:: [[openspec:tgs-spec#AsciiDoc notes in TGS 0.3#AsciiDoc example]] {level: unit}
+  // @lat: [[tests/tgs-spec#AsciiDoc example reads as documented]]
+  it('reads the AsciiDoc example of the specification into the graph it shows', () => {
+    const spec = readFileSync(join(SPEC, 'SPEC.md'), 'utf8');
+    const block = /```asciidoc\n([\s\S]*?)```/.exec(spec)![1]!;
+    const r = parseAsciidoc(block, 'book/ch03.adoc', { parseYaml });
+    expect(r.title).toBe('Metagraphs');
+    expect(r.meta).toEqual({ type: 'Chapter', status: 'draft', pages: 12 });
+    expect(r.edges.map((e) => [e.type, e.target, e.props])).toEqual([
+      ['cites', 'Pavlyshyn 2024', { page: 12, section: 'book/ch03.adoc#Definition' }],
+      ['defines', 'Metagraph', { section: 'book/ch03.adoc#Definition' }],
+    ]);
+    expect(r.sections.find((x) => x.aliases.includes('definition'))?.id).toBe('book/ch03.adoc#Definition');
+  });
+
+  // @tg: verifies:: [[openspec:tgs-spec#AsciiDoc notes in TGS 0.3#Published 0.3]] {level: unit}
+  // @lat: [[tests/tgs-spec#Version 0.3 published beside 0.2]]
+  it('publishes 0.3 as the current version with 0.2 archived unchanged', () => {
+    expect(readFileSync(join(SPEC, 'SPEC.md'), 'utf8')).toContain('spec/tgs/v0.3/');
+    expect(JSON.parse(readFileSync(join(SPEC, 'tgs.schema.json'), 'utf8')).$id).toContain('/spec/tgs/v0.3/');
+    const archived = readFileSync(join(SPEC, 'archive/v0.2/SPEC.md'), 'utf8');
+    expect(archived).toContain('# Typed Graph Schema (TGS) 0.2');
+    expect(archived).not.toContain('AsciiDoc');
+    expect(readFileSync(join(__dirname, '../../../site/build-spec.mjs'), 'utf8')).toContain("const VERSION = '0.3'");
   });
 });

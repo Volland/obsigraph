@@ -2,7 +2,7 @@
   "name": "typegraph-vscode",
   "displayName": "TypeGraph",
   "description": "Typed backlinks and a graph view for your markdown and code, with no Obsidian required.",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": true,
   "publisher": "pavlyshyn",
   "license": "MIT",
@@ -13,7 +13,7 @@
   "keywords": ["markdown", "backlinks", "graph", "lat.md", "knowledge graph", "typed links"],
   "engines": { "vscode": "^1.90.0" },
   "main": "dist/extension.cjs",
-  "activationEvents": ["workspaceContains:**/*.md", "onStartupFinished"],
+  "activationEvents": ["workspaceContains:**/*.md", "workspaceContains:**/*.adoc", "onStartupFinished"],
   "contributes": {
     "configuration": {
       "title": "TypeGraph",
@@ -29,6 +29,11 @@
           "items": { "type": "string" },
           "default": ["node_modules"],
           "markdownDescription": "Folder names skipped at any depth, in addition to dot folders."
+        },
+        "typegraph.asciidoc": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Index `.adoc` files as notes beside markdown: properties from a leading `////` block and `:tg-*:` attributes, edges from `// @tg:` comments."
         },
         "typegraph.schemaFolder": {
           "type": "string",

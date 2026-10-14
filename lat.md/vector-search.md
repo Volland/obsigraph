@@ -18,6 +18,8 @@ Implemented by `OllamaProvider` (`packages/sidecar/src/vectors/provider.mts`) (`
 
 Each note is chunked, with its title, type labels and frontmatter prepended to every chunk so a chunk carries its own context.
 
+An `.adoc` note is chunked at its sections with only reader-visible text: comments, attribute entries, includes and block attribute lines are dropped and cross references keep their text ([[packages/core/src/embed/chunk.ts#chunkNote]], [[asciidoc]]).
+
 A node's score is its best-matching chunk, or the pooled vector of its chunks.
 
 [[packages/core/src/embed/chunk.ts#chunkNote]] splits by heading, then packs paragraphs, sentences and words under a character limit (default 1500, context included); the stored body is returned in citations while the embedded text carries the context. Chunk ids hash path, heading path, ordinal and body with a pure-JS hash, so unchanged chunks keep their ids. [[packages/core/src/embed/chunk.ts#nodeScore]] implements both scoring modes.

@@ -6,6 +6,9 @@ import { backlinksFor, panelRows } from '../src/backlinks';
 import { GraphSession } from '../src/graph-session';
 import { WorkspaceIndex } from '../src/workspace-index';
 
+// Built from parts so the repository's own scanner does not read these fixtures as annotations.
+const TG = '@' + 'tg';
+
 export function workspace(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'tgvs-'));
   for (const [rel, text] of Object.entries(files)) {
@@ -194,4 +197,32 @@ it('clears expanded nodes when the active file changes and keeps the last file w
   expect(ids(null)).toEqual(['notes/Alice.md', 'notes/Bob.md', 'notes/Carol.md', 'notes/Eve.md']);
   expect(ids('notes/Eve.md')).toEqual(['notes/Alice.md', 'notes/Eve.md']);
   expect(ids('notes/Carol.md')).toEqual(['notes/Bob.md', 'notes/Carol.md']);
+});
+
+const BOOK: Record<string, string> = {
+  'Concepts/Metagraph.md': 'appears_in:: [[ch03]]\n',
+  'book/ch03.adoc': '////\ntype: Chapter\n////\n= Metagraphs\n\n// ' + TG + ': defines:: [[Metagraph]]\n',
+};
+
+// @tg: verifies:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes#Obsidian graph]] {level: unit}
+// @lat: [[tests/asciidoc-notes#Hosts#VS Code indexes notes]]
+it('indexes AsciiDoc notes with backlinks and live updates, unless turned off', async () => {
+  const dir = workspace(BOOK);
+  const idx = new WorkspaceIndex({ workspace: dir, roots: ['.'], ignore: [] });
+  await idx.load();
+  expect(idx.isNote('book/ch03.adoc')).toBe(true);
+  expect(idx.graph.node('book/ch03.adoc')).toMatchObject({ labels: ['Chapter'], props: { title: 'Metagraphs' } });
+  expect(backlinksFor(idx, 'book/ch03.adoc').groups.map((g) => g.title)).toEqual(['appears_in']);
+  expect(backlinksFor(idx, 'Concepts/Metagraph.md').groups.map((g) => g.title)).toEqual(['defines']);
+
+  writeFileSync(join(dir, 'book/ch03.adoc'), '= Metagraphs\n\n// ' + TG + ': cites:: [[Metagraph]]\n');
+  await idx.update('book/ch03.adoc');
+  expect(backlinksFor(idx, 'Concepts/Metagraph.md').groups.map((g) => g.title)).toEqual(['cites']);
+
+  // @tg: verifies:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes#Setting off]] {level: unit}
+  const off = new WorkspaceIndex({ workspace: dir, roots: ['.'], ignore: [], asciidoc: false });
+  await off.load();
+  await off.update('book/ch03.adoc');
+  expect(off.isNote('book/ch03.adoc')).toBe(false);
+  expect(off.graph.node('book/ch03.adoc')).toBeUndefined();
 });

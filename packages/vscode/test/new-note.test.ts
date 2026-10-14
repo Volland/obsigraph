@@ -49,3 +49,17 @@ it('branches a child or sibling from the active note with the next free Luhmann 
   const sibling = await planWorkspaceNote(idx, dir, { schemaFolder: 'Types/', type: 'Idea', title: 'Sib', folder: 'Ideas', parent: { ...parent, placement: 'sibling' } });
   expect(sibling.ids.luhmann).toBe('2');
 });
+
+// @tg: verifies:: [[openspec:asciidoc-notes#AsciiDoc limits in this version#Template decides format]] {level: unit}
+// @lat: [[tests/asciidoc-notes#Hosts#VS Code creates an adoc note]]
+it('plans an .adoc note when the type template is an .adoc file', async () => {
+  const dir = workspace({
+    'Types/Chapter.md': '---\ntgs: "0.2"\nschemas:\n  Chapter:\n    properties:\n      status: {kind: text, default: draft}\n    template: "Templates/Chapter.adoc"\n---\nChapters.\n',
+    'Templates/Chapter.adoc': '= {{title}}\n:tg-status:\n\n== Notes\n',
+  });
+  const idx = new WorkspaceIndex({ workspace: dir, roots: ['.'], ignore: [] });
+  await idx.load();
+  const plan = await planWorkspaceNote(idx, dir, { schemaFolder: 'Types/', type: 'Chapter', title: 'Reification', folder: 'book' });
+  expect(plan.path).toBe('book/Reification.adoc');
+  expect(plan.content).toBe('////\ntype: Chapter\nstatus: draft\n////\n= Reification\n:tg-status: draft\n\n== Notes\n');
+});

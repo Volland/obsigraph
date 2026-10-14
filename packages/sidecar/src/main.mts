@@ -79,6 +79,7 @@ export async function startSidecar(env: NodeJS.ProcessEnv = process.env, opts: S
     debounceMs: config.debounceMs,
     pollMs: config.pollMs,
     linkEdges: config.linkEdges,
+    asciidoc: config.asciidoc,
   });
   await sync.start();
   sync.watch();

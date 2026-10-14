@@ -27,6 +27,8 @@ export interface ObsigraphSettings {
   sidecarToken: string;
   /** Read links in frontmatter properties as edges typed by the property name. */
   frontmatterEdges: boolean;
+  /** Index `.adoc` files as notes beside Markdown. */
+  asciidoc: boolean;
   /** Derived code layer: off, annotated symbols only, or every symbol. */
   codeMode: CodeMode;
   /** Vault folder scanned for source files; empty means the whole vault. */
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: ObsigraphSettings = {
   sidecarUrl: '',
   sidecarToken: '',
   frontmatterEdges: false,
+  asciidoc: true,
   codeMode: 'off',
   codeRoot: '',
 };
@@ -183,6 +186,17 @@ export class ObsigraphSettingTab extends PluginSettingTab {
       .addToggle((t) =>
         t.setValue(this.plugin.settings.frontmatterEdges).onChange(async (v) => {
           this.plugin.settings.frontmatterEdges = v;
+          await this.plugin.saveSettings();
+          await this.plugin.index.reindex();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName('AsciiDoc notes')
+      .setDesc('Index `.adoc` files as notes: properties from a leading `////` comment block and `:tg-*:` attributes, edges from `// @tg:` comments. The files are only read; this plugin does not open or edit them. Re-indexes the vault when changed.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.asciidoc).onChange(async (v) => {
+          this.plugin.settings.asciidoc = v;
           await this.plugin.saveSettings();
           await this.plugin.index.reindex();
         }),

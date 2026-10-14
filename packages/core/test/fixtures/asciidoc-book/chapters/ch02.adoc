@@ -1,0 +1,13 @@
+= Chapter 2. Reification
+
+== Reified Edges
+
+Edges become nodes.
+
+== Typed Links
+
+Second heading with the same title as chapter one.
+
+== Typed Links
+
+Duplicate within one file.

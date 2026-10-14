@@ -9,6 +9,9 @@ import { tokenMatches } from '../src/http.mjs';
 import { startSidecar, type Sidecar } from '../src/main.mjs';
 import type { Processor } from '../src/sync.mjs';
 
+// Built from parts so the repository's own scanner does not read these fixtures as annotations.
+const TG = '@' + 'tg';
+
 const TOKEN = 'test-token-0123456789';
 const running: Sidecar[] = [];
 const dirs: string[] = [];
@@ -348,5 +351,20 @@ describe('sidecar service', () => {
     const body = await json(slow);
     expect(body).toEqual({ error: { kind: 'timeout', message: 'Query timed out', line: 0, column: 0 } });
     expect(JSON.stringify(body)).not.toMatch(/at .*\.ts/);
+  });
+  // @tg: verifies:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes#Setting off]] {level: integration}
+  // @tg: verifies:: [[openspec:asciidoc-notes#Hosts index AsciiDoc notes#Obsidian graph]] {level: integration}
+  // @lat: [[tests/asciidoc-notes#Hosts#Sidecar indexes notes]]
+  it('indexes AsciiDoc notes and picks up edits, unless turned off', async () => {
+    const chapter = '////\ntype: Chapter\n////\n= Metagraphs\n\n// ' + TG + ': defines:: [[Metagraph]]\n';
+    const f = fixture({ 'book/ch03.adoc': chapter });
+    const sc = await start(env(f));
+    const rows = async () => (await json(await query(sc, 'MATCH (c:Chapter)-[:defines]->(m) RETURN c.title, m.title'))).rows;
+    expect(await rows()).toEqual([['Metagraphs', 'Metagraph']]);
+    write(f.vault, 'book/ch03.adoc', chapter.replace('[[Metagraph]]', '[[Hypergraph]]'));
+    await until(async () => (await rows())[0]?.[1] === 'Hypergraph');
+
+    const off = await start(env(f, { OBSIGRAPH_ASCIIDOC: '0' }));
+    expect((await json(await query(off, 'MATCH (c:Chapter) RETURN c'))).rows).toEqual([]);
   });
 });

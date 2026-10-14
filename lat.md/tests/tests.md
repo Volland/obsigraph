@@ -44,3 +44,4 @@ Test specifications whose leaf sections must each be referenced by exactly one `
 - [[plugin-install]] — Obsidian install: manifest, release assets, bundle load and live install check
 - [[tg-trace]] — OpenSpec requirement index, `openspec:` targets and frontmatter, `tg trace`
 - [[tg-validate]] — `tg validate` findings, codes, exit codes, formats and plugin agreement
+- [[asciidoc-notes]] — AsciiDoc notes: parser, render safety, graph, links, chunks, export, new notes and hosts

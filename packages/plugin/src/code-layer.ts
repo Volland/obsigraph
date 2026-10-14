@@ -73,7 +73,7 @@ export class CodeLayer {
       this.mode(),
       (target, source) => {
         const f = this.app.metadataCache.getFirstLinkpathDest(splitTarget(target).file, source);
-        return f && f.extension === 'md' ? f.path : null;
+        return f && (f.extension === 'md' || f.extension === 'adoc') ? f.path : null;
       },
     );
     const next = new Set(layer.nodes.map((n) => n.path));

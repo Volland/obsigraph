@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Graph, pathResolver, type NoteInput } from '@obsigraph/core';
 import type { DataDir } from './data-dir.mjs';
-import { isNotePath, listMarkdown, readNote } from './vault.mjs';
+import { isNotePath, listNotes, parseYaml, readNote } from './vault.mjs';
 
 /** A downstream store fed per changed file, e.g. the Ladybug mirror or vector index. */
 export interface Processor {
@@ -57,14 +57,16 @@ export class VaultSync {
   private lastSync: Date | null = null;
   private lastReconciled: string[] = [];
   readonly frontmatterErrors = new Map<string, string>();
+  private readonly asciidoc: boolean;
 
   constructor(
     private readonly vaultDir: string,
     private readonly data: DataDir,
     private readonly processors: Processor[] = [],
-    private readonly opts: { debounceMs: number; pollMs: number; linkEdges?: boolean } = { debounceMs: 300, pollMs: 0 },
+    private readonly opts: { debounceMs: number; pollMs: number; linkEdges?: boolean; /** Index `.adoc` notes; on by default. */ asciidoc?: boolean } = { debounceMs: 300, pollMs: 0 },
   ) {
-    this.graph = new Graph(pathResolver(() => this.known), undefined, { linkEdges: opts.linkEdges ?? false });
+    this.asciidoc = opts.asciidoc ?? true;
+    this.graph = new Graph(pathResolver(() => this.known), undefined, { linkEdges: opts.linkEdges ?? false, parseYaml });
   }
 
   /** Content hash of a note as last read, for downstream change detection. */
@@ -100,7 +102,7 @@ export class VaultSync {
   async start(): Promise<void> {
     this.state = 'syncing';
     const stored = (await this.data.readJson<StoredState>(STATE_FILE))?.files ?? {};
-    const listing = await listMarkdown(this.vaultDir);
+    const listing = await listNotes(this.vaultDir, { asciidoc: this.asciidoc });
     for (const f of listing) this.known.add(f.path);
 
     const changed: NoteInput[] = [];
@@ -129,7 +131,7 @@ export class VaultSync {
       this.watcher = watch(this.vaultDir, { recursive: true }, (_event, filename) => {
         if (!filename) return;
         const path = filename.toString().split('\\').join('/');
-        if (isNotePath(path)) this.schedule(path);
+        if (isNotePath(path, [], this.asciidoc)) this.schedule(path);
       });
       this.watcher.on('error', () => {
         this.watcher?.close();
@@ -177,7 +179,7 @@ export class VaultSync {
   }
 
   private async poll(): Promise<void> {
-    const listing = await listMarkdown(this.vaultDir).catch(() => null);
+    const listing = await listNotes(this.vaultDir, { asciidoc: this.asciidoc }).catch(() => null);
     if (!listing) return;
     const seen = new Set<string>();
     for (const f of listing) {

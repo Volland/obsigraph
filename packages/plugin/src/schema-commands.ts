@@ -149,7 +149,7 @@ export function registerSchemaCommands(plugin: ObsigraphPlugin): void {
     app.workspace.on('file-menu', (menu, file) => {
       if (file instanceof TFolder) {
         menu.addItem((i) => i.setTitle('New typed note here').setIcon('file-plus').onClick(() => askType(plugin, file.isRoot() ? '' : `${file.path}/`)));
-      } else if (file instanceof TFile && file.extension === 'md' && findLuhmannParent(plugin.index.graph, plugin.index.schemas(), file.path)) {
+      } else if (file instanceof TFile && (file.extension === 'md' || file.extension === 'adoc') && findLuhmannParent(plugin.index.graph, plugin.index.schemas(), file.path)) {
         menu.addItem((i) => i.setTitle('New child note (Luhmann id)').setIcon('corner-down-right').onClick(() => newLuhmannNote(plugin, 'child', file.path)));
         menu.addItem((i) => i.setTitle('New sibling note (Luhmann id)').setIcon('arrow-down').onClick(() => newLuhmannNote(plugin, 'sibling', file.path)));
       }
@@ -362,13 +362,15 @@ async function createFromType(
 ): Promise<void> {
   const { app } = plugin;
   let linkedBody: string | null = null;
+  let linked: string | null = null;
   if (schema.template) {
     const resolve = (link: string, from: string) => app.metadataCache.getFirstLinkpathDest(link, from)?.path ?? null;
-    linkedBody = await bodyOf(app, templatePath(schema.template, schema.path, resolve));
+    linked = templatePath(schema.template, schema.path, resolve);
+    linkedBody = await bodyOf(app, linked);
     if (linkedBody === null) new Notice(`Template ${schema.template} for ${schema.type} was not found; using the next template source.`);
   }
   if (opts.luhmann && !luhmannRule(schema)) opts = { ...opts, luhmann: false };
-  const plan = planNewNote({ schema, title, linkedBody, schemaBody: (await bodyOf(app, schema.path)) ?? '', graph: plugin.index.graph, parent: opts.parent, luhmann: opts.luhmann });
+  const plan = planNewNote({ schema, title, linkedBody, templatePath: linked, schemaBody: (await bodyOf(app, schema.path)) ?? '', graph: plugin.index.graph, parent: opts.parent, luhmann: opts.luhmann });
   let dir = opts.folder;
   if (dir === undefined) {
     const parent = app.fileManager.getNewFileParent(app.workspace.getActiveFile()?.path ?? '');

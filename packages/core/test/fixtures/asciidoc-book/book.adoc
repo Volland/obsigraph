@@ -1,0 +1,18 @@
+////
+type: Book
+status: draft
+////
+= Metagraph Handbook
+:toc:
+:doctype: book
+:chapters: chapters
+:tg-pages: 240
+:tg-concepts: [Metagraph, Reification]
+
+// @tg: cites:: [[Pavlyshyn 2024]] {page: 12}
+
+Welcome to the handbook.
+
+include::{chapters}/ch01.adoc[]
+
+include::chapters/ch02.adoc[leveloffset=+1]
