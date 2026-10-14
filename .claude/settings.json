@@ -8,6 +8,14 @@
             "command": "lat hook claude UserPromptSubmit"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tg hook claude UserPromptSubmit"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -16,6 +24,14 @@
           {
             "type": "command",
             "command": "lat hook claude Stop"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tg hook claude Stop"
           }
         ]
       }

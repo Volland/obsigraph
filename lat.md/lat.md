@@ -16,3 +16,4 @@ This directory defines the high-level concepts, business logic, and architecture
 - [[roadmap]] — shipped releases v0.1 to v0.11, assessment, focus and the phased plan from 0.12
 - [[tests]] — test specifications tied to test code
 - [[publishing]] — releases, store submission and the website
+- [[code-ontology]] — shared vocabulary of intent types and typed edges between intent and code

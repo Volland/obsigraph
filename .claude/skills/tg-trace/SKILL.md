@@ -35,7 +35,11 @@ Put one line per scenario directly above the test call that proves it. It attach
 it('rejects an expired token with 401', () => {
 ```
 
+Put what you know about the link on the link: `{confidence: partial}` when the symbol covers only part of the requirement, `{since: "2.3"}` for the version that introduced it, `{level: integration}` on a `verifies` for the kind of test. `tg ontology` lists the properties each edge takes.
+
 Several edges fit on one line: `// @tg: verifies:: [[openspec:a#X#S1]], verifies:: [[openspec:a#X#S2]]`. Python and shell use `#` comments, SQL `--`.
+
+Docs relate to requirements with typed edge lines too, after a section's leading paragraph: a `Constraint` section that binds a requirement writes `- constrains:: [[openspec:auth#Token expiry]] {strength: must}`, a `Decision` that knowingly departs from one writes `- -contradicts:: [[openspec:auth#Token expiry]] {ticket: "AUTH-12"}`. Use only edge names `tg ontology` lists.
 
 Name the capabilities a lat.md file explains in its frontmatter (lat.md ignores the key):
 
@@ -54,6 +58,7 @@ tg trace auth billing --gaps   # only requirements still unimplemented or unveri
 tg trace --json                # for scripts
 tg trace --strict              # exit 1 while any gap remains (CI, once coverage is complete)
 tg edges --type verifies --to "openspec:auth#Token expiry"
+tg ontology check              # typed edges with undeclared names, wrong endpoints or properties
 ```
 
 A requirement is **implemented** when an `implements` edge reaches it or one of its scenarios, **verified** when every scenario has a `verifies` edge (or, with no scenarios, the requirement has one), and **documented** when a lat.md file names it. Missing links never fail `tg check`; only `tg trace --strict` enforces coverage.
@@ -67,4 +72,5 @@ A requirement is **implemented** when an `implements` edge reaches it or one of 
 
 ## Graph
 
-The same links are graph data: `Requirement` and `Scenario` nodes joined by `contains`, reached by `implements`, `verifies` and `references`. See the `tg-graph` and `tg-impact` skills for queries.
+The same links are graph data: `Requirement` and `Scenario` nodes joined by `contains`, reached by `implements`, `verifies` and `references` and by typed doc edges such as `constrains`, with their properties (`r.confidence`, `r.level`).
+Partly implemented requirements: `MATCH (c)-[i:implements {confidence: "partial"}]->(q:Requirement) RETURN q.title, c.symbol`. See the `tg-graph` and `tg-impact` skills for queries.

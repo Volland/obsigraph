@@ -5,6 +5,12 @@
       "args": [
         "mcp"
       ]
+    },
+    "tg": {
+      "command": "tg",
+      "args": [
+        "mcp"
+      ]
     }
   }
 }
