@@ -85,14 +85,15 @@ tg cypher "MATCH (s:Section)
     <p><code>tg search</code> ranks sections with a lexical index over title, overview and body. It needs no model, no key and no network, so it works in a new checkout and inside a hook. If you want semantic matches, point it at Ollama or any OpenAI-compatible endpoint with <code>TG_EMBED_PROVIDER</code> or a key, and it fuses both rankings. If the provider is down, you still get lexical results and a note.</p>
 
     <h2>5. Agents get the picture first</h2>
-    <p><code>tg init</code> sets a project up for Claude Code, Cursor or any agent that reads <code>AGENTS.md</code>. It never writes without <code>--write</code>: the default run prints a diff of every file it would touch.</p>
-<pre>$ tg init
-+++ b/CLAUDE.md          (instruction block: search first, check last)
-+++ b/.claude/settings.json   (UserPromptSubmit and Stop hooks)
-+++ b/.mcp.json          (the tg MCP server)
-+++ b/.claude/skills/tg-docs/SKILL.md
-+++ b/.claude/skills/tg-graph/SKILL.md
-Dry run: 5 files would change. Re-run with --write to apply.</pre>
+    <p><code>tg init</code> sets a project up for Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, Kilo Code, Pi or any agent that reads <code>AGENTS.md</code>. In a terminal it asks which agents you use and what to set up, then writes and lists the files; <code>--dry-run</code> prints the diff instead.</p>
+<pre>$ tg init --agent claude
+  + created CLAUDE.md               (instruction block: search first, check last)
+  + created .claude/settings.json   (UserPromptSubmit and Stop hooks)
+  + created .mcp.json               (the tg MCP server)
+  + created .claude/skills/tg-docs/SKILL.md
+  + created .claude/skills/tg-graph/SKILL.md
+  ...
+Wrote 17 files.</pre>
     <p>Once applied, the prompt hook reminds the agent to search before it works and expands any <code>[[refs]]</code> in your prompt. The stop hook blocks the agent from finishing when <code>tg check</code> fails or when it changed a lot of code without touching <code>lat.md/</code>. Hooks never fail the agent: on any internal error they exit 0.</p>
     <p><code>tg mcp</code> serves eight tools to MCP clients: <code>tg_locate</code>, <code>tg_section</code>, <code>tg_search</code>, <code>tg_expand</code>, <code>tg_check</code>, <code>tg_refs</code>, <code>tg_cypher</code> and <code>tg_edges</code>. The two bundled skills teach an agent how to maintain the docs and how to query the graph.</p>
 
@@ -111,9 +112,10 @@ Dry run: 5 files would change. Re-run with --write to apply.</pre>
     </ul>
 
     <h2>Try it</h2>
+<p>The CLI is <a href="https://www.npmjs.com/package/@typedgraph/cli"><code>@typedgraph/cli</code> on npm</a>.</p>
 <pre>npm install -g @typedgraph/cli
 cd your-project
-tg init          # dry run
+tg init          # pick your agents; it writes the setup
 tg check
 tg search "how are tokens validated"</pre>
     <p>The full command reference is in the <a href="docs.html#cli">docs</a>. If you already use lat.md, read <a href="blog-tg-vs-lat-md.html">how <code>tg</code> compares</a> first.</p>

@@ -24,12 +24,12 @@ npm install -g @typedgraph/cli
 tg init
 ```
 
-With no flags, `tg init` is a dry run. It prints a diff of every file it would create or change and writes nothing. Read it. For Claude Code the managed pieces are a block in `CLAUDE.md`, hooks in `.claude/settings.json`, an entry in `.mcp.json`, and two skills, `tg-docs` and `tg-graph`. It also installs a small [code ontology](blog-code-ontology.html), a shared vocabulary for intent and code.
+`tg init` asks which coding agents you use and what to set up, then writes the files and lists each one; add `--dry-run` first if you want to read the full diff. For Claude Code the managed pieces are a block in `CLAUDE.md`, hooks in `.claude/settings.json`, an entry in `.mcp.json`, and the tg skills. It also installs a small [code ontology](blog-code-ontology.html), a shared vocabulary for intent and code.
 
 When it looks right:
 
 ```
-tg init --write
+tg init
 ```
 
 The `CLAUDE.md` block sits between markers, so running it again replaces only that block. Use `--agent cursor` for Cursor or `--agent agents` for a plain `AGENTS.md`. If the project already uses lat.md, `--migrate` swaps its block, hooks and MCP entry, and leaves the rest of your files alone.

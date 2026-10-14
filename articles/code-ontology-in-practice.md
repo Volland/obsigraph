@@ -13,7 +13,7 @@ That left a practical question: which types? If every team invents its own words
 So the vocabulary now ships with the tool. Run:
 
 ```
-tg init --write
+tg init
 ```
 
 and next to the agent instructions, hooks and skills you get two more files:
@@ -176,8 +176,8 @@ The limits decide whether this fits you.
 ```
 npm install -g @typedgraph/cli
 cd your-project
-tg init            # dry run: shows every file it would write
-tg init --write
+tg init --dry-run  # optional: print the diff first
+tg init
 ```
 
 Then:

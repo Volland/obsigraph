@@ -161,7 +161,7 @@
     <h2>Use it from a project or another tool</h2>
 <pre>tg schema export shapes.ttl --vault path/to/vault     # any ontology as W3C SHACL
 tg schema import shapes.ttl --vault path/to/vault     # SHACL shapes back into schema notes</pre>
-    <p>In a code repository, <code>tg init --write</code> installs the smaller code ontology with <code>lat.md/</code>. To use a gallery ontology there instead, keep its <code>Types/</code> notes in a folder such as <code>ontology/</code> and pass <code>--schema-folder ontology</code>. The format is the open <a href="spec/tgs/v0.1/">Typed Graph Schema</a>, so other tools can read it.</p>
+    <p>In a code repository, <code>tg init</code> installs the smaller code ontology with <code>lat.md/</code>. To use a gallery ontology there instead, keep its <code>Types/</code> notes in a folder such as <code>ontology/</code> and pass <code>--schema-folder ontology</code>. The format is the open <a href="spec/tgs/v0.1/">Typed Graph Schema</a>, so other tools can read it.</p>
 
     <h2>Make it yours</h2>
     <p>They are starting points. Rename a type, drop a property you will never fill in, add a value to an enumeration. A type earns its place when you would ask a question that depends on it. If you build one other people could use, a pull request to the <code>ontologies/</code> folder is welcome; it needs to read without diagnostics, and the test suite checks that for every ontology.</p>

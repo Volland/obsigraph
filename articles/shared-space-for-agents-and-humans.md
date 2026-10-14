@@ -44,7 +44,7 @@ For an agent, [set up Claude Code](agents.html) in a minute:
 
 ```
 npm install -g @typedgraph/cli
-tg init --write
+tg init
 ```
 
 For a vault, [install the plugin](obsidian.html) from the Obsidian community directory, or open the [live demo](demo.html) first.

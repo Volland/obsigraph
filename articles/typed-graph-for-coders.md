@@ -196,7 +196,7 @@ The opposite failure is also real. If every edge is `related_to`, you are back t
 
 The rule I'd suggest: **a type earns its place only if you would ask a question that depends on it.** If you can't name the query, drop the type. What follows is a deliberately small starting set, six kinds of intent node and eleven kinds of edge, designed around the questions engineers and agents actually ask.
 
-To be clear about the status of what follows: this is a **convention**, and since 0.8.0 it ships with the tool. `tg init --write` installs it as two files: a guide note, `lat.md/code-ontology.md`, and a Typed Graph Schema, `ontology/code-types.md`. A [follow-up article](code-ontology-in-practice.md) shows how each role uses them.
+To be clear about the status of what follows: this is a **convention**, and since 0.8.0 it ships with the tool. `tg init` installs it as two files: a guide note, `lat.md/code-ontology.md`, and a Typed Graph Schema, `ontology/code-types.md`. A [follow-up article](code-ontology-in-practice.md) shows how each role uses them.
 
 It is still a convention and not an enforced rule. Edge types are free-form in the syntax (the word before `::` is whatever you write), and node types are whatever you put in `type:`. `tg check` does not reject an unknown edge name. The schema is what an Obsidian vault validates against, what exports to SHACL for other tools, and what an agent reads to stop inventing synonyms. The files are yours after the first run: `tg init` never overwrites them.
 
@@ -320,13 +320,12 @@ Don't start with the ontology. Start with five sections.
 ```
 npm install -g @typedgraph/cli
 cd your-project
-tg init          # dry run: prints a diff, writes nothing
-tg init --write  # agent files, hooks, skills, and the code ontology
+tg init          # agent files, hooks, skills, and the code ontology
 tg check
 tg cypher --code annotated "MATCH (c:CodeSymbol)-[r]->(s:Section) RETURN c.symbol, type(r), s.title"
 ```
 
-`tg init` sets the project up for Claude Code, Cursor or any agent that reads `AGENTS.md`. It writes nothing without `--write`, adds the code ontology note and schema (skip them with `--no-ontology`), and installs a prompt hook that reminds the agent to search the docs before it works and a stop hook that blocks it from finishing when the check fails or when it changed a lot of code without touching the docs.
+`tg init` sets the project up for Claude Code, Cursor or any agent that reads `AGENTS.md`. It asks which agents to set up and writes the files (`--dry-run` prints the diff instead), adds the code ontology with its schema and templates (skip it with `--no-ontology`), and installs a prompt hook that reminds the agent to search the docs before it works and a stop hook that blocks it from finishing when the check fails or when it changed a lot of code without touching the docs.
 
 ---
 

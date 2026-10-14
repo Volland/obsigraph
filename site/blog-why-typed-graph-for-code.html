@@ -120,7 +120,7 @@ RETURN c.path, c.symbol, s.title</pre>
     <h2>Try it</h2>
 <pre>npm install -g @typedgraph/cli
 cd your-project
-tg init          # dry run: prints a diff, writes nothing
+tg init          # pick your agents; it writes the setup
 tg check
 tg cypher --code annotated "MATCH (c:CodeSymbol)-[r]->(s:Section) RETURN c.symbol, type(r), s.title"</pre>
     <p>The <a href="blog-tg-cli.html">CLI article</a> covers the commands, and the <a href="docs.html">docs</a> have the full reference.</p>

@@ -1,9 +1,34 @@
 {
   "name": "@typedgraph/cli",
-  "version": "0.16.1",
-  "description": "tg: map, check and query docs and code as a typed graph; a drop-in replacement for lat.md",
+  "version": "0.16.2",
+  "description": "tg: keep docs, OpenSpec requirements and code linked as one typed graph, checked in CI and queryable by coding agents; a drop-in replacement for lat.md",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://typedgraph.org/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Volland/obsigraph.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Volland/obsigraph/issues"
+  },
+  "keywords": [
+    "lat.md",
+    "documentation",
+    "knowledge-graph",
+    "typed-graph",
+    "openspec",
+    "traceability",
+    "cypher",
+    "mcp",
+    "claude-code",
+    "codex",
+    "cursor",
+    "ai-agents",
+    "agents-md",
+    "docs-as-code"
+  ],
   "bin": {
     "tg": "dist/tg.mjs"
   },

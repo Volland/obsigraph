@@ -48,7 +48,7 @@
 
     <h2>Side by side</h2>
     <table>
-      <thead><tr><th></th><th>lat.md 0.12</th><th>tg 0.5</th></tr></thead>
+      <thead><tr><th></th><th>lat.md 0.12</th><th>tg 0.16</th></tr></thead>
       <tbody>
         <tr><td>Folder format and ids</td><td><code>lat.md/</code>, <code>file#Heading#Sub</code>, short ids</td><td>The same</td></tr>
         <tr><td><code>check</code> verdicts</td><td>Reference behavior</td><td>Same findings on the 3 projects it is tested on</td></tr>
@@ -57,8 +57,8 @@
         <tr><td>Querying</td><td>Locate by name, refs, search</td><td>All of those, plus openCypher over sections and code</td></tr>
         <tr><td>Code symbols</td><td>Tree-sitter grammars: TS, TSX, JS, JSX, Python, Rust, Go, C</td><td>Regex finders: TS/JS (also .mts .cts .mjs .cjs), Python, Go, Rust, C</td></tr>
         <tr><td>Search</td><td>Semantic: a local offline model or a hosted API key</td><td>Lexical by default, no model; optional Ollama or OpenAI-compatible embeddings</td></tr>
-        <tr><td>Agents</td><td>Claude Code, Cursor, plus Pi and OpenCode templates</td><td>Claude Code, Cursor, <code>AGENTS.md</code></td></tr>
-        <tr><td>MCP tools</td><td>6 (locate, section, search, expand, check, refs)</td><td>8 (the same plus cypher and edges)</td></tr>
+        <tr><td>Agents</td><td>Claude Code, Cursor, plus Pi and OpenCode templates</td><td>Nine agents chosen in a setup checklist: Claude Code, Codex, Cursor, GitHub Copilot, OpenCode, Kilo Code, Pi, Oh My Pi and any <code>AGENTS.md</code> agent, each with its own skills folder</td></tr>
+        <tr><td>MCP tools</td><td>6 (locate, section, search, expand, check, refs)</td><td>9 (the same plus cypher, edges and trace)</td></tr>
         <tr><td>Obsidian</td><td>Folder opens as plain Markdown</td><td>Plugin resolves lat ids on click, shows diagnostics, draws code nodes in the graph</td></tr>
         <tr><td>Move content between formats</td><td>No equivalent</td><td><code>export</code> (lossy, with a report) and <code>import</code></td></tr>
         <tr><td>Install</td><td>npm package with tree-sitter grammars and a database client as dependencies</td><td>One bundled file, no runtime dependencies</td></tr>
@@ -88,13 +88,13 @@
     <h3>Obsidian and interchange</h3>
     <p>If your notes live in Obsidian, the plugin makes a <code>lat.md/</code> folder in your vault navigable and checkable in place. <code>tg export</code> turns a vault into a lat.md folder that both tools accept. Typed edges and properties have no lat.md equivalent, so export flattens them and tells you what it dropped; it does not claim a lossless round trip.</p>
 
-    <h3>Safer setup</h3>
-    <p><code>tg init</code> prints a diff and writes nothing until you pass <code>--write</code>. Moving from lat.md is explicit: <code>--migrate</code> replaces the lat block, hooks and MCP entry, and leaves everything else in your files byte-for-byte as it was.</p>
+    <h3>Setup for the agent you use</h3>
+    <p><code>tg init</code> asks which coding agents you use and what to set up, shows the files it writes, and <code>tg init --dry-run</code> prints the full diff first if you want to read it. Re-running it only replaces its own marked blocks. Moving from lat.md is explicit: <code>--migrate</code> replaces the lat block, hooks and MCP entry, and leaves everything else in your files byte-for-byte as it was.</p>
 
     <h2>Where lat.md is better</h2>
     <ul>
       <li><strong>Symbol accuracy.</strong> lat.md parses source with real grammars. <code>tg</code>'s regex finders cover common declarations, but unusual syntax, macros and generated code can slip past them. They say "cannot tell" rather than guess, yet a grammar is still more precise.</li>
-      <li><strong>Agent coverage.</strong> lat.md ships templates for Pi and OpenCode as well. <code>tg</code> covers Claude Code, Cursor and <code>AGENTS.md</code>.</li>
+      
       <li><strong>Maturity.</strong> It is the original, and the format is defined by it. <code>tg</code> follows the format, and when the two disagree, lat.md is right by definition unless the difference is listed.</li>
       <li><strong>Semantic search out of the box.</strong> If you want embeddings without running or configuring anything else, lat.md's local model option is simpler than pointing <code>tg</code> at an embedding server.</li>
     </ul>
@@ -110,10 +110,11 @@
     </ul>
 
     <h2>Switching in four commands</h2>
+<p>The CLI is <a href="https://www.npmjs.com/package/@typedgraph/cli"><code>@typedgraph/cli</code> on npm</a>.</p>
 <pre>npm install -g @typedgraph/cli
 tg check                       # should match lat check
-tg init                        # dry run: see the diff
-tg init --write --migrate      # swap the lat block, hooks and MCP entry</pre>
+tg init --dry-run --migrate    # optional: see the diff
+tg init --migrate              # swap the lat block, hooks and MCP entry</pre>
     <p>Your <code>lat.md/</code> folder and <code>@lat:</code> comments stay as they are. If something differs from lat.md that is not on the list above, that is a bug, and the <a href="https://github.com/Volland/obsigraph/issues">issue tracker</a> is the place for it.</p>
 
     <div class="next">Previous: <a href="blog-tg-cli.html">← tg: your docs and your code as one typed graph</a><br>Next: <a href="blog-why-typed-graph-for-code.html">Why a typed graph for your codebase →</a></div>

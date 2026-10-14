@@ -2,6 +2,13 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.16.2 — 2026-10-14
+
+### Changed
+
+- **The `tg` package has a README on npm.** It explains what `tg` does and why, compares it with lat.md (including where lat.md is stronger), lists the nine coding agents `tg init` sets up and every command, and links to the website and articles. The package now links its homepage, repository and issues.
+- The website and articles describe the current `tg init`: it asks which agents to set up and writes the files, with `--dry-run` to print the diff, and they link to the npm package. The tg and lat.md comparison is updated for the agent list and the nine MCP tools.
+
 ## 0.16.1 — 2026-10-14
 
 ### Changed

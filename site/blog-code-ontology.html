@@ -41,7 +41,7 @@
 <p>In <a href="blog-typed-graph-for-coders.html">the first article</a> the argument was that a codebase has two graphs: the structure graph your tools derive, and the intent graph only people can write. Typed links connect them.</p>
 <p>That left a practical question: which types? If every team invents its own words, a developer writes <code>implements</code>, an architect writes <code>realizes</code>, an agent writes <code>relates_to</code>, and the graph stops answering questions because nobody asks for the same thing twice.</p>
 <p>So the vocabulary now ships with the tool. Run:</p>
-<pre>tg init --write</pre>
+<pre>tg init</pre>
 <p>and next to the agent instructions, hooks and skills you get two more files:</p>
 <ul>
 <li><code>lat.md/code-ontology.md</code>, a short guide note: the types, the edges, the rules of use. It is an ordinary lat.md section, so <code>tg check</code> verifies its links, and people and agents find it with <code>tg search</code>.</li>
@@ -188,8 +188,8 @@ session  | lat.md/decisions#Decisions#Stateless sessions | 2026-Q4 | null</pre>
 <h2>Start in ten minutes</h2>
 <pre>npm install -g @typedgraph/cli
 cd your-project
-tg init            # dry run: shows every file it would write
-tg init --write</pre>
+tg init --dry-run  # optional: print the diff first
+tg init</pre>
 <p>Then:</p>
 <ol>
 <li>Create <code>lat.md/requirements.md</code> with <code>type: Requirement</code> and three requirements you actually argue about.</li>
