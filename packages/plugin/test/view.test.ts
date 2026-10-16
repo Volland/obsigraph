@@ -70,6 +70,25 @@ describe('graph view', () => {
     expect(d.rows).toEqual(expect.arrayContaining([['labels', 'Person, Employee'], ['stub', 'false'], ['path', 'Bob.md']]));
   });
 
+  // @tg: verifies:: [[tests/graph-view#Subtitle after the title]] {since: "2026-10-16", level: unit}
+  // @lat: [[tests/graph-view#Subtitle after the title]]
+  // @tg: verifies:: [[openspec:graph-view#Node subtitle#Shared file name]]
+  // @tg: verifies:: [[openspec:graph-view#Node subtitle#No subtitle]]
+  it('draws a frontmatter subtitle after the title', () => {
+    const graph = new Graph((l) => (l.endsWith('.md') ? l : `${l}.md`));
+    graph.upsertNote({ path: 'specs/auth/spec.md', text: 'depends_on:: [[specs/billing/spec.md]]', frontmatter: { subtitle: 'auth' } });
+    graph.upsertNote({ path: 'specs/billing/spec.md', text: '', frontmatter: { subtitle: 'billing' } });
+    graph.upsertNote({ path: 'changes/x/design.md', text: '', frontmatter: { subtitle: '  ' } });
+    graph.upsertNote({ path: 'changes/y/design.md', text: '', frontmatter: { title: 'Y design', subtitle: 2 } });
+    const label = (id: string) => toElements(new BuiltinEngine(graph).run(`MATCH (n) WHERE n.path = '${id}' RETURN n`), (i) => graph.node(i)).nodes[0]!.label;
+    expect(label('specs/auth/spec.md')).toBe('spec — auth');
+    expect(label('changes/x/design.md')).toBe('design');
+    expect(label('changes/y/design.md')).toBe('Y design — 2');
+    expect(nodeDetails(graph.node('specs/billing/spec.md')!).title).toBe('spec — billing');
+    expect(edgeDetails([...graph.edges()][0]!, graph).title).toBe('spec — auth depends_on → spec — billing');
+    expect(makeStyler([]).node(neighborhood(graph, 'specs/auth/spec.md').nodes.find((n) => n.id === 'specs/auth/spec.md')!).label).toBe('spec — auth');
+  });
+
   // @tg: verifies:: [[tests/graph-view#Same element same style]] {since: "2026-10-03", level: unit}
   // @lat: [[tests/graph-view#Same element same style]]
   // @tg: verifies:: [[openspec:graph-view#Shared renderer#Consistent styling]]

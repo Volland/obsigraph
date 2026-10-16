@@ -1,5 +1,5 @@
 import { markdownTarget, type Graph, type GraphEdge, type GraphNode, type ResolvedEdgeStyle, type ResolvedNodeStyle } from '@obsigraph/core';
-import { nodeElement, type EdgeElement, type GraphElements } from './elements';
+import { nodeCaption, nodeElement, type EdgeElement, type GraphElements } from './elements';
 
 /** A node, its incident edges in both directions, and its direct neighbors. */
 // @tg: implements:: [[visualization#Surfaces]] {since: "2026-10-04"}
@@ -172,14 +172,17 @@ export function nodeDetails(n: GraphNode, style?: ResolvedNodeStyle, declared?: 
     if (isTechnical(k, declared)) technical.add(k);
   }
   if (style) for (const r of styleRows(style)) (rows.push(r), technical.add(r[0]));
-  return { title: String(n.props.title ?? n.id), rows, technical, values, source: n.stub ? null : n.id };
+  return { title: nodeCaption(n), rows, technical, values, source: n.stub ? null : n.id };
 }
 
 /** Rows for a selected edge; `declared` names the edge type's declared properties, as for `nodeDetails`. */
 // @tg: implements:: [[openspec:graph-view#Selection details]]
 // @tg: implements:: [[openspec:graph-view#Details panel]]
 export function edgeDetails(e: GraphEdge, graph: Graph, style?: ResolvedEdgeStyle, declared?: ReadonlySet<string>): Details {
-  const title = (id: string) => String(graph.node(id)?.props.title ?? id);
+  const title = (id: string) => {
+    const n = graph.node(id);
+    return n ? nodeCaption(n) : id;
+  };
   const rows: [string, string][] = [
     ['type', e.type],
     ['sign', e.sign < 0 ? '-1 (negative)' : '+1'],

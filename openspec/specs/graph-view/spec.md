@@ -48,6 +48,17 @@ The system SHALL use the same renderer and styling for the Graph view and for in
 - **WHEN** the same `Person` node appears in an inline block and in the Graph view
 - **THEN** it has the same color, shape and label style in both
 
+### Requirement: Node subtitle
+The system SHALL draw a node whose note has a non-empty frontmatter `subtitle` (a string or a number) with the label `<title> — <subtitle>`, where the title is the frontmatter `title`, the document title or the file name, and SHALL use the same text as the node's heading in the details panel and as an edge endpoint's name there. A type's label property, when set and present on the node, still replaces this text.
+
+#### Scenario: Shared file name
+- **WHEN** `specs/auth/spec.md` has frontmatter `subtitle: auth` and `specs/billing/spec.md` has `subtitle: billing`
+- **THEN** the graph draws them as `spec — auth` and `spec — billing`
+
+#### Scenario: No subtitle
+- **WHEN** a note has no `subtitle` or an empty one
+- **THEN** its node is labeled with its title alone
+
 ### Requirement: Selection details
 The system SHALL show the type, ID, sign and properties of a selected edge, and the labels and properties of a selected node.
 

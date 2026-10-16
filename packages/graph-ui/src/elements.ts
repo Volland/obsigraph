@@ -22,12 +22,24 @@ export interface GraphElements {
   edges: EdgeElement[];
 }
 
+/**
+ * Display text for a node: its title, then ` — ` and the frontmatter `subtitle` when the note has
+ * one, so many notes that share a file name such as `spec.md` stay apart in a graph.
+ */
+// @tg: implements:: [[openspec:graph-view#Node subtitle]]
+// @lat: [[visualization#Node captions]]
+export function nodeCaption(n: GraphNode): string {
+  const title = typeof n.props.title === 'string' ? n.props.title : n.id;
+  const sub = n.props.subtitle;
+  const text = typeof sub === 'string' ? sub.trim() : typeof sub === 'number' ? String(sub) : '';
+  return text ? `${title} — ${text}` : title;
+}
+
 // @tg: implements:: [[openspec:graph-view#Shared renderer]]
 export function nodeElement(n: GraphNode): NodeElement {
-  const title = n.props.title;
   return {
     id: n.id,
-    label: typeof title === 'string' ? title : n.id,
+    label: nodeCaption(n),
     labels: [...n.labels],
     stub: n.stub,
     path: n.stub ? null : n.id,

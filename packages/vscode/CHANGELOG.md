@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+- **Node subtitles.** A note's frontmatter `subtitle` is drawn after its title, as `spec — billing`, in the graph panel, the details panel and the HTML and PDF exports, so notes that share a file name such as `spec.md` stay apart.
+
 ## 0.11.0
 
 - **AsciiDoc notes.** `.adoc` files are indexed as notes beside markdown: properties from a leading `////` block and `:tg-*:` attributes, edges from `// @tg:` comments, with backlinks and the graph for `.adoc` editors. The setting `typegraph.asciidoc` (default on) turns it off, and the file watcher and activation cover `.adoc`.

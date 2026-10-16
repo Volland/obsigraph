@@ -2,6 +2,12 @@
 
 All notable changes to the Typed Graph plugin, the `tg` CLI, the core library and the sidecar. The VS Code extension keeps its own [changelog](packages/vscode/CHANGELOG.md).
 
+## 0.20.0 — 2026-10-16
+
+### Added
+
+- **Node subtitles.** A note's frontmatter `subtitle` is drawn after its title, as `spec — billing`, in the Graph view, inline graph blocks and the details panel, so many `spec.md` or `design.md` notes no longer show up as identical `spec` nodes. Unlike `title`, which replaces the file name everywhere including queries, `subtitle` only changes what the graph shows. A type's `visualization.label` property still wins.
+
 ## 0.19.1 — 2026-10-14
 
 ### Fixed

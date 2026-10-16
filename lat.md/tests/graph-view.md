@@ -23,6 +23,10 @@ A selected edge shows its type, sign, ID, source heading and user properties, wi
 
 A selected node shows its title, labels, stub flag and properties.
 
+## Subtitle after the title
+
+A note with frontmatter `subtitle` is drawn and headed as `<title> — <subtitle>`, an edge names it the same way, and a blank subtitle leaves the title alone.
+
 ## Same element same style
 
 A node produces identical element data, classes and style rules whether it comes from an inline block result or from the Graph view.

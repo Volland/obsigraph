@@ -22,6 +22,12 @@ Hosts supply a theme function instead of the renderer reading host variables: th
 
 The renderer starts Cytoscape with the `null` layout, so the empty bootstrap graph is never laid out against a container that may not be sized yet, and [[packages/plugin/src/query/query-block.ts#QueryBlock]] defers its first render by one animation frame (cancelled on unload) so the container is attached and sized when Cytoscape measures it. Without both, a `view: graph` block crashed on every render with a zero-width container (issue #3).
 
+## Node captions
+
+A node is drawn with its title, followed by ` — ` and the note's frontmatter `subtitle` when it has one, so many `spec.md` or `design.md` notes stay apart in one graph.
+
+The title is the frontmatter `title`, the document title or the file name, in that order (see [[graph-model#Node types]]): `title` replaces the file name everywhere, including queries, while `subtitle` only adds to what the graph shows. [[packages/graph-ui/src/elements.ts#nodeCaption]] builds the text for node labels, the details panel heading and edge endpoint names, so every host shows the same caption. A type's `label` property in its schema style still wins over it. OpenSpec accepts frontmatter in `spec.md` and `design.md`, so a capability or change can carry its own subtitle.
+
 ## Code nodes
 
 Derived `CodeFile` and `CodeSymbol` nodes from the code layer share the renderer: distinct built-in shapes and colors, a Code dropdown in the Graph view and a `code: hide` block option; see [[cli#Code layer]].
